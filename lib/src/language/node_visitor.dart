@@ -12,6 +12,7 @@ import 'enum_value.dart';
 import 'enum_value_definition.dart';
 import 'field.dart';
 import 'field_definition.dart';
+import 'float_value.dart';
 import 'input_value_definition.dart';
 import 'node.dart';
 import 'operation_definition.dart';
@@ -81,6 +82,11 @@ abstract interface class NodeVisitor {
 
   TraversalControl visitFieldDefinition(
     FieldDefinition node,
+    TraverserContext<Node> data,
+  );
+
+  TraversalControl visitFloatValue(
+    FloatValue node,
     TraverserContext<Node> data,
   );
 

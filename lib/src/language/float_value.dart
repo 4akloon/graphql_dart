@@ -1,36 +1,36 @@
-import '../util/consumer.dart';
+import 'package:graphql_dart/src/language/abstract_node.dart';
+import 'package:graphql_dart/src/language/node.dart';
+import 'package:graphql_dart/src/language/node_visitor.dart';
+import 'package:graphql_dart/src/language/scalar_value.dart';
+import 'package:graphql_dart/src/util/consumer.dart';
+import 'package:graphql_dart/src/util/traversal_control.dart';
+import 'package:graphql_dart/src/util/traverser_context.dart';
+
 import '../util/node_util.dart';
-import '../util/traversal_control.dart';
-import '../util/traverser_context.dart';
-import 'abstract_node.dart';
-import 'ignored_chars.dart';
-import 'node.dart';
 import 'node_builder.dart';
 import 'node_children_container.dart';
-import 'node_visitor.dart';
-import 'scalar_value.dart';
 
-class BooleanValue extends AbstractNode<BooleanValue>
-    implements ScalarValue<BooleanValue> {
-  final bool value;
+class FloatValue extends AbstractNode<FloatValue>
+    implements ScalarValue<FloatValue> {
+  final double value;
 
-  BooleanValue._({
+  FloatValue._({
     required this.value,
     super.sourceLocation,
     super.comments = const [],
-    IgnoredChars? ignoredChars,
     super.additionalData = const {},
-  }) : super(ignoredChars: ignoredChars ?? IgnoredChars.empty());
+    super.ignoredChars,
+  });
 
   @override
-  List<Node> get children => const [];
+  List<Node> get children => [];
 
   @override
   NodeChildrenContainer get namedChildren =>
       NodeChildrenContainer.builder().build();
 
   @override
-  BooleanValue withNewChildren(NodeChildrenContainer newChildren) {
+  FloatValue withNewChildren(NodeChildrenContainer newChildren) {
     NodeUtil.assertNewChildrenAreEmpty(newChildren);
     return this;
   }
@@ -41,7 +41,7 @@ class BooleanValue extends AbstractNode<BooleanValue>
       return true;
     } else if (runtimeType != node.runtimeType) {
       return false;
-    } else if (node is BooleanValue) {
+    } else if (node is FloatValue) {
       return value == node.value;
     } else {
       return false;
@@ -49,7 +49,7 @@ class BooleanValue extends AbstractNode<BooleanValue>
   }
 
   @override
-  BooleanValue deepCopy() => BooleanValue._(
+  FloatValue deepCopy() => FloatValue._(
         value: value,
         ignoredChars: ignoredChars,
         comments: comments,
@@ -58,31 +58,30 @@ class BooleanValue extends AbstractNode<BooleanValue>
       );
 
   @override
-  String toString() => 'BooleanValue(value: $value)';
+  String toString() => 'FloatValue(value: $value)';
 
-  factory BooleanValue.of(bool value) => builder(value).build();
+  factory FloatValue.of(double value) => builder(value).build();
 
-  static BooleanValueBuilder builder(bool value) =>
-      BooleanValueBuilder._(value);
+  static FloatValueBuilder builder(double value) => FloatValueBuilder._(value);
 
   @override
   TraversalControl accept(TraverserContext<Node> context, NodeVisitor visitor) {
-    return visitor.visitBooleanValue(this, context);
+    return visitor.visitFloatValue(this, context);
   }
 
-  BooleanValue transform(Consumer<BooleanValueBuilder> buildConsumer) {
-    final builder = BooleanValueBuilder._from(this);
+  FloatValue transform(Consumer<FloatValueBuilder> buildConsumer) {
+    final builder = FloatValueBuilder._from(this);
     buildConsumer(builder);
     return builder.build();
   }
 }
 
-final class BooleanValueBuilder extends NodeBuilder {
-  bool value;
+class FloatValueBuilder extends NodeBuilder {
+  double value;
 
-  BooleanValueBuilder._(this.value);
+  FloatValueBuilder._(this.value);
 
-  BooleanValueBuilder._from(BooleanValue existing)
+  FloatValueBuilder._from(FloatValue existing)
       : value = existing.value,
         super(
           sourceLocation: existing.sourceLocation,
@@ -91,7 +90,7 @@ final class BooleanValueBuilder extends NodeBuilder {
           additionalData: existing.additionalData,
         );
 
-  BooleanValue build() => BooleanValue._(
+  FloatValue build() => FloatValue._(
         value: value,
         sourceLocation: sourceLocation,
         comments: comments,
