@@ -2,14 +2,12 @@ import '../util/consumer.dart';
 import '../util/traversal_control.dart';
 import '../util/traverser_context.dart';
 import 'abstract_node.dart';
-import 'comment.dart';
 import 'ignored_chars.dart';
 import 'named_node.dart';
 import 'node.dart';
 import 'node_builder.dart';
 import 'node_children_container.dart';
 import 'node_visitor.dart';
-import 'source_location.dart';
 import 'value.dart';
 
 class Argument extends AbstractNode<Argument> implements NamedNode<Argument> {
@@ -19,7 +17,7 @@ class Argument extends AbstractNode<Argument> implements NamedNode<Argument> {
   final String name;
   final Value? value;
 
-  Argument({
+  Argument._({
     required this.name,
     required this.value,
     super.sourceLocation,
@@ -44,7 +42,7 @@ class Argument extends AbstractNode<Argument> implements NamedNode<Argument> {
   @override
   Argument withNewChildren(NodeChildrenContainer newChildren) {
     return transform(
-      (builder) => builder.value(newChildren.getChild(childValue)),
+      (builder) => builder.value = newChildren.getChild(childValue),
     );
   }
 
@@ -63,7 +61,7 @@ class Argument extends AbstractNode<Argument> implements NamedNode<Argument> {
 
   @override
   Argument deepCopy() {
-    return Argument(
+    return Argument._(
       name: name,
       value: deepCopyFromNode(value),
       sourceLocation: sourceLocation,
@@ -88,71 +86,28 @@ class Argument extends AbstractNode<Argument> implements NamedNode<Argument> {
   }
 }
 
-final class ArgumentBuilder implements NodeBuilder {
-  SourceLocation? _sourceLocation;
-  List<Comment> _comments = [];
-  String _name;
-  Value? _value;
-  IgnoredChars _ignoredChars = IgnoredChars.empty();
-  Map<String, String> _additionalData = {};
+final class ArgumentBuilder extends NodeBuilder {
+  String name;
+  Value? value;
 
-  ArgumentBuilder._(String name, Value? value)
-      : _name = name,
-        _value = value;
+  ArgumentBuilder._(this.name, this.value);
 
   ArgumentBuilder._from(Argument argument)
-      : _sourceLocation = argument.sourceLocation,
-        _comments = List.unmodifiable(argument.comments),
-        _name = argument.name,
-        _ignoredChars = argument.ignoredChars,
-        _additionalData = {...argument.additionalData};
+      : name = argument.name,
+        value = argument.value,
+        super(
+          sourceLocation: argument.sourceLocation,
+          comments: argument.comments,
+          ignoredChars: argument.ignoredChars,
+          additionalData: argument.additionalData,
+        );
 
-  @override
-  ArgumentBuilder sourceLocation(SourceLocation? sourceLocation) {
-    _sourceLocation = sourceLocation;
-    return this;
-  }
-
-  ArgumentBuilder name(String name) {
-    _name = name;
-    return this;
-  }
-
-  ArgumentBuilder value(Value? value) {
-    _value = value;
-    return this;
-  }
-
-  @override
-  ArgumentBuilder comments(List<Comment> comments) {
-    _comments = comments;
-    return this;
-  }
-
-  @override
-  ArgumentBuilder ignoredChars(IgnoredChars ignoredChars) {
-    _ignoredChars = ignoredChars;
-    return this;
-  }
-
-  @override
-  NodeBuilder additionalData(Map<String, String> additionalData) {
-    _additionalData = additionalData;
-    return this;
-  }
-
-  @override
-  NodeBuilder additionalDataEntry(String key, String value) {
-    _additionalData[key] = value;
-    return this;
-  }
-
-  Argument build() => Argument(
-        name: _name,
-        value: _value,
-        sourceLocation: _sourceLocation,
-        comments: _comments,
-        ignoredChars: _ignoredChars,
-        additionalData: _additionalData,
+  Argument build() => Argument._(
+        name: name,
+        value: value,
+        sourceLocation: sourceLocation,
+        comments: comments,
+        ignoredChars: ignoredChars,
+        additionalData: additionalData,
       );
 }

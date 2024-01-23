@@ -2,14 +2,27 @@ import 'comment.dart';
 import 'ignored_chars.dart';
 import 'source_location.dart';
 
-abstract interface class NodeBuilder {
-  NodeBuilder sourceLocation(SourceLocation? sourceLocation);
+abstract class NodeBuilder<T extends NodeBuilder<dynamic>> {
+  SourceLocation? sourceLocation;
+  List<Comment> _comments;
+  IgnoredChars ignoredChars;
+  Map<String, String> additionalData;
 
-  NodeBuilder comments(List<Comment> comments);
+  NodeBuilder({
+    this.sourceLocation,
+    IgnoredChars? ignoredChars,
+    List<Comment> comments = const [],
+    Map<String, String> additionalData = const {},
+  })  : ignoredChars = ignoredChars ?? IgnoredChars.empty(),
+        _comments = List.unmodifiable(comments),
+        additionalData = {...additionalData};
 
-  NodeBuilder ignoredChars(IgnoredChars ignoredChars);
+  List<Comment> get comments => _comments;
 
-  NodeBuilder additionalData(Map<String, String> additionalData);
+  set comments(List<Comment> comments) {
+    _comments = List.unmodifiable(comments);
+  }
 
-  NodeBuilder additionalDataEntry(String key, String value);
+  void setAdditionalDataEntry(String key, String value) =>
+      additionalData[key] = value;
 }

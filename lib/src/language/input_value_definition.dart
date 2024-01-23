@@ -7,12 +7,10 @@ import 'package:graphql_dart/src/util/traverser_context.dart';
 
 import '../util/consumer.dart';
 import 'abstract_described_node.dart';
-import 'comment.dart';
 import 'directives_container.dart';
 import 'ignored_chars.dart';
 import 'named_node.dart';
 import 'node_directives_builder.dart';
-import 'source_location.dart';
 import 'type.dart';
 import 'value.dart';
 
@@ -60,9 +58,9 @@ class InputValueDefinition extends AbstractDescribedNode<InputValueDefinition>
   InputValueDefinition withNewChildren(NodeChildrenContainer newChildren) {
     return transform(
       (builder) => builder
-          .type(newChildren.getChild(childType) as GType)
-          .defaultValue(newChildren.getChild(childDefaultValue))
-          .directives(newChildren.getChildrenValue(childDirectives)),
+        ..type = (newChildren.getChild(childType) as GType)
+        ..defaultValue = newChildren.getChild(childDefaultValue)
+        ..directives = newChildren.getChildrenValue(childDirectives),
     );
   }
 
@@ -115,96 +113,32 @@ class InputValueDefinition extends AbstractDescribedNode<InputValueDefinition>
   }
 }
 
-final class InputValueDefinitionBuilder implements NodeDirectivesBuilder {
-  SourceLocation? _sourceLocation;
-  List<Comment> _comments = [];
-  String _name;
-  GType _type;
-  Value? _defaultValue;
-  List<Directive> _directives = [];
-  IgnoredChars _ignoredChars = IgnoredChars.empty();
-  Map<String, String> _additionalData = {};
+final class InputValueDefinitionBuilder extends NodeDirectivesBuilder {
+  String name;
+  GType type;
+  Value? defaultValue;
 
-  InputValueDefinitionBuilder._(String name, GType type)
-      : _name = name,
-        _type = type;
+  InputValueDefinitionBuilder._(this.name, this.type);
 
   InputValueDefinitionBuilder._from(InputValueDefinition inputValueDefinition)
-      : _sourceLocation = inputValueDefinition.sourceLocation,
-        _comments = List.unmodifiable(inputValueDefinition.comments),
-        _name = inputValueDefinition.name,
-        _type = inputValueDefinition.type,
-        _defaultValue = inputValueDefinition.defaultValue,
-        _directives = List.unmodifiable(inputValueDefinition.directives),
-        _ignoredChars = inputValueDefinition.ignoredChars,
-        _additionalData = {...inputValueDefinition.additionalData};
-
-  @override
-  InputValueDefinitionBuilder sourceLocation(SourceLocation? sourceLocation) {
-    _sourceLocation = sourceLocation;
-    return this;
-  }
-
-  @override
-  InputValueDefinitionBuilder comments(List<Comment> comments) {
-    _comments = comments;
-    return this;
-  }
-
-  InputValueDefinitionBuilder name(String name) {
-    _name = name;
-    return this;
-  }
-
-  InputValueDefinitionBuilder type(GType type) {
-    _type = type;
-    return this;
-  }
-
-  InputValueDefinitionBuilder defaultValue(Value? defaultValue) {
-    _defaultValue = defaultValue;
-    return this;
-  }
-
-  @override
-  InputValueDefinitionBuilder directives(List<Directive> directives) {
-    _directives = directives;
-    return this;
-  }
-
-  @override
-  InputValueDefinitionBuilder directive(Directive directive) {
-    _directives = List.unmodifiable([..._directives, directive]);
-    return this;
-  }
-
-  @override
-  InputValueDefinitionBuilder ignoredChars(IgnoredChars ignoredChars) {
-    _ignoredChars = ignoredChars;
-    return this;
-  }
-
-  @override
-  InputValueDefinitionBuilder additionalData(
-      Map<String, String> additionalData) {
-    _additionalData = additionalData;
-    return this;
-  }
-
-  @override
-  InputValueDefinitionBuilder additionalDataEntry(String key, String value) {
-    _additionalData[key] = value;
-    return this;
-  }
+      : name = inputValueDefinition.name,
+        type = inputValueDefinition.type,
+        super(
+          sourceLocation: inputValueDefinition.sourceLocation,
+          comments: inputValueDefinition.comments,
+          ignoredChars: inputValueDefinition.ignoredChars,
+          additionalData: inputValueDefinition.additionalData,
+          directives: inputValueDefinition.directives,
+        );
 
   InputValueDefinition build() => InputValueDefinition._(
-        name: _name,
-        type: _type,
-        defaultValue: _defaultValue,
-        directives: _directives,
-        sourceLocation: _sourceLocation,
-        comments: _comments,
-        ignoredChars: _ignoredChars,
-        additionalData: _additionalData,
+        name: name,
+        type: type,
+        defaultValue: defaultValue,
+        directives: directives,
+        sourceLocation: sourceLocation,
+        comments: comments,
+        ignoredChars: ignoredChars,
+        additionalData: additionalData,
       );
 }

@@ -9,10 +9,8 @@ import 'package:graphql_dart/src/util/traverser_context.dart';
 import '../util/consumer.dart';
 import '../util/node_util.dart';
 import 'argument.dart';
-import 'comment.dart';
 import 'ignored_chars.dart';
 import 'node_builder.dart';
-import 'source_location.dart';
 
 class Directive extends AbstractNode<Directive>
     implements NamedNode<Directive> {
@@ -47,7 +45,7 @@ class Directive extends AbstractNode<Directive>
   Directive withNewChildren(NodeChildrenContainer newChildren) {
     return transform(
       (builder) =>
-          builder.arguments(newChildren.getChildrenValue(childArguments)),
+          builder.arguments = newChildren.getChildrenValue(childArguments),
     );
   }
 
@@ -91,75 +89,36 @@ class Directive extends AbstractNode<Directive>
   }
 }
 
-final class DirectiveBuilder implements NodeBuilder {
-  SourceLocation? _sourceLocation;
-  List<Comment> _comments = [];
-  String _name;
+final class DirectiveBuilder extends NodeBuilder {
+  String name;
   List<Argument> _arguments = [];
-  IgnoredChars _ignoredChars = IgnoredChars.empty();
-  Map<String, String> _additionalData = {};
 
-  DirectiveBuilder._(String name) : _name = name;
+  DirectiveBuilder._(this.name);
 
   DirectiveBuilder._from(Directive directive)
-      : _sourceLocation = directive.sourceLocation,
-        _comments = List.unmodifiable(directive.comments),
-        _name = directive.name,
+      : name = directive.name,
         _arguments = directive.arguments,
-        _ignoredChars = directive.ignoredChars,
-        _additionalData = directive.additionalData;
+        super(
+          sourceLocation: directive.sourceLocation,
+          comments: directive.comments,
+          ignoredChars: directive.ignoredChars,
+          additionalData: directive.additionalData,
+        );
 
-  @override
-  DirectiveBuilder sourceLocation(SourceLocation? sourceLocation) {
-    _sourceLocation = sourceLocation;
-    return this;
+  set arguments(List<Argument> arguments) {
+    _arguments = List.unmodifiable(arguments);
   }
 
-  @override
-  DirectiveBuilder comments(List<Comment> comments) {
-    _comments = comments;
-    return this;
-  }
-
-  DirectiveBuilder name(String name) {
-    _name = name;
-    return this;
-  }
-
-  DirectiveBuilder arguments(List<Argument> arguments) {
-    _arguments = arguments;
-    return this;
-  }
-
-  DirectiveBuilder argument(Argument argument) {
+  set argument(Argument argument) {
     _arguments = List.unmodifiable([..._arguments, argument]);
-    return this;
-  }
-
-  @override
-  DirectiveBuilder ignoredChars(IgnoredChars ignoredChars) {
-    _ignoredChars = ignoredChars;
-    return this;
-  }
-
-  @override
-  DirectiveBuilder additionalData(Map<String, String> additionalData) {
-    _additionalData = additionalData;
-    return this;
-  }
-
-  @override
-  DirectiveBuilder additionalDataEntry(String key, String value) {
-    _additionalData[key] = value;
-    return this;
   }
 
   Directive build() => Directive._(
-        name: _name,
+        name: name,
         arguments: _arguments,
-        sourceLocation: _sourceLocation,
-        comments: _comments,
-        ignoredChars: _ignoredChars,
-        additionalData: _additionalData,
+        sourceLocation: sourceLocation,
+        comments: comments,
+        ignoredChars: ignoredChars,
+        additionalData: additionalData,
       );
 }

@@ -1,8 +1,18 @@
 import 'directive.dart';
 import 'node_builder.dart';
 
-abstract interface class NodeDirectivesBuilder implements NodeBuilder {
-  NodeDirectivesBuilder directives(List<Directive> directives);
+abstract class NodeDirectivesBuilder extends NodeBuilder {
+  List<Directive> directives;
 
-  NodeDirectivesBuilder directive(Directive directive);
+  NodeDirectivesBuilder({
+    List<Directive> directives = const [],
+    super.sourceLocation,
+    super.comments = const [],
+    super.ignoredChars,
+    super.additionalData = const {},
+  }) : directives = List.unmodifiable(directives);
+
+  set directive(Directive directive) {
+    directives = List.unmodifiable([...directives, directive]);
+  }
 }

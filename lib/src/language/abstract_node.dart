@@ -15,11 +15,12 @@ abstract class AbstractNode<T extends Node<dynamic>> implements Node<T> {
 
   AbstractNode({
     this.sourceLocation,
-    required this.ignoredChars,
+    IgnoredChars? ignoredChars,
     required List<Comment> comments,
     Map<String, String> additionalData = const {},
   })  : comments = List.unmodifiable(comments),
-        additionalData = Map.unmodifiable(additionalData);
+        additionalData = Map.unmodifiable(additionalData),
+        ignoredChars = ignoredChars ?? IgnoredChars.empty();
 
   V? deepCopyFromNode<V extends Node>(V? node) {
     if (node == null) {

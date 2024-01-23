@@ -3,14 +3,12 @@ import '../util/node_util.dart';
 import '../util/traversal_control.dart';
 import '../util/traverser_context.dart';
 import 'abstract_node.dart';
-import 'comment.dart';
 import 'ignored_chars.dart';
 import 'node.dart';
 import 'node_builder.dart';
 import 'node_children_container.dart';
 import 'node_visitor.dart';
 import 'scalar_value.dart';
-import 'source_location.dart';
 
 class BooleanValue extends AbstractNode<BooleanValue>
     implements ScalarValue<BooleanValue> {
@@ -77,64 +75,27 @@ class BooleanValue extends AbstractNode<BooleanValue>
   }
 }
 
-final class BooleanValueBuilder implements NodeBuilder {
-  SourceLocation? _sourceLocation;
-  bool _value;
-  List<Comment> _comments = [];
-  IgnoredChars _ignoredChars = IgnoredChars.empty();
-  Map<String, String> _additionalData = {};
+final class BooleanValueBuilder extends NodeBuilder {
+  bool value;
 
-  BooleanValueBuilder._(this._value);
+  BooleanValueBuilder._(this.value);
 
   BooleanValueBuilder._from(BooleanValue existing)
-      : _value = existing.value,
-        _sourceLocation = existing.sourceLocation,
-        _comments = List.unmodifiable(existing.comments),
-        _ignoredChars = existing.ignoredChars,
-        _additionalData = {...existing.additionalData};
-
-  @override
-  BooleanValueBuilder sourceLocation(SourceLocation? sourceLocation) {
-    _sourceLocation = sourceLocation;
-    return this;
-  }
-
-  BooleanValueBuilder value(bool value) {
-    _value = value;
-    return this;
-  }
-
-  @override
-  BooleanValueBuilder comments(List<Comment> comments) {
-    _comments = comments;
-    return this;
-  }
-
-  @override
-  BooleanValueBuilder ignoredChars(IgnoredChars ignoredChars) {
-    _ignoredChars = ignoredChars;
-    return this;
-  }
-
-  @override
-  BooleanValueBuilder additionalData(Map<String, String> additionalData) {
-    _additionalData = additionalData;
-    return this;
-  }
-
-  @override
-  BooleanValueBuilder additionalDataEntry(String key, String value) {
-    _additionalData[key] = value;
-    return this;
-  }
+      : value = existing.value,
+        super(
+          sourceLocation: existing.sourceLocation,
+          comments: existing.comments,
+          ignoredChars: existing.ignoredChars,
+          additionalData: existing.additionalData,
+        );
 
   BooleanValue build() {
     return BooleanValue(
-      value: _value,
-      sourceLocation: _sourceLocation,
-      comments: _comments,
-      ignoredChars: _ignoredChars,
-      additionalData: _additionalData,
+      value: value,
+      sourceLocation: sourceLocation,
+      comments: comments,
+      ignoredChars: ignoredChars,
+      additionalData: additionalData,
     );
   }
 }
