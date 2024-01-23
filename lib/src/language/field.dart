@@ -1,19 +1,18 @@
-import 'package:graphql_dart/src/language/abstract_node.dart';
-import 'package:graphql_dart/src/language/directives_container.dart';
-import 'package:graphql_dart/src/language/named_node.dart';
-import 'package:graphql_dart/src/language/node_visitor.dart';
-import 'package:graphql_dart/src/language/selection.dart';
-import 'package:graphql_dart/src/language/selection_set_container.dart';
-import 'package:graphql_dart/src/util/traversal_control.dart';
-import 'package:graphql_dart/src/util/traverser_context.dart';
-
 import '../util/consumer.dart';
+import '../util/traversal_control.dart';
+import '../util/traverser_context.dart';
+import 'abstract_node.dart';
 import 'argument.dart';
 import 'directive.dart';
+import 'directives_container.dart';
+import 'named_node.dart';
 import 'node.dart';
 import 'node_children_container.dart';
 import 'node_directives_builder.dart';
+import 'node_visitor.dart';
+import 'selection.dart';
 import 'selection_set.dart';
+import 'selection_set_container.dart';
 
 class Field extends AbstractNode<Field>
     with DirectivesContainer<Field>
