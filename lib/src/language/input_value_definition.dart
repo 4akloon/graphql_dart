@@ -56,10 +56,17 @@ class InputValueDefinition extends AbstractDescribedNode<InputValueDefinition>
   @override
   InputValueDefinition withNewChildren(NodeChildrenContainer newChildren) {
     return transform(
-      (builder) => builder
-        ..type = (newChildren.getChild(childType) as GType)
-        ..defaultValue = newChildren.getChild(childDefaultValue)
-        ..directives = newChildren.getChildrenValue(childDirectives),
+      (builder) {
+        builder
+          ..defaultValue = newChildren.getChild(childDefaultValue)
+          ..directives = newChildren.getChildrenValue(childDirectives);
+
+        final type = newChildren.getChild(childType);
+
+        if (type is GType) {
+          builder.type = type;
+        }
+      },
     );
   }
 

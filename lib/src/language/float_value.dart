@@ -1,14 +1,13 @@
-import 'package:graphql_dart/src/language/abstract_node.dart';
-import 'package:graphql_dart/src/language/node.dart';
-import 'package:graphql_dart/src/language/node_visitor.dart';
-import 'package:graphql_dart/src/language/scalar_value.dart';
-import 'package:graphql_dart/src/util/consumer.dart';
-import 'package:graphql_dart/src/util/traversal_control.dart';
-import 'package:graphql_dart/src/util/traverser_context.dart';
-
+import '../util/consumer.dart';
 import '../util/node_util.dart';
+import '../util/traversal_control.dart';
+import '../util/traverser_context.dart';
+import 'abstract_node.dart';
+import 'node.dart';
 import 'node_builder.dart';
 import 'node_children_container.dart';
+import 'node_visitor.dart';
+import 'scalar_value.dart';
 
 class FloatValue extends AbstractNode<FloatValue>
     implements ScalarValue<FloatValue> {
