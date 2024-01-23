@@ -17,6 +17,7 @@ import 'fragment_definition.dart';
 import 'fragment_spread.dart';
 import 'input_value_definition.dart';
 import 'int_value.dart';
+import 'list_type.dart';
 import 'node.dart';
 import 'operation_definition.dart';
 import 'selection_set.dart';
@@ -24,10 +25,7 @@ import 'type_name.dart';
 import 'variable_definition.dart';
 
 abstract interface class NodeVisitor {
-  TraversalControl visitArgument(
-    Argument node,
-    TraverserContext<Node> context,
-  );
+  TraversalControl visitArgument(Argument node, TraverserContext<Node> context);
 
   TraversalControl visitArrayValue(
     ArrayValue node,
@@ -54,30 +52,21 @@ abstract interface class NodeVisitor {
     TraverserContext<Node> context,
   );
 
-  TraversalControl visitDocument(
-    Document node,
-    TraverserContext<Node> data,
-  );
+  TraversalControl visitDocument(Document node, TraverserContext<Node> data);
 
   TraversalControl visitEnumTypeDefinition(
     EnumTypeDefinition node,
     TraverserContext<Node> data,
   );
 
-  TraversalControl visitEnumValue(
-    EnumValue node,
-    TraverserContext<Node> data,
-  );
+  TraversalControl visitEnumValue(EnumValue node, TraverserContext<Node> data);
 
   TraversalControl visitEnumValueDefinition(
     EnumValueDefinition node,
     TraverserContext<Node> data,
   );
 
-  TraversalControl visitField(
-    Field node,
-    TraverserContext<Node> data,
-  );
+  TraversalControl visitField(Field node, TraverserContext<Node> data);
 
   TraversalControl visitFieldDefinition(
     FieldDefinition node,
@@ -104,10 +93,9 @@ abstract interface class NodeVisitor {
     TraverserContext<Node> context,
   );
 
-  TraversalControl visitIntValue(
-    IntValue node,
-    TraverserContext<Node> data,
-  );
+  TraversalControl visitIntValue(IntValue node, TraverserContext<Node> data);
+
+  TraversalControl visitListType(ListType node, TraverserContext<Node> data);
 
   TraversalControl visitOperationDefinition(
     OperationDefinition node,
@@ -119,10 +107,7 @@ abstract interface class NodeVisitor {
     TraverserContext<Node> data,
   );
 
-  TraversalControl visitTypeName(
-    TypeName node,
-    TraverserContext<Node> data,
-  );
+  TraversalControl visitTypeName(TypeName node, TraverserContext<Node> data);
 
   TraversalControl visitVariableDefinition(
     VariableDefinition node,
