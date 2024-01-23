@@ -1,21 +1,21 @@
+import 'package:graphql_dart/src/language/abstract_node.dart';
+import 'package:graphql_dart/src/language/directives_container.dart';
+import 'package:graphql_dart/src/language/named_node.dart';
+import 'package:graphql_dart/src/language/node.dart';
+import 'package:graphql_dart/src/language/type.dart';
+import 'package:graphql_dart/src/util/traversal_control.dart';
+
 import '../util/consumer.dart';
-import '../util/traversal_control.dart';
 import '../util/traverser_context.dart';
-import 'abstract_described_node.dart';
-import 'description.dart';
 import 'directive.dart';
-import 'directives_container.dart';
-import 'named_node.dart';
-import 'node.dart';
+import 'node_builder.dart';
 import 'node_children_container.dart';
-import 'node_directives_builder.dart';
 import 'node_visitor.dart';
-import 'type.dart';
 import 'value.dart';
 
-class InputValueDefinition extends AbstractDescribedNode<InputValueDefinition>
-    with DirectivesContainer<InputValueDefinition>
-    implements NamedNode<InputValueDefinition> {
+class VariableDefinition extends AbstractNode<VariableDefinition>
+    with DirectivesContainer<VariableDefinition>
+    implements NamedNode<VariableDefinition> {
   static const String childType = 'type';
   static const String childDefaultValue = 'defaultValue';
   static const String childDirectives = 'directives';
@@ -27,12 +27,11 @@ class InputValueDefinition extends AbstractDescribedNode<InputValueDefinition>
   @override
   final List<Directive> directives;
 
-  InputValueDefinition._({
+  VariableDefinition._({
     required this.name,
     required this.type,
     this.defaultValue,
     List<Directive> directives = const [],
-    super.description,
     super.sourceLocation,
     super.comments = const [],
     super.additionalData = const {},
@@ -54,7 +53,7 @@ class InputValueDefinition extends AbstractDescribedNode<InputValueDefinition>
       .build();
 
   @override
-  InputValueDefinition withNewChildren(NodeChildrenContainer newChildren) {
+  VariableDefinition withNewChildren(NodeChildrenContainer newChildren) {
     return transform(
       (builder) => builder
         ..type = (newChildren.getChild(childType) as GType)
@@ -69,7 +68,7 @@ class InputValueDefinition extends AbstractDescribedNode<InputValueDefinition>
       return true;
     } else if (runtimeType != node.runtimeType) {
       return false;
-    } else if (node is InputValueDefinition) {
+    } else if (node is VariableDefinition) {
       return name == node.name;
     } else {
       return false;
@@ -77,67 +76,69 @@ class InputValueDefinition extends AbstractDescribedNode<InputValueDefinition>
   }
 
   @override
-  InputValueDefinition deepCopy() => InputValueDefinition._(
+  VariableDefinition deepCopy() => VariableDefinition._(
         name: name,
         type: deepCopyFromNode(type)!,
         defaultValue: deepCopyFromNode(defaultValue),
         directives: deepCopyFromNodes<Directive>(directives) ?? [],
-        description: description,
         sourceLocation: sourceLocation,
         comments: comments,
-        ignoredChars: ignoredChars,
         additionalData: additionalData,
+        ignoredChars: ignoredChars,
       );
 
   @override
   String toString() =>
-      'InputValueDefinition(name: $name, type: $type, defaultValue: $defaultValue, directives: $directives)';
+      'VariableDefinition(name: $name, type: $type, defaultValue: $defaultValue, directives: $directives)';
 
   @override
   TraversalControl accept(TraverserContext<Node> context, NodeVisitor visitor) {
-    return visitor.visitInputValueDefinition(this, context);
+    return visitor.visitVariableDefinition(this, context);
   }
 
-  static InputValueDefinitionBuilder builder({
+  static VariableDefinitionBuilder builder({
     required String name,
     required GType type,
+    Value? defaultValue,
   }) =>
-      InputValueDefinitionBuilder._(name, type);
+      VariableDefinitionBuilder._(name, type, defaultValue);
 
-  InputValueDefinition transform(
-      Consumer<InputValueDefinitionBuilder> buildConsumer) {
-    final builder = InputValueDefinitionBuilder._from(this);
+  VariableDefinition transform(
+      Consumer<VariableDefinitionBuilder> buildConsumer) {
+    final builder = VariableDefinitionBuilder._from(this);
     buildConsumer(builder);
     return builder.build();
   }
 }
 
-final class InputValueDefinitionBuilder extends NodeDirectivesBuilder {
+class VariableDefinitionBuilder extends NodeBuilder {
   String name;
   GType type;
   Value? defaultValue;
-  Description? description;
+  List<Directive> directives;
 
-  InputValueDefinitionBuilder._(this.name, this.type);
+  VariableDefinitionBuilder._(
+    this.name,
+    this.type,
+    this.defaultValue,
+  ) : directives = [];
 
-  InputValueDefinitionBuilder._from(InputValueDefinition inputValueDefinition)
-      : name = inputValueDefinition.name,
-        type = inputValueDefinition.type,
-        defaultValue = inputValueDefinition.defaultValue,
-        description = inputValueDefinition.description,
+  VariableDefinitionBuilder._from(VariableDefinition variableDefinition)
+      : name = variableDefinition.name,
+        type = variableDefinition.type,
+        defaultValue = variableDefinition.defaultValue,
+        directives = variableDefinition.directives,
         super(
-          sourceLocation: inputValueDefinition.sourceLocation,
-          comments: inputValueDefinition.comments,
-          ignoredChars: inputValueDefinition.ignoredChars,
-          additionalData: inputValueDefinition.additionalData,
-          directives: inputValueDefinition.directives,
+          sourceLocation: variableDefinition.sourceLocation,
+          comments: variableDefinition.comments,
+          ignoredChars: variableDefinition.ignoredChars,
+          additionalData: variableDefinition.additionalData,
         );
 
-  InputValueDefinition build() => InputValueDefinition._(
+  VariableDefinition build() => VariableDefinition._(
         name: name,
         type: type,
         defaultValue: defaultValue,
-        description: description,
         directives: directives,
         sourceLocation: sourceLocation,
         comments: comments,

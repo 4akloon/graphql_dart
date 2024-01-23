@@ -75,12 +75,12 @@ class ArrayValue extends AbstractNode<ArrayValue> implements Value<ArrayValue> {
 }
 
 final class ArrayValueBuilder extends NodeBuilder {
-  List<Value> _values = [];
+  List<Value> values;
 
-  ArrayValueBuilder._(List<Value> values) : _values = values;
+  ArrayValueBuilder._(this.values);
 
   ArrayValueBuilder._from(ArrayValue arrayValue)
-      : _values = List.unmodifiable(arrayValue.values),
+      : values = arrayValue.values,
         super(
           sourceLocation: arrayValue.sourceLocation,
           comments: arrayValue.comments,
@@ -88,16 +88,8 @@ final class ArrayValueBuilder extends NodeBuilder {
           additionalData: arrayValue.additionalData,
         );
 
-  set values(List<Value> values) {
-    _values = List.unmodifiable(values);
-  }
-
-  set value(Value value) {
-    _values = List.unmodifiable([..._values, value]);
-  }
-
   ArrayValue build() => ArrayValue(
-        values: _values,
+        values: values,
         sourceLocation: sourceLocation,
         comments: comments,
         ignoredChars: ignoredChars,

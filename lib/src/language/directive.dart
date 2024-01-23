@@ -1,16 +1,15 @@
-import 'package:graphql_dart/src/language/abstract_node.dart';
-import 'package:graphql_dart/src/language/named_node.dart';
-import 'package:graphql_dart/src/language/node.dart';
-import 'package:graphql_dart/src/language/node_children_container.dart';
-import 'package:graphql_dart/src/language/node_visitor.dart';
-import 'package:graphql_dart/src/util/traversal_control.dart';
-import 'package:graphql_dart/src/util/traverser_context.dart';
-
 import '../util/consumer.dart';
 import '../util/node_util.dart';
+import '../util/traversal_control.dart';
+import '../util/traverser_context.dart';
+import 'abstract_node.dart';
 import 'argument.dart';
 import 'ignored_chars.dart';
+import 'named_node.dart';
+import 'node.dart';
 import 'node_builder.dart';
+import 'node_children_container.dart';
+import 'node_visitor.dart';
 
 class Directive extends AbstractNode<Directive>
     implements NamedNode<Directive> {
@@ -91,13 +90,13 @@ class Directive extends AbstractNode<Directive>
 
 final class DirectiveBuilder extends NodeBuilder {
   String name;
-  List<Argument> _arguments = [];
+  List<Argument> arguments = [];
 
   DirectiveBuilder._(this.name);
 
   DirectiveBuilder._from(Directive directive)
       : name = directive.name,
-        _arguments = directive.arguments,
+        arguments = directive.arguments,
         super(
           sourceLocation: directive.sourceLocation,
           comments: directive.comments,
@@ -105,17 +104,13 @@ final class DirectiveBuilder extends NodeBuilder {
           additionalData: directive.additionalData,
         );
 
-  set arguments(List<Argument> arguments) {
-    _arguments = List.unmodifiable(arguments);
-  }
-
   set argument(Argument argument) {
-    _arguments = List.unmodifiable([..._arguments, argument]);
+    arguments = [...arguments, argument];
   }
 
   Directive build() => Directive._(
         name: name,
-        arguments: _arguments,
+        arguments: arguments,
         sourceLocation: sourceLocation,
         comments: comments,
         ignoredChars: ignoredChars,

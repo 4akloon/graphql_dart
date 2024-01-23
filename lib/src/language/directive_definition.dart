@@ -119,17 +119,15 @@ final class DirectiveDefinitionBuilder extends NodeBuilder {
 
   DirectiveDefinitionBuilder._(this.name)
       : repeatable = false,
-        inputValueDefinitions = List.unmodifiable([]),
-        directiveLocations = List.unmodifiable([]);
+        inputValueDefinitions = [],
+        directiveLocations = [];
 
   DirectiveDefinitionBuilder._from(DirectiveDefinition directiveDefinition)
       : name = directiveDefinition.name,
         repeatable = directiveDefinition.repeatable,
         description = directiveDefinition.description,
-        inputValueDefinitions =
-            List.unmodifiable(directiveDefinition.inputValueDefinitions),
-        directiveLocations =
-            List.unmodifiable(directiveDefinition.directiveLocations),
+        inputValueDefinitions = directiveDefinition.inputValueDefinitions,
+        directiveLocations = directiveDefinition.directiveLocations,
         super(
           sourceLocation: directiveDefinition.sourceLocation,
           comments: directiveDefinition.comments,
