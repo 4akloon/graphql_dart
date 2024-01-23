@@ -4,6 +4,7 @@ import 'argument.dart';
 import 'array_value.dart';
 import 'boolean_value.dart';
 import 'directive.dart';
+import 'input_value_definition.dart';
 import 'node.dart';
 
 abstract interface class NodeVisitor {
@@ -24,6 +25,11 @@ abstract interface class NodeVisitor {
 
   TraversalControl visitDirective(
     Directive node,
+    TraverserContext<Node> context,
+  );
+
+  TraversalControl visitInputValueDefinition(
+    InputValueDefinition node,
     TraverserContext<Node> context,
   );
 }

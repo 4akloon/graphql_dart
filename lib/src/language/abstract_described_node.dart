@@ -1,12 +1,11 @@
-import 'package:graphql_dart/src/language/ignored_chars.dart';
-
 import 'abstract_node.dart';
 import 'comment.dart';
 import 'described_node.dart';
 import 'description.dart';
+import 'ignored_chars.dart';
 import 'node.dart';
 
-abstract interface class AbstractDescribedNode<T extends Node<dynamic>>
+abstract class AbstractDescribedNode<T extends Node<dynamic>>
     extends AbstractNode<T> implements DescribeNode<T> {
   final Description? _description;
 
