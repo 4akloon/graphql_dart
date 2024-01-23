@@ -1,27 +1,26 @@
-import 'package:graphql_dart/src/language/ignored_chars.dart';
-import 'package:graphql_dart/src/language/node.dart';
-import 'package:graphql_dart/src/language/node_children_container.dart';
-import 'package:graphql_dart/src/language/source_location.dart';
-import 'package:graphql_dart/src/util/traversal_control.dart';
-import 'package:graphql_dart/src/util/traverser_context.dart';
-
 import '../util/consumer.dart';
+import '../util/traversal_control.dart';
+import '../util/traverser_context.dart';
 import 'abstract_node.dart';
 import 'comment.dart';
+import 'ignored_chars.dart';
 import 'named_node.dart';
+import 'node.dart';
 import 'node_builder.dart';
+import 'node_children_container.dart';
 import 'node_visitor.dart';
+import 'source_location.dart';
 import 'value.dart';
 
 class Argument extends AbstractNode<Argument> implements NamedNode<Argument> {
   static const String childValue = 'value';
 
   @override
-  final String? name;
+  final String name;
   final Value? value;
 
   Argument({
-    this.name,
+    required this.name,
     required this.value,
     super.sourceLocation,
     super.comments = const [],
@@ -29,8 +28,8 @@ class Argument extends AbstractNode<Argument> implements NamedNode<Argument> {
     IgnoredChars? ignoredChars,
   }) : super(ignoredChars: ignoredChars ?? IgnoredChars.empty());
 
-  static ArgumentBuilder newArgument({
-    String? name,
+  static ArgumentBuilder builder({
+    required String name,
     Value? value,
   }) =>
       ArgumentBuilder._(name, value);
@@ -92,12 +91,12 @@ class Argument extends AbstractNode<Argument> implements NamedNode<Argument> {
 final class ArgumentBuilder implements NodeBuilder {
   SourceLocation? _sourceLocation;
   List<Comment> _comments = [];
-  String? _name;
+  String _name;
   Value? _value;
   IgnoredChars _ignoredChars = IgnoredChars.empty();
   Map<String, String> _additionalData = {};
 
-  ArgumentBuilder._(String? name, Value? value)
+  ArgumentBuilder._(String name, Value? value)
       : _name = name,
         _value = value;
 
@@ -106,7 +105,7 @@ final class ArgumentBuilder implements NodeBuilder {
         _comments = List.unmodifiable(argument.comments),
         _name = argument.name,
         _ignoredChars = argument.ignoredChars,
-        _additionalData = argument.additionalData;
+        _additionalData = {...argument.additionalData};
 
   @override
   ArgumentBuilder sourceLocation(SourceLocation? sourceLocation) {
@@ -114,7 +113,7 @@ final class ArgumentBuilder implements NodeBuilder {
     return this;
   }
 
-  ArgumentBuilder name(String? name) {
+  ArgumentBuilder name(String name) {
     _name = name;
     return this;
   }

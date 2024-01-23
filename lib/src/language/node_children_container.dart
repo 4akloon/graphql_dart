@@ -1,3 +1,4 @@
+import '../util/consumer.dart';
 import 'node.dart';
 
 class NodeChildrenContainer {
@@ -38,7 +39,15 @@ class NodeChildrenContainer {
 
   static NodeChildrenContainerBuilder builderFromContainer(
           NodeChildrenContainer container) =>
-      NodeChildrenContainerBuilder.fromContainer(container);
+      NodeChildrenContainerBuilder._fromContainer(container);
+
+  NodeChildrenContainer transform(
+    Consumer<NodeChildrenContainerBuilder> builderConsumer,
+  ) {
+    final builder = NodeChildrenContainerBuilder._fromContainer(this);
+    builderConsumer(builder);
+    return builder.build();
+  }
 
   bool get isEmpty => _children.isEmpty;
 }
@@ -52,7 +61,7 @@ class NodeChildrenContainerBuilder {
     }
   }
 
-  NodeChildrenContainerBuilder.fromContainer(NodeChildrenContainer container) {
+  NodeChildrenContainerBuilder._fromContainer(NodeChildrenContainer container) {
     _children.addAll(container._children);
   }
 

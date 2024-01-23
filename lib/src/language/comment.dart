@@ -1,4 +1,4 @@
-import 'package:graphql_dart/src/language/source_location.dart';
+import 'source_location.dart';
 
 class Comment {
   final String content;

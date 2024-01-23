@@ -1,4 +1,4 @@
-import 'package:graphql_dart/src/language/source_location.dart';
+import 'source_location.dart';
 
 enum IgnoredCharKind { space, comma, tab, cr, lf, other }
 
