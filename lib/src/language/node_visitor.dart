@@ -16,6 +16,7 @@ import 'float_value.dart';
 import 'fragment_definition.dart';
 import 'fragment_spread.dart';
 import 'input_value_definition.dart';
+import 'int_value.dart';
 import 'node.dart';
 import 'operation_definition.dart';
 import 'selection_set.dart';
@@ -45,11 +46,6 @@ abstract interface class NodeVisitor {
 
   TraversalControl visitDirectiveDefinition(
     DirectiveDefinition node,
-    TraverserContext<Node> context,
-  );
-
-  TraversalControl visitInputValueDefinition(
-    InputValueDefinition node,
     TraverserContext<Node> context,
   );
 
@@ -100,6 +96,16 @@ abstract interface class NodeVisitor {
 
   TraversalControl visitFragmentSpread(
     FragmentSpread node,
+    TraverserContext<Node> data,
+  );
+
+  TraversalControl visitInputValueDefinition(
+    InputValueDefinition node,
+    TraverserContext<Node> context,
+  );
+
+  TraversalControl visitIntValue(
+    IntValue node,
     TraverserContext<Node> data,
   );
 
