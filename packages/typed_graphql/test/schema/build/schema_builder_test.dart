@@ -18,9 +18,9 @@ void main() {
   });
 
   test('builds an empty schema from an empty document', () {
-    final schema = const SchemaBuilder().fromSdl(Document(const []));
-    expect(schema, isA<BuildSuccess>());
-    expect(schema.diagnostics, isEmpty);
+    final result = const SchemaBuilder().fromSdl(Document(const []));
+    expect(result, isA<BuildSuccess>());
+    expect(result.diagnostics, isEmpty);
   });
 
   test('takes the root types from the types named after them', () {
@@ -70,8 +70,10 @@ void main() {
   });
 
   test('keeps a reference to an unknown type: building does not validate', () {
-    final field = Built('type Query { a: Missing }').schema.typeNamed('Query');
-    expect(field, isA<ObjectType>());
+    final query = Built(
+      'type Query { a: Missing }',
+    ).schema.typeNamed('Query') as ObjectType;
+    expect((query.fields.single.type as NamedType).name.value, 'Missing');
   });
 
   test('gives every element the span of its definition', () {
@@ -81,9 +83,42 @@ void main() {
   });
 
   test('gives no spans without a source', () {
-    final document = Sdl('type Query { a: Int }').document;
+    final document = Sdl('''
+"d" schema { query: Query }
+directive @d(a: Int) on FIELD
+type Query { f(x: Int): Int }
+enum E { A }''').document;
+    final schema =
+        (const SchemaBuilder().fromSdl(document) as BuildSuccess).schema;
+    final query = schema.typeNamed('Query') as ObjectType;
+    final spans = [
+      schema.span,
+      schema.directives.single.span,
+      schema.directives.single.arguments.single.span,
+      query.span,
+      query.fields.single.span,
+      query.fields.single.arguments.single.span,
+      (schema.typeNamed('E') as EnumType).values.single.span,
+    ];
+    expect(spans, everyElement(isNull));
+  });
+
+  test('gives no span to a diagnostic without a source', () {
+    final document = Sdl('scalar A scalar A').document;
     final result = const SchemaBuilder().fromSdl(document);
-    expect((result as BuildSuccess).schema.types.single.span, isNull);
+    expect(result.diagnostics.single.span, isNull);
+    expect(result.diagnostics.single.related, isEmpty);
+  });
+
+  test('fails with a complete partial schema when only references fail', () {
+    final built = Built('''
+query { a }
+type Query { a: Int }''');
+    expect(
+      built.result.diagnostics.single.code,
+      DiagnosticCode.executableDefinitionInSchema,
+    );
+    expect(built.typeNames, ['Query']);
   });
 
   test('reports an operation or a fragment and builds the rest', () {

@@ -25,8 +25,22 @@ enum A { B }''');
     expect(related.start, 0);
   });
 
-  test('reports each repeat of a type name', () {
-    expect(Built('scalar A scalar A scalar A').errors, hasLength(2));
+  test('reports each repeat of a type name, related to the first', () {
+    final built = Built('scalar A scalar A scalar A');
+    expect(built.errors, hasLength(2));
+    expect(
+      built.result.diagnostics.map(
+        (diagnostic) => diagnostic.related.single.start,
+      ),
+      [0, 0],
+    );
+  });
+
+  test('points a repeated directive at the definition it repeats', () {
+    final built = Built('directive @d on FIELD directive @d on FIELD');
+    final related = built.result.diagnostics.single.related.single;
+    expect(related.text, 'directive @d on FIELD');
+    expect(related.start, 0);
   });
 
   test('keeps the first of two directives with one name', () {
@@ -107,6 +121,32 @@ scalar A''');
         'GQL101 Type "Date" already exists in the schema. It cannot also be '
             'defined in this type definition.',
       ]);
+    });
+
+    test('reports a built-in before a type the schema has', () {
+      final withInt = Schema(types: [ScalarType('Int')]);
+      final sdl = Sdl('scalar Int');
+      final report = BuildReport(NodeSpans(sdl.source));
+      UniqueDefinitions(report, withInt).types(sdl.all());
+      expect(
+        report.diagnostics().single.code,
+        DiagnosticCode.builtInRedefinition,
+      );
+    });
+
+    test('reports a built-in before a directive the schema has', () {
+      final withSkip = Schema(directives: [SchemaDirective('skip')]);
+      final sdl = Sdl('directive @skip on FIELD');
+      final report = BuildReport(NodeSpans(sdl.source));
+      UniqueDefinitions(report, withSkip).directives(sdl.all());
+      expect(
+        report.diagnostics().single.code,
+        DiagnosticCode.builtInRedefinition,
+      );
+    });
+
+    test('reports each repeat of a type the schema has', () {
+      expect(check('scalar Date scalar Date'), hasLength(2));
     });
 
     test('rejects a directive the schema has', () {

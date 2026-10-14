@@ -10,13 +10,24 @@ void main() {
 
   /// The first line of each definition [printed] holds, such as
   /// `directive @include` or `scalar Int`, in order.
-  List<String> headsOf(String printed) => [
-    for (final match in RegExp(
+  /// Lines inside a block string, a description, never count.
+  List<String> headsOf(String printed) {
+    final head = RegExp(
       r'^(directive @\w+|schema|(scalar|type|interface|union|enum|input) \w+)',
-      multiLine: true,
-    ).allMatches(printed))
-      match[0]!,
-  ];
+    );
+    final heads = <String>[];
+    var isInBlock = false;
+    for (final line in printed.split('\n')) {
+      final match = isInBlock ? null : head.firstMatch(line);
+      if (match != null) {
+        heads.add(match[0]!);
+      }
+      if ('"""'.allMatches(line).length.isOdd) {
+        isInBlock = !isInBlock;
+      }
+    }
+    return heads;
+  }
 
   test('omits a schema definition that names the default roots', () {
     const sdl = 'type Query {\n  a: Int\n}\n\ntype Mutation {\n  a: Int\n}';
@@ -176,5 +187,52 @@ scalar Url @specifiedBy(url: "https://url.spec.whatwg.org")''';
     final once = reprint(sdl);
     expect(once, sdl);
     expect(reprint(once), once);
+  });
+
+  test('prints the schema definition for a description alone', () {
+    const sdl = '''
+"""The API"""
+schema {
+  query: Query
+}
+
+type Query {
+  a: Int
+}''';
+    expect(reprint(sdl), sdl);
+  });
+
+  test('prints the schema definition for directives alone', () {
+    const sdl = '''
+schema @key {
+  query: Query
+}
+
+type Query {
+  a: Int
+}''';
+    expect(reprint(sdl), sdl);
+  });
+
+  test('prints a built-in directive with its description and arguments', () {
+    const printer = SchemaPrinter(includesBuiltIns: true);
+    expect(
+      printer.print(Schema()),
+      startsWith('''
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include(
+  """Included when true."""
+  if: Boolean!
+) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT'''),
+    );
+  });
+
+  test('does not take a line of a description for a definition', () {
+    final printed = const SchemaPrinter().print(
+      Schema(types: [ScalarType('A', description: 'x\n\ntype Fake\ny')]),
+    );
+    expect(headsOf(printed), ['scalar A']);
   });
 }

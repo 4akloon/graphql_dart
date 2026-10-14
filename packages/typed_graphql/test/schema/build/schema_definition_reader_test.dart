@@ -10,7 +10,12 @@ import '../sdl.dart';
 void main() {
   /// Reads the schema definitions and extensions of [text] onto [base];
   /// the errors go to [errors].
-  Schema read(String text, {Schema? base, List<String>? errors}) {
+  Schema read(
+    String text, {
+    Schema? base,
+    List<String>? errors,
+    List<Diagnostic>? diagnostics,
+  }) {
     final sdl = Sdl(text);
     final report = BuildReport(NodeSpans(sdl.source));
     final schema = SchemaDefinitionReader(
@@ -22,6 +27,7 @@ void main() {
         '${diagnostic.span?.location} ${diagnostic.code.id} '
             '${diagnostic.message}',
     ]);
+    diagnostics?.addAll(report.diagnostics());
     return schema;
   }
 
@@ -120,5 +126,25 @@ extend schema { query: C }''', errors: errors);
   test('accepts a schema definition onto a schema without roots', () {
     final schema = read('schema { query: Q }', base: Schema());
     expect(schema.queryTypeName, 'Q');
+  });
+
+  test('relates a second schema definition to the first', () {
+    final diagnostics = <Diagnostic>[];
+    read('schema { query: A }\nschema { query: B }', diagnostics: diagnostics);
+    expect(diagnostics.single.related.single.start, 0);
+  });
+
+  test('relates a repeated root type to the first one', () {
+    final diagnostics = <Diagnostic>[];
+    read('schema { query: A query: B }', diagnostics: diagnostics);
+    expect(diagnostics.single.related.single.text, 'query: A');
+  });
+
+  test('rejects a schema definition onto a schema with a span only', () {
+    final errors = <String>[];
+    final base = Schema(span: SourceSpan(Source('schema {}'), 0, 9));
+    final schema = read('schema { query: Q }', base: base, errors: errors);
+    expect(schema.queryTypeName, isNull);
+    expect(errors.single, startsWith('1:1 GQL107'));
   });
 }

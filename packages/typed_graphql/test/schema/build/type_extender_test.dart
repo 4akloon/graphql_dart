@@ -158,4 +158,30 @@ extend type A { c: Int }''');
       'c',
     ]);
   });
+
+  test('reports an input field an extension repeats', () {
+    expect(Built('input F { a: Int } extend input F { a: Int }').errors, [
+      '1:37 GQL104 Field "F.a" can only be defined once.',
+    ]);
+  });
+
+  test('reports an argument an extension\'s field repeats', () {
+    expect(Built('type T extend type T { f(x: Int, x: Int): Int }').errors, [
+      '1:34 GQL105 Argument "T.f(x:)" can only be defined once.',
+    ]);
+  });
+
+  test('gives a member an extension adds a span inside the extension', () {
+    final schema = Built('''
+type T { a: Int }
+extend type T { b: Int }
+enum E { A }
+extend enum E { B }''').schema;
+    final type = schema.typeNamed('T') as ObjectType;
+    final color = schema.typeNamed('E') as EnumType;
+    expect(type.fieldNamed('b')?.span?.text, 'b: Int');
+    expect(type.fieldNamed('b')?.span?.start, 34);
+    expect(color.values.last.span?.text, 'B');
+    expect(color.values.last.span?.start, 72);
+  });
 }

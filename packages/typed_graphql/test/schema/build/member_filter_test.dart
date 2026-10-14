@@ -2,6 +2,7 @@ import 'package:test/test.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../built.dart';
+import '../sdl.dart';
 
 void main() {
   test('keeps the first of two fields with one name', () {
@@ -74,5 +75,31 @@ type Query {
 type A { f(x: Int): Int g(x: Int): Int }
 type B { f: Int }''');
     expect(built.result, isA<BuildSuccess>());
+  });
+
+  test('relates a repeated argument to the one it repeats', () {
+    final built = Built('type Query { f(a: Int, a: Int): Int }');
+    expect(built.result.diagnostics.single.related.single.text, 'a: Int');
+    expect(built.result.diagnostics.single.related.single.start, 15);
+  });
+
+  test('relates a repeated enum value to the one it repeats', () {
+    final built = Built('enum Color { RED RED }');
+    expect(built.result.diagnostics.single.related.single.text, 'RED');
+    expect(built.result.diagnostics.single.related.single.start, 13);
+  });
+
+  test('relates nothing without a source', () {
+    final document = Sdl('type Query { a: Int a: Int }').document;
+    final result = const SchemaBuilder().fromSdl(document);
+    expect(result.diagnostics.single.related, isEmpty);
+  });
+
+  test('keeps the interfaces and directives of a type with a repeat', () {
+    final built = Built('type T implements I @d { a: Int a: Int }');
+    final type = built.partial.typeNamed('T') as ObjectType;
+    expect(type.interfaces.single.name.value, 'I');
+    expect(type.appliedDirectives.single.name, 'd');
+    expect(type.fields.single.name, 'a');
   });
 }

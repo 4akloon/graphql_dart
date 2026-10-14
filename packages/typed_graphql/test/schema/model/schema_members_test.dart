@@ -112,4 +112,37 @@ void main() {
     );
     expect(input.defaultValue, same(value));
   });
+
+  test('the lists of a field and a directive cannot be modified', () {
+    final field = SchemaField('f', const NamedType(Name('String')));
+    final directive = SchemaDirective('d', locations: ['FIELD']);
+    expect(
+      () => field.arguments.add(InputValue('a', field.type)),
+      throwsUnsupportedError,
+    );
+    expect(
+      () => field.appliedDirectives.add(AppliedDirective('x')),
+      throwsUnsupportedError,
+    );
+    expect(() => directive.locations.add('QUERY'), throwsUnsupportedError);
+  });
+
+  test('an element does not see the list it was built from change', () {
+    final locations = ['FIELD'];
+    final directive = SchemaDirective('d', locations: locations);
+    locations.add('QUERY');
+    expect(directive.locations, ['FIELD']);
+  });
+
+  test('an element keeps its description and span', () {
+    final span = SourceSpan(Source('f'), 0, 1);
+    final field = SchemaField(
+      'f',
+      const NamedType(Name('String')),
+      description: 'A field.',
+      span: span,
+    );
+    expect(field.description, 'A field.');
+    expect(field.span, same(span));
+  });
 }

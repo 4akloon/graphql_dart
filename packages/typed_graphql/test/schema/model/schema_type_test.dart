@@ -97,4 +97,54 @@ void main() {
       throwsUnsupportedError,
     );
   });
+
+  test('every list of every kind cannot be modified', () {
+    const member = NamedType(Name('A'));
+    final additions = <void Function()>[
+      () => ObjectType('T').appliedDirectives.add(AppliedDirective('d')),
+      () => InterfaceType('I').interfaces.add(member),
+      () => InterfaceType('I').fields.add(SchemaField('a', string)),
+      () => UnionType('U').memberTypes.add(member),
+      () => EnumType('E').values.add(SchemaEnumValue('A')),
+      () => InputObjectType('F').fields.add(InputValue('a', string)),
+      () => ScalarType('S').appliedDirectives.add(AppliedDirective('d')),
+    ];
+    for (final addition in additions) {
+      expect(addition, throwsUnsupportedError);
+    }
+  });
+
+  test('a type does not see the list it was built from change', () {
+    final fields = [SchemaField('a', string)];
+    final type = ObjectType('T', fields: fields);
+    fields.add(SchemaField('b', string));
+    expect(type.fields, hasLength(1));
+    expect(type.fieldNamed('b'), isNull);
+  });
+
+  test('a @specifiedBy url that is not a string is no url', () {
+    final scalar = ScalarType(
+      'Url',
+      appliedDirectives: [
+        AppliedDirective(
+          'specifiedBy',
+          arguments: [const Argument(Name('url'), IntValue('1'))],
+        ),
+      ],
+    );
+    expect(scalar.specifiedByUrl, isNull);
+  });
+
+  test('a type keeps its description, directives and span', () {
+    final span = SourceSpan(Source('type T'), 0, 6);
+    final type = ObjectType(
+      'T',
+      description: 'A type.',
+      appliedDirectives: [AppliedDirective('d')],
+      span: span,
+    );
+    expect(type.description, 'A type.');
+    expect(type.appliedDirectives.single.name, 'd');
+    expect(type.span, same(span));
+  });
 }

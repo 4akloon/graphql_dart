@@ -124,4 +124,50 @@ input In @oneOf {
 }''';
     expect(reprint(sdl), sdl);
   });
+
+  test('prints described enum values with a blank line between', () {
+    const sdl = '''
+enum E {
+  """First"""
+  A
+
+  """Second"""
+  B
+  C
+}''';
+    expect(reprint(sdl), sdl);
+  });
+
+  test('prints described input fields with a blank line between', () {
+    const sdl = '''
+input In {
+  """One"""
+  a: Int
+
+  """Two"""
+  b: Int
+}''';
+    expect(reprint(sdl), sdl);
+  });
+
+  test('prints an empty description as an empty block string', () {
+    final schema = Schema(types: [ScalarType('A', description: '')]);
+    expect(const SchemaPrinter().print(schema), '""""""\nscalar A');
+  });
+
+  test('escapes triple quotes in a block string description', () {
+    final schema = Schema(types: [ScalarType('A', description: 'a """ b')]);
+    expect(
+      const SchemaPrinter().print(schema),
+      '"""a \\""" b"""\nscalar A',
+    );
+  });
+
+  test('puts a description that ends with a quote on its own line', () {
+    final schema = Schema(types: [ScalarType('A', description: 'Say "hi"')]);
+    expect(
+      const SchemaPrinter().print(schema),
+      '"""\nSay "hi"\n"""\nscalar A',
+    );
+  });
 }

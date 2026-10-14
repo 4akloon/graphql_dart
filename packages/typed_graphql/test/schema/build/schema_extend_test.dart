@@ -93,6 +93,98 @@ extend type Query { b: Int }''');
     expect(built.partial.includesDeferAndStream, isTrue);
   });
 
+  test('rejects an input field the schema\'s type has', () {
+    final schema = Built('input Filter { a: Int }').schema;
+    expect(Built.extending(schema, 'extend input Filter { a: Int }').errors, [
+      '1:23 GQL104 Field "Filter.a" already exists in the schema. It cannot '
+          'also be defined in this type extension.',
+    ]);
+  });
+
+  test('rejects an interface field the schema\'s type has', () {
+    final schema = Built('interface Node { id: ID }').schema;
+    expect(
+      Built.extending(schema, 'extend interface Node { id: ID }').errors,
+      [
+        '1:25 GQL104 Field "Node.id" already exists in the schema. It cannot '
+            'also be defined in this type extension.',
+      ],
+    );
+  });
+
+  test('reports a repeated argument of a field the extension adds', () {
+    final built = Built.extending(
+      base,
+      'extend type Query { b(x: Int, x: Int): Int }',
+    );
+    expect(built.errors, [
+      '1:31 GQL105 Argument "Query.b(x:)" can only be defined once.',
+    ]);
+  });
+
+  group('schema extensions', () {
+    test('add a root type the schema does not have', () {
+      final schema = Built.extending(base, '''
+extend schema { mutation: Mutation }
+type Mutation { b: Int }''').schema;
+      expect(schema.queryTypeName, 'Query');
+      expect(schema.mutationTypeName, 'Mutation');
+    });
+
+    test('report a second root type for an operation', () {
+      final built = Built.extending(base, 'extend schema { query: Other }');
+      expect(built.errors.single, startsWith('1:17 GQL108'));
+      expect(built.partial.queryTypeName, 'Query');
+    });
+
+    test('report a schema definition when the schema has root types', () {
+      final built = Built.extending(
+        Built('schema { query: Query } type Query { a: Int }').schema,
+        'schema { mutation: Mutation }',
+      );
+      expect(built.errors.single, startsWith('1:1 GQL107'));
+      expect(built.result.diagnostics.single.related, isEmpty);
+      expect(built.partial.mutationTypeName, isNull);
+    });
+  });
+
+  group('@defer and @stream', () {
+    test('can be defined when the schema does not include them', () {
+      final schema = Built('directive @defer on FIELD').schema;
+      expect(schema.directiveNamed('defer')?.span, isNotNull);
+    });
+
+    test('cannot be defined when the schema includes them', () {
+      final built = Built(
+        'directive @stream on FIELD',
+        builder: const SchemaBuilder(includesDeferAndStream: true),
+      );
+      expect(built.errors.single, contains('GQL103'));
+      expect(built.partial.includesDeferAndStream, isTrue);
+    });
+
+    test('follow the schema being extended, not the builder', () {
+      final built = Built.extending(Schema(), 'directive @defer on FIELD');
+      expect(built.schema.includesDeferAndStream, isFalse);
+      expect(built.schema.directiveNamed('defer')?.span, isNotNull);
+    });
+
+    test('cannot be extended when the schema includes them', () {
+      final built = Built.extending(
+        Schema(includesDeferAndStream: true),
+        'extend directive @defer @a',
+      );
+      expect(built.errors.single, contains('GQL103'));
+    });
+
+    test('are unknown to extend directive when the schema omits them', () {
+      expect(
+        Built.extending(Schema(), 'extend directive @defer @a').errors.single,
+        contains('GQL109'),
+      );
+    });
+  });
+
   group('directive extensions', () {
     test('add directives to a directive of the schema', () {
       final schema = Built.extending(base, 'extend directive @key @a').schema;
