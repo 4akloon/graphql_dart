@@ -261,5 +261,38 @@ enum DiagnosticCode(
 
   /// `GQL140`: a deprecated field that implements an interface
   /// field that is not deprecated (spec §3.6.3).
-  deprecatedImplementationField('GQL140');
+  deprecatedImplementationField('GQL140'),
+
+  /// `GQL141`: a union type without member types (spec §3.8).
+  missingUnionMembers('GQL141'),
+
+  /// `GQL142`: a union type that names one member type twice
+  /// (spec §3.8).
+  repeatedUnionMember('GQL142'),
+
+  /// `GQL143`: a union member that is not an object type (spec §3.8).
+  nonObjectUnionMember('GQL143'),
+
+  /// `GQL144`: an enum type without values (spec §3.9).
+  missingEnumValues('GQL144'),
+
+  /// `GQL145`: an input object type without fields (spec §3.10).
+  missingInputFields('GQL145'),
+
+  /// `GQL146`: a field of a `@oneOf` input object type of non-null
+  /// type (spec §3.10.1).
+  nonNullOneOfField('GQL146'),
+
+  /// `GQL147`: a field of a `@oneOf` input object type with a default
+  /// value (spec §3.10.1).
+  defaultedOneOfField('GQL147'),
+
+  /// `GQL148`: an input object type that cannot be given a finite
+  /// value: it reaches itself through non-null fields, or through every
+  /// field of a `@oneOf` type (spec §3.10.1 `InputObjectHasUnbreakableCycle`).
+  infiniteInputValue('GQL148'),
+
+  /// `GQL149`: an input field whose default value contains itself,
+  /// directly or through the default values of other fields (spec §3.10).
+  defaultValueCycle('GQL149');
 }

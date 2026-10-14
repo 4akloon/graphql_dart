@@ -277,7 +277,12 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `DirectiveReferenceRules` walks `@name` and type-name keys with a stack
   and a visited set. `InterfaceRules` checks the references of an object or
   interface type and hands each interface to `ImplementationRules`
-  (spec §3.6.3 `IsValidImplementation`).
+  (spec §3.6.3 `IsValidImplementation`). The two input cycles are found
+  without recursion: `FiniteValueRules` propagates the types known to have
+  a finite value through reverse edges (graphql-js's one-pass algorithm),
+  then reports each cycle among the rest once; `DefaultValueCycleRules`
+  walks default values depth-first and, created once per run, remembers
+  the fields it walked across types.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

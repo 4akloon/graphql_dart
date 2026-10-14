@@ -5,8 +5,8 @@ import 'name_rules.dart';
 import 'unique_names.dart';
 import 'validation_report.dart';
 
-/// The rules of an enum type (spec §3.9): unique and valid value names
-/// and valid applied directives.
+/// The rules of an enum type (spec §3.9): one or more values, unique and
+/// valid value names and valid applied directives.
 final class EnumRules(
   /// Receives the errors.
   final ValidationReport report,
@@ -19,6 +19,13 @@ final class EnumRules(
 
   /// Reports the problems of [type].
   void check(EnumType type) {
+    if (type.values.isEmpty) {
+      report.error(
+        .missingEnumValues,
+        'Enum type ${type.name} must define one or more values.',
+        [type.span],
+      );
+    }
     UniqueNames(report).check(
       [for (final value in type.values) (value.name, value.span)],
       .duplicateEnumValueName,

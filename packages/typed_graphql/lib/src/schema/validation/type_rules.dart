@@ -3,8 +3,10 @@ import '../build/built_ins.dart';
 import '../model/schema_type.dart';
 import '../schema.dart';
 import 'applied_directive_rules.dart';
+import 'default_value_cycle_rules.dart';
 import 'enum_rules.dart';
 import 'field_rules.dart';
+import 'finite_value_rules.dart';
 import 'input_object_rules.dart';
 import 'interface_rules.dart';
 import 'name_rules.dart';
@@ -14,7 +16,8 @@ import 'validation_report.dart';
 
 /// The rules of the named types of a schema (spec §3.4–§3.10), type by
 /// type in declaration order, as graphql-js's `validateTypes`: each type
-/// is checked by the rule family of its kind.
+/// is checked by the rule family of its kind, then the input object types
+/// together for values that cannot be finite.
 final class TypeRules(
   /// Receives the errors.
   final ValidationReport report,
@@ -28,17 +31,19 @@ final class TypeRules(
   /// Reports every problem of the declared types of [schema].
   void check() {
     _definitions();
+    final cycles = DefaultValueCycleRules(report, schema);
     for (final type in schema.types) {
       NameRules(report).check(type.name, type.span);
       AppliedDirectiveRules(
         report,
         schema,
       ).check(type.appliedDirectives, _locationOf(type));
-      _kind(type);
+      _kind(type, cycles);
     }
+    FiniteValueRules(report, schema).check();
   }
 
-  void _kind(SchemaType type) {
+  void _kind(SchemaType type, DefaultValueCycleRules cycles) {
     switch (type) {
       case ObjectType(:final fields, :final interfaces) ||
           InterfaceType(:final fields, :final interfaces):
@@ -50,6 +55,7 @@ final class TypeRules(
         EnumRules(report, schema).check(type);
       case InputObjectType():
         InputObjectRules(report, schema).check(type);
+        cycles.check(type);
       case ScalarType():
         break;
     }

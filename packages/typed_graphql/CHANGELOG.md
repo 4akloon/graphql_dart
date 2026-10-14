@@ -165,3 +165,10 @@
   (`GQL137`), an argument of another type (`GQL138`), an added required
   argument (`GQL139`) and a deprecated implementation of a live field
   (`GQL140`).
+- Schema validation checks unions, enums and input objects, with
+  graphql-js's messages: a union without members (`GQL141`), with a
+  repeated member (`GQL142`) or a member that is not an object type
+  (`GQL143`); an enum without values (`GQL144`); an input object without
+  fields (`GQL145`); a `@oneOf` field that is non-null (`GQL146`) or has a
+  default (`GQL147`); an input object that cannot be given a finite value
+  (`GQL148`) and a default value that contains itself (`GQL149`).
