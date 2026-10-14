@@ -28,3 +28,6 @@
 - Hostile-SDL fuzzer (R10.4): random and mutated type-system text, built
   and used to extend a schema, stays within the sink limit, reaches every
   build diagnostic and never throws.
+- Ported graphql-js `validation-test.ts` (schema validation), with
+  `ValidationPort`: each error as its message and `line:column` locations,
+  compared with graphql-js's; template-named tests become loops.
