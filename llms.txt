@@ -1,0 +1,28 @@
+# typed_graphql
+
+> GraphQL for Dart, written from scratch and fully typed. Today the core package, typed_graphql, parses, prints and transforms GraphQL documents, builds, validates and prints schemas from SDL, writes and reads introspection, and reads and writes GraphQL request and response JSON as typed values. Bad input never throws: every problem is a value, a diagnostic with a stable code and a place or a decode failure with a JSON path. It is pure Dart and runs on the VM, AOT, dart2js and dart2wasm. Operation validation (stage M4), execution (M5) and the server, client and code generation packages are not built yet, and nothing is on pub.dev yet: install the core from this repository with a git dependency on the path packages/typed_graphql.
+
+## Packages
+
+- [typed_graphql](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/README.md): under construction; the core, usable today: language, schema, introspection, wire protocol and diagnostics
+- [typed_graphql_builder](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_builder/README.md): skeleton; build_runner builders, not usable yet (M9)
+- [typed_graphql_client](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_client/README.md): skeleton; client runtime and normalized cache, not usable yet (M11, M12)
+- [typed_graphql_codegen](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_codegen/README.md): skeleton; code generator and its CLI, not usable yet (M8, M10)
+- [typed_graphql_server](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_server/README.md): skeleton; typed schema builder, executor and transport handlers, not usable yet (M5 to M7)
+- [typed_graphql_shelf](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_shelf/README.md): skeleton; the shelf adapter, not usable yet (M7)
+
+## Guides
+
+- [Getting started](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/getting_started.md): the layers, the four rules, a first program
+- [Language](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/language.md): parse, print, visit and rewrite documents; schema coordinates; tokens
+- [Diagnostics](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/diagnostics.md): sources, spans, codes and the sink
+- [Wire protocol](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/protocol.md): JsonValue, requests, responses and errors
+- [Schema](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/schema.md): build a schema from SDL, read, validate, extend and print it; resolve coordinates
+- [Scalars and codecs](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/scalars.md): the built-in scalar codecs and your own
+- [Introspection](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/introspection.md): the introspection query, a schema's answer, and a schema built from an answer
+- [Example](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/example/example.dart): a runnable program: report syntax errors, print a document, build a schema from SDL
+
+## Reference
+
+- [Roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md): the stages M1 to M16 and what each delivers
+- [Requirements](https://github.com/4akloon/graphql_dart/blob/main/docs/requirements.md): the requirements R0 to R11
