@@ -11,6 +11,10 @@ final class ListSizeSetting(
 
   /// The names of the `sizedFields`.
   final List<String> sizedFields,
+
+  /// Whether a field must be given exactly one slicing argument (the
+  /// draft's `requireOneSlicingArgument`, true by default).
+  final bool requiresOneSlicingArgument,
 ) {
   /// Creates a setting.
   this;
@@ -28,6 +32,10 @@ final class ListSizeSetting(
           },
           _names(directive, 'slicingArguments'),
           _names(directive, 'sizedFields'),
+          switch (directive.argument('requireOneSlicingArgument')) {
+            BooleanValue(value: false) => false,
+            _ => true,
+          },
         );
       }
     }

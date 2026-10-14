@@ -6,8 +6,10 @@ import '../schema/built.dart';
 /// A validated schema to check documents against, for a validation test.
 final class Checked {
   /// Builds and validates [sdl]; fails the test when it is not valid.
-  Checked(String sdl)
-    : schema = switch (const SchemaValidator().validate(Built(sdl).schema)) {
+  Checked(String sdl, {SchemaBuilder builder = const SchemaBuilder()})
+    : schema = switch (const SchemaValidator().validate(
+        Built(sdl, builder: builder).schema,
+      )) {
         final ValidSchema valid => valid,
         InvalidSchema(:final diagnostics) => fail('$diagnostics'),
       };

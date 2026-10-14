@@ -1,3 +1,5 @@
+import 'cost_number.dart';
+
 /// The static cost of one operation by the IBM cost directives draft.
 ///
 /// Both numbers are upper bounds computed before execution; `CostAnalysis`
@@ -27,5 +29,6 @@ final class const OperationCost(
 
   @override
   String toString() =>
-      'OperationCost(fieldCost: $fieldCost, typeCost: $typeCost)';
+      'OperationCost(fieldCost: ${CostNumber(fieldCost).text}, '
+      'typeCost: ${CostNumber(typeCost).text})';
 }

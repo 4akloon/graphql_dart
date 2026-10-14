@@ -405,7 +405,7 @@ type Query { a(l: [In]): Int }
     test('prints both numbers', () {
       expect(
         const OperationCost(6, 56).toString(),
-        'OperationCost(fieldCost: 6.0, typeCost: 56.0)',
+        'OperationCost(fieldCost: 6, typeCost: 56)',
       );
     });
   });

@@ -501,4 +501,12 @@ enum DiagnosticCode(
   /// more of `fields`, `interfaces`, `possibleTypes` and `inputFields`,
   /// fragments expanded (`MaxIntrospectionDepthRule`).
   maxIntrospectionDepthExceeded('GQL236'),
+
+  /// `GQL237`: a field with `@listSize(slicingArguments:)` that is not given
+  /// exactly one of its slicing arguments (`SlicingArgumentsRule`).
+  slicingArgumentsRequired('GQL237'),
+
+  /// `GQL238`: an operation whose field cost or type cost is more than the
+  /// maximum `MaxCostRule` allows.
+  maxCostExceeded('GQL238'),
 }
