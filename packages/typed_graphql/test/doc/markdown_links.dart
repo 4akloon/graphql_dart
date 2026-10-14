@@ -42,6 +42,20 @@ final class MarkdownLinks {
         if (!_web.hasMatch(match[1]!)) MarkdownLink(index + 1, match[1]!),
   ];
 
+  /// Why the link [target], written in the file at [from], leads nowhere,
+  /// or null when it leads to a file or folder and, with an anchor, to a
+  /// heading of that file. Both paths are from the folder the tests run in.
+  String? problemOf(String from, String target) {
+    final uri = Uri.parse(from).resolve(target);
+    if (FileSystemEntity.typeSync(uri.path) == .notFound) {
+      return '${uri.path} does not exist';
+    }
+    if (uri.fragment.isEmpty) return null;
+    final anchors = anchorsIn(readTarget(uri.path));
+    if (anchors.contains(uri.fragment)) return null;
+    return '${uri.path} has no heading with the anchor #${uri.fragment}';
+  }
+
   /// The text of the file at [path], the target of a link with an anchor. A
   /// path that is not a file is a [FormatException] saying so, as a
   /// directory has no headings to point at.
