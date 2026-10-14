@@ -14,3 +14,5 @@
 - `GraphQLError`: the error format of the spec, read and written.
 - `GraphQLRequest` and `ResponsePayload` (`ExecutionResult`,
   `RequestErrorResult`).
+- The syntax tree: `Node` (`children`, `withChildren`, `isEquivalentTo`),
+  `Name`, `Document`, and the `Value` and `TypeRef` families.

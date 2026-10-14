@@ -83,6 +83,13 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   take a sink through their constructor; the public API turns it into a
   sealed result.
 
+**Language** (`language/`; M2).
+- `ast/`: every node extends `Node` (`start`, `end`, `children` in
+  graphql-js key order, `withChildren`, `isEquivalentTo`). Leaves are
+  `const`; a node with a list copies it with `List.unmodifiable`. A node
+  overrides `rebuildFrom(ChildReader)` for `withChildren`. `scalars` lists
+  what `isEquivalentTo` compares besides children.
+
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,
   `JsonString`, `JsonArray`, `JsonObject`): the type of arbitrary JSON in
