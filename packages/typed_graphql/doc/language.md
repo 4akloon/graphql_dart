@@ -56,16 +56,17 @@ two.graphql:1:16: error GQL008: Unexpected ")".
 ### Limits and the working draft
 
 `ParserOptions` bound the work on untrusted text: `maxTokens` (15 000 by
-default) and `maxDepth` (128), the nesting of selection sets, lists and
-objects. `null` removes a limit, which lets a hostile document exhaust memory
+default) and `maxDepth` (128), the nesting of selection sets, lists, objects
+and list types. `null` removes a limit, which lets a hostile document exhaust memory
 or the stack. The parser recurses on nested values, so a `maxDepth` near 1000
 can overflow the stack on deeply nested object values; keep the default unless
 you know the input.
 
-Syntax from the specification's working draft is off by default and reported as
-`GQL014` when used: `allowDirectiveExtensions` for `extend directive`,
-directives on a directive definition and the `DIRECTIVE_DEFINITION` location,
-and `allowEmptySelectionSets` for `{ }`.
+Syntax from the specification's working draft is off by default.
+`allowDirectiveExtensions` enables `extend directive`, directives on a
+directive definition and the `DIRECTIVE_DEFINITION` location; without it each
+is reported as `GQL014`. `allowEmptySelectionSets` enables `{ }`; without it
+an empty selection set is reported as `GQL012`.
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';
