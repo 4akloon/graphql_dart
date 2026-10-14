@@ -6,6 +6,8 @@ import 'value.dart';
 
 /// A variable definition of an operation, `$name: Type = default
 /// @directives` (spec §2.10).
+///
+/// {@category language}
 final class VariableDefinition(
   /// The variable.
   final Variable variable,

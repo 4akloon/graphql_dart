@@ -20,6 +20,8 @@ import 'token_source.dart';
 /// With [maxTokens], the token after the limit is replaced by one
 /// [DiagnosticCode.tokenLimitExceeded] error, [isLimitReached] becomes
 /// true and every later call returns [TokenKind.eof] (R1.6).
+///
+/// {@category language}
 final class Lexer implements TokenSource {
   /// Creates a lexer of [source] that reports into [sink].
   Lexer(

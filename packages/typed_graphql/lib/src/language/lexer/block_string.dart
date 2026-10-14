@@ -3,6 +3,8 @@ import 'dart:math';
 /// The block string algorithms: the value of a block string
 /// (`BlockStringValue`, spec §2.9.4) and how a printer writes one, ported
 /// from graphql-js's `blockString.ts` so printed output matches.
+///
+/// {@category language}
 final class BlockString {
   /// Creates the algorithms; they keep no state.
   const BlockString();

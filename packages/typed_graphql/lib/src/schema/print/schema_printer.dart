@@ -12,6 +12,8 @@ import 'type_printer.dart';
 /// Unlike graphql-js, every applied directive is printed as written, so
 /// SDL to schema to SDL loses nothing but a schema description or
 /// directives without root types, which SDL cannot hold.
+///
+/// {@category schema}
 final class const SchemaPrinter({
   /// Whether the built-in directives, scalars and introspection types
   /// are printed too, around the declared ones; `@defer` and `@stream`

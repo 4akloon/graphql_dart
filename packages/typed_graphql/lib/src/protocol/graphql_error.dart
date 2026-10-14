@@ -8,6 +8,8 @@ import 'path_segment.dart';
 ///
 /// Both sides use it: a server writes it with [toJson], a client reads it
 /// with [decode]. Two errors are equal when their JSON is equal.
+///
+/// {@category protocol}
 final class GraphQLError(
   /// What went wrong, for the developer reading it.
   final String message, {

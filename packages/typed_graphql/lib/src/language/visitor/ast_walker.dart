@@ -9,6 +9,8 @@ import 'visit_action.dart';
 /// code cannot overflow the call stack however deep it is. (A parser
 /// without `maxDepth` overflows first, and `Printer.print` and
 /// [Node.isEquivalentTo] recurse.)
+///
+/// {@category language}
 final class AstWalker {
   /// Creates a walker; it keeps no state between walks.
   const AstWalker();

@@ -14,6 +14,8 @@ import 'diagnostic_code.dart';
 /// next error adds one [DiagnosticCode.diagnosticLimitReached] error at its
 /// place instead, [isFull] becomes true and every later report is ignored,
 /// as graphql-js's `maxErrors` aborts validation.
+///
+/// {@category diagnostics}
 final class DiagnosticSink {
   /// Creates an empty sink that keeps at most [maxErrors] errors.
   DiagnosticSink({this.maxErrors = defaultMaxErrors}) {

@@ -7,6 +7,8 @@ import 'scalar_codec.dart';
 /// A whole float such as `3.0` decodes, as on the web; a fraction, a
 /// number past the bounds and anything but a number do not. The messages
 /// are graphql-js's.
+///
+/// {@category scalars}
 final class const IntCodec() implements ScalarCodec<int> {
   /// Creates the codec.
   this;

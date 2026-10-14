@@ -12,6 +12,8 @@ import 'type_system_definition_rebuilder.dart';
 import 'value.dart';
 
 /// A definition of a schema, a type or a directive (spec §3).
+///
+/// {@category language}
 sealed class TypeSystemDefinition({
   /// The description, if any.
   final StringValue? description,
@@ -31,6 +33,8 @@ sealed class TypeSystemDefinition({
 }
 
 /// `"desc" schema @d { query: Query }` (spec §3.3).
+///
+/// {@category language}
 final class SchemaDefinition({
   super.description,
   super.directives,
@@ -51,6 +55,8 @@ final class SchemaDefinition({
 }
 
 /// `"desc" directive @name(args) @d repeatable on LOCATIONS` (spec §3.13).
+///
+/// {@category language}
 final class DirectiveDefinition(
   /// The directive name, without the `@`.
   final Name name, {
@@ -87,6 +93,8 @@ final class DirectiveDefinition(
 }
 
 /// A named type definition (spec §3.4).
+///
+/// {@category language}
 sealed class TypeDefinition(
   /// The type name.
   final Name name, {
@@ -100,6 +108,8 @@ sealed class TypeDefinition(
 }
 
 /// `"desc" scalar Name @d` (spec §3.5).
+///
+/// {@category language}
 final class ScalarTypeDefinition(
   super.name, {
   super.description,
@@ -115,6 +125,8 @@ final class ScalarTypeDefinition(
 }
 
 /// `"desc" type Name implements I @d { fields }` (spec §3.6).
+///
+/// {@category language}
 final class ObjectTypeDefinition(
   super.name, {
   super.description,
@@ -144,6 +156,8 @@ final class ObjectTypeDefinition(
 }
 
 /// `"desc" interface Name implements I @d { fields }` (spec §3.7).
+///
+/// {@category language}
 final class InterfaceTypeDefinition(
   super.name, {
   super.description,
@@ -173,6 +187,8 @@ final class InterfaceTypeDefinition(
 }
 
 /// `"desc" union Name @d = A | B` (spec §3.8).
+///
+/// {@category language}
 final class UnionTypeDefinition(
   super.name, {
   super.description,
@@ -192,6 +208,8 @@ final class UnionTypeDefinition(
 }
 
 /// `"desc" enum Name @d { VALUES }` (spec §3.9).
+///
+/// {@category language}
 final class EnumTypeDefinition(
   super.name, {
   super.description,
@@ -211,6 +229,8 @@ final class EnumTypeDefinition(
 }
 
 /// `"desc" input Name @d { fields }` (spec §3.10).
+///
+/// {@category language}
 final class InputObjectTypeDefinition(
   super.name, {
   super.description,

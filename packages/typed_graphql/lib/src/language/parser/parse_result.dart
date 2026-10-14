@@ -4,6 +4,8 @@ import 'graphql_syntax_exception.dart';
 
 /// The result of parsing a document: [ParseSuccess] or [ParseFailure],
 /// both with every [diagnostics] (R1.5).
+///
+/// {@category language}
 sealed class ParseResult(List<Diagnostic> diagnostics) {
   /// Creates a result.
   this;
@@ -20,6 +22,8 @@ sealed class ParseResult(List<Diagnostic> diagnostics) {
 }
 
 /// A document without syntax errors; [diagnostics] hold warnings only.
+///
+/// {@category language}
 final class ParseSuccess(
   /// The document.
   final Document document,
@@ -30,6 +34,8 @@ final class ParseSuccess(
 }
 
 /// A document with syntax errors.
+///
+/// {@category language}
 final class ParseFailure(
   /// Every definition that parsed completely; a definition or selection
   /// with an error is left out, so the tree has no error nodes.

@@ -138,6 +138,18 @@ input:
 
 ## Documentation
 
+Guides for the core package, `typed_graphql`. Every program in them is run by
+the test suite, so what they print is what the package does:
+
+- [Getting started](packages/typed_graphql/doc/getting_started.md) · [Language](packages/typed_graphql/doc/language.md) ·
+  [Diagnostics](packages/typed_graphql/doc/diagnostics.md) · [Wire protocol](packages/typed_graphql/doc/protocol.md) ·
+  [Schema](packages/typed_graphql/doc/schema.md) · [Scalars and codecs](packages/typed_graphql/doc/scalars.md)
+- API reference: run `dart doc` in `packages/typed_graphql` and open
+  `doc/api/index.html`; the types are grouped under the same topics.
+- A runnable [example](packages/typed_graphql/example/example.dart)
+
+For contributors and the design:
+
 - [Roadmap](docs/roadmap.md) · [Requirements](docs/requirements.md) ·
   [Architecture](docs/superpowers/specs/2026-10-13-typed-graphql-design.md)
 - [Research and decisions](docs/research/README.md)

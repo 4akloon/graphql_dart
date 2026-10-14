@@ -9,6 +9,8 @@ import 'input_value.dart';
 /// The language node with the spec's name is `DirectiveDefinition`; this
 /// is the schema's element. Directives applied to a directive definition
 /// are working-draft syntax (`ParserOptions.allowDirectiveExtensions`).
+///
+/// {@category schema}
 final class SchemaDirective(
   /// The directive name, without the `@`.
   final String name, {

@@ -5,6 +5,8 @@
 /// data types, the language (syntax trees, lexer, parser, printer,
 /// visitors, transformers and schema coordinates) and the schema (model,
 /// SDL building, extension and printing, scalar codecs).
+///
+/// {@category getting-started}
 library;
 
 export 'src/diagnostics/diagnostic.dart';

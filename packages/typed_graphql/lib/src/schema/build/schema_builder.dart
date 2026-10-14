@@ -12,6 +12,8 @@ import 'schema_assembly.dart';
 ///
 /// Building does not validate: an unknown type reference is kept, a root
 /// may name a type of the wrong kind. Schema validation checks those.
+///
+/// {@category schema}
 final class const SchemaBuilder({
   /// Whether built schemas have `@defer` and `@stream`, which graphql-js
   /// defines and the specification does not yet (R2.6).

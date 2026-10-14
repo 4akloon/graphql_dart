@@ -7,6 +7,8 @@ import 'child_reader.dart';
 /// [start] and [end] are UTF-16 offsets into the source the node was parsed
 /// from (R1.7); a node built in code has 0 for both. Nodes do not override
 /// `==`: [isEquivalentTo] compares structure and ignores positions.
+///
+/// {@category language}
 abstract class const Node({
   /// The offset of the first code unit of the node.
   final int start = 0,

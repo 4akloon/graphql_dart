@@ -17,6 +17,8 @@ import 'scalar_codec.dart';
 /// stack is shallow). An integer beyond 2^53 becomes a double on the web;
 /// on the VM it stays exact up to 2^63 and becomes a double beyond that.
 /// [JsonNumber.asInt] is the safe view.
+///
+/// {@category scalars}
 final class const LiteralConverter() {
   /// Creates a converter.
   this;

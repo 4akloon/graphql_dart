@@ -6,6 +6,8 @@ import 'selection.dart';
 ///
 /// It is empty only when the parser allows empty selection sets (a
 /// working-draft option).
+///
+/// {@category language}
 final class SelectionSet(
   List<Selection> selections, {
   super.start,

@@ -5,6 +5,8 @@ import 'node.dart';
 import 'value.dart';
 
 /// A value of an enum type, `"desc" NAME @d` (spec §3.9).
+///
+/// {@category language}
 final class EnumValueDefinition(
   /// The value's name; never `true`, `false` or `null`.
   final Name name, {

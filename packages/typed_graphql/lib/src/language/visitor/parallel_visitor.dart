@@ -11,6 +11,8 @@ import 'visit_action.dart';
 /// passes over a node that every running visitor skips, and ends when
 /// every visitor has stopped (at once for an empty list). It keeps that
 /// state as it goes, so each walk needs a new one.
+///
+/// {@category language}
 final class ParallelVisitor extends AstVisitor {
   /// Creates a visitor that runs [visitors], in order, at every node.
   ParallelVisitor(List<AstVisitor> visitors)

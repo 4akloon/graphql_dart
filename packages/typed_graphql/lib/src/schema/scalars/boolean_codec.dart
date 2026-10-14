@@ -3,6 +3,8 @@ import '../../protocol/json_value.dart';
 import 'scalar_codec.dart';
 
 /// The built-in `Boolean`: `true` or `false` (spec §3.5.4).
+///
+/// {@category scalars}
 final class const BooleanCodec() implements ScalarCodec<bool> {
   /// Creates the codec.
   this;

@@ -9,6 +9,8 @@ import 'json_value.dart';
 ///
 /// It is the payload on the wire. The client's `GraphQLResponse` is a
 /// different, typed thing built from it.
+///
+/// {@category protocol}
 sealed class ResponsePayload({
   List<GraphQLError> errors = const [],
 
@@ -40,6 +42,8 @@ sealed class ResponsePayload({
 
 /// The result of running an operation: [data], and the [errors] raised on
 /// the way (partial data when both are there).
+///
+/// {@category protocol}
 final class ExecutionResult(
   /// The data; null when an error left none (`"data": null`).
   final JsonObject? data, {
@@ -92,6 +96,8 @@ final class ExecutionResult(
 
 /// A request that failed before the operation ran, such as a syntax or
 /// validation error: no `data`, at least one error.
+///
+/// {@category protocol}
 final class RequestErrorResult({required super.errors, super.extensions})
     extends ResponsePayload {
   /// Creates a request error result; an empty [errors] is an

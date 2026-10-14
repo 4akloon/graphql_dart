@@ -3,12 +3,16 @@ import 'name.dart';
 import 'node.dart';
 
 /// A reference to a type: named, list or non-null (spec §2.11).
+///
+/// {@category language}
 sealed class const TypeRef({super.start, super.end}) extends Node {
   /// Creates a type reference spanning `start` to `end`.
   this;
 }
 
 /// A type by its name, `Name`.
+///
+/// {@category language}
 final class const NamedType(
   /// The type's name.
   final Name name, {
@@ -27,6 +31,8 @@ final class const NamedType(
 }
 
 /// A list type, `[Type]`.
+///
+/// {@category language}
 final class const ListType(
   /// The type of the items.
   final TypeRef type, {
@@ -46,6 +52,8 @@ final class const ListType(
 
 /// A non-null type, `Type!`; it wraps a named or list type, never another
 /// non-null type.
+///
+/// {@category language}
 final class const NonNullType(
   /// The wrapped type.
   final TypeRef type, {

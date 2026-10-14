@@ -4,12 +4,16 @@ import 'node.dart';
 import 'object_field.dart';
 
 /// An input value as written in a document (spec §2.9).
+///
+/// {@category language}
 sealed class const Value({super.start, super.end}) extends Node {
   /// Creates a value spanning `start` to `end`.
   this;
 }
 
 /// A variable, `$name` (spec §2.10).
+///
+/// {@category language}
 final class const Variable(
   /// The name without the `$`.
   final Name name, {
@@ -28,6 +32,8 @@ final class const Variable(
 }
 
 /// An integer, kept as written so no precision is lost (spec §2.9.1).
+///
+/// {@category language}
 final class const IntValue(
   /// The lexeme, such as `-12`.
   final String value, {
@@ -48,6 +54,8 @@ final class const IntValue(
 }
 
 /// A float, kept as written so no precision is lost (spec §2.9.2).
+///
+/// {@category language}
 final class const FloatValue(
   /// The lexeme, such as `1.5e-3`.
   final String value, {
@@ -68,6 +76,8 @@ final class const FloatValue(
 }
 
 /// A string or block string; also a description (spec §2.9.4).
+///
+/// {@category language}
 final class const StringValue(
   /// The decoded value: escapes resolved, block indentation removed.
   final String value, {
@@ -91,6 +101,8 @@ final class const StringValue(
 }
 
 /// `true` or `false` (spec §2.9.3).
+///
+/// {@category language}
 final class const BooleanValue(
   /// The value.
   final bool value, {
@@ -111,6 +123,8 @@ final class const BooleanValue(
 }
 
 /// `null` (spec §2.9.5).
+///
+/// {@category language}
 final class const NullValue({super.start, super.end}) extends Value {
   /// Creates a null value.
   this;
@@ -124,6 +138,8 @@ final class const NullValue({super.start, super.end}) extends Value {
 
 /// An enum value: a name other than `true`, `false` and `null` (spec
 /// §2.9.6).
+///
+/// {@category language}
 final class const EnumValue(
   /// The name as written.
   final String value, {
@@ -144,6 +160,8 @@ final class const EnumValue(
 }
 
 /// A list, `[a, b]` (spec §2.9.7).
+///
+/// {@category language}
 final class ListValue(
   List<Value> values, {
   super.start,
@@ -164,6 +182,8 @@ final class ListValue(
 }
 
 /// An input object, `{a: 1}` (spec §2.9.8).
+///
+/// {@category language}
 final class ObjectValue(
   List<ObjectField> fields, {
   super.start,

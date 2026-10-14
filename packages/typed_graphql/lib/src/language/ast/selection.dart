@@ -7,6 +7,8 @@ import 'selection_set.dart';
 import 'type_ref.dart';
 
 /// One selection of a [SelectionSet] (spec §2.4).
+///
+/// {@category language}
 sealed class const Selection({super.start, super.end}) extends Node {
   /// Creates a selection spanning `start` to `end`.
   this;
@@ -14,6 +16,8 @@ sealed class const Selection({super.start, super.end}) extends Node {
 
 /// A field, `alias: name(arguments) @directives { selections }` (spec
 /// §2.5).
+///
+/// {@category language}
 final class Field(
   /// The alias, if any.
   final Name? alias,
@@ -73,6 +77,8 @@ final class Field(
 }
 
 /// A fragment spread, `...Name @directives` (spec §2.8).
+///
+/// {@category language}
 final class FragmentSpread(
   /// The fragment name.
   final Name name, {
@@ -100,6 +106,8 @@ final class FragmentSpread(
 
 /// An inline fragment, `... on Type @directives { selections }` (spec
 /// §2.8.2).
+///
+/// {@category language}
 final class InlineFragment(
   /// The type condition, if any.
   final NamedType? typeCondition,

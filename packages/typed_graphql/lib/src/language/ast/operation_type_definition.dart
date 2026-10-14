@@ -4,6 +4,8 @@ import 'operation_type.dart';
 import 'type_ref.dart';
 
 /// A root operation type of a schema, `query: Query` (spec §3.3.1).
+///
+/// {@category language}
 final class const OperationTypeDefinition(
   /// The operation the type serves.
   final OperationType operation,

@@ -1,5 +1,7 @@
 /// What a walk does after `AstVisitor.enter` returns, as graphql-js's
 /// `visit` does with `undefined`, `false` and `BREAK`.
+///
+/// {@category language}
 enum VisitAction {
   /// Visit the node's children, then leave the node.
   next,

@@ -12,6 +12,8 @@ import 'path_segment.dart';
 /// string, a Dart object that is not JSON, and arrays and objects nested
 /// deeper than [maxDepth]. A key repeated in one object keeps its last
 /// value, as `jsonDecode` and JavaScript's `JSON.parse` do.
+///
+/// {@category protocol}
 final class JsonReader {
   /// Creates a reader that accepts at most [maxDepth] arrays and objects
   /// nested in one another.

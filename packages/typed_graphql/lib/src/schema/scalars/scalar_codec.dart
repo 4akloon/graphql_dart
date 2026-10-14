@@ -8,6 +8,8 @@ import '../../protocol/json_value.dart';
 /// throws. [encode] writes a result value. A codec is registered by scalar
 /// name with the server or the client, not held by `ScalarType`: the
 /// schema model has no behaviour.
+///
+/// {@category scalars}
 abstract interface class ScalarCodec<T> {
   /// The value [json] stands for, or a failure that says why it cannot.
   DecodeResult<T> decode(JsonValue json);

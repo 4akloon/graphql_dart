@@ -8,6 +8,8 @@ import 'node.dart';
 /// The field names follow graphql-js's nodes. A coordinate is parsed with
 /// `Parser.parseSchemaCoordinate`; resolving it against a schema is not the
 /// parser's work.
+///
+/// {@category language}
 sealed class const SchemaCoordinate(
   /// The type or, after `@`, the directive the coordinate starts from.
   final Name name, {
@@ -19,6 +21,8 @@ sealed class const SchemaCoordinate(
 }
 
 /// A type, `Name`.
+///
+/// {@category language}
 final class const TypeCoordinate(
   super.name, {
   super.start,
@@ -36,6 +40,8 @@ final class const TypeCoordinate(
 }
 
 /// A field, input field or enum value of a type, `Name.Name`.
+///
+/// {@category language}
 final class const MemberCoordinate(
   super.name,
 
@@ -56,6 +62,8 @@ final class const MemberCoordinate(
 }
 
 /// An argument of a field, `Name.Name(Name:)`.
+///
+/// {@category language}
 final class const ArgumentCoordinate(
   super.name,
 
@@ -84,6 +92,8 @@ final class const ArgumentCoordinate(
 }
 
 /// A directive, `@Name`.
+///
+/// {@category language}
 final class const DirectiveCoordinate(
   super.name, {
   super.start,
@@ -101,6 +111,8 @@ final class const DirectiveCoordinate(
 }
 
 /// An argument of a directive, `@Name(Name:)`.
+///
+/// {@category language}
 final class const DirectiveArgumentCoordinate(
   super.name,
 

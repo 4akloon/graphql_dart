@@ -6,6 +6,8 @@ import 'path_segment.dart';
 ///
 /// Decoding never throws on bad input (spec §0, principle 3): a caller
 /// switches over [DecodeSuccess] and [DecodeFailure].
+///
+/// {@category protocol}
 @immutable
 sealed class const DecodeResult<T>() {
   /// Creates a result.
@@ -23,6 +25,8 @@ sealed class const DecodeResult<T>() {
 }
 
 /// Decoding produced [value].
+///
+/// {@category protocol}
 final class const DecodeSuccess<T>(
   /// The decoded value.
   final T value,
@@ -42,6 +46,8 @@ final class const DecodeSuccess<T>(
 }
 
 /// Decoding failed: [message] says what is wrong, [path] where.
+///
+/// {@category protocol}
 final class const DecodeFailure(
   /// What is wrong, such as `expected a string`.
   final String message, {

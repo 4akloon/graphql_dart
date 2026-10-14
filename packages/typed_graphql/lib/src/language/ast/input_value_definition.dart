@@ -7,6 +7,8 @@ import 'value.dart';
 
 /// An argument or input field definition, `"desc" name: Type = default
 /// @d` (spec §3.6.1, §3.10).
+///
+/// {@category language}
 final class InputValueDefinition(
   /// The name.
   final Name name,

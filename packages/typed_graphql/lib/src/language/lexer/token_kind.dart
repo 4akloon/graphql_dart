@@ -1,5 +1,7 @@
 /// The kinds of lexical tokens (spec §2.1.6), plus [comment], [error] and
 /// [eof].
+///
+/// {@category language}
 enum TokenKind(
   /// How a message names the kind, as graphql-js does: a punctuator in
   /// quotes, such as `"{"`, other kinds by name, such as `Name`.

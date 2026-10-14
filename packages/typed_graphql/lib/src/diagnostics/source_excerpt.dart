@@ -9,6 +9,8 @@ import 'source_location.dart';
 ///
 /// A line longer than 120 code units, as in a minified document, is shown
 /// in 80-unit pieces up to the one after the caret.
+///
+/// {@category diagnostics}
 final class SourceExcerpt {
   /// Creates the formatter; it keeps no state.
   const SourceExcerpt();

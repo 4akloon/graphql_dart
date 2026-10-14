@@ -5,6 +5,8 @@ import 'package:meta/meta.dart';
 ///
 /// It is also the shape of an entry of a GraphQL error's `locations`
 /// (spec §7.1.2, "Error Result Format").
+///
+/// {@category diagnostics}
 @immutable
 final class const SourceLocation(
   /// The line, from 1.

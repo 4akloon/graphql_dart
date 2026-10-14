@@ -3,6 +3,8 @@ import '../../protocol/json_value.dart';
 import 'scalar_codec.dart';
 
 /// The built-in `String`: Unicode text (spec §3.5.3).
+///
+/// {@category scalars}
 final class const StringCodec() implements ScalarCodec<String> {
   /// Creates the codec.
   this;

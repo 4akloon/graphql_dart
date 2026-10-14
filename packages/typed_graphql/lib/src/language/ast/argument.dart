@@ -4,6 +4,8 @@ import 'node.dart';
 import 'value.dart';
 
 /// An argument of a field or directive, `name: value` (spec §2.6).
+///
+/// {@category language}
 final class const Argument(
   /// The argument name.
   final Name name,

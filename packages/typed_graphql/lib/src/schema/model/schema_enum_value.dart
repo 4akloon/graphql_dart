@@ -6,6 +6,8 @@ import 'applied_directives.dart';
 ///
 /// The language nodes with the spec's names are `EnumValueDefinition` and,
 /// for a literal, `EnumValue`; this is the schema's element.
+///
+/// {@category schema}
 final class SchemaEnumValue(
   /// The value's name.
   final String name, {

@@ -14,6 +14,8 @@ import 'token_source.dart';
 /// commas and comments are invalid characters here. Like `Lexer`, it never
 /// throws: an invalid character becomes one [TokenKind.error] token and
 /// one diagnostic with graphql-js's message, `Invalid character: " ".`
+///
+/// {@category language}
 final class SchemaCoordinateLexer implements TokenSource {
   /// Creates a lexer of [source] that reports into [sink].
   SchemaCoordinateLexer(Source source, DiagnosticSink sink)

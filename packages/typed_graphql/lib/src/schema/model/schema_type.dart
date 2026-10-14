@@ -12,6 +12,8 @@ import 'schema_field.dart';
 /// The language node `NamedType` is a reference to a type by name; this
 /// is the type itself. References between types are names, so a cyclic
 /// schema needs no `late`.
+///
+/// {@category schema}
 sealed class SchemaType(
   /// The type name.
   final String name, {
@@ -45,6 +47,8 @@ sealed class SchemaType(
 }
 
 /// A scalar type, `scalar Name @specifiedBy(url: "...")` (spec §3.5).
+///
+/// {@category schema}
 final class ScalarType(
   super.name, {
   super.description,
@@ -60,6 +64,8 @@ final class ScalarType(
 }
 
 /// An object type, `type Name implements I { fields }` (spec §3.6).
+///
+/// {@category schema}
 final class ObjectType(
   super.name, {
   super.description,
@@ -83,6 +89,8 @@ final class ObjectType(
 
 /// An interface type, `interface Name implements I { fields }` (spec
 /// §3.7).
+///
+/// {@category schema}
 final class InterfaceType(
   super.name, {
   super.description,
@@ -105,6 +113,8 @@ final class InterfaceType(
 }
 
 /// A union type, `union Name = A | B` (spec §3.8).
+///
+/// {@category schema}
 final class UnionType(
   super.name, {
   super.description,
@@ -121,6 +131,8 @@ final class UnionType(
 }
 
 /// An enum type, `enum Name { VALUES }` (spec §3.9).
+///
+/// {@category schema}
 final class EnumType(
   super.name, {
   super.description,
@@ -146,6 +158,8 @@ final class EnumType(
 }
 
 /// An input object type, `input Name @oneOf { fields }` (spec §3.10).
+///
+/// {@category schema}
 final class InputObjectType(
   super.name, {
   super.description,

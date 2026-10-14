@@ -30,6 +30,8 @@ import 'value_parser.dart';
 ///
 /// The grammar lives in collaborators, one per part of the language; this
 /// class wires them to a [TokenCursor] and assembles results.
+///
+/// {@category language}
 final class Parser {
   /// Creates a parser with [options].
   const Parser({this.options = const ParserOptions()});
