@@ -160,10 +160,10 @@ printer-test.ts,Printer: Query document,keeps arguments on one line if line is s
 printer-test.ts,Printer: Query document,puts arguments on multiple lines if line is long (> 80 chars),ported,test/language/printer/printer_test.dart,
 printer-test.ts,Printer: Query document,puts large object values on multiple lines if line is long (> 80 chars),ported,test/language/printer/printer_test.dart,
 printer-test.ts,Printer: Query document,puts large list values on multiple lines if line is long (> 80 chars),ported,test/language/printer/printer_test.dart,
-printer-test.ts,Printer: Query document,prints fragment with argument definition directives,skipped,,experimental fragment arguments are out of scope (R1.14)
-printer-test.ts,Printer: Query document,correctly prints fragment defined arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
-printer-test.ts,Printer: Query document,prints fragment spread with arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
-printer-test.ts,Printer: Query document,prints fragment spread with multi-line arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
+printer-test.ts,Printer: Query document,prints fragment with argument definition directives,skipped,,Experimental fragment arguments are out of scope (R1.14).
+printer-test.ts,Printer: Query document,correctly prints fragment defined arguments,skipped,,Experimental fragment arguments are out of scope (R1.14).
+printer-test.ts,Printer: Query document,prints fragment spread with arguments,skipped,,Experimental fragment arguments are out of scope (R1.14).
+printer-test.ts,Printer: Query document,prints fragment spread with multi-line arguments,skipped,,Experimental fragment arguments are out of scope (R1.14).
 printer-test.ts,Printer: Query document,prints fragment,ported,test/language/printer/printer_test.dart,
 printer-test.ts,Printer: Query document,prints kitchen sink without altering ast,adapted,test/language/printer/printer_test.dart,Nodes are immutable so the AST cannot be altered; isEquivalentTo stands for the deep equality without locations.
 printer-test.ts,Printer: Query document,prints schema coordinates,ported,test/language/printer/printer_test.dart,

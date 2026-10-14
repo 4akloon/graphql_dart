@@ -1,6 +1,8 @@
 @TestOn('vm')
 library;
 
+import 'dart:math';
+
 import 'package:test/test.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
@@ -79,7 +81,7 @@ void main() {
   test('the generators build every kind of node', () {
     final kinds = <String>{};
     for (var index = 0; index < 200; index++) {
-      final parts = RandomParts(budget.randomFor(index));
+      final parts = RandomParts(Random(FuzzBudget.defaultSeed + index));
       kinds
         ..addAll(const NodeSamples().kindsIn(randomDocument(parts)))
         ..addAll(const NodeSamples().kindsIn(randomCoordinate(parts)));
