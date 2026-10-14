@@ -1,10 +1,6 @@
 # Changelog
 
 ## 0.0.1 - Unreleased
-- Parser recovery no longer mistakes a directive named like a keyword
-  (`@query`) for the start of a definition; `NonNullType.withChildren` throws
-  a `StateError` in release builds too.
-
 - Package skeleton.
 - `Source`, `SourceLocation` and `SourceSpan`: a document, 1-based lines
   and columns computed on demand, and ranges.
@@ -48,3 +44,6 @@
 - `Printer(isMinified: true)`: GraphQL text without insignificant
   characters, for the wire and persisted-query hashes; parse, print and
   parse again gives an equivalent tree in both forms.
+- Parser recovery no longer mistakes a directive named like a keyword
+  (`@query`) for the start of a definition.
+- `NonNullType.withChildren` throws a `StateError` in release builds too.
