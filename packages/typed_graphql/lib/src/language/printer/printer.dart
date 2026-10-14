@@ -19,17 +19,22 @@ import '../ast/value.dart';
 import '../ast/variable_definition.dart';
 import 'executable_printer.dart';
 import 'extension_printer.dart';
+import 'minifier.dart';
 import 'type_member_printer.dart';
 import 'type_system_printer.dart';
 import 'value_printer.dart';
 
-/// Prints a syntax tree as GraphQL text (R1.10), character for character
-/// as graphql-js's `print`.
+/// Prints a syntax tree as GraphQL text (R1.10): canonically, character for
+/// character as graphql-js's `print`, or minified, with no insignificant
+/// characters, for the wire and for persisted-query hashes.
 ///
 /// Parsing the output gives a tree equivalent to the input.
 final class Printer {
-  /// Creates a printer.
-  const Printer();
+  /// Creates a printer; [isMinified] selects the minified form.
+  const Printer({this.isMinified = false});
+
+  /// Whether the output has no insignificant characters.
+  final bool isMinified;
 
   static const ValuePrinter _values = ValuePrinter();
   static const ExecutablePrinter _executable = ExecutablePrinter(_values);
@@ -45,7 +50,12 @@ final class Printer {
 
   /// [node] as GraphQL text. Throws an [ArgumentError] for a [Node]
   /// subclass this library does not define.
-  String print(Node node) => switch (node) {
+  String print(Node node) {
+    final canonical = _canonical(node);
+    return isMinified ? const Minifier().minify(canonical) : canonical;
+  }
+
+  String _canonical(Node node) => switch (node) {
     Document(:final definitions) => definitions.map(_definition).join('\n\n'),
     Definition() => _definition(node),
     SelectionSet() => _executable.selectionSet(node),

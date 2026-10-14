@@ -123,6 +123,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `TypeMemberPrinter`, `TypeSystemPrinter`, `ExtensionPrinter`, over the
   `PrintLayout` combinators (`join`, `wrap`, `indent`, `block`) and
   `QuotedString`. An empty selection set prints as `{}`.
+  `Printer(isMinified: true)` passes the canonical text through `Minifier`
+  (graphql-js's `stripIgnoredCharacters`: a space only between two
+  non-punctuators or before `...`, block strings in their shortest form).
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

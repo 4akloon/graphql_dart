@@ -42,3 +42,6 @@
   location; diagnostic `GQL014`.
 - `Printer`: canonical GraphQL text from any node, as graphql-js prints
   it.
+- `Printer(isMinified: true)`: GraphQL text without insignificant
+  characters, for the wire and persisted-query hashes; parse, print and
+  parse again gives an equivalent tree in both forms.
