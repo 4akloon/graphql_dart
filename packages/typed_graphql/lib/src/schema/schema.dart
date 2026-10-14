@@ -32,6 +32,8 @@ final class Schema({
   final String? description,
   List<AppliedDirective> appliedDirectives = const [],
 
+  Map<OperationType, SourceSpan> rootTypeSpans = const {},
+
   /// Whether `@defer` and `@stream` exist in this schema (an opt-in, as
   /// graphql-js defines them; R2.6).
   final bool includesDeferAndStream = false,
@@ -53,6 +55,11 @@ final class Schema({
   /// The directives applied to the schema definition and its extensions.
   final List<AppliedDirective> appliedDirectives = List.unmodifiable(
     appliedDirectives,
+  );
+
+  // Only for lookups, never iterated.
+  final Map<OperationType, SourceSpan> _rootTypeSpans = Map.unmodifiable(
+    rootTypeSpans,
   );
 
   // Only for lookups, never iterated. Built from the end, so the first of
@@ -88,6 +95,11 @@ final class Schema({
       _ => builtIns.directiveNamed(name),
     };
   }
+
+  /// Where the root type of [operation] was named, as `query: Query` in a
+  /// schema definition or extension; null when it was not named in SDL.
+  SourceSpan? rootTypeSpan(OperationType operation) =>
+      _rootTypeSpans[operation];
 
   /// The name of the root type of [operation]; null when there is none.
   String? rootTypeName(OperationType operation) => switch (operation) {

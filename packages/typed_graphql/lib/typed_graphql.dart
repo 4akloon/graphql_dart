@@ -68,6 +68,7 @@ export 'src/schema/build/built_ins.dart';
 export 'src/schema/build/schema_builder.dart';
 export 'src/schema/model/applied_directive.dart';
 export 'src/schema/model/input_value.dart';
+export 'src/schema/model/named_type_reference.dart';
 export 'src/schema/model/schema_directive.dart';
 export 'src/schema/model/schema_enum_value.dart';
 export 'src/schema/model/schema_field.dart';

@@ -16,7 +16,7 @@ void main() {
         types: [
           ObjectType(
             'Bar',
-            interfaces: [port.named('Foo')],
+            interfaces: [port.reference('Foo')],
             fields: [SchemaField('str', port.type('String'))],
           ),
           InterfaceType(
@@ -44,7 +44,7 @@ void main() {
         types: [
           ObjectType(
             'Bar',
-            interfaces: [port.named('Foo'), port.named('Baz')],
+            interfaces: [port.reference('Foo'), port.reference('Baz')],
             fields: [
               SchemaField('str', port.type('String')),
               SchemaField('int', port.type('Int')),
@@ -81,7 +81,7 @@ void main() {
         types: [
           ObjectType(
             'Bar',
-            interfaces: [port.named('Foo'), port.named('Baz')],
+            interfaces: [port.reference('Foo'), port.reference('Baz')],
             fields: [
               SchemaField('str', port.type('String')),
               SchemaField('int', port.type('Int')),
@@ -93,7 +93,7 @@ void main() {
           ),
           InterfaceType(
             'Baz',
-            interfaces: [port.named('Foo')],
+            interfaces: [port.reference('Foo')],
             fields: [
               SchemaField('int', port.type('Int')),
               SchemaField('str', port.type('String')),
@@ -130,14 +130,14 @@ void main() {
     test('Print Unions', () {
       final schema = Schema(
         types: [
-          UnionType('SingleUnion', memberTypes: [port.named('Foo')]),
+          UnionType('SingleUnion', memberTypes: [port.reference('Foo')]),
           ObjectType(
             'Foo',
             fields: [SchemaField('bool', port.type('Boolean'))],
           ),
           UnionType(
             'MultipleUnion',
-            memberTypes: [port.named('Foo'), port.named('Bar')],
+            memberTypes: [port.reference('Foo'), port.reference('Bar')],
           ),
           ObjectType(
             'Bar',

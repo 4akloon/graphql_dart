@@ -1,8 +1,8 @@
 import '../../diagnostics/source_span.dart';
-import '../../language/ast/type_ref.dart';
 import 'applied_directive.dart';
 import 'applied_directives.dart';
 import 'input_value.dart';
+import 'named_type_reference.dart';
 import 'schema_enum_value.dart';
 import 'schema_field.dart';
 
@@ -10,7 +10,8 @@ import 'schema_field.dart';
 /// types (R2.1).
 ///
 /// The language node `NamedType` is a reference to a type by name; this
-/// is the type itself. References between types are names, so a cyclic
+/// is the type itself. References between types are names (a
+/// [NamedTypeReference] for interfaces and union members), so a cyclic
 /// schema needs no `late`.
 ///
 /// {@category schema}
@@ -69,7 +70,7 @@ final class ScalarType(
 final class ObjectType(
   super.name, {
   super.description,
-  List<NamedType> interfaces = const [],
+  List<NamedTypeReference> interfaces = const [],
   super.appliedDirectives,
   List<SchemaField> fields = const [],
   super.span,
@@ -78,7 +79,7 @@ final class ObjectType(
   this;
 
   /// The interfaces it implements, by name, in declaration order.
-  final List<NamedType> interfaces = List.unmodifiable(interfaces);
+  final List<NamedTypeReference> interfaces = List.unmodifiable(interfaces);
 
   /// The fields, in declaration order.
   final List<SchemaField> fields = List.unmodifiable(fields);
@@ -94,7 +95,7 @@ final class ObjectType(
 final class InterfaceType(
   super.name, {
   super.description,
-  List<NamedType> interfaces = const [],
+  List<NamedTypeReference> interfaces = const [],
   super.appliedDirectives,
   List<SchemaField> fields = const [],
   super.span,
@@ -103,7 +104,7 @@ final class InterfaceType(
   this;
 
   /// The interfaces it implements, by name, in declaration order.
-  final List<NamedType> interfaces = List.unmodifiable(interfaces);
+  final List<NamedTypeReference> interfaces = List.unmodifiable(interfaces);
 
   /// The fields, in declaration order.
   final List<SchemaField> fields = List.unmodifiable(fields);
@@ -119,7 +120,7 @@ final class UnionType(
   super.name, {
   super.description,
   super.appliedDirectives,
-  List<NamedType> memberTypes = const [],
+  List<NamedTypeReference> memberTypes = const [],
   super.span,
 }) extends SchemaType {
   /// Creates a union type.
@@ -127,7 +128,9 @@ final class UnionType(
 
   /// The member types, by name, in declaration order; a repeated member
   /// is kept for schema validation to report.
-  final List<NamedType> memberTypes = List.unmodifiable(memberTypes);
+  final List<NamedTypeReference> memberTypes = List.unmodifiable(
+    memberTypes,
+  );
 }
 
 /// An enum type, `enum Name { VALUES }` (spec §3.9).

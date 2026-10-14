@@ -43,14 +43,14 @@ input Filter @oneOf { color: Color = RED, limit: Int }
 
   test('keeps implemented interfaces and union members as names', () {
     final query = types[1] as ObjectType;
-    expect(query.interfaces.map((type) => type.name.value), [
+    expect(query.interfaces.map((type) => type.name), [
       'Node',
       'Entity',
     ]);
     final node = types[2] as InterfaceType;
-    expect(node.interfaces.single.name.value, 'Entity');
+    expect(node.interfaces.single.name, 'Entity');
     final result = types[3] as UnionType;
-    expect(result.memberTypes.map((type) => type.name.value), [
+    expect(result.memberTypes.map((type) => type.name), [
       'Query',
       'Other',
     ]);

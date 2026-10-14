@@ -120,3 +120,8 @@
   `DirectiveLocation` names the nineteen September2025 locations and the
   working draft's `DIRECTIVE_DEFINITION` (`spelling`, `named`,
   `isExecutable`); the parser accepts exactly its spellings.
+- **Breaking:** the interfaces of `ObjectType` and `InterfaceType` and the
+  members of `UnionType` are `NamedTypeReference`s (a name and a span)
+  instead of `NamedType` nodes, so a reference added by `extend` from
+  another source points into that source. `Schema.rootTypeSpan` gives
+  where a root type was named (`rootTypeSpans` in the constructor).

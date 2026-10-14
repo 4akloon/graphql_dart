@@ -31,11 +31,11 @@ final class SchemaDump {
       ScalarType() => const <String>[],
       ObjectType(:final interfaces, :final fields) ||
       InterfaceType(:final interfaces, :final fields) => [
-        'implements ${interfaces.map(_printer.print).join(' & ')}',
+        'implements ${interfaces.map((type) => type.name).join(' & ')}',
         for (final field in fields) ..._field(field),
       ],
       UnionType(:final memberTypes) => [
-        'members ${memberTypes.map(_printer.print).join(' | ')}',
+        'members ${memberTypes.map((type) => type.name).join(' | ')}',
       ],
       EnumType(:final values) => [
         for (final value in values)

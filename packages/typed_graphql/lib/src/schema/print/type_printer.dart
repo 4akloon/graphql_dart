@@ -1,4 +1,4 @@
-import '../../language/ast/type_ref.dart';
+import '../model/named_type_reference.dart';
 import '../model/schema_directive.dart';
 import '../model/schema_type.dart';
 import 'member_printer.dart';
@@ -39,12 +39,12 @@ final class const TypePrinter() {
       '${directive.isRepeatable ? ' repeatable' : ''}'
       ' on ${directive.locations.map((location) => location.spelling).join(' | ')}';
 
-  static String _union(List<NamedType> memberTypes) =>
+  static String _union(List<NamedTypeReference> memberTypes) =>
       memberTypes.isEmpty ? '' : ' = ${_names(memberTypes, ' | ')}';
 
-  static String _interfaces(List<NamedType> interfaces) =>
+  static String _interfaces(List<NamedTypeReference> interfaces) =>
       interfaces.isEmpty ? '' : ' implements ${_names(interfaces, ' & ')}';
 
-  static String _names(List<NamedType> types, String separator) =>
-      types.map((type) => type.name.value).join(separator);
+  static String _names(List<NamedTypeReference> types, String separator) =>
+      types.map((type) => type.name).join(separator);
 }

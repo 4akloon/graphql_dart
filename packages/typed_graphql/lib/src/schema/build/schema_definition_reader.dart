@@ -2,6 +2,7 @@ import '../../language/ast/operation_type.dart';
 import '../../language/ast/operation_type_definition.dart';
 import '../../language/ast/type_system_definition.dart';
 import '../../language/ast/type_system_extension.dart';
+import '../model/named_type_reference.dart';
 import '../schema.dart';
 import 'build_report.dart';
 import 'element_reader.dart';
@@ -39,9 +40,12 @@ final class SchemaDefinitionReader(
     return Schema(
       types: base.types,
       directives: base.directives,
-      queryTypeName: roots[OperationType.query],
-      mutationTypeName: roots[OperationType.mutation],
-      subscriptionTypeName: roots[OperationType.subscription],
+      queryTypeName: roots[OperationType.query]?.name,
+      mutationTypeName: roots[OperationType.mutation]?.name,
+      subscriptionTypeName: roots[OperationType.subscription]?.name,
+      rootTypeSpans: {
+        for (final MapEntry(:key, :value) in roots.entries) key: ?value.span,
+      },
       description: definition?.description?.value ?? base.description,
       appliedDirectives: [
         ...base.appliedDirectives,
@@ -83,13 +87,18 @@ final class SchemaDefinitionReader(
     return hasSchema ? null : nodes.firstOrNull;
   }
 
-  Map<OperationType, String> _roots(
+  /// The root types, each with the span of the name that set it.
+  Map<OperationType, NamedTypeReference> _roots(
     Schema base,
     List<OperationTypeDefinition> nodes,
   ) {
     final roots = {
       for (final operation in OperationType.values)
-        operation: ?base.rootTypeName(operation),
+        if (base.rootTypeName(operation) case final name?)
+          operation: NamedTypeReference(
+            name,
+            span: base.rootTypeSpan(operation),
+          ),
     };
     final firsts = <OperationType, OperationTypeDefinition>{};
     for (final node in nodes) {
@@ -110,7 +119,7 @@ final class SchemaDefinitionReader(
         );
       } else {
         firsts[operation] = node;
-        roots[operation] = node.type.name.value;
+        roots[operation] = elements.references([node.type]).single;
       }
     }
     return roots;

@@ -39,7 +39,7 @@ void main() {
           UnionType(
             'SomeUnion',
             description: '',
-            memberTypes: [port.named('Query')],
+            memberTypes: [port.reference('Query')],
           ),
           ObjectType('Query', description: '', fields: fields()),
           EnumType(

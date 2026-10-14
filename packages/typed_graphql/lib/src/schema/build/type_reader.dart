@@ -25,7 +25,7 @@ final class const TypeReader(
       node.name.value,
       description: node.description?.value,
       appliedDirectives: elements.appliedAll(node.directives),
-      memberTypes: node.types,
+      memberTypes: elements.references(node.types),
       span: elements.spans.of(node),
     ),
     EnumTypeDefinition() => _enum(node),
@@ -35,7 +35,7 @@ final class const TypeReader(
   ObjectType _object(ObjectTypeDefinition node) => ObjectType(
     node.name.value,
     description: node.description?.value,
-    interfaces: node.interfaces,
+    interfaces: elements.references(node.interfaces),
     appliedDirectives: elements.appliedAll(node.directives),
     fields: node.fields.map(elements.field).toList(),
     span: elements.spans.of(node),
@@ -44,7 +44,7 @@ final class const TypeReader(
   InterfaceType _interface(InterfaceTypeDefinition node) => InterfaceType(
     node.name.value,
     description: node.description?.value,
-    interfaces: node.interfaces,
+    interfaces: elements.references(node.interfaces),
     appliedDirectives: elements.appliedAll(node.directives),
     fields: node.fields.map(elements.field).toList(),
     span: elements.spans.of(node),

@@ -71,14 +71,14 @@ final class RandomSchema {
       1 => ObjectType(
         name,
         description: description,
-        interfaces: parts.some(2, () => NamedType(parts.name())),
+        interfaces: parts.some(2, () => NamedTypeReference(parts.name().value)),
         appliedDirectives: applied,
         fields: _members(3, _field),
       ),
       2 => InterfaceType(
         name,
         description: description,
-        interfaces: parts.some(2, () => NamedType(parts.name())),
+        interfaces: parts.some(2, () => NamedTypeReference(parts.name().value)),
         appliedDirectives: applied,
         fields: _members(3, _field),
       ),
@@ -86,7 +86,10 @@ final class RandomSchema {
         name,
         description: description,
         appliedDirectives: applied,
-        memberTypes: parts.some(3, () => NamedType(parts.name())),
+        memberTypes: parts.some(
+          3,
+          () => NamedTypeReference(parts.name().value),
+        ),
       ),
       4 => EnumType(
         name,

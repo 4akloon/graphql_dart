@@ -4,9 +4,11 @@ import '../../language/ast/enum_value_definition.dart';
 import '../../language/ast/field_definition.dart';
 import '../../language/ast/input_value_definition.dart';
 import '../../language/ast/name.dart';
+import '../../language/ast/type_ref.dart';
 import '../../language/ast/type_system_definition.dart';
 import '../model/applied_directive.dart';
 import '../model/input_value.dart';
+import '../model/named_type_reference.dart';
 import '../model/schema_directive.dart';
 import '../model/schema_enum_value.dart';
 import '../model/schema_field.dart';
@@ -49,6 +51,12 @@ final class const ElementReader(
     appliedDirectives: appliedAll(node.directives),
     span: spans.of(node),
   );
+
+  /// References to the types [nodes] name, each with its span.
+  List<NamedTypeReference> references(List<NamedType> nodes) => [
+    for (final node in nodes)
+      NamedTypeReference(node.name.value, span: spans.of(node)),
+  ];
 
   /// The directives applied to an element, in order.
   List<AppliedDirective> appliedAll(List<Directive> nodes) => [

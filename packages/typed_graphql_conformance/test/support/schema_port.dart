@@ -20,6 +20,9 @@ final class SchemaPort {
   /// member.
   NamedType named(String name) => NamedType(Name(name));
 
+  /// A reference to the type [name], for interfaces and union members.
+  NamedTypeReference reference(String name) => NamedTypeReference(name);
+
   /// [text] as a constant value, such as `{ a: 1 }`.
   Value value(String text) =>
       _element(_parser.parseValue(Source(text), isConst: true));

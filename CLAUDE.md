@@ -181,8 +181,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `NamedType` already name language nodes, so the schema's take a
   `Schema` prefix. `SchemaType` is the sealed family of named types
   (`ScalarType`, `ObjectType`, `InterfaceType`, `UnionType`, `EnumType`,
-  `InputObjectType`). Types are language `TypeRef` nodes (implemented
-  interfaces and union members `NamedType` nodes), resolved by name;
+  `InputObjectType`). Types are language `TypeRef` nodes, resolved by
+  name; implemented interfaces and union members are `NamedTypeReference`s,
+  a name and the span where it was written (an extension's reference has a
+  span in the extension's source, unlike the type's own span);
   defaults and directive arguments are constant language `Value` nodes.
   Every element has `SourceSpan? span`. `deprecationReason`,
   `specifiedByUrl` and `isOneOf` read the applied directives through the
@@ -197,7 +199,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 - `Schema` (`schema.dart`) lists only what was declared; `typeNamed` and
   `directiveNamed` fall back to `BuiltIns` (`defer` and `stream` only with
   `includesDeferAndStream`). Roots are names (`queryTypeName`, ...,
-  `rootTypeName(OperationType)`).
+  `rootTypeName(OperationType)`); `rootTypeSpan(OperationType)` is the
+  span of the name in the schema definition or extension, null for a
+  default root.
 - `build/SchemaBuilder` (const, `includesDeferAndStream`): `fromSdl(document,
   source:)` returns the sealed `BuildResult` (`BuildSuccess(schema)` |
   `BuildFailure(partial, diagnostics)`). A run sorts the definitions

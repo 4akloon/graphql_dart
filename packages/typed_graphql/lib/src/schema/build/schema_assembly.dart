@@ -75,6 +75,10 @@ final class SchemaAssembly(
           header.subscriptionTypeName ?? defaults[OperationType.subscription],
       description: header.description,
       appliedDirectives: header.appliedDirectives,
+      rootTypeSpans: {
+        for (final operation in OperationType.values)
+          operation: ?header.rootTypeSpan(operation),
+      },
       includesDeferAndStream: base.includesDeferAndStream,
       span: header.span,
     );
