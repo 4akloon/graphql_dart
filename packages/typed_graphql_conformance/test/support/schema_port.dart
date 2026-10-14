@@ -53,6 +53,38 @@ final class SchemaPort {
     return const SchemaBuilder().fromSdl(_document(source), source: source);
   }
 
+  /// graphql-js's `extendSchema`: [schema] extended with [sdl]; fails the
+  /// test on a diagnostic.
+  Schema extend(Schema schema, String sdl) =>
+      switch (extendResult(schema, sdl)) {
+        BuildSuccess(:final schema) => schema,
+        BuildFailure(:final diagnostics) => fail('$diagnostics'),
+      };
+
+  /// [schema] extended with [sdl], for a test that expects diagnostics.
+  BuildResult extendResult(Schema schema, String sdl) {
+    final source = Source(sdl);
+    return const SchemaBuilder().extend(
+      schema,
+      _document(source),
+      source: source,
+    );
+  }
+
+  /// graphql-js's `expectSchemaChanges`: the definitions printed for
+  /// [extended] that are not printed for [schema], each printed by the
+  /// language printer, separated by a blank line.
+  String schemaChanges(Schema schema, Schema extended) {
+    List<String> definitions(Schema schema) => [
+      for (final definition in document(print(schema)).definitions)
+        const Printer().print(definition),
+    ];
+    final before = definitions(schema).toSet();
+    return definitions(
+      extended,
+    ).where((definition) => !before.contains(definition)).join('\n\n');
+  }
+
   /// The ids of the codes of [result]'s diagnostics, such as `GQL103`.
   List<String> codes(BuildResult result) => [
     for (final diagnostic in result.diagnostics) diagnostic.code.id,

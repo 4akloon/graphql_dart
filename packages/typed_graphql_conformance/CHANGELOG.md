@@ -21,4 +21,5 @@
   a source excerpt.
 - `mapping/schema.csv`, the conformance table of the schema suites, checked
   by the same mapping test; `SchemaPort`, the port helpers. Ported
-  graphql-js schema suites: `printSchema-test.ts`, `buildASTSchema-test.ts`.
+  graphql-js schema suites: `printSchema-test.ts`, `buildASTSchema-test.ts`,
+  `extendSchema-test.ts`.

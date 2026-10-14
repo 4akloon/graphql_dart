@@ -71,6 +71,7 @@ void main() {
       prefix: '',
       covered: const [
         'utilities/__tests__/buildASTSchema-test.ts',
+        'utilities/__tests__/extendSchema-test.ts',
         'utilities/__tests__/printSchema-test.ts',
       ],
     ),
