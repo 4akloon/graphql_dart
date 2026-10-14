@@ -57,7 +57,7 @@ void main() {
     });
 
     test('is unchanged when minified again', () {
-      final once = minify('query Q(\$a: Int) { a(x: 1) { ...F } }');
+      final once = minify(r'query Q($a: Int) { a(x: 1) { ...F } }');
       expect(
         const Printer(isMinified: true).print(Parsed(once).document),
         once,
