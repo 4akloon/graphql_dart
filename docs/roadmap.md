@@ -15,16 +15,16 @@ Decisions: [research/README.md](research/README.md).
 | M1 | Foundations | Pub workspace with all package skeletons (`sdk: ^3.13.0`); the old `lib/`, `example/`, `test/` deleted; `analysis_options.yaml` adapted from typed_openapi's; size-limit and layer-direction ratchet tests; CI (minimum SDK + stable, AOT, dart2js/dart2wasm, publish dry-run); `Source` with a lazy line table and spans; the `DiagnosticCode` catalog, `Diagnostic`, `DiagnosticSink`; `protocol/` data types (`GraphQLError`, request, response, `JsonValue`); `CLAUDE.md`, `CONTRIBUTING.md`, `docs/superpowers/HANDOFF.md` | R0.5, R0.6, R1.7 (Source), R1.12, R10.1, R10.2, R10.5, R11.4 | — |
 | M2 | Language | Lexer, error-resilient parser of the September2025 grammar with working-draft options and limits, sealed AST, `isEquivalentTo`, visitors, `ParallelVisitor`, transformer, printer, schema coordinates; graphql-js lexer, parser, printer and visitor suites ported; round-trip fuzzing; the conformance package starts here; carried over from M1: give `Diagnostic` value equality (`==` / `hashCode`), because the ported suites compare lists of diagnostics, and enable the analyzer's strict-inference and strict-raw-types (staged in `analysis_options.yaml`) | R0.1, R0.7, R1.1–R1.11, R10.3, R10.4 | M1 |
 | M3 | Type system | `Schema` model, SDL → `Schema` with extensions, schema validation → `ValidSchema`, `Schema` → SDL, built-ins, coordinates resolution, introspection query and introspection JSON → `Schema`, `ScalarCodec`; graphql-js `buildASTSchema` / `extendSchema` / type-validation suites ported | R2.1–R2.9 | M2 |
-| M4 | Operation validation | `TypeInfo`, the 30 rules, one-walk validation, `ValidDocument`, opt-in limit rules, custom rule API; graphql-js validation suites ported per rule | R3.1–R3.6 | M3 |
+| M4 | Operation validation | `TypeInfo`, the 30 rules, one-walk validation, `ValidDocument`, opt-in limit rules, the `MaxCost` analysis rule with the opt-in `@cost` / `@listSize` built-in directives (IBM draft), custom rule API; graphql-js validation suites ported per rule | R3.1–R3.6, R3.8 | M3 |
 
 ### Server branch
 
 | # | Stage | What appears | Requirements | Depends on |
 |---|---|---|---|---|
-| M5 | Execution | Typed `SchemaBuilder`, `ExecutableSchema`, variable coercion, `OperationPlan` and its cache, the `FutureOr` executor with the pure lane, error behaviours, masking, field middleware, introspection resolvers, subscriptions; graphql-js execution suites ported; benchmarks | R4.1–R4.14, R4.17 | M4 |
-| M6 | Server pipeline | `GraphQLServer`, document caches, `ServerExtension`, limits, APQ, trusted documents, CSRF prevention, DataLoader | R4.15, R5.1–R5.4 | M5 |
-| M7 | Transports | GraphQL over HTTP, multipart uploads, graphql-ws, graphql-sse, `typed_graphql_shelf` with the GraphiQL page | R5.5–R5.9 | M6 |
-| M8 | SDL-first generator | The shared server emitter in `typed_graphql_codegen`; type and field binding; abstract resolver classes; directive slots; goldens | R6.1, R6.2 | M5, M10 |
+| M5 | Execution | Typed `SchemaBuilder`, `ExecutableSchema`, variable coercion, `OperationPlan` and its cache, the `FutureOr` executor with the pure lane, error behaviours, masking, field middleware, introspection resolvers, subscriptions; look-ahead (`info.selection`), the `Authorizer` hook and its coverage lint, `CancelSignal` and execution timeout; graphql-js execution suites ported; benchmarks | R4.1–R4.14, R4.17–R4.20 | M4 |
+| M6 | Server pipeline | `GraphQLServer`, document caches, `ServerExtension`, limits, APQ, trusted documents, CSRF prevention, the cost limit, `ServerProfile` (`development` / `production`), DataLoader | R4.15, R5.1–R5.4, R5.14, R5.15 | M5 |
+| M7 | Transports | GraphQL over HTTP (CSRF protection and the batching policy applied at the transport), multipart uploads, graphql-ws, graphql-sse, `typed_graphql_shelf` with the GraphiQL page | R5.5–R5.9 | M6 |
+| M8 | SDL-first generator | The shared server emitter in `typed_graphql_codegen`; type and field binding; abstract resolver classes; directive slots; generated selection classes for look-ahead; goldens | R6.1, R6.2 | M5, M10 |
 | M9 | `build_runner` and annotations | `typed_graphql_builder`: builders for the client engine and the SDL-first generator, the annotation front end, `schema.graphql` emission | R6.3–R6.5, R7.10 | M8 |
 
 ### Client branch
