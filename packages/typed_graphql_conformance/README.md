@@ -29,6 +29,20 @@ per graphql-js test, with the same group and test names.
 `test/mapping_test.dart` checks the table; with `reference/` fetched it also
 checks that every test of a ported file has a row.
 
+## Fuzzing
+
+`test/fuzz/` holds the fuzzers of R10.4. They run with the other tests, a
+fixed number of cases from a fixed seed; set the environment to run more or
+other cases:
+
+```sh
+TYPED_GRAPHQL_FUZZ_ITERATIONS=100000 TYPED_GRAPHQL_FUZZ_SEED=7 dart test test/fuzz
+```
+
+A failure names its case and the `Random` seed that replays it.
+`round_trip_fuzz_test.dart` prints random documents and coordinates and
+parses them back.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). The ported tests derive from graphql-js,

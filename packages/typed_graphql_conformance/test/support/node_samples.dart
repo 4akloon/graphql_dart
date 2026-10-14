@@ -34,6 +34,13 @@ final class NodeSamples {
     return Map.fromEntries(entries);
   }
 
+  /// The kind names of [root] and every node under it.
+  Set<String> kindsIn(Node root) {
+    final found = <String, Node>{};
+    const AstWalker().walk(root, _FirstOfEachKind(found));
+    return found.keys.toSet();
+  }
+
   Document _document(String text) => switch (_parser.parse(Source(text))) {
     ParseSuccess(:final document) => document,
     ParseFailure(:final diagnostics) => fail('$diagnostics'),
