@@ -86,6 +86,7 @@ final class Schema({
   // final list of types, which never changes after construction.
   late final ImplementationIndex _implementations = ImplementationIndex(
     types,
+    typeNamed,
   );
 
   /// The declared type named [name], else the built-in scalar or
@@ -160,24 +161,25 @@ final class Schema({
   /// The object types a value of [type] can be at run time, in
   /// declaration order: the object itself, the members of a union that
   /// are objects, or the objects that implement an interface.
-  List<ObjectType> possibleTypes(SchemaType type) => switch (type) {
-    ObjectType() => [type],
-    InterfaceType() => implementations(type).whereType<ObjectType>().toList(),
-    UnionType(:final memberTypes) => [
-      for (final member in memberTypes)
-        if (typeNamed(member.name) case final ObjectType object) object,
-    ],
-    ScalarType() || EnumType() || InputObjectType() => const [],
-  };
+  ///
+  /// The list is unmodifiable and, for an abstract type, shared by every
+  /// call.
+  List<ObjectType> possibleTypes(SchemaType type) =>
+      _implementations.possibleOf(type);
 
-  /// Whether [maybeSubType] is a member of the union [abstractType] or
-  /// declares the interface [abstractType] (graphql-js's `isSubType`).
+  /// Whether [maybeSubType] is an object that is a member of the union
+  /// [abstractType], or declares the interface [abstractType] (graphql-js's
+  /// `isSubType`). A union member that is not an object type, or does not
+  /// exist, is no sub type.
   bool isSubType(SchemaType abstractType, SchemaType maybeSubType) =>
       switch (abstractType) {
-        UnionType(:final memberTypes) => memberTypes.any(
-          (member) => member.name == maybeSubType.name,
+        UnionType() =>
+          maybeSubType is ObjectType &&
+              _implementations.isPossible(abstractType, maybeSubType),
+        InterfaceType(:final name) => _implementations.declares(
+          name,
+          maybeSubType,
         ),
-        InterfaceType() => implementations(abstractType).contains(maybeSubType),
         _ => false,
       };
 
@@ -199,7 +201,11 @@ final class Schema({
     if (identical(a, b)) {
       return true;
     }
-    final possible = possibleTypes(b);
-    return possibleTypes(a).any(possible.contains);
+    final (listed, other) = possibleTypes(a).length <= possibleTypes(b).length
+        ? (a, b)
+        : (b, a);
+    return possibleTypes(
+      listed,
+    ).any((object) => _implementations.isPossible(other, object));
   }
 }
