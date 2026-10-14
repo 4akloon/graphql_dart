@@ -214,6 +214,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   it has roots and a description, directives or other than the default root
   names; `includesBuiltIns` prints schema definition, built-in directives,
   own directives, built-in scalars, own types, introspection types.
+- `scalars/`: `ScalarCodec<T>` (`decode(JsonValue)` → `DecodeResult<T>`,
+  never throws; `encode(T)` → `JsonValue`, an `ArgumentError` for a value the
+  type cannot hold) and the five built-in codecs with graphql-js's messages.
+  A codec is not a field of `ScalarType` (R2.9).
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

@@ -103,3 +103,6 @@
 - `SchemaPrinter` prints the schema definition when it says more than the
   default root names, and the directive definitions; `includesBuiltIns`
   adds the built-in directives, scalars and introspection types.
+- `ScalarCodec<T>` (`decode` to a `DecodeResult`, `encode` to a
+  `JsonValue`) and the built-in codecs `IntCodec` (signed 32-bit),
+  `FloatCodec` (finite), `StringCodec`, `BooleanCodec` and `IdCodec`.
