@@ -95,7 +95,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `BlockStringValue` and graphql-js's printing rules; lexer and printer share
   it. `Lexer(source, sink).advance()` never throws: bad text becomes one
   `error` token over the run and one diagnostic, with graphql-js's message
-  minus "Syntax Error: ". Scanners (`*_scanner.dart`) share a
+  minus "Syntax Error: ". `maxTokens` is counted here (R1.6). Scanners
+  (`*_scanner.dart`) share a
   `SourceReader` (text, `describe`, `report`); `CharacterClass` holds the
   character tests.
 

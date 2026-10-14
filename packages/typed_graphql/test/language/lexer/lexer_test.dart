@@ -136,4 +136,37 @@ void main() {
     expect(lexer.advance().kind, TokenKind.eof);
     expect(lexer.advance().kind, TokenKind.eof);
   });
+
+  group('maxTokens', () {
+    test('replaces the token after the limit by one error and the end', () {
+      final sink = DiagnosticSink();
+      final lexer = Lexer(Source('{ a b }'), sink, maxTokens: 3);
+      final kinds = [for (var i = 0; i < 5; i++) lexer.advance().kind];
+      expect(kinds, [
+        TokenKind.braceLeft,
+        TokenKind.name,
+        TokenKind.name,
+        TokenKind.eof,
+        TokenKind.eof,
+      ]);
+      expect(lexer.isLimitReached, isTrue);
+      expect(
+        sink.diagnostics.single.message,
+        'Document contains more than 3 tokens. Parsing aborted.',
+      );
+      expect(sink.diagnostics.single.span?.start, 6);
+    });
+
+    test('counts neither comments nor the end', () {
+      final lexer = Lexer(
+        Source('a # c\n'),
+        DiagnosticSink(),
+        keepComments: true,
+        maxTokens: 1,
+      );
+      while (lexer.advance().kind != TokenKind.eof) {}
+      expect(lexer.tokenCount, 1);
+      expect(lexer.isLimitReached, isFalse);
+    });
+  });
 }

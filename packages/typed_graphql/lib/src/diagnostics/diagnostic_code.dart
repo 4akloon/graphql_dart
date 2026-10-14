@@ -36,5 +36,17 @@ enum DiagnosticCode(
 
   /// `GQL003`: a malformed number, such as `007`, `1.`, `.5`, `1e` or a
   /// name glued to a number (`1a`).
-  invalidNumber('GQL003');
+  invalidNumber('GQL003'),
+
+  /// `GQL004`: a string or block string without its closing quotes; a
+  /// quoted string also ends at a line break.
+  unterminatedString('GQL004'),
+
+  /// `GQL005`: an escape sequence that is not `\"`, `\\`, `\/`, `\b`,
+  /// `\f`, `\n`, `\r`, `\t` or a Unicode escape of a scalar value.
+  invalidEscapeSequence('GQL005'),
+
+  /// `GQL006`: a document with more tokens than the limit; the rest is not
+  /// read.
+  tokenLimitExceeded('GQL006');
 }

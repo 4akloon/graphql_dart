@@ -1,8 +1,11 @@
+import '../../diagnostics/diagnostic_code.dart';
 import '../../diagnostics/diagnostic_sink.dart';
 import '../../diagnostics/source.dart';
+import 'block_string_scanner.dart';
 import 'character_class.dart';
 import 'number_scanner.dart';
 import 'source_reader.dart';
+import 'string_scanner.dart';
 import 'token.dart';
 import 'token_kind.dart';
 
@@ -12,21 +15,53 @@ import 'token_kind.dart';
 /// [TokenKind.error] token over the offending run and one diagnostic in
 /// the sink, and scanning resumes after it. Ignored tokens are skipped;
 /// comments are returned only when [keepComments] is set.
+///
+/// With [maxTokens], the token after the limit is replaced by one
+/// [DiagnosticCode.tokenLimitExceeded] error, [isLimitReached] becomes
+/// true and every later call returns [TokenKind.eof] (R1.6).
 final class Lexer {
   /// Creates a lexer of [source] that reports into [sink].
-  Lexer(Source source, DiagnosticSink sink, {bool keepComments = false})
-    : this._(SourceReader(source, sink), keepComments: keepComments);
+  Lexer(
+    Source source,
+    DiagnosticSink sink, {
+    bool keepComments = false,
+    int? maxTokens,
+  }) : this._(
+         SourceReader(source, sink),
+         keepComments: keepComments,
+         maxTokens: maxTokens,
+       );
 
-  Lexer._(SourceReader reader, {required this.keepComments})
-    : _reader = reader,
-      _numbers = NumberScanner(reader);
+  Lexer._(
+    SourceReader reader, {
+    required this.keepComments,
+    required this.maxTokens,
+  }) : _reader = reader,
+       _numbers = NumberScanner(reader),
+       _strings = StringScanner(reader),
+       _blockStrings = BlockStringScanner(reader);
 
   /// Whether [advance] returns [TokenKind.comment] tokens.
   final bool keepComments;
 
+  /// The most tokens [advance] returns, comments and the end not counted;
+  /// null for no limit.
+  final int? maxTokens;
+
   final SourceReader _reader;
   final NumberScanner _numbers;
+  final StringScanner _strings;
+  final BlockStringScanner _blockStrings;
   int _position = 0;
+  int _tokenCount = 0;
+  bool _isLimitReached = false;
+
+  /// The tokens returned so far, comments and the end not counted.
+  int get tokenCount => _tokenCount;
+
+  /// Whether [maxTokens] was exceeded, so the document was not read to
+  /// its end.
+  bool get isLimitReached => _isLimitReached;
 
   static const CharacterClass _classes = CharacterClass();
 
@@ -46,17 +81,37 @@ final class Lexer {
     0x7d: .braceRight,
   };
 
-  /// The document being lexed.
-  Source get source => _reader.source;
-
   /// The next token; [TokenKind.eof] at the end, and again on every later
   /// call.
   Token advance() {
+    if (_isLimitReached) {
+      return Token(.eof, _position, _position);
+    }
     var token = _scanFrom(_position);
     while (token.kind == .comment && !keepComments) {
       token = _scanFrom(token.end);
     }
-    return token;
+    return _counted(token);
+  }
+
+  Token _counted(Token token) {
+    if (token.kind == .eof || token.kind == .comment) {
+      return token;
+    }
+    _tokenCount++;
+    final limit = maxTokens;
+    if (limit == null || _tokenCount <= limit) {
+      return token;
+    }
+    _isLimitReached = true;
+    _position = token.start;
+    _reader.report(
+      .tokenLimitExceeded,
+      'Document contains more than $limit tokens. Parsing aborted.',
+      token.start,
+      token.end,
+    );
+    return Token(.eof, token.start, token.start);
   }
 
   Token _scanFrom(int offset) {
@@ -89,6 +144,8 @@ final class Lexer {
       -1 => Token(.eof, at, at),
       0x23 => _comment(at),
       0x2e => _dot(at),
+      0x22 when _reader.slice(at, at + 3) == '"""' => _blockStrings.scan(at),
+      0x22 => _strings.scan(at),
       _ when _classes.isDigit(unit) || unit == 0x2d => _numbers.scan(at),
       _ when _classes.isNameStart(unit) => _name(at),
       _ => _unexpected(at),
