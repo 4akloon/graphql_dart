@@ -6,7 +6,7 @@ import '../support/schema_port.dart';
 
 // Ported from graphql-js src/utilities/__tests__/buildASTSchema-test.ts:
 // deprecation, spans, root types and the built-in names. Where graphql-js
-// calls validateSchema, the check returns with schema validation in M3b.
+// calls validateSchema, the port checks SchemaValidator.
 void main() {
   const dedent = Dedent();
   const port = SchemaPort();
@@ -207,11 +207,11 @@ void main() {
     });
 
     test('can build invalid schema', () {
-      // Invalid, because it has no query root type; validateSchema
-      // reports it from M3b.
+      // Invalid, because it has no query root type.
       final schema = port.build('type Mutation');
       expect(schema.queryTypeName, isNull);
       expect(schema.mutationTypeName, 'Mutation');
+      expect(port.validate(schema), isA<InvalidSchema>());
     });
 
     test('Do not override standard types', () {
@@ -259,10 +259,22 @@ void main() {
       );
     });
 
+    test('Rejects invalid SDL', () {
+      // Adapted: the builder builds; the validator reports the directive.
+      final schema = port.build('''
+        type Query {
+          foo: String @unknown
+        }
+      ''');
+      expect(port.validationErrors(schema), [
+        'GQL117 Unknown directive "@unknown".',
+      ]);
+    });
+
     test('Allows to disable SDL validation', () {
       // Adapted: the builder never validates, so an unknown directive
-      // builds without an option; schema validation (M3b) is what
-      // `assumeValid` turns off.
+      // builds without an option; `ValidSchema.assumeValid` is
+      // graphql-js's `assumeValid`.
       final schema = port.build('''
         type Query {
           foo: String @unknown
@@ -270,6 +282,7 @@ void main() {
       ''');
       final field = (schema.typeNamed('Query')! as ObjectType).fields.single;
       expect(field.appliedDirectives.single.name, 'unknown');
+      expect(ValidSchema.assumeValid(schema).schema, same(schema));
     });
 
     test('buildSchema parses directives on directive definitions', () {
@@ -290,7 +303,7 @@ void main() {
 
     test('Throws on unknown types', () {
       // References are names: the build succeeds and schema validation
-      // reports the unknown type from M3b.
+      // reports the unknown type.
       final schema = port.build('''
         type Query {
           unknown: UnknownType
@@ -306,6 +319,9 @@ void main() {
         '''),
       );
       expect(schema.typeNamed('UnknownType'), isNull);
+      expect(port.validationErrors(schema), [
+        'GQL116 Unknown type "UnknownType".',
+      ]);
     });
 
     test('correctly processes viral schema', () {

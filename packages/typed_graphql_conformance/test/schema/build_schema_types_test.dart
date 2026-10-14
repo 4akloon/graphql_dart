@@ -159,11 +159,11 @@ void main() {
           hello: Hello
         }
       ''');
-      // graphql-js then checks that validateSchema reports the union;
-      // schema validation arrives in M3b.
+      // graphql-js then checks that validateSchema reports the union.
       final hello = schema.typeNamed('Hello');
       expect(hello, isA<UnionType>());
       expect(port.print(Schema(types: [?hello])), 'union Hello = Hello');
+      expect(port.validate(schema), isA<InvalidSchema>());
     });
 
     test('Custom Scalar', () {

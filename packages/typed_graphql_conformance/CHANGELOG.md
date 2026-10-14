@@ -31,3 +31,6 @@
 - Ported graphql-js `validation-test.ts` (schema validation), with
   `ValidationPort`: each error as its message and `line:column` locations,
   compared with graphql-js's; template-named tests become loops.
+- The build and extend ports check `validateSchema` where graphql-js does
+  (`SchemaPort.validate`, `validationErrors`); SDL validation is the
+  validator's: an unknown directive is `GQL117`, an unknown type `GQL116`.

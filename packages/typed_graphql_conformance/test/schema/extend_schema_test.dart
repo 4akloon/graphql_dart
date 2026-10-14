@@ -6,8 +6,7 @@ import '../support/schema_port.dart';
 
 // Ported from graphql-js src/utilities/__tests__/extendSchema-test.ts:
 // the original schema, built-ins and extensions of each kind of type.
-// graphql-js also checks validateSchema; that check returns with schema
-// validation in M3b.
+// Where graphql-js checks validateSchema, the port checks SchemaValidator.
 void main() {
   const dedent = Dedent();
   const port = SchemaPort();
@@ -113,6 +112,10 @@ void main() {
           }
         '''),
       );
+      expect(
+        port.validate(extendedSchema),
+        isA<ValidSchema>(),
+      );
     });
 
     test('extends objects with standard type fields', () {
@@ -144,6 +147,10 @@ void main() {
             id: ID
           }
         '''),
+      );
+      expect(
+        port.validate(extendedTwiceSchema),
+        isA<ValidSchema>(),
       );
     });
 
@@ -177,6 +184,10 @@ void main() {
           }
         '''),
       );
+      expect(
+        port.validate(extendedSchema),
+        isA<ValidSchema>(),
+      );
     });
 
     test('extends unions by adding new types', () {
@@ -198,6 +209,10 @@ void main() {
         port.schemaChanges(schema, extendedSchema),
         'union SomeUnion = Foo | Biz | Bar',
       );
+      expect(
+        port.validate(extendedSchema),
+        isA<ValidSchema>(),
+      );
     });
 
     test('allows extension of union by adding itself', () {
@@ -210,6 +225,10 @@ void main() {
       expect(
         port.schemaChanges(schema, extendedSchema),
         'union SomeUnion = SomeUnion',
+      );
+      expect(
+        port.validate(extendedSchema),
+        isA<InvalidSchema>(),
       );
     });
 
@@ -243,10 +262,17 @@ void main() {
           }
         '''),
       );
+      expect(
+        port.validate(extendedSchema),
+        isA<ValidSchema>(),
+      );
     });
 
     test('extends scalars by adding new directives', () {
-      // The model keeps no extension nodes; the directive is applied.
+      // The model keeps no extension nodes; the directive is applied. The
+      // spec forbids a directive that reaches itself through the types of
+      // its arguments (§3.13), which graphql-js does not check: @foo takes
+      // a SomeScalar, which @foo is applied to.
       final schema = port.build('''
         type Query {
           someScalar(arg: SomeScalar): SomeScalar
@@ -271,6 +297,12 @@ void main() {
       expect(
         [for (final directive in someScalar.appliedDirectives) directive.name],
         ['foo'],
+      );
+      expect(
+        port.validationErrors(extendedSchema),
+        [
+          'GQL130 Directive "@foo" must not reference itself directly or indirectly.',
+        ],
       );
     });
 
@@ -298,6 +330,10 @@ void main() {
         port.printType(foo),
         'scalar Foo @foo @specifiedBy(url: "https://example.com/foo_spec")',
       );
+      expect(
+        port.validate(extendedSchema),
+        isA<ValidSchema>(),
+      );
     });
 
     test('builds scalars with specifiedBy directive from extensions', () {
@@ -321,6 +357,10 @@ void main() {
       final foo = port.assertType<ScalarType>(extendedSchema, 'Foo');
       expect(foo.specifiedByUrl, 'https://example.com/foo_spec');
       expect(foo.span?.text, 'scalar Foo');
+      expect(
+        port.validate(extendedSchema),
+        isA<ValidSchema>(),
+      );
     });
   });
 }

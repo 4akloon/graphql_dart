@@ -88,6 +88,17 @@ final class SchemaPort {
     ).where((definition) => !before.contains(definition)).join('\n\n');
   }
 
+  /// graphql-js's `validateSchema`: [schema] validated.
+  SchemaValidationResult validate(Schema schema) =>
+      const SchemaValidator().validate(schema);
+
+  /// The diagnostics of `validateSchema(schema)`, each as its code id and
+  /// message, such as `GQL116 Unknown type "X".`.
+  List<String> validationErrors(Schema schema) => [
+    for (final diagnostic in validate(schema).diagnostics)
+      '${diagnostic.code.id} ${diagnostic.message}',
+  ];
+
   /// The ids of the codes of [result]'s diagnostics, such as `GQL103`.
   List<String> codes(BuildResult result) => [
     for (final diagnostic in result.diagnostics) diagnostic.code.id,
