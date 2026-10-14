@@ -112,3 +112,7 @@
 - `BuiltIns.isBuiltInDirective`: whether a name is a built-in directive,
   `@defer` and `@stream` by a flag. Extending one type or directive many
   times builds in linear time.
+- Documentation: six guides (getting started, language, diagnostics, wire
+  protocol, schema, scalars and codecs), a runnable `example/example.dart`
+  and `dart doc` categories for every exported type. The programs in the
+  guides are run by the test suite.

@@ -28,7 +28,8 @@ visitors and transformers, schema coordinates, source excerpts, every
 graphql-js language suite and the language fuzzers. M3a (schema core)
 delivers the schema model, SDL building and extension, the SDL printer,
 scalar codecs, the graphql-js schema builder, extension and printer suites
-and the SDL fuzzers.
+and the SDL fuzzers. M3c (core documentation) delivers the guides, the
+example and the dartdoc categories.
 
 ## Documents
 
@@ -333,6 +334,16 @@ thing. Tests that need `dart:io` start with `@TestOn('vm')`, because the core
 suite also runs in Chrome. Every package keeps at least one test: `dart test`
 fails when it finds none.
 
+**Documentation.** A program in a guide is a fence tagged `dart`: complete
+(imports and `main`), formatted by `dart format`, followed by a line ending
+in `It prints:` and a `text` fence with its exact output; a fragment or a
+signature is a `text` fence. A guide has no relative link (dartdoc breaks
+it) and names another guide by its topic. Every exported public type has
+`/// {@category <folder>}` in its doc comment (`schema/scalars/` is
+`scalars`); a new exported folder needs its category in
+`dartdoc_options.yaml` and its guide. `dart doc` reports 0 warnings. A stage
+that adds API adds its section to the guide of its layer in the same commit.
+
 **Self-review before saying "done".**
 1. `wc -l` of every file touched, and the longest method added.
 2. Could a new reader say in one sentence what each new class and method is
@@ -375,6 +386,10 @@ fails when it finds none.
 - Code rules suite: `test/quality/` at the workspace root (`code_rules.dart`
   and its scanners).
 - Core layer test: `packages/typed_graphql/test/quality/layers_test.dart`.
+- Guides: `packages/typed_graphql/doc/*.md`, tied to the dartdoc categories
+  by `packages/typed_graphql/dartdoc_options.yaml`; the example is
+  `packages/typed_graphql/example/example.dart`. The documentation suite is
+  `packages/typed_graphql/test/doc/`.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
 - Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`
   and `mapping/schema.csv`, checked by `test/mapping_test.dart` there; port
