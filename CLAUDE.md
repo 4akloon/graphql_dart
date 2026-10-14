@@ -93,7 +93,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 - `lexer/`: `Token` (`kind`, `start`, `end`, `value`) and `TokenKind`, whose
   `description` is how messages name it. `BlockString` holds the spec's
   `BlockStringValue` and graphql-js's printing rules; lexer and printer share
-  it.
+  it. `Lexer(source, sink).advance()` never throws: bad text becomes one
+  `error` token over the run and one diagnostic, with graphql-js's message
+  minus "Syntax Error: ". Scanners (`*_scanner.dart`) share a
+  `SourceReader` (text, `describe`, `report`); `CharacterClass` holds the
+  character tests.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

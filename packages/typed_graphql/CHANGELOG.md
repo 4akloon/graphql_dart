@@ -24,3 +24,5 @@
   enum value and root operation type definitions.
 - `Token`, `TokenKind` and `BlockString` (block string values and
   printing).
+- `Lexer`: names, numbers (raw lexemes), punctuators and comments, with
+  diagnostics `GQL001`–`GQL003` instead of exceptions.

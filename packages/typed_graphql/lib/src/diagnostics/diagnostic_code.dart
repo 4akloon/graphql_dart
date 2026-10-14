@@ -24,5 +24,17 @@ enum DiagnosticCode(
   /// `GQL000`: a sink kept as many errors as its limit allows and dropped
   /// the rest. It is reported once, at the place of the first dropped
   /// error; the run behind the sink should stop.
-  diagnosticLimitReached('GQL000');
+  diagnosticLimitReached('GQL000'),
+
+  /// `GQL001`: a character that starts no token, such as `~`, a single
+  /// quote or `..`.
+  unexpectedCharacter('GQL001'),
+
+  /// `GQL002`: a code unit that is not part of a Unicode scalar value: a
+  /// surrogate without its pair, in or outside a string (spec §2.1.1).
+  invalidCharacter('GQL002'),
+
+  /// `GQL003`: a malformed number, such as `007`, `1.`, `.5`, `1e` or a
+  /// name glued to a number (`1a`).
+  invalidNumber('GQL003');
 }
