@@ -66,7 +66,7 @@ jobs:
       - name: Install dependencies (workspace)
         run: dart pub get
 
-      - name: Test the code rules (workspace root)
+      - name: Test the code rules and the discovery checks (workspace root)
         run: dart test
 
       - name: Test every package

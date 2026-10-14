@@ -48,15 +48,19 @@ stage that makes it true.
 6. print GraphQL schema SDL dart
 7. decode GraphQL response errors dart
 8. GraphQL request response JSON types dart
+9. validate a GraphQL schema dart
+10. GraphQL introspection query schema dart
 
-Not yet targeted, because they do not work yet: validate a schema or an
-operation (M3b, M4), execute (M5), serve (M7), generate a client (M10). The
+Not yet targeted, because they do not work yet: validate an operation (M4),
+execute (M5), serve (M7), generate a client (M10). The
 queries live in `docs/discovery.md` (section 7) with the stage that unlocks
 each.
 
-## 3. Metadata (pub.dev rules, verified)
+## 3. Metadata (pub.dev rules, as the test checks them)
 
-Source: [dart.dev pubspec reference](https://dart.dev/tools/pub/pubspec).
+The limits below are pub.dev's rules as the metadata test checks them; the
+[dart.dev pubspec reference](https://dart.dev/tools/pub/pubspec) does not
+state the topic rules, so their source is not confirmed on that page.
 
 - `description`: plain text, no markdown, 60 to 180 characters. Start with a
   verb and the platform. Proposal for `typed_graphql` (check the length in the
@@ -69,12 +73,10 @@ Source: [dart.dev pubspec reference](https://dart.dev/tools/pub/pubspec).
 - `repository`: for a monorepo, the package folder, so that pub.dev can
   rewrite relative links and images:
   `https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql`
-  (the form the pub-dev maintainers give in
-  [dart-lang/pub-dev#5068](https://github.com/dart-lang/pub-dev/issues/5068)).
-  This works only with **repository verification** (public GitHub repository
-  whose pubspecs point back at it). The generated API reference does not
-  rewrite relative links, so doc comments keep using none (already a rule from
-  M3c).
+  (a convention, not verified: see docs/discovery.md, "Repository
+  verification"; confirm at M16). The generated API reference does not
+  rewrite relative links, so doc comments keep using none (already a rule
+  from M3c).
 - `issue_tracker` stays; images and badges use absolute URLs.
 - Pub points ask for an example and documented API: both exist since M3c.
 
@@ -96,8 +98,9 @@ For `typed_graphql`:
     build a schema from SDL, in Dart (VM, web or Wasm), and want errors as
     values with stable codes and places.
   - *You do not need it when* you only send a query string to a server and read
-    the JSON back; and, today, when you need to validate or execute (those
-    arrive in M3b, M4 and M5).
+    the JSON back; and, today, when you need to validate an operation or
+    execute (those arrive in M4 and M5). Schema validation, introspection and
+    coordinate resolution work today (M3b).
   - *What it replaces*: matching GraphQL text with regular expressions or string
     splitting, and reading responses as `Map<String, dynamic>`. The concrete
     faults: a regular expression does not see comments, block strings or nested

@@ -4,11 +4,11 @@
 ![Role](https://img.shields.io/badge/role-core-blue)
 ![Part of](https://img.shields.io/badge/part%20of-typed__graphql-purple)
 
-**GraphQL for Dart, written from scratch and fully typed: the language, the
-type system, validation and the wire protocol, with diagnostics instead of
-exceptions.** Pure Dart, depends only on `meta`, runs on the VM, AOT and the
-web (dart2js and dart2wasm). Part of
-[typed_graphql](https://github.com/4akloon/graphql_dart).
+**Parse, print and transform GraphQL queries and SDL in Dart, build and
+validate a schema from SDL, and decode GraphQL responses into sealed
+`ResponsePayload` values, with every syntax error reported in one pass with
+its line and column.** Pure Dart, depends only on `meta`, runs on the VM, AOT
+and the web (dart2js and dart2wasm). Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
 > **Status: under construction.** This release has the diagnostics model, the
 > protocol data types, the language (syntax trees, lexer, parser, printer,
@@ -21,6 +21,7 @@ web (dart2js and dart2wasm). Part of
 ## Contents
 
 - [Install](#install)
+- [Should I use this?](#should-i-use-this)
 - [A quick tour](#a-quick-tour)
 - [Guides](#guides)
 - [License](#license)
@@ -36,6 +37,32 @@ dependencies:
       url: https://github.com/4akloon/graphql_dart
       path: packages/typed_graphql
 ```
+
+## Should I use this?
+
+- **Use it when** you need to parse, print, rewrite or inspect GraphQL text,
+  or build and validate a schema from SDL, in Dart (VM, web or Wasm), and want
+  every problem as a diagnostic with a stable code (and a place when the
+  source is given), or a decode failure with a path
+  ([Language](doc/language.md#parsing-a-document),
+  [Schema](doc/schema.md#building-a-schema-from-sdl),
+  [Diagnostics](doc/diagnostics.md#reading-a-diagnostic)).
+- **You do not need it when** you only send a query string to a server and
+  read the JSON back. Today it also does not validate an operation against a
+  schema or execute one: operation validation arrives in this package in M4,
+  and execution in `typed_graphql_server` (M5).
+- **What it replaces**: matching GraphQL text with regular expressions or
+  string splitting, and reading responses as `Map<String, dynamic>`. A regular
+  expression does not see comments, block strings or nested selections, and
+  fails silently on them; a dynamic map reads `errors` and `path` without
+  checking their shape, so a wrong field is a runtime cast error far from its
+  cause. Here a document is a syntax tree, and `ResponsePayload.decode` checks
+  a response and names the path of a wrong field
+  ([Wire protocol](doc/protocol.md#responses),
+  [decode results](doc/protocol.md#decode-results)).
+- **Which package**: this one, the core, which depends only on `meta`. The
+  server, client and code generation packages build on it and are not usable
+  yet.
 
 ## A quick tour
 

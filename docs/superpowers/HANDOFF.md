@@ -14,6 +14,7 @@ needed.
 | M2 Language | [spec](specs/2026-10-14-m2-language-design.md) | M2a: [plan](plans/2026-10-14-m2a-language-core.md); M2b: [plan](plans/2026-10-14-m2b-language-tools.md) | M2a and M2b merged into `main` locally (M2a pushed, M2b not); M2 is complete; next is M3 (schema) |
 | M3 Type system | [spec](specs/2026-10-14-m3-type-system-design.md) | M3a: [plan](plans/2026-10-14-m3a-schema-core.md); M3b: [plan](plans/2026-10-14-m3b-schema-validation.md) | M3a and M3b merged into `main` locally (not pushed); M3 is complete; next is M4 (operation validation) |
 | M3c Core docs | [plan](plans/2026-10-14-m3c-core-docs.md) | — | merged into `main` locally (not pushed): six guides in `packages/typed_graphql/doc/`, `example/`, dartdoc categories, doc test suite (`test/doc/`), CI `dart doc` step. M3b added "Validating a schema" and "Resolving a coordinate" to `doc/schema.md`, and the `introspection` category with its guide `doc/introspection.md` |
+| Agent discoverability | [spec](specs/2026-10-14-agent-discoverability-design.md) | [plan](plans/2026-10-14-agent-discoverability.md) | implemented on its branch (not merged): pub.dev metadata, the core README's "Should I use this?", `llms.txt`, `docs/discovery.md`, the `test/discovery/` suite |
 
 **Decisions (2026-10-14):**
 - Layer order is diagnostics < language < protocol < schema < validation; the
@@ -46,7 +47,19 @@ The superpowers skills: `brainstorming`, `writing-plans`,
 
 ## Open for publishing (M16)
 
-- pub.dev rewrites relative README links only when `repository` is verified and, for a monorepo, points at the package folder (`https://github.com/4akloon/graphql_dart/tree/main/packages/<pkg>`); today every pubspec points at the repo root, so relative links in package READMEs would 404.
+- Every publishable pubspec's `repository` points at its package folder
+  (`https://github.com/4akloon/graphql_dart/tree/main/packages/<pkg>`);
+  pub.dev is expected to rewrite relative README links from it (to confirm at
+  M16).
+  What pub.dev checks for verification is still open: confirm it before
+  publishing ([discovery.md](../discovery.md), "Repository verification").
+- The five skeleton pubspec descriptions (server, shelf, client, codegen,
+  builder) name each package's planned role, an owner decision (spec §9
+  item 1) that breaks "say only what works today"; revisit them before
+  publishing.
+- After publishing, search pub.dev and the web for each query and record the
+  results in the release PR ([discovery.md](../discovery.md), "After a
+  release").
 - Chrome runs (dart2js/dart2wasm) cannot launch under the 8 GB `ulimit`; CI covers them.
 
 ## Open items

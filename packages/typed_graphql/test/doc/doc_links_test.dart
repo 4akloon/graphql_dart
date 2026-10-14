@@ -1,8 +1,6 @@
 @TestOn('vm')
 library;
 
-import 'dart:io';
-
 import 'package:test/test.dart';
 
 import 'doc_files.dart';
@@ -25,15 +23,7 @@ void main() {
     for (final MapEntry(key: path, value: markdown) in files.entries) {
       for (final MarkdownLink(:line, :target) in links.relativeIn(markdown)) {
         test('$path:$line -> $target', () {
-          final uri = Uri.parse(path).resolve(target);
-          expect(
-            FileSystemEntity.typeSync(uri.path),
-            isNot(FileSystemEntityType.notFound),
-          );
-          if (uri.fragment.isNotEmpty) {
-            final anchors = links.anchorsIn(links.readTarget(uri.path));
-            expect(anchors, contains(uri.fragment));
-          }
+          expect(links.problemOf(path, target), isNull);
         });
       }
     }

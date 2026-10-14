@@ -10,6 +10,8 @@
 > code rules cover it from the start. Its code arrives in stage M11 of the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md); nothing is exported yet.
 
+**Not usable yet.** This package exports nothing; the part of typed_graphql that works today is the core package, [typed_graphql](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql).
+
 Planned: `GraphQLClient`, the sealed `GraphQLResponse`, links for HTTP, WebSocket and SSE, and `MockLink` (M11); the normalized cache and `watchQuery` (M12).
 
 ## License

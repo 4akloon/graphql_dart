@@ -46,6 +46,10 @@ and the Introspection guide.
 - `docs/superpowers/plans/` - one plan per stage; `HANDOFF.md` - where the
   work stands and the rules the user set. Read it first in a new session.
 - `docs/research/` - the research and the decisions log (`README.md`).
+- `docs/discovery.md` - how agents find the packages: the search queries and
+  the stage that unlocks each, the pubspec metadata rules, what a README and
+  `llms.txt` may claim (only what works today), the re-check after a release.
+  `llms.txt` at the root is the map for agents.
 - `reference/` (git-ignored) - the specifications, protocols and graphql-js;
   fetch them with `tool/fetch_reference.sh`. Never edit it.
 
@@ -55,7 +59,7 @@ and the Introspection guide.
 dart pub get                                                  # repo root, once and after pubspec edits
 dart format --output=none --set-exit-if-changed packages test # must change 0 files
 dart analyze --fatal-infos                                    # repo root; must print "No issues found!"
-dart test                                                     # repo root: the code rules
+dart test                                                     # repo root: the code rules and the discovery checks
 cd packages/typed_graphql && dart test                        # one package (every package has tests)
 cd packages/typed_graphql && dart test --compiler exe         # AOT (sealed switches, sdk#56010)
 cd packages/typed_graphql && dart test -p chrome --compiler dart2js
@@ -423,6 +427,13 @@ folder needs its category in `dartdoc_options.yaml` and its guide. `dart doc`
 reports 0 warnings. A stage that adds API adds its section to the guide of
 its layer in the same commit.
 
+A stage that adds a capability adds its query to `docs/discovery.md`, its
+line in the core's README and its `llms.txt` entry; a README, a pubspec
+description and `llms.txt` say only what works today (exception: a
+skeleton package's description names its planned role; its README banner and
+the "Not usable yet." line carry the status). A link in a package
+README that leaves the package folder is an absolute URL.
+
 **Self-review before saying "done".**
 1. `wc -l` of every file touched, and the longest method added.
 2. Could a new reader say in one sentence what each new class and method is
@@ -464,6 +475,10 @@ its layer in the same commit.
 
 - Code rules suite: `test/quality/` at the workspace root (`code_rules.dart`
   and its scanners).
+- Discovery suite: `test/discovery/` at the workspace root (pubspec
+  metadata, README openings, `llms.txt`, links); it imports the core's
+  `MarkdownFences` and `MarkdownLinks` from
+  `packages/typed_graphql/test/doc/` instead of copying them.
 - Core layer test: `packages/typed_graphql/test/quality/layers_test.dart`.
 - Guides: `packages/typed_graphql/doc/*.md`, tied to the dartdoc categories
   by `packages/typed_graphql/dartdoc_options.yaml`; the example is

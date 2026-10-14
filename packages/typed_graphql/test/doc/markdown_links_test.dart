@@ -27,6 +27,16 @@ void main() {
     expect(found.single.line, 2);
   });
 
+  test('finds both targets of an image inside a link', () {
+    final found = links.relativeIn('[![CI](https://x.dev/b.svg)](LICENSE)');
+    expect(found.map((link) => link.target), ['LICENSE']);
+  });
+
+  test('finds the relative image of a linked badge too', () {
+    final found = links.relativeIn('[![CI](img/b.svg)](LICENSE)');
+    expect(found.map((link) => link.target), ['img/b.svg', 'LICENSE']);
+  });
+
   test('leaves out links inside fenced code', () {
     expect(links.relativeIn('```text\n[a](b.md)\n```\n'), isEmpty);
   });
@@ -63,6 +73,28 @@ void main() {
 
   test('keeps line numbers across a fence', () {
     expect(links.relativeIn('```text\nx\n```\n[a](b.md)').single.line, 4);
+  });
+
+  test('a link to an existing file and heading has no problem', () {
+    expect(links.problemOf('doc/language.md', '../README.md#install'), isNull);
+  });
+
+  test('a link to a folder has no problem', () {
+    expect(links.problemOf('README.md', 'doc'), isNull);
+  });
+
+  test('a link to a missing file says the file does not exist', () {
+    expect(
+      links.problemOf('README.md', 'doc/missing.md'),
+      'doc/missing.md does not exist',
+    );
+  });
+
+  test('a link to a missing heading names the anchor', () {
+    expect(
+      links.problemOf('README.md', '#missing'),
+      'README.md has no heading with the anchor #missing',
+    );
   });
 
   test('a link to a directory with an anchor fails with a clear message', () {
