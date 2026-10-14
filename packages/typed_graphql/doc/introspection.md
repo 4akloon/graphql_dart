@@ -41,7 +41,9 @@ false
 with, as a `JsonObject`. It writes only the fields the query reads, so the
 answer to a narrower query is smaller. A union lists every member as a
 possible type, even one that is not an object type, so the validator still
-sees it on the client. Introspect a validated schema: a reference to a type
+sees it on the client; a member named twice (`union U = A | A`) is written
+twice, as declared, whereas `Schema.possibleTypes` lists each object type
+once. Introspect a validated schema: a reference to a type
 the schema does not have is an `ArgumentError`.
 
 ```dart

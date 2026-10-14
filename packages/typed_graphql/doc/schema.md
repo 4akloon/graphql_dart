@@ -2,9 +2,10 @@
 
 The schema layer turns SDL into an immutable `Schema`, extends it, prints it
 back, validates it, resolves schema coordinates in it and exchanges it with
-introspection results (see the Introspection topic). A schema is plain data: named types, directive definitions and the names
-of the root types. It has no behaviour; the codecs of its scalars are held
-apart (see the Scalars & Codecs topic).
+introspection results (see the Introspection topic). A schema is plain
+data: named types, directive definitions and the names of the root types.
+It has no behaviour; the codecs of its scalars are held apart (see the
+Scalars & Codecs topic).
 
 ## Building a schema from SDL
 
