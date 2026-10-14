@@ -1,3 +1,4 @@
+import '../../diagnostics/source_span.dart';
 import '../../language/ast/enum_value_definition.dart';
 import '../../language/ast/field_definition.dart';
 import '../../language/ast/input_value_definition.dart';
@@ -5,6 +6,7 @@ import '../../language/ast/node.dart';
 import '../../language/ast/type_system_extension.dart';
 import '../model/applied_directive.dart';
 import '../model/schema_type.dart';
+import '../schema.dart';
 import 'build_report.dart';
 import 'built_ins.dart';
 import 'element_reader.dart';
@@ -21,16 +23,25 @@ import 'member_filter.dart';
 final class TypeExtender(
   /// Receives the errors and gives the spans.
   final BuildReport report,
+
+  /// The schema being extended: a member its type has is "already in the
+  /// schema", which graphql-js words differently from a repeat.
+  final Schema base,
 ) {
   /// Creates an extender.
   this;
 
-  /// [types] with [extensions] applied, in the order of [types].
+  /// [types] with [extensions] applied, in the order of [types]; an
+  /// extension applies to the first type of its name.
   List<SchemaType> applyAll(
     List<SchemaType> types,
     List<TypeExtension> extensions,
   ) {
-    final extended = {for (final type in types.reversed) type.name: type};
+    final extended = [...types];
+    final indexes = <String, int>{};
+    for (final (index, type) in types.indexed) {
+      indexes.putIfAbsent(type.name, () => index);
+    }
     for (final node in extensions) {
       final name = node.name.value;
       if (const BuiltIns().typeNamed(name) != null) {
@@ -39,8 +50,9 @@ final class TypeExtender(
           'The built-in type "$name" cannot be extended.',
           node.name,
         );
-      } else if (extended[name] case final type?) {
-        extended[name] = _extend(type, node) ?? _mismatch(type, node);
+      } else if (indexes[name] case final index?) {
+        final type = extended[index];
+        extended[index] = _extend(type, node) ?? _mismatch(type, node);
       } else {
         report.error(
           .unknownExtensionTarget,
@@ -49,7 +61,7 @@ final class TypeExtender(
         );
       }
     }
-    return [for (final type in types) extended[type.name] ?? type];
+    return extended;
   }
 
   SchemaType _mismatch(SchemaType type, TypeExtension node) {
@@ -164,20 +176,29 @@ final class TypeExtender(
 
   /// The members of [node] that [type] does not have yet.
   Iterable<T> _members<T extends Node>(SchemaType type, TypeExtension node) {
-    final earlier = switch (type) {
-      ObjectType(:final fields) || InterfaceType(:final fields) => {
-        for (final field in fields) field.name: field.span,
-      },
-      EnumType(:final values) => {
-        for (final value in values) value.name: value.span,
-      },
-      InputObjectType(:final fields) => {
-        for (final field in fields) field.name: field.span,
-      },
-      ScalarType() || UnionType() => const <String, Never>{},
-    };
-    return MemberFilter(
-      report,
-    ).members(type.name, node.children, earlier).whereType<T>();
+    final original = base.typeNamed(type.name);
+    return MemberFilter(report)
+        .members(
+          type.name,
+          node.children,
+          _memberSpans(type),
+          inSchema: original == null
+              ? const {}
+              : {..._memberSpans(original).keys},
+        )
+        .whereType<T>();
   }
+
+  Map<String, SourceSpan?> _memberSpans(SchemaType type) => switch (type) {
+    ObjectType(:final fields) || InterfaceType(:final fields) => {
+      for (final field in fields) field.name: field.span,
+    },
+    EnumType(:final values) => {
+      for (final value in values) value.name: value.span,
+    },
+    InputObjectType(:final fields) => {
+      for (final field in fields) field.name: field.span,
+    },
+    ScalarType() || UnionType() => const {},
+  };
 }

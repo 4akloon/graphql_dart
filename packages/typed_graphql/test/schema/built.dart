@@ -9,8 +9,18 @@ final class Built {
   Built(String text, {SchemaBuilder builder = const SchemaBuilder()})
     : this._(Sdl(text), builder);
 
+  /// Extends [base] with [text].
+  Built.extending(Schema base, String text) : this._onto(base, Sdl(text));
+
   Built._(Sdl sdl, SchemaBuilder builder)
     : result = builder.fromSdl(sdl.document, source: sdl.source);
+
+  Built._onto(Schema base, Sdl sdl)
+    : result = const SchemaBuilder().extend(
+        base,
+        sdl.document,
+        source: sdl.source,
+      );
 
   /// What the builder returned.
   final BuildResult result;

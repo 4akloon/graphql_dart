@@ -202,7 +202,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   definition or extension names, and only without a schema definition.
   `TypeExtender` appends an extension's members, interfaces, union members
   and directives after the type's own, in document order, and keeps the
-  definition's span.
+  definition's span. `extend(schema, document, source:)` is the same run
+  over a base schema, without default roots; a member the base already has
+  is "already exists in the schema" (no related span). `DirectiveExtender`
+  applies `extend directive`.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

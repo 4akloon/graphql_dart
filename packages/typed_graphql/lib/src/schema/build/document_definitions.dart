@@ -20,6 +20,8 @@ final class DocumentDefinitions {
           directives.add(definition);
         case SchemaExtension():
           schemaExtensions.add(definition);
+        case DirectiveExtension():
+          directiveExtensions.add(definition);
         case ExecutableDefinition():
           executables.add(definition);
       }
@@ -41,6 +43,18 @@ final class DocumentDefinitions {
   /// The directive definitions.
   final List<DirectiveDefinition> directives = [];
 
+  /// The directive extensions (working draft).
+  final List<DirectiveExtension> directiveExtensions = [];
+
   /// What a schema cannot hold: operations and fragments.
   final List<ExecutableDefinition> executables = [];
+
+  /// Whether there is a type-system definition or extension.
+  bool get hasTypeSystem =>
+      schemas.isNotEmpty ||
+      schemaExtensions.isNotEmpty ||
+      types.isNotEmpty ||
+      typeExtensions.isNotEmpty ||
+      directives.isNotEmpty ||
+      directiveExtensions.isNotEmpty;
 }

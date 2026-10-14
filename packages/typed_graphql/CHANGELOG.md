@@ -94,3 +94,7 @@
 - The builder applies type extensions of every kind; `GQL109` for an
   extension of a missing type, `GQL110` for one of another kind,
   `GQL103` for one of a built-in.
+- `SchemaBuilder.extend`: applies a document's definitions and extensions
+  to an existing `Schema` (graphql-js's `extendSchema`), giving the schema
+  back when the document has none; directive extensions (working draft)
+  are applied too.

@@ -4,6 +4,7 @@ import '../model/schema_directive.dart';
 import '../model/schema_type.dart';
 import '../schema.dart';
 import 'build_report.dart';
+import 'directive_extender.dart';
 import 'document_definitions.dart';
 import 'element_reader.dart';
 import 'member_filter.dart';
@@ -27,11 +28,30 @@ final class SchemaAssembly(
   Schema fromSdl(
     DocumentDefinitions definitions, {
     required bool includesDeferAndStream,
+  }) => _apply(
+    Schema(includesDeferAndStream: includesDeferAndStream),
+    definitions,
+    appliesDefaultRoots: definitions.schemas.isEmpty,
+  );
+
+  /// [base] with [definitions] applied, as graphql-js's `extendSchema`:
+  /// [base] itself when there is no type-system definition or extension.
+  Schema extend(Schema base, DocumentDefinitions definitions) {
+    if (definitions.hasTypeSystem) {
+      return _apply(base, definitions, appliesDefaultRoots: false);
+    }
+    _reportExecutables(definitions);
+    return base;
+  }
+
+  Schema _apply(
+    Schema base,
+    DocumentDefinitions definitions, {
+    required bool appliesDefaultRoots,
   }) {
-    final base = Schema(includesDeferAndStream: includesDeferAndStream);
     _reportExecutables(definitions);
     final unique = UniqueDefinitions(report, base);
-    final types = TypeExtender(report).applyAll(
+    final types = TypeExtender(report, base).applyAll(
       _types(base, unique.types(definitions.types)),
       definitions.typeExtensions,
     );
@@ -39,12 +59,15 @@ final class SchemaAssembly(
       report,
       _elements,
     ).read(base, definitions.schemas, definitions.schemaExtensions);
-    final defaults = definitions.schemas.isEmpty
+    final defaults = appliesDefaultRoots
         ? _defaultRoots(types)
         : const <OperationType, String>{};
     return Schema(
       types: types,
-      directives: _directives(base, unique.directives(definitions.directives)),
+      directives: DirectiveExtender(report, base).applyAll(
+        _directives(base, unique.directives(definitions.directives)),
+        definitions.directiveExtensions,
+      ),
       queryTypeName: header.queryTypeName ?? defaults[OperationType.query],
       mutationTypeName:
           header.mutationTypeName ?? defaults[OperationType.mutation],

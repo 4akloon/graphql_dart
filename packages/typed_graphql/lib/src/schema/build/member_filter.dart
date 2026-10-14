@@ -35,13 +35,17 @@ final class MemberFilter(
 
   /// [children] of a definition or an extension of the type [typeName]
   /// without the members named in [earlier] or before in [children]; the
-  /// kept fields lose their repeated arguments. [earlier] maps the names of
-  /// the members the type already has to their spans.
+  /// kept fields lose their repeated arguments.
+  ///
+  /// [earlier] maps the names of the members the type already has to their
+  /// spans; a name in [inSchema] came from the schema being extended,
+  /// which graphql-js words differently.
   List<Node> members(
     String typeName,
     List<Node> children,
-    Map<String, SourceSpan?> earlier,
-  ) {
+    Map<String, SourceSpan?> earlier, {
+    Set<String> inSchema = const {},
+  }) {
     final seen = {...earlier};
     final kept = <Node>[];
     for (final child in children) {
@@ -53,13 +57,18 @@ final class MemberFilter(
       };
       switch (_memberName(member)) {
         case final name? when seen.containsKey(name.value):
-          final isEnumValue = member is EnumValueDefinition;
+          final isInSchema = inSchema.contains(name.value);
           report.error(
-            isEnumValue ? .duplicateEnumValueName : .duplicateFieldName,
-            '${isEnumValue ? 'Enum value' : 'Field'} '
-            '"$typeName.${name.value}" can only be defined once.',
+            member is EnumValueDefinition
+                ? .duplicateEnumValueName
+                : .duplicateFieldName,
+            _message(
+              member,
+              '$typeName.${name.value}',
+              isInSchema: isInSchema,
+            ),
             name,
-            related: seen[name.value],
+            related: isInSchema ? null : seen[name.value],
           );
         case final name?:
           seen[name.value] = report.spans.of(member);
@@ -91,6 +100,18 @@ final class MemberFilter(
       kept.add(child);
     }
     return kept;
+  }
+
+  String _message(
+    Node member,
+    String coordinate, {
+    required bool isInSchema,
+  }) {
+    final what = member is EnumValueDefinition ? 'Enum value' : 'Field';
+    return isInSchema
+        ? '$what "$coordinate" already exists in the schema. It cannot also '
+              'be defined in this type extension.'
+        : '$what "$coordinate" can only be defined once.';
   }
 
   Name? _memberName(Node node) => switch (node) {
