@@ -1,6 +1,6 @@
 # Agent discoverability: design
 
-Status: draft for review, 2026-10-14. Not part of a numbered stage; it refines
+Status: approved by the owner 2026-10-14 (open points decided in section 9). Not part of a numbered stage; it refines
 R11.1 (READMEs) and adds a small process around it. It never overrides the
 [architecture](2026-10-13-typed-graphql-design.md).
 
@@ -168,15 +168,15 @@ for plans and from `CONTRIBUTING.md`.
   query, write the results into the release PR description, and promise no
   ranking in any document.
 
-## 9. Open points for review
+## 9. Decisions on the open points
 
-1. Skeleton packages get only the `repository` fix and a "not usable yet" line.
-   Their descriptions already describe future features ("A fully typed GraphQL
-   server…"); keep them (they are the product's intent) or reword them to say
-   "planned"? Recommendation: keep, because the README banner says the status
-   and pub.dev will not list unpublished packages.
-2. Add a rule to `docs/roadmap.md` ("a stage that adds a capability adds its
-   query, its README line and its `llms.txt` entry"), like the M3c
-   documentation rule? Not chosen yet; recommended, and cheap.
-3. Recipes: deferred as decided. The first stage that should bring them is M5
+Taken 2026-10-14 when the owner answered "do everything" to the review request,
+adopting the recommendations:
+
+1. Skeleton packages keep their descriptions; only the `repository` fix and the
+   "not usable yet" line change.
+2. `docs/roadmap.md` gets the rule "a stage that adds a capability adds its
+   query to `docs/discovery.md`, its README line and its `llms.txt` entry" next
+   to the M3c documentation rule. The plan includes it.
+3. Recipes stay deferred; the first stage that should bring them is M5
    (execution), when "serve GraphQL in Dart" becomes true.
