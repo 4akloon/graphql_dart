@@ -7,3 +7,5 @@
   and columns computed on demand, and ranges.
 - `DiagnosticCode` (the catalog, seeded with `GQL000`), `DiagnosticSeverity`,
   `Diagnostic` and `DiagnosticSink`.
+- `JsonValue`, a sealed family for arbitrary JSON; `PathSegment` and
+  `DecodeResult`.
