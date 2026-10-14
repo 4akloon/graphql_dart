@@ -50,14 +50,18 @@ final class SelectionParser {
       cursor.fail(.emptySelectionSet, 'Unexpected empty selection set.');
     }
     final selections = <Selection>[];
+    var hasDropped = false;
     while (!cursor.expectOptional(.braceRight)) {
       if (_selectionOrSkip() case final selection?) {
         selections.add(selection);
+      } else {
+        hasDropped = true;
       }
     }
-    if (selections.isEmpty && !allowsEmpty) {
-      // Every selection failed and was reported; an empty set would not
-      // be a valid tree, so the enclosing selection fails too.
+    if (selections.isEmpty && (!allowsEmpty || hasDropped)) {
+      // Every selection failed and was reported (or empty sets are not
+      // allowed); an empty set would misstate the source, so the
+      // enclosing selection fails too.
       throw const SyntaxAbort();
     }
     return SelectionSet(selections, start: start, end: cursor.lastEnd);

@@ -87,4 +87,59 @@ void main() {
       expect(diagnostics.last.code, DiagnosticCode.diagnosticLimitReached);
     });
   });
+
+  group('resynchronisation', () {
+    test('a header error skips the body of the failed definition', () {
+      expect(fieldNames(Parsed(r'query Q($a: ) { b } { c }').partial), [
+        'c',
+      ]);
+      expect(fieldNames(Parsed(r'query Q($a: ) { b }').partial), isEmpty);
+      expect(fieldNames(Parsed('fragment F on { a }').partial), isEmpty);
+      expect(
+        fieldNames(Parsed('fragment F { a } { b }').partial),
+        ['b'],
+      );
+      expect(
+        fieldNames(Parsed(r'query Q($a: Int = ) { b } { c }').partial),
+        ['c'],
+      );
+      expect(fieldNames(Parsed('type Foo { a: Int }').partial), isEmpty);
+    });
+
+    test('a stray closer at the top level is skipped', () {
+      final parsed = Parsed('} query { a }');
+      expect(parsed.errors, ['1:1 GQL008 Unexpected "}".']);
+      expect(fieldNames(parsed.partial), ['a']);
+    });
+
+    test('a stray closer inside a selection set is skipped', () {
+      final parsed = Parsed('{ a ) b }');
+      expect(parsed.errors, hasLength(1));
+      expect(fieldNames(parsed.partial), ['a', 'b']);
+    });
+
+    test('an unclosed parenthesis swallows the later definitions', () {
+      final parsed = Parsed(r'query Q($a: Int { b } query R { c }');
+      expect(parsed.errors, hasLength(1));
+      expect(parsed.partial.definitions, isEmpty);
+    });
+  });
+
+  group('empty selection sets allowed', () {
+    const options = ParserOptions(allowEmptySelectionSets: true);
+
+    test('a set whose every selection failed drops the definition', () {
+      for (final text in ['{ ~ }', '{ ... on }', '{ a @ }']) {
+        expect(Parsed(text, options: options).partial.definitions, isEmpty);
+      }
+    });
+
+    test('a genuinely empty set still parses as empty', () {
+      final operation = Parsed(
+        '{ }',
+        options: options,
+      ).single<OperationDefinition>();
+      expect(operation.selectionSet.selections, isEmpty);
+    });
+  });
 }

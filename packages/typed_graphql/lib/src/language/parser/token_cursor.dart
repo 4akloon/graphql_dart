@@ -32,6 +32,7 @@ final class TokenCursor {
   Token _token;
   Token? _lookahead;
   int _lastEnd = 0;
+  TokenKind? _lastKind;
   int _balance = 0;
   int _depth = 0;
   final Set<int> _reportedOffsets = {};
@@ -41,6 +42,9 @@ final class TokenCursor {
 
   /// The end of the last consumed token: the end of the node being built.
   int get lastEnd => _lastEnd;
+
+  /// The kind of the last consumed token; null before the first.
+  TokenKind? get lastKind => _lastKind;
 
   /// Opening minus closing brackets, braces and parentheses consumed; the
   /// recovery uses it to stay at the level where the error happened.
@@ -56,6 +60,7 @@ final class TokenCursor {
   /// Consumes [token].
   void advance() {
     _lastEnd = _token.end;
+    _lastKind = _token.kind;
     _balance += switch (_token.kind) {
       .braceLeft || .bracketLeft || .parenLeft => 1,
       .braceRight || .bracketRight || .parenRight => -1,

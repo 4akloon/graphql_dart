@@ -52,8 +52,12 @@ final class Recovery {
     }
   }
 
-  static bool _startsDefinition(Token token) => switch (token.kind) {
-    .braceLeft || .string || .blockString => true,
+  /// A `{` starts a definition only after a closed block or at the start;
+  /// elsewhere it opens the body of the failed definition, which is
+  /// skipped with it.
+  bool _startsDefinition(Token token) => switch (token.kind) {
+    .braceLeft => cursor.lastKind == null || cursor.lastKind == .braceRight,
+    .string || .blockString => true,
     .name => _definitionKeywords.contains(token.value),
     _ => false,
   };
