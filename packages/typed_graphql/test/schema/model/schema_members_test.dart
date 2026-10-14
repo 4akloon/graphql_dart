@@ -64,7 +64,7 @@ void main() {
     test('reads the first of two @deprecated', () {
       final directive = SchemaDirective(
         'd',
-        locations: ['FIELD'],
+        locations: [.field],
         appliedDirectives: [
           deprecated(const StringValue('first')),
           deprecated(const StringValue('second')),
@@ -98,9 +98,15 @@ void main() {
   });
 
   test('a directive definition is not repeatable by default', () {
-    final directive = SchemaDirective('d', locations: ['FIELD', 'QUERY']);
+    final directive = SchemaDirective(
+      'd',
+      locations: [.field, .query],
+    );
     expect(directive.isRepeatable, isFalse);
-    expect(directive.locations, ['FIELD', 'QUERY']);
+    expect(directive.locations, [
+      DirectiveLocation.field,
+      DirectiveLocation.query,
+    ]);
   });
 
   test('an input value keeps its default value node', () {
@@ -115,7 +121,7 @@ void main() {
 
   test('the lists of a field and a directive cannot be modified', () {
     final field = SchemaField('f', const NamedType(Name('String')));
-    final directive = SchemaDirective('d', locations: ['FIELD']);
+    final directive = SchemaDirective('d', locations: [.field]);
     expect(
       () => field.arguments.add(InputValue('a', field.type)),
       throwsUnsupportedError,
@@ -124,14 +130,14 @@ void main() {
       () => field.appliedDirectives.add(AppliedDirective('x')),
       throwsUnsupportedError,
     );
-    expect(() => directive.locations.add('QUERY'), throwsUnsupportedError);
+    expect(() => directive.locations.add(.query), throwsUnsupportedError);
   });
 
   test('an element does not see the list it was built from change', () {
-    final locations = ['FIELD'];
+    final locations = [DirectiveLocation.field];
     final directive = SchemaDirective('d', locations: locations);
-    locations.add('QUERY');
-    expect(directive.locations, ['FIELD']);
+    locations.add(.query);
+    expect(directive.locations, [DirectiveLocation.field]);
   });
 
   test('an element keeps its description and span', () {

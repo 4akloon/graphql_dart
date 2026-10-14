@@ -1,4 +1,5 @@
 import '../../diagnostics/source_span.dart';
+import '../../language/ast/directive_location.dart';
 import 'applied_directive.dart';
 import 'applied_directives.dart';
 import 'input_value.dart';
@@ -21,7 +22,7 @@ final class SchemaDirective(
 
   /// Whether it may be applied more than once to one place.
   final bool isRepeatable = false,
-  List<String> locations = const [],
+  List<DirectiveLocation> locations = const [],
   List<AppliedDirective> appliedDirectives = const [],
 
   /// Where it was defined; null when it was not read from SDL.
@@ -33,8 +34,8 @@ final class SchemaDirective(
   /// The arguments, in declaration order.
   final List<InputValue> arguments = List.unmodifiable(arguments);
 
-  /// The locations it may be applied to, such as `FIELD`, as written.
-  final List<String> locations = List.unmodifiable(locations);
+  /// The locations it may be applied to, in the order written.
+  final List<DirectiveLocation> locations = List.unmodifiable(locations);
 
   /// The directives applied to the definition itself, in the order written.
   final List<AppliedDirective> appliedDirectives = List.unmodifiable(

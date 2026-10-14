@@ -37,7 +37,7 @@ final class const TypePrinter() {
       'directive @${directive.name}${_members.arguments(directive.arguments)}'
       '${_members.directives(directive.appliedDirectives)}'
       '${directive.isRepeatable ? ' repeatable' : ''}'
-      ' on ${directive.locations.join(' | ')}';
+      ' on ${directive.locations.map((location) => location.spelling).join(' | ')}';
 
   static String _union(List<NamedType> memberTypes) =>
       memberTypes.isEmpty ? '' : ' = ${_names(memberTypes, ' | ')}';

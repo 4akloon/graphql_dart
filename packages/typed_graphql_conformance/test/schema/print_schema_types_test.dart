@@ -275,7 +275,7 @@ void main() {
     test('Prints custom directives', () {
       final schema = Schema(
         directives: [
-          SchemaDirective('simpleDirective', locations: ['FIELD']),
+          SchemaDirective('simpleDirective', locations: [.field]),
           SchemaDirective(
             'complexDirective',
             description: 'Complex Directive',
@@ -284,7 +284,7 @@ void main() {
               port.input('intArg', 'Int', defaultValue: '-1'),
             ],
             isRepeatable: true,
-            locations: ['FIELD', 'QUERY'],
+            locations: [.field, .query],
           ),
         ],
       );
@@ -304,7 +304,7 @@ void main() {
         directives: [
           SchemaDirective(
             'deprecatedDirective',
-            locations: ['FIELD'],
+            locations: [.field],
             appliedDirectives: port.applied(
               '@deprecated(reason: "Use another directive")',
             ),

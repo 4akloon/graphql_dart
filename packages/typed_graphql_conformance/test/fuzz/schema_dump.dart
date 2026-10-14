@@ -54,7 +54,7 @@ final class SchemaDump {
   List<String> _directive(SchemaDirective directive) => [
     ..._described(
       'directive ${directive.name} repeatable ${directive.isRepeatable} '
-      'on ${directive.locations.join(' | ')}',
+      'on ${directive.locations.map((location) => location.spelling).join(' | ')}',
       directive.description,
       directive.appliedDirectives,
     ),

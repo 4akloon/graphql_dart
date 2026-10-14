@@ -20,6 +20,7 @@ export 'src/diagnostics/source_span.dart';
 export 'src/language/ast/argument.dart';
 export 'src/language/ast/definition.dart';
 export 'src/language/ast/directive.dart';
+export 'src/language/ast/directive_location.dart';
 export 'src/language/ast/document.dart';
 export 'src/language/ast/enum_value_definition.dart';
 export 'src/language/ast/executable_definition.dart';

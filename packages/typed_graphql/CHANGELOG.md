@@ -116,3 +116,7 @@
   protocol, schema, scalars and codecs), a runnable `example/example.dart`
   and `dart doc` categories for every exported type. The programs in the
   guides are run by the test suite.
+- **Breaking:** `SchemaDirective.locations` is a `List<DirectiveLocation>`.
+  `DirectiveLocation` names the nineteen September2025 locations and the
+  working draft's `DIRECTIVE_DEFINITION` (`spelling`, `named`,
+  `isExecutable`); the parser accepts exactly its spellings.

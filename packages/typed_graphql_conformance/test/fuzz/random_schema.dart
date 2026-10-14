@@ -13,26 +13,9 @@ final class RandomSchema {
   final RandomParts parts;
 
   /// The 19 directive locations of the September2025 edition.
-  static const List<String> _locations = [
-    'QUERY',
-    'MUTATION',
-    'SUBSCRIPTION',
-    'FIELD',
-    'FRAGMENT_DEFINITION',
-    'FRAGMENT_SPREAD',
-    'INLINE_FRAGMENT',
-    'VARIABLE_DEFINITION',
-    'SCHEMA',
-    'SCALAR',
-    'OBJECT',
-    'FIELD_DEFINITION',
-    'ARGUMENT_DEFINITION',
-    'INTERFACE',
-    'UNION',
-    'ENUM',
-    'ENUM_VALUE',
-    'INPUT_OBJECT',
-    'INPUT_FIELD_DEFINITION',
+  static final List<DirectiveLocation> _locations = [
+    for (final location in DirectiveLocation.values)
+      if (location != .directiveDefinition) location,
   ];
 
   /// A schema of up to six types and two directive definitions. A type

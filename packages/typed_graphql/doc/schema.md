@@ -112,7 +112,7 @@ The elements of the model:
 | `SchemaField` | A field of an object or interface: `name`, `type`, `arguments`, `description` |
 | `InputValue` | An argument or an input field, with its `defaultValue` |
 | `SchemaEnumValue` | A value of an enum |
-| `SchemaDirective` | A directive definition: `arguments`, `isRepeatable`, `locations` |
+| `SchemaDirective` | A directive definition: `arguments`, `isRepeatable`, `locations` (`DirectiveLocation` values, whose `spelling` is the SDL name) |
 | `AppliedDirective` | A directive applied to an element, with its arguments as written |
 
 The spec's own names, `FieldDefinition`, `EnumValueDefinition` and
@@ -210,7 +210,7 @@ void main() {
   print(schema.typeNamed('__Schema')?.name);
   final deprecated = schema.directiveNamed('deprecated');
   print(deprecated?.arguments.map((argument) => argument.name).toList());
-  print(deprecated?.locations);
+  print(deprecated?.locations.map((location) => location.spelling).toList());
 
   // @defer and @stream are opt-in.
   print(schema.directiveNamed('defer'));

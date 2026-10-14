@@ -56,7 +56,7 @@ void main() {
             'someDirective',
             description: '',
             arguments: arguments(),
-            locations: ['QUERY'],
+            locations: [.query],
           ),
         ],
       );

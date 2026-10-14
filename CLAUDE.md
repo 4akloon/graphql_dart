@@ -132,7 +132,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   definition's draft parts report `GQL014` instead of a generic error.
   `Parser.parseSchemaCoordinate` runs `SchemaCoordinateParser` over a
   cursor on a `SchemaCoordinateLexer` (the cursor reads any
-  `TokenSource`); `ParserOptions` do not apply to it.
+  `TokenSource`); `ParserOptions` do not apply to it. A directive
+  definition's locations are checked against `DirectiveLocation`
+  (`ast/directive_location.dart`), whose `spelling` is the SDL name.
 - `printer/`: `Printer` prints any node as graphql-js's `print` does, to
   the character (80-column wrapping included), through collaborators:
   `ValuePrinter` (values, types, arguments, directives), `ExecutablePrinter`,
@@ -185,7 +187,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   Every element has `SourceSpan? span`. `deprecationReason`,
   `specifiedByUrl` and `isOneOf` read the applied directives through the
   internal `AppliedDirectives`; the directives stay in the element's list.
-  Elements compare by identity.
+  Elements compare by identity. `SchemaDirective.locations` are
+  `DirectiveLocation` values; a code-built node with another spelling is an
+  `ArgumentError` in the reader.
 - `build/BuiltIns` (const): the five built-in scalars, the five specified
   directives, `defer` and `stream` (graphql-js's definitions, not in the
   specified five) and the introspection types, read once from the internal
