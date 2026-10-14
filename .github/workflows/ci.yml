@@ -12,7 +12,9 @@ permissions:
 # R10.5: the minimum SDK and stable; AOT; dart2js and dart2wasm; a publish
 # dry-run. Formatting and lints run once, on stable: the minimum SDK only
 # has to compile and pass the tests. Every package of packages/ is tested
-# by the loops below, so a new package needs no change here.
+# by the loops below, so a new package needs no change there; the publish
+# dry-run job lists its packages by hand, so add a new published package
+# to that list.
 jobs:
   analyze:
     name: Format and analyze
