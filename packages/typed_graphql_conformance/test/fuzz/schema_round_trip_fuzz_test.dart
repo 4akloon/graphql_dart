@@ -9,6 +9,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 import 'fuzz_budget.dart';
 import 'random_parts.dart';
 import 'random_schema.dart';
+import 'schema_coverage.dart';
 import 'schema_dump.dart';
 
 /// R10.4 and spec §11 of M3, property 1: a random schema, printed as SDL
@@ -33,43 +34,41 @@ void main() {
     };
   }
 
+  void check(int index) {
+    final schema = RandomSchema(RandomParts(budget.randomFor(index))).schema();
+    final text = printer.print(schema);
+    final reason = '${budget.replay(index)}\n$text';
+    // An empty document is a syntax error (spec §2.2), so an empty
+    // schema is checked to be one instead.
+    if (text.isEmpty) {
+      expect(dump.of(schema), dump.of(Schema()), reason: reason);
+      return;
+    }
+    final built = rebuilt(text, reason);
+    expect(dump.of(built), dump.of(schema), reason: reason);
+    expect(printer.print(built), text, reason: reason);
+  }
+
   test('print then build gives the same schema and the same text', () {
     for (var index = 0; index < budget.iterations; index++) {
-      final schema = RandomSchema(
-        RandomParts(budget.randomFor(index)),
-      ).schema();
-      final text = printer.print(schema);
-      final reason = '${budget.replay(index)}\n$text';
-      // An empty document is a syntax error (spec §2.2), so an empty
-      // schema is checked to be one instead.
-      if (text.isEmpty) {
-        expect(dump.of(schema), dump.of(Schema()), reason: reason);
-        continue;
+      var isDone = false;
+      try {
+        check(index);
+        isDone = true;
+      } finally {
+        // The generator and the printer can throw too; name the replay.
+        if (!isDone) printOnFailure(budget.replay(index));
       }
-      final built = rebuilt(text, reason);
-      expect(dump.of(built), dump.of(schema), reason: reason);
-      expect(printer.print(built), text, reason: reason);
     }
   });
 
   test('the generator makes every kind of schema element', () {
-    final kinds = <String>{};
+    final features = <String>{};
     for (var index = 0; index < 200; index++) {
       final parts = RandomParts(Random(FuzzBudget.defaultSeed + index));
-      final schema = RandomSchema(parts).schema();
-      kinds.addAll([
-        for (final type in schema.types) '${type.runtimeType}',
-        if (schema.directives.isNotEmpty) 'directive',
-        if (schema.typeNamed('Query') != null) 'Query',
-        if (schema.queryTypeName != null) 'query root',
-        if (schema.mutationTypeName != null) 'mutation root',
-        if (schema.description != null) 'schema description',
-        if (schema.appliedDirectives.isNotEmpty) 'schema directive',
-        for (final line in dump.of(schema))
-          if (line.contains(' = ') && !line.endsWith('= none')) 'default value',
-      ]);
+      features.addAll(const SchemaCoverage().of(RandomSchema(parts).schema()));
     }
-    expect(kinds, {
+    expect(features, {
       'ScalarType',
       'ObjectType',
       'InterfaceType',
@@ -77,12 +76,31 @@ void main() {
       'EnumType',
       'InputObjectType',
       'directive',
+      'repeatable directive',
+      'non-repeatable directive',
       'Query',
       'query root',
       'mutation root',
+      'subscription root',
       'schema description',
       'schema directive',
-      'default value',
+      'interface implements',
+      'directive with arguments',
+      'awkward description',
+      'deprecated',
+      'specifiedBy',
+      'oneOf',
+      for (final kind in [
+        'IntValue',
+        'FloatValue',
+        'StringValue',
+        'BooleanValue',
+        'NullValue',
+        'EnumValue',
+        'ListValue',
+        'ObjectValue',
+      ])
+        'default $kind',
     });
   });
 }

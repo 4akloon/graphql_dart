@@ -12,17 +12,27 @@ final class RandomSchema {
   /// The shared random parts.
   final RandomParts parts;
 
+  /// The 19 directive locations of the September2025 edition.
   static const List<String> _locations = [
     'QUERY',
+    'MUTATION',
+    'SUBSCRIPTION',
     'FIELD',
+    'FRAGMENT_DEFINITION',
     'FRAGMENT_SPREAD',
+    'INLINE_FRAGMENT',
+    'VARIABLE_DEFINITION',
     'SCHEMA',
     'SCALAR',
     'OBJECT',
     'FIELD_DEFINITION',
     'ARGUMENT_DEFINITION',
+    'INTERFACE',
+    'UNION',
+    'ENUM',
     'ENUM_VALUE',
     'INPUT_OBJECT',
+    'INPUT_FIELD_DEFINITION',
   ];
 
   /// A schema of up to six types and two directive definitions. A type
@@ -41,8 +51,14 @@ final class RandomSchema {
       mutation: objects.isNotEmpty && parts.chance(30)
           ? parts.pick(objects)
           : null,
+      subscription: objects.isNotEmpty && parts.chance(30)
+          ? parts.pick(objects)
+          : null,
     );
-    final hasRoots = roots.query != null || roots.mutation != null;
+    final hasRoots =
+        roots.query != null ||
+        roots.mutation != null ||
+        roots.subscription != null;
     return Schema(
       types: [
         if (query != null) ObjectType(query, fields: _members(2, _field)),
@@ -51,6 +67,7 @@ final class RandomSchema {
       directives: _members(2, _directive),
       queryTypeName: roots.query,
       mutationTypeName: roots.mutation,
+      subscriptionTypeName: roots.subscription,
       description: hasRoots ? _description() : null,
       appliedDirectives: hasRoots ? _applied() : const [],
     );
@@ -63,7 +80,10 @@ final class RandomSchema {
       0 => ScalarType(
         name,
         description: description,
-        appliedDirectives: applied,
+        appliedDirectives: [
+          if (parts.chance(40)) _specifiedBy(name),
+          ...applied,
+        ],
       ),
       1 => ObjectType(
         name,
@@ -94,14 +114,17 @@ final class RandomSchema {
           (name) => SchemaEnumValue(
             name,
             description: _description(),
-            appliedDirectives: _applied(),
+            appliedDirectives: _applied(isMaybeDeprecated: true),
           ),
         ),
       ),
       _ => InputObjectType(
         name,
         description: description,
-        appliedDirectives: applied,
+        appliedDirectives: [
+          if (parts.chance(30)) AppliedDirective('oneOf'),
+          ...applied,
+        ],
         fields: _members(3, _inputValue),
       ),
     };
@@ -112,7 +135,10 @@ final class RandomSchema {
     description: _description(),
     arguments: _members(2, _inputValue),
     isRepeatable: parts.random.nextBool(),
-    locations: parts.some(3, () => parts.pick(_locations), min: 1),
+    locations: (_locations.toList()..shuffle(parts.random)).sublist(
+      0,
+      1 + parts.random.nextInt(3),
+    ),
     appliedDirectives: _applied(),
   );
 
@@ -121,7 +147,7 @@ final class RandomSchema {
     parts.type(),
     description: _description(),
     arguments: _members(2, _inputValue),
-    appliedDirectives: _applied(),
+    appliedDirectives: _applied(isMaybeDeprecated: true),
   );
 
   InputValue _inputValue(String name) => InputValue(
@@ -129,7 +155,7 @@ final class RandomSchema {
     parts.type(),
     description: _description(),
     defaultValue: parts.chance(40) ? parts.value(isConst: true) : null,
-    appliedDirectives: _applied(),
+    appliedDirectives: _applied(isMaybeDeprecated: true),
   );
 
   /// Up to [max] members made by [make], each with its own name.
@@ -139,12 +165,33 @@ final class RandomSchema {
   );
 
   /// A random name made unique by [index]; no built-in name ends in `_`
-  /// and a digit, and neither does `Query`.
-  String _unique(int index) => '${parts.enumValueName().value}_$index';
+  /// and a digit, and neither does `Query`. A `__` prefix is reserved for
+  /// introspection, so it is avoided.
+  String _unique(int index) {
+    final name = parts.enumValueName().value;
+    return '${name.startsWith('__') ? 'x$name' : name}_$index';
+  }
 
   String? _description() => parts.description()?.value;
 
-  List<AppliedDirective> _applied() => [
+  AppliedDirective _specifiedBy(String name) => AppliedDirective(
+    'specifiedBy',
+    arguments: [
+      Argument(const Name('url'), StringValue('https://example.com/$name')),
+    ],
+  );
+
+  AppliedDirective _deprecated() => AppliedDirective(
+    'deprecated',
+    arguments: [
+      if (parts.chance(70)) Argument(const Name('reason'), parts.string()),
+    ],
+  );
+
+  /// Random directives; `@deprecated` first when [isMaybeDeprecated] and
+  /// chance says so.
+  List<AppliedDirective> _applied({bool isMaybeDeprecated = false}) => [
+    if (isMaybeDeprecated && parts.chance(25)) _deprecated(),
     for (final directive in parts.directives(isConst: true))
       AppliedDirective(directive.name.value, arguments: directive.arguments),
   ];
