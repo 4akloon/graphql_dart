@@ -2,8 +2,9 @@
 /// wire protocol, with diagnostics instead of exceptions.
 ///
 /// Under construction: this release has the diagnostics model, the protocol
-/// data types, and the language (syntax trees, lexer, parser, printer,
-/// visitors, transformers and schema coordinates).
+/// data types, the language (syntax trees, lexer, parser, printer,
+/// visitors, transformers and schema coordinates) and the schema (model,
+/// SDL building, extension and printing, scalar codecs).
 library;
 
 export 'src/diagnostics/diagnostic.dart';

@@ -9,7 +9,8 @@
 > **Status: under construction.** Stage M2 of the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)
 > ports every graphql-js language suite and adds the language fuzzers;
-> nothing is exported.
+> M3a ports the graphql-js schema builder, extension and printer suites
+> and adds the SDL fuzzers. Nothing is exported.
 
 ## Ported suites
 

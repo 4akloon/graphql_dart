@@ -25,7 +25,10 @@ Status: under construction. M1 (foundations) delivered the workspace, the
 code rules, CI, the diagnostics model and the protocol data types. M2
 (language) delivers the syntax trees, the lexer, the parser, the printer,
 visitors and transformers, schema coordinates, source excerpts, every
-graphql-js language suite and the language fuzzers.
+graphql-js language suite and the language fuzzers. M3a (schema core)
+delivers the schema model, SDL building and extension, the SDL printer,
+scalar codecs, the graphql-js schema builder, extension and printer suites
+and the SDL fuzzers.
 
 ## Documents
 
@@ -303,6 +306,15 @@ Learned in M2b:
   opens that extension's body, as in graphql-js: a shorthand query can
   only come first.
 
+Learned in M3a:
+- `Definition` is abstract, not sealed: a `switch` statement over it needs
+  no `default`, and a `default` would swallow kinds added later. Name every
+  case.
+- A `for` condition is evaluated on every pass: `i < random.nextInt(n)`
+  draws a new bound each time. Draw the count once (`List.generate`).
+- An empty document is a syntax error (spec §2.2), so an empty schema
+  prints text that does not build back; a round trip treats it apart.
+
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
 refer to identifiers in `[brackets]`; a boolean property starts with
@@ -361,6 +373,7 @@ fails when it finds none.
 - Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`
   and `mapping/schema.csv`, checked by `test/mapping_test.dart` there; port
   helpers in its `test/support/` (`SchemaPort` for the schema suites).
-- Fuzzers: `packages/typed_graphql_conformance/test/fuzz/`;
-  `TYPED_GRAPHQL_FUZZ_ITERATIONS` and `TYPED_GRAPHQL_FUZZ_SEED` tune them.
+- Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
+  round trip, hostile SDL); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
+  `TYPED_GRAPHQL_FUZZ_SEED` tune them.
 - CI: `.github/workflows/ci.yml`.

@@ -12,8 +12,10 @@ web (dart2js and dart2wasm). Part of
 
 > **Status: under construction.** This release has the diagnostics model, the
 > protocol data types, and the language: syntax trees, the lexer, the
-> parser, the printer, visitors and schema coordinates. The type system
-> arrives in M3 and validation in M4 (see the
+> parser, the printer, visitors and schema coordinates; and the schema:
+> its model, building and extending it from SDL, printing it, and scalar
+> codecs. Schema validation and introspection arrive in M3b, and document
+> validation in M4 (see the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)).
 
 ## Contents
@@ -21,6 +23,7 @@ web (dart2js and dart2wasm). Part of
 - [Install](#install)
 - [Parsing and printing](#parsing-and-printing)
 - [Visiting and rewriting](#visiting-and-rewriting)
+- [Building and printing a schema](#building-and-printing-a-schema)
 - [Reading the wire format](#reading-the-wire-format)
 - [Diagnostics](#diagnostics)
 - [License](#license)
@@ -176,6 +179,93 @@ hero.graphql:2:12
 3 | }
 ```
 
+## Building and printing a schema
+
+`SchemaBuilder().fromSdl(document, source:)` builds a `Schema` from SDL,
+every `extend` included, and `extend(schema, document, source:)` adds a
+document to an existing schema. Both return a sealed `BuildResult`: a
+`BuildSuccess`, or a `BuildFailure` with every problem as a diagnostic and
+the schema built from the rest. The built-in scalars, directives and
+introspection types are in every schema without being listed.
+`SchemaPrinter` prints a schema as graphql-js's `printSchema` does, and
+`ScalarCodecs` holds the codecs that turn JSON into scalar values and back.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  const parser = Parser();
+  const builder = SchemaBuilder();
+  const printer = SchemaPrinter();
+
+  final source = Source('''
+type Query {
+  hero(episode: Episode = JEDI): Character
+}
+
+enum Episode { NEWHOPE EMPIRE JEDI }
+
+interface Character {
+  name: String!
+}
+
+extend enum Episode { ROGUE_ONE @deprecated(reason: "Not a saga film.") }
+''', name: 'schema.graphql');
+  final schema = switch (builder.fromSdl(
+    parser.parse(source).requireDocument(),
+    source: source,
+  )) {
+    BuildSuccess(:final schema) => schema,
+    BuildFailure(:final diagnostics) => throw StateError('$diagnostics'),
+  };
+  print(printer.print(schema));
+
+  if (schema.typeNamed('Episode') case EnumType(:final values)) {
+    for (final value in values) {
+      print('${value.name}: ${value.deprecationReason ?? 'current'}');
+    }
+  }
+
+  // Every problem is a diagnostic with a code and a place.
+  final extension = Source('extend type Droid { id: ID }', name: 'more.graphql');
+  final result = builder.extend(
+    schema,
+    parser.parse(extension).requireDocument(),
+    source: extension,
+  );
+  result.diagnostics.forEach(print);
+
+  // Scalar codecs turn JSON values into Dart values and back.
+  final codecs = ScalarCodecs();
+  print(codecs.codecFor('Int')?.decode(JsonNumber(42.0)));
+}
+```
+
+It prints:
+
+```text
+type Query {
+  hero(episode: Episode = JEDI): Character
+}
+
+enum Episode {
+  NEWHOPE
+  EMPIRE
+  JEDI
+  ROGUE_ONE @deprecated(reason: "Not a saga film.")
+}
+
+interface Character {
+  name: String!
+}
+NEWHOPE: current
+EMPIRE: current
+JEDI: current
+ROGUE_ONE: Not a saga film.
+more.graphql:1:13: error GQL109: Cannot extend type "Droid" because it is not defined.
+DecodeSuccess(42)
+```
+
 ## Reading the wire format
 
 Bad input never throws. `JsonReader` turns text into a `JsonValue`, a sealed
@@ -225,7 +315,8 @@ is an `ExecutionResult` (it has `data`, maybe `null`) or a
 
 ## Diagnostics
 
-The parser reports through this model, and the validator will:
+The parser and the schema builder report through this model, and the
+validator will:
 
 - `Source` is a document and its name; `locationOf(offset)` gives a 1-based
   line and column, counted in UTF-16 code units.
