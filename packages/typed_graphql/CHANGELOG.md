@@ -78,3 +78,8 @@
 - `Schema`: declared types and directives in declaration order, root
   operation type names, description and applied directives;
   `typeNamed` and `directiveNamed` also find the built-ins.
+- `SchemaBuilder.fromSdl`: SDL to a `Schema` without validating, as the
+  sealed `BuildResult` (`BuildSuccess`, `BuildFailure` with the partial
+  schema); root types from the schema definition or the types named
+  `Query`, `Mutation` and `Subscription`; `GQL100` for an operation or a
+  fragment in the document; `includesDeferAndStream` opt-in.

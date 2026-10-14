@@ -83,5 +83,9 @@ enum DiagnosticCode(
   /// a directive extension, directives on a directive definition or the
   /// `DIRECTIVE_DEFINITION` location without
   /// `ParserOptions.allowDirectiveExtensions`.
-  workingDraftFeatureDisabled('GQL014');
+  workingDraftFeatureDisabled('GQL014'),
+
+  /// `GQL100`: an operation or a fragment in a document built into a
+  /// schema; it is ignored.
+  executableDefinitionInSchema('GQL100');
 }

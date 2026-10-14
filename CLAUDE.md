@@ -187,6 +187,12 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `directiveNamed` fall back to `BuiltIns` (`defer` and `stream` only with
   `includesDeferAndStream`). Roots are names (`queryTypeName`, ...,
   `rootTypeName(OperationType)`).
+- `build/SchemaBuilder` (const, `includesDeferAndStream`): `fromSdl(document,
+  source:)` returns the sealed `BuildResult` (`BuildSuccess(schema)` |
+  `BuildFailure(partial, diagnostics)`). A run sorts the definitions
+  (`DocumentDefinitions`), assembles them (`SchemaAssembly`) and reports into
+  a `BuildReport`, which orders the errors by node offset before a
+  `DiagnosticSink` limits them. Without `source` every span is null.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
