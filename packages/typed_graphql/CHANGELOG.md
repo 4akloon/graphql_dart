@@ -9,3 +9,5 @@
   `Diagnostic` and `DiagnosticSink`.
 - `JsonValue`, a sealed family for arbitrary JSON; `PathSegment` and
   `DecodeResult`.
+- `JsonReader`: JSON text to `JsonValue`, with a nesting limit and no
+  exceptions.
