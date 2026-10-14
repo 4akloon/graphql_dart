@@ -21,8 +21,10 @@ server and the client. It is a Dart pub workspace of pure-Dart packages:
 Minimum SDK: Dart 3.13 (`sdk: ^3.13.0`) in every package and in generated
 code. No dependency on `package:gql` or its ecosystem.
 
-Status: under construction. M1 (foundations) delivers the workspace, the code
-rules, CI, the diagnostics model and the protocol data types.
+Status: under construction. M1 (foundations) delivered the workspace, the
+code rules, CI, the diagnostics model and the protocol data types. M2a
+(language core) delivers the syntax trees, the lexer, the parser, the
+printer and the ported graphql-js language suites.
 
 ## Documents
 
@@ -96,9 +98,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   it. `Lexer(source, sink).advance()` never throws: bad text becomes one
   `error` token over the run and one diagnostic, with graphql-js's message
   minus "Syntax Error: ". `maxTokens` is counted here (R1.6). Scanners
-  (`*_scanner.dart`) share a
-  `SourceReader` (text, `describe`, `report`); `CharacterClass` holds the
-  character tests.
+  (`*_scanner.dart`) share a `SourceReader` (text, `describe`, `report`);
+  `CharacterClass` holds the character tests.
 - `parser/`: `Parser(options:)` is const and stateless; each call builds a
   `TokenCursor` (current token, one lookahead, graphql-js's `expect*`,
   `many`, `any`, `delimitedMany`, `nested` for `maxDepth`) and grammar
@@ -201,6 +202,17 @@ M1:
   values with different static types differ.
 - In tests, `expect` arguments have no context type: write full names, not
   dot shorthands.
+
+Learned in M2a:
+- An empty `case` in a `switch` statement falls through to the next case;
+  to skip an item, test it with `if (...) continue;` before the `switch`.
+- `prefer_interpolation_to_compose_strings` rejects `+` on strings; use
+  interpolation, or adjacent literals for a long text.
+- A multi-line literal drops a line break right after its opening quotes;
+  write `'\n'` in front when the text must start with one.
+- An overriding method may widen a parameter type: a node class outside the
+  library overrides `rebuildFrom(Object? read)` without the internal
+  `ChildReader`.
 
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and

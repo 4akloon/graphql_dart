@@ -10,14 +10,16 @@ exceptions.** Pure Dart, depends only on `meta`, runs on the VM, AOT and the
 web (dart2js and dart2wasm). Part of
 [typed_graphql](https://github.com/4akloon/graphql_dart).
 
-> **Status: under construction.** This release has the diagnostics model and
-> the protocol data types. The parser arrives in M2, the type system in M3 and
+> **Status: under construction.** This release has the diagnostics model, the
+> protocol data types, and the language: syntax trees, the lexer, the parser
+> and the printer. Visitors arrive later in M2, the type system in M3 and
 > validation in M4 (see the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)).
 
 ## Contents
 
 - [Install](#install)
+- [Parsing and printing](#parsing-and-printing)
 - [Reading the wire format](#reading-the-wire-format)
 - [Diagnostics](#diagnostics)
 - [License](#license)
@@ -33,6 +35,59 @@ dependencies:
       url: https://github.com/4akloon/graphql_dart
       path: packages/typed_graphql
 ```
+
+## Parsing and printing
+
+`Parser` turns a `Source` into a `Document`, or a `ParseFailure` with every
+syntax error it found: after an error it skips to the next definition or
+selection and goes on. `Printer` prints any node the way graphql-js prints
+it; `Printer(isMinified: true)` drops every character that does not matter.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  const parser = Parser();
+
+  // Every syntax error in one pass, each with a stable code and a place.
+  final broken = Source(
+    'query { a(x: ) }\nfragment F on { b }',
+    name: 'bad.graphql',
+  );
+  if (parser.parse(broken) case ParseFailure(:final diagnostics)) {
+    diagnostics.forEach(print);
+  }
+
+  // A document prints back the way graphql-js prints it.
+  final source = Source(
+    r'query Hero($id:ID!){hero(id:$id){name ...on Droid{primaryFunction}}}',
+  );
+  if (parser.parse(source) case ParseSuccess(:final document)) {
+    print(const Printer().print(document));
+    print(const Printer(isMinified: true).print(document));
+  }
+}
+```
+
+It prints:
+
+```text
+bad.graphql:1:14: error GQL008: Unexpected ")".
+bad.graphql:2:15: error GQL007: Expected Name, found "{".
+query Hero($id: ID!) {
+  hero(id: $id) {
+    name
+    ... on Droid {
+      primaryFunction
+    }
+  }
+}
+query Hero($id:ID!){hero(id:$id){name ...on Droid{primaryFunction}}}
+```
+
+`ParserOptions` bound the work on untrusted text: `maxTokens` (15 000 by
+default) and `maxDepth` (128). Working-draft syntax, such as
+`extend directive`, is off unless `allowDirectiveExtensions` is set.
 
 ## Reading the wire format
 
@@ -83,7 +138,7 @@ is an `ExecutionResult` (it has `data`, maybe `null`) or a
 
 ## Diagnostics
 
-The parser and the validator will report through this model:
+The parser reports through this model, and the validator will:
 
 - `Source` is a document and its name; `locationOf(offset)` gives a 1-based
   line and column, counted in UTF-16 code units.

@@ -1,8 +1,8 @@
 /// GraphQL for Dart: the language, the type system, validation and the
 /// wire protocol, with diagnostics instead of exceptions.
 ///
-/// Under construction: this release has the diagnostics model and the
-/// protocol data types.
+/// Under construction: this release has the diagnostics model, the protocol
+/// data types, and the language (syntax trees, lexer, parser, printer).
 library;
 
 export 'src/diagnostics/diagnostic.dart';
