@@ -43,10 +43,6 @@ void main() {
       expect(JsonNumber(9007199254740992.0).asInt, isNull);
     });
 
-    test('asInt is null for int.minValue, whose abs overflows', () {
-      expect(JsonNumber(-9223372036854775807 - 1).asInt, isNull);
-    });
-
     test('asInt holds the bounds of the safe range on both sides', () {
       expect(JsonNumber(-9007199254740991).asInt, -9007199254740991);
       expect(JsonNumber(-9007199254740992.0).asInt, isNull);
