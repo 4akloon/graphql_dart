@@ -16,3 +16,6 @@
   `RequestErrorResult`).
 - The syntax tree: `Node` (`children`, `withChildren`, `isEquivalentTo`),
   `Name`, `Document`, and the `Value` and `TypeRef` families.
+- Executable nodes: `OperationDefinition`, `FragmentDefinition`, the
+  `Selection` family, `SelectionSet`, `VariableDefinition`, `Argument`,
+  `Directive`.
