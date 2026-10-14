@@ -42,6 +42,7 @@ export 'src/language/parser/parse_result.dart';
 export 'src/language/parser/parser.dart';
 export 'src/language/parser/parser_options.dart';
 export 'src/language/printer/printer.dart';
+export 'src/language/visitor/ast_transformer.dart';
 export 'src/language/visitor/ast_visitor.dart';
 export 'src/language/visitor/ast_walker.dart';
 export 'src/language/visitor/parallel_visitor.dart';

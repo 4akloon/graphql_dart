@@ -133,6 +133,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `leave`; a skipped node is not left, a stop leaves nothing.
   `ParallelVisitor` keeps a skip or stop state per visitor, as graphql-js's
   `visitInParallel`; it is stateful, so use one per walk.
+  `AstTransformer.transform` rewrites bottom-up, also without recursion:
+  `rewrite(node)` sees rewritten children and returns the node, a
+  replacement or null (removed); the parent is rebuilt with
+  `withChildren`, so removing a required child is a `StateError`.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

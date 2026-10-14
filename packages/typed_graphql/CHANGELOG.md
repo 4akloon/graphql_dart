@@ -51,3 +51,5 @@
   syntax tree with `enter` and `leave`, which can skip a subtree or stop.
 - `ParallelVisitor`: several visitors in one walk, each called as if it
   walked alone.
+- `AstTransformer`: rebuilds a syntax tree bottom-up; `rewrite` keeps,
+  replaces or removes a node, and unchanged branches keep their instance.
