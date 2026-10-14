@@ -2,8 +2,9 @@
 /// wire protocol, with diagnostics instead of exceptions.
 ///
 /// Under construction: this release has the diagnostics model, the protocol
-/// data types, and the language (syntax trees, lexer, parser, printer,
-/// visitors, transformers and schema coordinates).
+/// data types, the language (syntax trees, lexer, parser, printer,
+/// visitors, transformers and schema coordinates) and the schema (model,
+/// SDL building, extension and printing, scalar codecs).
 library;
 
 export 'src/diagnostics/diagnostic.dart';
@@ -59,3 +60,22 @@ export 'src/protocol/json_reader.dart';
 export 'src/protocol/json_value.dart';
 export 'src/protocol/path_segment.dart';
 export 'src/protocol/response_payload.dart';
+export 'src/schema/build/build_result.dart';
+export 'src/schema/build/built_ins.dart';
+export 'src/schema/build/schema_builder.dart';
+export 'src/schema/model/applied_directive.dart';
+export 'src/schema/model/input_value.dart';
+export 'src/schema/model/schema_directive.dart';
+export 'src/schema/model/schema_enum_value.dart';
+export 'src/schema/model/schema_field.dart';
+export 'src/schema/model/schema_type.dart';
+export 'src/schema/print/schema_printer.dart';
+export 'src/schema/scalars/boolean_codec.dart';
+export 'src/schema/scalars/float_codec.dart';
+export 'src/schema/scalars/id_codec.dart';
+export 'src/schema/scalars/int_codec.dart';
+export 'src/schema/scalars/literal_converter.dart';
+export 'src/schema/scalars/scalar_codec.dart';
+export 'src/schema/scalars/scalar_codecs.dart';
+export 'src/schema/scalars/string_codec.dart';
+export 'src/schema/schema.dart';

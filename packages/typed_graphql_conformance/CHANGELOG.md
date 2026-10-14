@@ -19,3 +19,12 @@
 - Hostile-text fuzzer (R1.6, R10.4): random and mutated text through every
   parser entry point stays within the sink limit, and every diagnostic has
   a source excerpt.
+- `mapping/schema.csv`, the conformance table of the schema suites, checked
+  by the same mapping test; `SchemaPort`, the port helpers. Ported
+  graphql-js schema suites: `printSchema-test.ts`, `buildASTSchema-test.ts`,
+  `extendSchema-test.ts`.
+- SDL round-trip fuzzer (R10.4): random schemas printed as SDL build back
+  to the same elements and print the same text.
+- Hostile-SDL fuzzer (R10.4): random and mutated type-system text, built
+  and used to extend a schema, stays within the sink limit, reaches every
+  build diagnostic and never throws.

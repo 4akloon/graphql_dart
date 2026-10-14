@@ -9,6 +9,10 @@ final class const ParserOptions({
 
   /// The deepest nesting of selection sets, lists, objects and list types;
   /// null for no limit, which lets a hostile document exhaust the stack.
+  ///
+  /// The parser recurses on nested values, so a limit near 1000 (or null)
+  /// can overflow the stack on deeply nested object values; the default
+  /// of 128 is safe.
   final int? maxDepth = 128,
 
   /// Whether the working draft's directive extensions are accepted:

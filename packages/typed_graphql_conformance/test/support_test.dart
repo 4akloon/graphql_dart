@@ -1,7 +1,9 @@
 import 'package:test/test.dart';
+import 'package:typed_graphql/typed_graphql.dart';
 
 import 'support/csv_table.dart';
 import 'support/graphql_js_suite.dart';
+import 'support/schema_port.dart';
 
 void main() {
   group('CsvTable', () {
@@ -45,6 +47,27 @@ describe('isPunctuatorTokenKind', () => {
         ('Parser', 'limits'),
         ('isPunctuatorTokenKind', 'returns true'),
       ]);
+    });
+
+    test('finds no files in a folder that does not exist', () {
+      expect(GraphqlJsSuite.filesIn('no/such/__tests__'), isEmpty);
+    });
+  });
+
+  group('SchemaPort', () {
+    const port = SchemaPort();
+
+    test('reads applied directives with their arguments', () {
+      final [directive] = port.applied('@deprecated(reason: "old")');
+      expect(directive.name, 'deprecated');
+      expect(directive.argument('reason'), isA<StringValue>());
+    });
+
+    test('prints a schema it can build back', () {
+      expect(port.printed(port.singleField('[Int!]')), '''
+type Query {
+  singleField: [Int!]
+}''');
     });
   });
 }

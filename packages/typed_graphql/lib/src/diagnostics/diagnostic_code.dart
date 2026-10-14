@@ -83,5 +83,54 @@ enum DiagnosticCode(
   /// a directive extension, directives on a directive definition or the
   /// `DIRECTIVE_DEFINITION` location without
   /// `ParserOptions.allowDirectiveExtensions`.
-  workingDraftFeatureDisabled('GQL014');
+  workingDraftFeatureDisabled('GQL014'),
+
+  /// `GQL100`: an operation or a fragment in a document built into a
+  /// schema; it is ignored.
+  executableDefinitionInSchema('GQL100'),
+
+  /// `GQL101`: a second type definition with the name of a type already
+  /// defined in the document or in the schema being extended; the second
+  /// is ignored.
+  duplicateTypeName('GQL101'),
+
+  /// `GQL102`: a second directive definition with the name of a directive
+  /// already defined in the document or in the schema being extended; the
+  /// second is ignored.
+  duplicateDirectiveName('GQL102'),
+
+  /// `GQL103`: a definition or an extension of a built-in: a built-in
+  /// scalar, an introspection type or a built-in directive (R2.6); it is
+  /// ignored.
+  builtInRedefinition('GQL103'),
+
+  /// `GQL104`: a second field or input field with one name in a type, its
+  /// extensions included; the second is ignored.
+  duplicateFieldName('GQL104'),
+
+  /// `GQL105`: a second argument with one name in a field or a directive
+  /// definition; the second is ignored.
+  duplicateArgumentName('GQL105'),
+
+  /// `GQL106`: a second value with one name in an enum type, its
+  /// extensions included; the second is ignored.
+  duplicateEnumValueName('GQL106'),
+
+  /// `GQL107`: a second schema definition, or one in a document that
+  /// extends a schema with root types; it is ignored.
+  duplicateSchemaDefinition('GQL107'),
+
+  /// `GQL108`: a second root type for one operation, in the schema
+  /// definition, its extensions or the schema being extended; the second
+  /// is ignored.
+  duplicateOperationType('GQL108'),
+
+  /// `GQL109`: an extension of a type or a directive (`extend directive`)
+  /// that neither the document nor the schema being extended defines; it
+  /// is ignored.
+  unknownExtensionTarget('GQL109'),
+
+  /// `GQL110`: an extension of a type of another kind, such as
+  /// `extend input` of an object type; it is ignored.
+  extensionKindMismatch('GQL110');
 }

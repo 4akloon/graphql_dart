@@ -66,3 +66,49 @@
 - `Printer` prints schema coordinates, the same in both forms.
 - `SourceExcerpt` and `SourceSpan.excerpt`: a location shown in its lines
   with a caret, as graphql-js's `printLocation` prints it.
+- Schema model elements: `SchemaField`, `InputValue`, `SchemaEnumValue`,
+  `SchemaDirective` and `AppliedDirective`, with `deprecationReason` read
+  from `@deprecated` and lookups of arguments by name.
+- `SchemaType`, the sealed family of named types: `ScalarType`
+  (`specifiedByUrl`), `ObjectType`, `InterfaceType`, `UnionType`,
+  `EnumType` and `InputObjectType` (`isOneOf`), with lookups by name.
+- `BuiltIns`: the built-in scalars (`String`, `Int`, `Float`, `Boolean`,
+  `ID`), the five specified directives, `@defer` and `@stream`, and the
+  introspection types of September2025.
+- `Schema`: declared types and directives in declaration order, root
+  operation type names, description and applied directives;
+  `typeNamed` and `directiveNamed` also find the built-ins.
+- `SchemaBuilder.fromSdl`: SDL to a `Schema` without validating, as the
+  sealed `BuildResult` (`BuildSuccess`, `BuildFailure` with the partial
+  schema); root types from the schema definition or the types named
+  `Query`, `Mutation` and `Subscription`; `GQL100` for an operation or a
+  fragment in the document; `includesDeferAndStream` opt-in.
+- The builder keeps the first type or directive of each name: `GQL101`
+  and `GQL102` for a repeat, `GQL103` for a redefined built-in scalar,
+  introspection type or directive.
+- The builder keeps the first member of each name: `GQL104` for a
+  repeated field or input field, `GQL105` for a repeated argument,
+  `GQL106` for a repeated enum value.
+- The builder applies schema extensions; `GQL107` for a second schema
+  definition, `GQL108` for a second root type of one operation.
+- The builder applies type extensions of every kind; `GQL109` for an
+  extension of a missing type, `GQL110` for one of another kind,
+  `GQL103` for one of a built-in.
+- `SchemaBuilder.extend`: applies a document's definitions and extensions
+  to an existing `Schema` (graphql-js's `extendSchema`), giving the schema
+  back when the document has none; directive extensions (working draft)
+  are applied too.
+- `SchemaPrinter`: a schema's types as SDL, laid out as graphql-js's
+  `printSchema`, with every applied directive printed as written.
+- `SchemaPrinter` prints the schema definition when it says more than the
+  default root names, and the directive definitions; `includesBuiltIns`
+  adds the built-in directives, scalars and introspection types.
+- `ScalarCodec<T>` (`decode` to a `DecodeResult`, `encode` to a
+  `JsonValue`) and the built-in codecs `IntCodec` (signed 32-bit),
+  `FloatCodec` (finite), `StringCodec`, `BooleanCodec` and `IdCodec`.
+- `ScalarCodecs`: an immutable registry of codecs by scalar name, with the
+  built-in ones; `LiteralConverter`: a constant literal to the `JsonValue`
+  a codec decodes.
+- `BuiltIns.isBuiltInDirective`: whether a name is a built-in directive,
+  `@defer` and `@stream` by a flag. Extending one type or directive many
+  times builds in linear time.

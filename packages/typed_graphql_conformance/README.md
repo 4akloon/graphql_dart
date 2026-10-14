@@ -9,26 +9,28 @@
 > **Status: under construction.** Stage M2 of the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)
 > ports every graphql-js language suite and adds the language fuzzers;
-> nothing is exported.
+> M3a ports the graphql-js schema builder, extension and printer suites
+> and adds the SDL fuzzers. Nothing is exported.
 
 ## Ported suites
 
-Tests under `test/language/` are ported from graphql-js 17
-(`reference/graphql-js`, fetched by `tool/fetch_reference.sh`), one Dart test
-per graphql-js test, with the same group and test names.
-`mapping/language.csv` records each graphql-js test:
+Tests under `test/language/` and `test/schema/` are ported from graphql-js
+17 (`reference/graphql-js`, fetched by `tool/fetch_reference.sh`), one Dart
+test per graphql-js test, with the same group and test names.
+`mapping/language.csv` and `mapping/schema.csv` record each graphql-js test:
 
 | Column | Meaning |
 |---|---|
-| `graphql_js_file` | the file in `src/language/__tests__/`, such as `lexer-test.ts` |
+| `graphql_js_file` | the file: in `src/language/__tests__/` for `language.csv`, such as `lexer-test.ts`; in `src/` for `schema.csv`, such as `utilities/__tests__/printSchema-test.ts` |
 | `group` | the `describe` blocks around the test, joined by ` > ` |
 | `test` | the `it` name |
 | `status` | `ported` (same assertions), `adapted` (a deliberate design difference changes them) or `skipped` (behaviour this library does not have) |
 | `dart_file` | the Dart test file, relative to this package; empty when skipped |
 | `reason` | why, for `adapted` and `skipped` |
 
-`test/mapping_test.dart` checks the table; with `reference/` fetched it also
-checks that every test of every graphql-js language test file has a row.
+`test/mapping_test.dart` checks the tables; with `reference/` fetched it also
+checks that every test of every graphql-js language test file, and of each
+graphql-js schema test file the stage ports, has a row.
 
 ## Fuzzing
 
@@ -44,7 +46,12 @@ A failure names its case and the `Random` seed that replays it.
 `round_trip_fuzz_test.dart` prints random documents and coordinates and
 parses them back; `hostile_text_fuzz_test.dart` feeds random and mutated
 text to every parser entry point and checks that it reports, within the
-sink limit, and never throws.
+sink limit, and never throws. `schema_round_trip_fuzz_test.dart` prints
+random schemas as SDL and builds them back: the rebuilt schema holds the
+same elements (`SchemaDump`) and prints the same text;
+`hostile_sdl_fuzz_test.dart` builds random and mutated type-system text,
+and extends a schema with it, and checks that the builder reports every
+kind of problem, within the sink limit, and never throws.
 
 ## License
 

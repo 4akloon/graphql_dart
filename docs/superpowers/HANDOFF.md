@@ -1,6 +1,6 @@
 # Handoff: where typed_graphql stands and how to continue
 
-Last updated: 2026-10-14 (M2 merged into main locally, not pushed). Read this
+Last updated: 2026-10-14 (M3a implemented, final review pending). Read this
 first on a new device or in a new Claude session. Session memory and scratch
 directories do not travel; this file and the repository hold everything
 needed.
@@ -12,6 +12,7 @@ needed.
 | Architecture | [spec](specs/2026-10-13-typed-graphql-design.md), [requirements](../requirements.md), [roadmap](../roadmap.md) | — | — |
 | M1 Foundations | the architecture spec (no stage spec) | [plan](plans/2026-10-13-m1-foundations.md) | done: merged into `main` locally (not pushed); next is M2 |
 | M2 Language | [spec](specs/2026-10-14-m2-language-design.md) | M2a: [plan](plans/2026-10-14-m2a-language-core.md); M2b: [plan](plans/2026-10-14-m2b-language-tools.md) | M2a and M2b merged into `main` locally (M2a pushed, M2b not); M2 is complete; next is M3 (schema) |
+| M3 Type system | [spec](specs/2026-10-14-m3-type-system-design.md) | M3a: [plan](plans/2026-10-14-m3a-schema-core.md) | M3a implemented on its branch, final review pending; then the M3b plan (validation, introspection) |
 
 **Decisions (2026-10-14):**
 - Layer order is diagnostics < language < protocol < schema < validation; the
@@ -41,6 +42,41 @@ The superpowers skills: `brainstorming`, `writing-plans`,
    scoped re-review. Residuals go into `docs/roadmap.md` with a reason.
 5. **Merge.** `git merge --no-ff` into main, re-run every suite on the merged
    tree, remove the worktree and the branch, update this file.
+
+## Open for M3b
+
+Found by the M3a reviews; none blocks the merge of M3a.
+
+- **CSV conversion.** Every row of `mapping/schema.csv` whose reason says
+  validation arrives in M3b (23 rows) must gain the `validateSchema`
+  assertion: `ValidSchema` normally, `InvalidSchema` for "allows extension of
+  interface with missing Object fields" and "allows extension of union by
+  adding itself". Both "Allows to disable SDL validation" rows are adapted tests
+  already (an unknown directive builds); M3b adds the `ValidSchema.assumeValid`
+  link. "Throws on unknown types" (x2) and
+  "Rejects invalid SDL" (x2) assert real `GQL1xx` codes.
+- **Spec section 7** must list "applied directive must be defined" and
+  "referenced type must exist" explicitly.
+- **Spans of references added by `extend`.** An interface or union member
+  added by an extension from another `Source` is a bare `NamedType` whose
+  offsets belong to the extension's source, while the type's span belongs to
+  the base. Decide: store a span next to each reference, or point the
+  diagnostic at the type.
+- **`fromIntrospection`** returns the sealed `BuildResult`, but spec section 8
+  also says `DecodeFailure`: reconcile.
+- **`locations`** of `SchemaDirective` is `List<String>`: decide a typed
+  location for M4.
+- **`ScalarCodec<Object>`** covariance: a wrongly typed `encode` is a
+  `TypeError`, not an `ArgumentError` (M5).
+- **`maxErrors`** of a build cannot be lowered in a test: `SchemaBuilder` and
+  `BuildReport` expose no limit.
+- **Parser recursion.** `Parser` recurses on nested values, so a raised
+  `maxDepth` (about 1000) or `null` can overflow the stack on deeply nested
+  object values; the default 128 is safe. Make object-value parsing iterative
+  or cap `maxDepth` (M2 follow-up).
+- **Merge** the docs branch `docs/m4-m7-decisions` (commit 0891b33: R4.18 to
+  R4.20, R3.8, R5.14 and R5.15) into `main`; remove its worktree and the stray
+  branch.
 
 ## Rules the user set
 

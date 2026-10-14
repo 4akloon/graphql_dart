@@ -25,7 +25,10 @@ Status: under construction. M1 (foundations) delivered the workspace, the
 code rules, CI, the diagnostics model and the protocol data types. M2
 (language) delivers the syntax trees, the lexer, the parser, the printer,
 visitors and transformers, schema coordinates, source excerpts, every
-graphql-js language suite and the language fuzzers.
+graphql-js language suite and the language fuzzers. M3a (schema core)
+delivers the schema model, SDL building and extension, the SDL printer,
+scalar codecs, the graphql-js schema builder, extension and printer suites
+and the SDL fuzzers.
 
 ## Documents
 
@@ -164,6 +167,71 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `RequestErrorResult`) read with a static `decode(JsonValue)` and write with
   `toJson()`; equality is equality of their JSON.
 
+**Schema** (`schema/`; M3). Imports `diagnostics`, `language` and
+`protocol`.
+- `model/`: the immutable schema model (R2.1). Its elements are
+  `SchemaField`, `InputValue` (arguments and input fields),
+  `SchemaEnumValue`, `SchemaDirective` and `AppliedDirective`; the spec's
+  names `FieldDefinition`, `EnumValueDefinition`, `DirectiveDefinition` and
+  `NamedType` already name language nodes, so the schema's take a
+  `Schema` prefix. `SchemaType` is the sealed family of named types
+  (`ScalarType`, `ObjectType`, `InterfaceType`, `UnionType`, `EnumType`,
+  `InputObjectType`). Types are language `TypeRef` nodes (implemented
+  interfaces and union members `NamedType` nodes), resolved by name;
+  defaults and directive arguments are constant language `Value` nodes.
+  Every element has `SourceSpan? span`. `deprecationReason`,
+  `specifiedByUrl` and `isOneOf` read the applied directives through the
+  internal `AppliedDirectives`; the directives stay in the element's list.
+  Elements compare by identity.
+- `build/BuiltIns` (const): the five built-in scalars, the five specified
+  directives, `defer` and `stream` (graphql-js's definitions, not in the
+  specified five) and the introspection types, read once from the internal
+  `BuiltInSdl` text of September2025 Appendix D; they have no span.
+- `Schema` (`schema.dart`) lists only what was declared; `typeNamed` and
+  `directiveNamed` fall back to `BuiltIns` (`defer` and `stream` only with
+  `includesDeferAndStream`). Roots are names (`queryTypeName`, ...,
+  `rootTypeName(OperationType)`).
+- `build/SchemaBuilder` (const, `includesDeferAndStream`): `fromSdl(document,
+  source:)` returns the sealed `BuildResult` (`BuildSuccess(schema)` |
+  `BuildFailure(partial, diagnostics)`). A run sorts the definitions
+  (`DocumentDefinitions`), assembles them (`SchemaAssembly`) and reports into
+  a `BuildReport`, which orders the errors by node offset before a
+  `DiagnosticSink` limits them. Without `source` every span is null.
+- Construction problems use graphql-js's SDL-rule messages; a repeat points
+  at its name and relates to the span of the definition it repeats; the
+  first definition wins (`UniqueDefinitions`). `MemberFilter` drops repeated
+  members and arguments from syntax nodes with `withChildren` before the
+  readers see them. `SchemaDefinitionReader` applies the schema definition
+  and `extend schema`; default roots fill only the operations that no schema
+  definition or extension names, and only without a schema definition.
+  `TypeExtender` appends an extension's members, interfaces, union members
+  and directives after the type's own, in document order, and keeps the
+  definition's span; the extensions of one type are grouped and applied in
+  one pass, so N extensions cost linear time.
+  `extend(schema, document, source:)` is the same run over a base schema,
+  without default roots; a member the base already has is "already exists in
+  the schema" (no related span). `DirectiveExtender` applies
+  `extend directive`.
+- `print/SchemaPrinter` (const): graphql-js's `printSchema` layout through
+  `TypePrinter` (a type or directive definition) and `MemberPrinter`
+  (descriptions, member blocks, arguments, applied directives); values and
+  types go through the language `Printer`. Unlike graphql-js it prints
+  every applied directive as written. The schema block is printed when the
+  schema has roots and either a description, applied directives, a root with
+  another name than its operation's default, or a non-root type named
+  `Query`, `Mutation` or `Subscription` (stricter than graphql-js, so the
+  printed SDL builds back to the same roots). `includesBuiltIns` prints, in
+  order: built-in directives, own directives, built-in scalars, own types,
+  introspection types.
+- `scalars/`: `ScalarCodec<T>` (`decode(JsonValue)` → `DecodeResult<T>`,
+  never throws; `encode(T)` → `JsonValue`, an `ArgumentError` for a value the
+  type cannot hold) and the five built-in codecs with graphql-js's messages.
+  A codec is not a field of `ScalarType` (R2.9): `ScalarCodecs` maps names to
+  codecs (`withCodec` gives a new registry; built-ins cannot be replaced).
+  `LiteralConverter` turns a constant `Value` into the `JsonValue` a codec
+  decodes (an enum value becomes its name), so codecs have no
+  `parseLiteral`.
+
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
 `ArgumentError`, `RangeError`, `StateError`.
@@ -244,6 +312,15 @@ Learned in M2b:
   opens that extension's body, as in graphql-js: a shorthand query can
   only come first.
 
+Learned in M3a:
+- `Definition` is abstract, not sealed: a `switch` statement over it needs
+  no `default`, and a `default` would swallow kinds added later. Name every
+  case.
+- A `for` condition is evaluated on every pass: `i < random.nextInt(n)`
+  draws a new bound each time. Draw the count once (`List.generate`).
+- An empty document is a syntax error (spec §2.2), so an empty schema
+  prints text that does not build back; a round trip treats it apart.
+
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
 refer to identifiers in `[brackets]`; a boolean property starts with
@@ -299,8 +376,10 @@ fails when it finds none.
   and its scanners).
 - Core layer test: `packages/typed_graphql/test/quality/layers_test.dart`.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
-- Conformance mapping table: `packages/typed_graphql_conformance/mapping/language.csv`,
-  checked by `test/mapping_test.dart` there; port helpers in its `test/support/`.
-- Fuzzers: `packages/typed_graphql_conformance/test/fuzz/`;
-  `TYPED_GRAPHQL_FUZZ_ITERATIONS` and `TYPED_GRAPHQL_FUZZ_SEED` tune them.
+- Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`
+  and `mapping/schema.csv`, checked by `test/mapping_test.dart` there; port
+  helpers in its `test/support/` (`SchemaPort` for the schema suites).
+- Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
+  round trip, hostile SDL); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
+  `TYPED_GRAPHQL_FUZZ_SEED` tune them.
 - CI: `.github/workflows/ci.yml`.

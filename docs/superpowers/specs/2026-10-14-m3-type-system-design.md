@@ -192,3 +192,19 @@ stay green after every task, no allowlist grows.
    language nodes.
 6. The hostile-SDL fuzzer for `fromSdl` / `extend` ships with M3a, the
    introspection and coordinate fuzzers with M3b.
+7. The printer prints every applied directive as written; graphql-js prints
+   only `@deprecated`, `@specifiedBy` and `@oneOf`. SDL to schema to SDL then
+   loses nothing.
+8. The default-roots check of the printer is stricter than graphql-js's
+   `isSchemaOfCommonNames`: a non-root type named `Query`, `Mutation` or
+   `Subscription` also forces the schema block, so building the printed SDL
+   infers the same roots.
+9. Roots named by `extend schema` are not overridden by types named `Query`,
+   `Mutation` or `Subscription`; graphql-js's `buildASTSchema` without a
+   schema definition does override them.
+10. An empty argument description prints the arguments one per line;
+    graphql-js, which tests `!description`, keeps them on one line. Matching
+    it would lose the empty description when the printed SDL is built again.
+11. `extend scalar String` (any built-in) is `GQL103`.
+12. `GQL109` has no "Did you mean" suggestion; it also covers an unknown
+    `extend directive` target.
