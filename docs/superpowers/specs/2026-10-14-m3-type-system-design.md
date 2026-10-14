@@ -32,11 +32,13 @@ An immutable `Schema` holds, in declaration order, its named types, its
 directive definitions and its root operation types (query, mutation,
 subscription: each a type name or absent), and an optional description.
 
-- `sealed class NamedType` with `ScalarType`, `ObjectType`, `InterfaceType`,
+- `sealed class SchemaType` with `ScalarType`, `ObjectType`, `InterfaceType`,
   `UnionType`, `EnumType`, `InputObjectType`.
-- Members: `FieldDefinition` (object and interface fields),
-  `InputValue` (arguments and input-object fields), `EnumValueDefinition`,
-  `DirectiveDefinition` (arguments, repeatable flag, locations).
+- Members: `SchemaField` (object and interface fields),
+  `InputValue` (arguments and input-object fields), `SchemaEnumValue`,
+  `SchemaDirective` (arguments, repeatable flag, locations). The `Schema*`
+  prefix avoids the names of the language nodes (`NamedType`, `FieldDefinition`,
+  `EnumValueDefinition`, `DirectiveDefinition`) that the barrel already exports.
 - **References are names.** A field's type is a `TypeRef` (the language-layer
   type node: `NamedType` / `ListType` / `NonNullType`), and `schema.typeNamed(name)`
   resolves it. A cyclic graph stays immutable and needs no `late`.
@@ -185,3 +187,8 @@ stay green after every task, no allowlist grows.
 3. `ScalarCodec` is a separate registry entry, not a field of `ScalarType`
    (the model has no behaviour).
 4. `extend(Schema, Document)` is part of M3a, as graphql-js `extendSchema`.
+5. The model family is `SchemaType` (not `NamedType`) and the members carry the
+   `Schema` prefix (section 3); the architecture spec's names clash with
+   language nodes.
+6. The hostile-SDL fuzzer for `fromSdl` / `extend` ships with M3a, the
+   introspection and coordinate fuzzers with M3b.
