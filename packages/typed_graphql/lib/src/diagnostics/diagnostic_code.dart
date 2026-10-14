@@ -420,8 +420,24 @@ enum DiagnosticCode(
   /// location (spec §5.7.3).
   uniqueDirectivesPerLocation('GQL224'),
 
+  /// `GQL225`: an operation that declares two variables with one name
+  /// (spec §5.8.1).
+  uniqueVariableNames('GQL225'),
+
   /// `GQL226`: a variable whose type is not an input type (spec §5.8.2).
   variablesAreInputTypes('GQL226'),
+
+  /// `GQL227`: a variable an operation uses, directly or through
+  /// fragments, without declaring it (spec §5.8.3).
+  noUndefinedVariables('GQL227'),
+
+  /// `GQL228`: a variable an operation declares and never uses, directly or
+  /// through fragments (spec §5.8.4).
+  noUnusedVariables('GQL228'),
+
+  /// `GQL229`: a variable used where its type is not allowed, or a nullable
+  /// variable used for a field of a `@oneOf` input object (spec §5.8.5).
+  variablesInAllowedPosition('GQL229'),
 
   /// `GQL230`: validating a document needed more work than the
   /// validator's step budget allows, such as fragments that expand to

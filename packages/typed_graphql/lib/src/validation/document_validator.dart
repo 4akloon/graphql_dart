@@ -17,7 +17,9 @@ import 'rules/known_operation_types_rule.dart';
 import 'rules/known_type_names_rule.dart';
 import 'rules/lone_anonymous_operation_rule.dart';
 import 'rules/no_fragment_cycles_rule.dart';
+import 'rules/no_undefined_variables_rule.dart';
 import 'rules/no_unused_fragments_rule.dart';
+import 'rules/no_unused_variables_rule.dart';
 import 'rules/possible_fragment_spreads_rule.dart';
 import 'rules/provided_required_arguments_rule.dart';
 import 'rules/scalar_leafs_rule.dart';
@@ -27,8 +29,10 @@ import 'rules/unique_directives_per_location_rule.dart';
 import 'rules/unique_fragment_names_rule.dart';
 import 'rules/unique_input_field_names_rule.dart';
 import 'rules/unique_operation_names_rule.dart';
+import 'rules/unique_variable_names_rule.dart';
 import 'rules/values_of_correct_type_rule.dart';
 import 'rules/variables_are_input_types_rule.dart';
+import 'rules/variables_in_allowed_position_rule.dart';
 import 'validation_context.dart';
 import 'validation_rule.dart';
 
@@ -83,6 +87,9 @@ final class const DocumentValidator({
     NoUnusedFragmentsRule(),
     PossibleFragmentSpreadsRule(),
     NoFragmentCyclesRule(),
+    UniqueVariableNamesRule(),
+    NoUndefinedVariablesRule(),
+    NoUnusedVariablesRule(),
     KnownDirectivesRule(),
     DirectivesInValidLocationsRule(),
     UniqueDirectivesPerLocationRule(),
@@ -92,6 +99,7 @@ final class const DocumentValidator({
     InputObjectFieldNamesRule(),
     InputObjectRequiredFieldsRule(),
     ProvidedRequiredArgumentsRule(),
+    VariablesInAllowedPositionRule(),
     UniqueInputFieldNamesRule(),
   ];
 

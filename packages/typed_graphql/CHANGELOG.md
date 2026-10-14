@@ -242,3 +242,6 @@
 - The directive rules: `KnownDirectivesRule`, `DirectivesInValidLocationsRule`
   and `UniqueDirectivesPerLocationRule` (`GQL222`-`GQL224`); graphql-js's
   `KnownDirectivesRule` is split in two.
+- The variable rules: `UniqueVariableNamesRule`, `NoUndefinedVariablesRule`,
+  `NoUnusedVariablesRule` and `VariablesInAllowedPositionRule`
+  (`GQL225`, `GQL227`-`GQL229`).
