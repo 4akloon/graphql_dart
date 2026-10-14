@@ -211,7 +211,8 @@
   deprecation and drops a result's redefinition of a built-in directive; the
   Introspection guide and the M3 spec list these and the other differences
   from graphql-js.
-- pub.dev metadata: a description that says what the package does today, the
-  topics `graphql`, `parser`, `ast`, `sdl` and `schema`, and a `repository`
-  URL that points at the package folder, so pub.dev resolves the README's
-  relative links.
+- pub.dev metadata and README: a description and an opening sentence that say
+  what the package does today, a "Should I use this?" section after Install,
+  the topics `graphql`, `parser`, `ast`, `sdl` and `schema`, and a
+  `repository` URL that points at the package folder, so pub.dev resolves the
+  README's relative links.

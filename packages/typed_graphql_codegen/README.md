@@ -10,6 +10,8 @@
 > code rules cover it from the start. Its code arrives in stages M8 and M10 of the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md); nothing is exported yet.
 
+**Not usable yet.** This package exports nothing; the part of typed_graphql that works today is the core package, [typed_graphql](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql).
+
 Planned: the client generator and its CLI (M10), then the SDL-first server generator (M8). It does not depend on `analyzer`.
 
 ## License
