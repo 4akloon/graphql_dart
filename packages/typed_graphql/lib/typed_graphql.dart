@@ -68,4 +68,5 @@ export 'src/schema/model/schema_directive.dart';
 export 'src/schema/model/schema_enum_value.dart';
 export 'src/schema/model/schema_field.dart';
 export 'src/schema/model/schema_type.dart';
+export 'src/schema/print/schema_printer.dart';
 export 'src/schema/schema.dart';

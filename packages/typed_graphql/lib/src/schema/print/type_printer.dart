@@ -1,0 +1,49 @@
+import '../../language/ast/type_ref.dart';
+import '../model/schema_directive.dart';
+import '../model/schema_type.dart';
+import 'member_printer.dart';
+
+/// Prints a named type or a directive definition as graphql-js's
+/// `printSchema`, with every applied directive as written.
+final class const TypePrinter() {
+  /// Creates a printer.
+  this;
+
+  static const MemberPrinter _members = MemberPrinter();
+
+  /// [type] as SDL, its description first.
+  String type(SchemaType type) {
+    final head = '${type.name}${_members.directives(type.appliedDirectives)}';
+    final definition = switch (type) {
+      ScalarType() => 'scalar $head',
+      ObjectType(:final interfaces, :final fields) =>
+        'type ${type.name}${_interfaces(interfaces)}'
+            '${_members.directives(type.appliedDirectives)}'
+            '${_members.fields(fields)}',
+      InterfaceType(:final interfaces, :final fields) =>
+        'interface ${type.name}${_interfaces(interfaces)}'
+            '${_members.directives(type.appliedDirectives)}'
+            '${_members.fields(fields)}',
+      UnionType(:final memberTypes) =>
+        'union $head${memberTypes.isEmpty ? '' : ' = ${_names(memberTypes, ' | ')}'}',
+      EnumType(:final values) => 'enum $head${_members.enumValues(values)}',
+      InputObjectType(:final fields) =>
+        'input $head${_members.inputFields(fields)}',
+    };
+    return '${_members.description(type.description)}$definition';
+  }
+
+  /// [directive] as SDL, its description first.
+  String directive(SchemaDirective directive) =>
+      '${_members.description(directive.description)}'
+      'directive @${directive.name}${_members.arguments(directive.arguments)}'
+      '${_members.directives(directive.appliedDirectives)}'
+      '${directive.isRepeatable ? ' repeatable' : ''}'
+      ' on ${directive.locations.join(' | ')}';
+
+  static String _interfaces(List<NamedType> interfaces) =>
+      interfaces.isEmpty ? '' : ' implements ${_names(interfaces, ' & ')}';
+
+  static String _names(List<NamedType> types, String separator) =>
+      types.map((type) => type.name.value).join(separator);
+}

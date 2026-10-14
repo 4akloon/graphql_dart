@@ -98,3 +98,5 @@
   to an existing `Schema` (graphql-js's `extendSchema`), giving the schema
   back when the document has none; directive extensions (working draft)
   are applied too.
+- `SchemaPrinter`: a schema's types as SDL, laid out as graphql-js's
+  `printSchema`, with every applied directive printed as written.

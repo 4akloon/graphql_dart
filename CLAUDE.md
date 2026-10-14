@@ -206,6 +206,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   over a base schema, without default roots; a member the base already has
   is "already exists in the schema" (no related span). `DirectiveExtender`
   applies `extend directive`.
+- `print/SchemaPrinter` (const): graphql-js's `printSchema` layout through
+  `TypePrinter` (a type or directive definition) and `MemberPrinter`
+  (descriptions, member blocks, arguments, applied directives); values and
+  types go through the language `Printer`. Unlike graphql-js it prints
+  every applied directive as written.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
