@@ -1,0 +1,18 @@
+name: typed_graphql
+description: >-
+  GraphQL for Dart, written from scratch and fully typed: the language, the type system, validation and the wire protocol, with diagnostics instead of exceptions.
+version: 0.0.1
+repository: https://github.com/4akloon/graphql_dart
+issue_tracker: https://github.com/4akloon/graphql_dart/issues
+topics: [graphql]
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  meta: ^1.15.0
+
+dev_dependencies:
+  test: ^1.31.0
+
+resolution: workspace

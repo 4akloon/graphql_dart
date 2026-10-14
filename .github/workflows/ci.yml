@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# R10.5: the minimum SDK and stable; AOT; dart2js and dart2wasm; a publish
+# dry-run. Formatting and lints run once, on stable: the minimum SDK only
+# has to compile and pass the tests. Every package of packages/ is tested
+# by the loops below, so a new package needs no change there; the publish
+# dry-run job lists its packages by hand, so add a new published package
+# to that list.
+jobs:
+  analyze:
+    name: Format and analyze
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies (workspace)
+        run: dart pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed packages test
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+  test:
+    name: Test (${{ matrix.os }}, ${{ matrix.sdk }})
+    timeout-minutes: 30
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        sdk: ['3.13.0', stable]
+        include:
+          - os: macos-latest
+            sdk: stable
+          - os: windows-latest
+            sdk: stable
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.sdk }}
+
+      - name: Install dependencies (workspace)
+        run: dart pub get
+
+      - name: Test the code rules (workspace root)
+        run: dart test
+
+      - name: Test every package
+        shell: bash
+        run: |
+          for package in packages/*/; do
+            echo "::group::$package"
+            (cd "$package" && dart test)
+            echo "::endgroup::"
+          done
+
+  aot:
+    name: Test compiled to native code (AOT)
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies (workspace)
+        run: dart pub get
+
+      - name: Test every suite with --compiler exe
+        shell: bash
+        run: |
+          dart test --compiler exe
+          for package in packages/*/; do
+            echo "::group::$package"
+            (cd "$package" && dart test --compiler exe)
+            echo "::endgroup::"
+          done
+
+  web:
+    name: Core on the web (${{ matrix.compiler }})
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [dart2js, dart2wasm]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies (workspace)
+        run: dart pub get
+
+      # The client joins this job when it has code that runs in a browser
+      # (M11); until then its only tests are VM-only.
+      - name: Test typed_graphql in Chrome
+        run: dart test -p chrome --compiler ${{ matrix.compiler }}
+        working-directory: packages/typed_graphql
+
+  publish-dry-run:
+    name: Publish dry-run
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies (workspace)
+        run: dart pub get
+
+      # typed_graphql_conformance is `publish_to: none` and is left out.
+      - name: Dry-run every publishable package
+        shell: bash
+        run: |
+          for package in typed_graphql typed_graphql_server typed_graphql_shelf \
+            typed_graphql_client typed_graphql_codegen typed_graphql_builder; do
+            echo "::group::$package"
+            (cd "packages/$package" && dart pub publish --dry-run)
+            echo "::endgroup::"
+          done

@@ -1,0 +1,18 @@
+name: typed_graphql_shelf
+description: >-
+  The shelf adapter of typed_graphql_server: GraphQL over HTTP and WebSocket handlers for shelf, with an optional GraphiQL page in development.
+version: 0.0.1
+repository: https://github.com/4akloon/graphql_dart
+issue_tracker: https://github.com/4akloon/graphql_dart/issues
+topics: [graphql]
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  typed_graphql_server: ^0.0.1
+
+dev_dependencies:
+  test: ^1.31.0
+
+resolution: workspace

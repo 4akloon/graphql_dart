@@ -24,8 +24,10 @@ the client. The previous attempt (a line-by-line port of graphql-java, still in
    arguments) have extension points and land only when they stabilise or behind an
    opt-in.
 2. **Fully typed public API.** No `dynamic`, no `Map<String, dynamic>` in a public
-   signature. Arbitrary JSON is `JsonValue` / `JsonObject` (extension types over
-   `Object?` / `Map<String, Object?>`).
+   signature. Arbitrary JSON is `JsonValue`, a sealed class family
+   (`JsonNull`, `JsonBool`, `JsonNumber`, `JsonString`, `JsonArray`,
+   `JsonObject`), not an extension type: an extension type cannot be sealed or
+   matched with `is`.
 3. **No exceptions on bad input.** Parsing, validation, coercion and client calls
    return sealed results with every diagnostic. Exceptions are reserved for
    programmer errors (`ArgumentError`, `StateError`, `SchemaBuildError`) and for
@@ -63,8 +65,10 @@ repository as its adapter.
 
 Rationale:
 - **One core package with internal layers**, as `graphql` in JS. The import
-  direction `diagnostics ← language ← schema ← validation` (and
-  `protocol ← diagnostics, language`) is enforced by a test in `test/quality/`.
+  direction is a total order, lowest layer first: `diagnostics` < `language` <
+  `protocol` < `schema` < `validation`. A layer imports only itself and lower
+  layers; in particular `protocol` depends on `diagnostics` and `language`. A
+  test in `test/quality/` enforces it.
 - **The executor lives in the server package.** A Flutter app depends on
   `typed_graphql_client` and the core only; generated operations embed their
   documents as strings, so no parser runs at client runtime. Client tests that need
@@ -82,7 +86,9 @@ selection sets) and, later, experimental RFC grammar (fragment arguments, only o
 it reaches Proposal). The parser has a dedicated extension point for such
 productions.
 
-**Source and positions.** `Source(body, name:)` builds its line-start table lazily,
+**Source and positions.** `Source` (with `SourceLocation` and `SourceSpan`) lives
+in `diagnostics/`, the lowest layer, because `Diagnostic` points at spans; the
+language layer uses it. `Source(body, name:)` builds its line-start table lazily,
 only when a line/column is needed (error `locations`). Every node stores `start` and
 `end` offsets (UTF-16 code units).
 
@@ -388,7 +394,8 @@ data builders; `typed_graphql_flutter` if needed.
 ## 7. Quality, conformance and documentation
 
 **Code rules.** The typed_openapi rules (its `CLAUDE.md`, `CONTRIBUTING.md`) apply,
-with `analysis_options.yaml` copied verbatim and the SDK floor raised to 3.13
+with `analysis_options.yaml` adapted from typed_openapi's (comments rewritten; extra lints
+`simple_directive_paths`, `no_dynamic_casts`, `no_raw_types`) and the SDK floor raised to 3.13
 (primary constructors allowed). In short: files in `lib/` ≤ 300 lines, test files
 ≤ 500, methods ≤ 40, ≤ 5 parameters, nesting ≤ 3, one public class or sealed family
 per file, all enforced by a ratchet test; no `part` files, no top-level functions

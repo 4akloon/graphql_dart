@@ -1,30 +1,129 @@
-# This file configures the static analysis results for your project (errors,
-# warnings, and lints).
+# Lints for the whole workspace. Rules come from Effective Dart
+# (https://dart.dev/effective-dart) and the lint catalog
+# (https://dart.dev/tools/linter-rules/all).
 #
-# This enables the 'recommended' set of lints from `package:lints`.
-# This set helps identify many issues that may lead to problems when running
-# or consuming Dart code, and enforces writing Dart using a single, idiomatic
-# style and format.
-#
-# If you want a smaller set of lints you can change this to specify
-# 'package:lints/core.yaml'. These are just the most critical lints
-# (the recommended set includes the core lints).
-# The core lints are also what is used by pub.dev for scoring packages.
-
+# The minimum SDK is 3.13, so rules up to that version may be listed.
+# Every rule here passes with zero findings, so `dart analyze --fatal-infos`
+# must print "No issues found!".
 include: package:lints/recommended.yaml
 
-# Uncomment the following section to specify additional rules.
+linter:
+  rules:
+    # Types and signatures (Effective Dart: Design, Usage)
+    - always_declare_return_types
+    - type_annotate_public_apis
+    - avoid_annotating_with_dynamic
+    - avoid_types_on_closure_parameters
+    - avoid_types_as_parameter_names
+    - avoid_dynamic_calls
+    - no_dynamic_casts
+    - no_raw_types
+    - always_put_required_named_parameters_first
+    - avoid_final_parameters
+    - parameter_assignments
+    - avoid_unused_constructor_parameters
+    - matching_super_parameters
+    - tighten_type_of_initializing_formals
 
-# linter:
-#   rules:
-#     - camel_case_types
+    # Immutability and class design (Effective Dart: Design)
+    - prefer_final_locals
+    - prefer_final_in_for_each
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_const_constructors_in_immutables
+    - prefer_const_literals_to_create_immutables
+    - avoid_field_initializers_in_const_classes
+    - avoid_returning_this
+    - avoid_setters_without_getters
+    - use_setters_to_change_properties
+    - use_to_and_as_if_applicable
+    - avoid_implementing_value_types
+    - prefer_mixin
+    - avoid_classes_with_only_static_members
+    - use_enums
+    - sort_constructors_first
+    - sort_unnamed_constructors_first
+    - prefer_asserts_in_initializer_lists
+    - prefer_asserts_with_message
+    - test_types_in_equals
 
-# analyzer:
-#   exclude:
-#     - path/to/excluded/files/**
+    # Control flow and expressions (Effective Dart: Usage)
+    - avoid_bool_literals_in_conditional_expressions
+    - literal_only_boolean_expressions
+    - no_literal_bool_comparisons
+    - no_self_assignments
+    - avoid_multiple_declarations_per_line
+    - prefer_if_elements_to_conditional_expressions
+    - prefer_null_aware_method_calls
+    - unnecessary_statements
+    - unnecessary_breaks
+    - unnecessary_lambdas
+    - join_return_with_assignment
+    - switch_on_type
+    - use_is_even_rather_than_modulo
+    - use_truncating_division
+    - prefer_int_literals
+    - noop_primitive_operations
+    - use_named_constants
+    - use_string_buffers
+    - unnecessary_null_aware_operator_on_extension_on_nullable
 
-# For more information about the core and recommended set of lints, see
-# https://dart.dev/go/core-lints
+    # Errors, async and resources (Effective Dart: Usage; the generator never prints)
+    - avoid_catching_errors
+    - avoid_catches_without_on_clauses
+    - only_throw_errors
+    - throw_in_finally
+    - avoid_void_async
+    - avoid_slow_async_io
+    - cancel_subscriptions
+    - close_sinks
+    - avoid_print
 
-# For additional information about configuring this file, see
-# https://dart.dev/guides/language/analysis-options
+    # Web compatibility (the runtime is compiled to JS and Wasm)
+    - avoid_double_and_int_checks
+    - avoid_js_rounded_ints
+    - no_runtimetype_tostring
+    - avoid_type_to_string
+
+    # Strings, imports and files (Effective Dart: Style)
+    - prefer_single_quotes
+    - unnecessary_raw_strings
+    - use_raw_strings
+    - leading_newlines_in_multiline_strings
+    - directives_ordering
+    - combinators_ordering
+    - file_names
+    - library_names
+    - eol_at_end_of_file
+    - prefer_relative_imports
+    - simple_directive_paths
+    - conditional_uri_does_not_exist
+    - unnecessary_library_directive
+    - unreachable_from_main
+    - require_trailing_commas
+
+    # Documentation, deprecation, tests and pubspec
+    - public_member_api_docs
+    - missing_code_block_language_in_doc_comment
+    - deprecated_consistency
+    - deprecated_member_use_from_same_package
+    - unnecessary_ignore
+    - use_test_throws_matchers
+    - sort_pub_dependencies
+
+    # Staged, not enabled yet: enable one at a time and fix its findings.
+    #   strict-casts, strict-inference, strict-raw-types (analyzer: language:)
+    #   avoid_positional_boolean_parameters, avoid_redundant_argument_values,
+    #   avoid_equals_and_hash_code_on_mutable_classes (add @immutable),
+    #   cast_nullable_to_non_nullable, comment_references, discarded_futures,
+    #   unawaited_futures, async_return_with_no_await,
+    #   missing_whitespace_between_adjacent_strings, avoid_escaping_inner_quotes,
+    #   prefer_expression_function_bodies, prefer_foreach,
+    #   prefer_constructors_over_static_methods, unnecessary_null_checks,
+    #   unnecessary_parenthesis, prefer_void_to_null, omit_obvious_local_variable_types,
+    #   omit_obvious_property_types, specify_nonobvious_property_types,
+    #   lines_longer_than_80_chars, document_ignores, simplify_variable_pattern
+    #   initialize_in_field_declaration
+
+formatter:
+  trailing_commas: preserve

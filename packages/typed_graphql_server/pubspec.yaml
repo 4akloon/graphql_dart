@@ -1,0 +1,18 @@
+name: typed_graphql_server
+description: >-
+  A fully typed GraphQL server for Dart: a typed schema builder, the execution engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws and graphql-sse handlers.
+version: 0.0.1
+repository: https://github.com/4akloon/graphql_dart
+issue_tracker: https://github.com/4akloon/graphql_dart/issues
+topics: [graphql]
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  typed_graphql: ^0.0.1
+
+dev_dependencies:
+  test: ^1.31.0
+
+resolution: workspace
