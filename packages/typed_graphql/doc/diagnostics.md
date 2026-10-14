@@ -15,7 +15,7 @@ or `\r`.
 A `SourceSpan` is a range of a `Source`: offsets from `start` up to, not
 including, `end`. Its `location` is the line and column of `start`, its `text`
 is the text it covers, and its `excerpt` shows the line the way graphql-js's
-`printLocation` does.
+`printSourceLocation` does.
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';

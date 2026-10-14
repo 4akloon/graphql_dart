@@ -37,7 +37,7 @@ final class BuildFailure(
   /// Everything that built: what an error is about is left out (the
   /// second of two types with one name, an extension of a missing type).
   /// It can be complete, when the only errors left nothing out (an
-  /// unknown type reference, `GQL100`).
+  /// executable definition in the document, `GQL100`).
   final Schema partial,
   List<Diagnostic> diagnostics,
 ) extends BuildResult {

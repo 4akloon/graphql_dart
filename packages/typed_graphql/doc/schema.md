@@ -362,8 +362,8 @@ dup.graphql:1:21: error GQL104: Field "Query.hero" already exists in the schema.
 `printSchema`: the schema definition when it says more than the default root
 names (a description, directives, a root with another name, or a type named
 `Query`, `Mutation` or `Subscription` that is not a root), then the directive
-definitions and the types, in declaration order, separated by a blank line. Unlike graphql-js, it
-prints every applied directive as written, so SDL to schema to SDL loses
+definitions and the types, in declaration order, separated by a blank line. Unlike
+graphql-js, it prints every applied directive as written, so SDL to schema to SDL loses
 nothing. `SchemaPrinter(includesBuiltIns: true)` prints the built-in directives,
 scalars and introspection types too.
 

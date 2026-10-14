@@ -33,7 +33,7 @@ final class const SourceSpan(
   String get text => source.body.substring(start, end);
 
   /// [start] shown in its lines with a caret, as graphql-js's
-  /// `printLocation`; see [SourceExcerpt].
+  /// `printSourceLocation`; see [SourceExcerpt].
   String get excerpt => const SourceExcerpt().of(source, location);
 
   @override

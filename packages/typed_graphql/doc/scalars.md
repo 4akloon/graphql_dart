@@ -27,6 +27,10 @@ The five built-in scalars have codecs, with graphql-js's error messages:
 | `Boolean` | `BooleanCodec` | `bool` |
 | `ID` | `IdCodec` | `String`; an integer input becomes its decimal text |
 
+`FloatCodec.decode` accepts any JSON number, and `FloatCodec.encode` throws an
+`ArgumentError` for NaN and infinity. `IdCodec` rejects an integer beyond
+2^53 - 1. `IntCodec` decodes `-0.0` as `0`.
+
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';
 
@@ -72,10 +76,12 @@ is not a 32-bit integer
 
 `ScalarCodecs` maps scalar names to codecs. `const ScalarCodecs()` holds the
 five built-ins. `withCodec(name, codec)` returns a new registry with one more
-codec and leaves the first one alone, so a registry is safe to share. The
+codec and leaves the first one alone, so a registry is safe to share; naming
+a custom scalar that is already registered replaces its codec. The
 built-ins cannot be replaced: naming one is an `ArgumentError`, because the
 specification fixes what they mean. `codecFor(name)` finds a codec or returns
-null; the server and the client call it for every scalar they meet.
+null; the typed server and the generated client will call it for every scalar
+they meet.
 
 ## A custom scalar
 
@@ -137,9 +143,9 @@ $: DateTime cannot represent value: 1
 is a built-in scalar
 ```
 
-The registry holds codecs as `ScalarCodec<Object>`, so a lookup returns the
-codec without its type argument; cast it to the Dart type you registered, as
-above. The typed server and the generated client do this for you.
+`codecFor` returns a `ScalarCodec<Object>`, so cast it to the Dart type you
+registered, as above. The typed server and the generated client will do this
+for you.
 
 ## Literals
 
@@ -148,7 +154,8 @@ argument. A literal is a language `Value` node, and a codec decodes `JsonValue`.
 `LiteralConverter().convert(value)` bridges the two, so a codec has one entry
 point and no `parseLiteral`: an enum value becomes its name as a string, a list
 and an object convert element by element, and a variable has no value at this
-point and fails.
+point and fails. So does nesting deeper than `JsonReader.maxSupportedDepth` and a
+number too large to be finite; of two object fields with one name the last wins.
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';
