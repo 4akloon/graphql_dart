@@ -15,10 +15,23 @@ import 'path_segment.dart';
 final class JsonReader {
   /// Creates a reader that accepts at most [maxDepth] arrays and objects
   /// nested in one another.
-  const JsonReader({this.maxDepth = defaultMaxDepth});
+  ///
+  /// [maxDepth] must be between 0 and [maxSupportedDepth]: a larger limit
+  /// would let the recursive conversion overflow the stack, which is a
+  /// programming error, so it is asserted.
+  const JsonReader({this.maxDepth = defaultMaxDepth})
+    : assert(
+        maxDepth >= 0 && maxDepth <= maxSupportedDepth,
+        'maxDepth must be between 0 and JsonReader.maxSupportedDepth',
+      );
 
   /// The default of [maxDepth].
   static const int defaultMaxDepth = 512;
+
+  /// The largest [maxDepth] a reader accepts; the recursive conversion is
+  /// known to fit in the stack at this depth on the VM, dart2js and
+  /// dart2wasm.
+  static const int maxSupportedDepth = 1000;
 
   /// The most arrays and objects nested in one another; a scalar at the top
   /// has depth 0, `[]` has 1, `[[]]` has 2.
@@ -44,6 +57,10 @@ final class JsonReader {
 
   /// Converts [value]: the output of `jsonDecode`, or plain Dart objects
   /// (`null`, `bool`, `num`, `String`, `List`, `Map` with `String` keys).
+  ///
+  /// A list or map that appears several times in [value] is walked again at
+  /// each appearance, so an in-process object graph with heavy sharing is
+  /// expensive to read.
   DecodeResult<JsonValue> read(Object? value) => _read(value, 0);
 
   DecodeResult<JsonValue> _read(Object? value, int depth) => switch (value) {

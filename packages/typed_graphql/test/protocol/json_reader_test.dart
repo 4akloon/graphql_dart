@@ -108,6 +108,37 @@ void main() {
     });
   });
 
+  group('maxSupportedDepth', () {
+    const deepest = JsonReader(maxDepth: JsonReader.maxSupportedDepth);
+
+    test('parses text nested exactly that deep', () {
+      expect(
+        deepest.parse(nested(JsonReader.maxSupportedDepth)),
+        isA<DecodeSuccess<JsonValue>>(),
+      );
+      expect(
+        deepest.parse(nested(JsonReader.maxSupportedDepth + 1)),
+        isA<DecodeFailure>(),
+      );
+    });
+
+    test('reads Dart objects nested exactly that deep', () {
+      Object? value = <Object?>[];
+      for (var i = 1; i < JsonReader.maxSupportedDepth; i++) {
+        value = <Object?>[value];
+      }
+      expect(deepest.read(value), isA<DecodeSuccess<JsonValue>>());
+      expect(deepest.read(<Object?>[value]), isA<DecodeFailure>());
+    });
+
+    test('is at least the default', () {
+      expect(
+        JsonReader.maxSupportedDepth,
+        greaterThanOrEqualTo(JsonReader.defaultMaxDepth),
+      );
+    });
+  });
+
   group('read', () {
     test('converts plain Dart objects', () {
       expect(
