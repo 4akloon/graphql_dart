@@ -64,5 +64,13 @@ enum DiagnosticCode(
 
   /// `GQL010`: selection sets, lists, objects and list types nested deeper
   /// than the parser's `maxDepth`; the definition is dropped.
-  depthLimitExceeded('GQL010');
+  depthLimitExceeded('GQL010'),
+
+  /// `GQL011`: a description where none is allowed: before a shorthand
+  /// query `{ ... }` or before something that is not a definition.
+  misplacedDescription('GQL011'),
+
+  /// `GQL012`: an empty selection set, `{ }`, which only the working
+  /// draft allows (`ParserOptions.allowEmptySelectionSets`).
+  emptySelectionSet('GQL012');
 }

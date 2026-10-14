@@ -1,11 +1,19 @@
 import '../../diagnostics/diagnostic_sink.dart';
 import '../../diagnostics/source.dart';
+import '../ast/definition.dart';
+import '../ast/document.dart';
 import '../ast/node.dart';
 import '../ast/type_ref.dart';
 import '../ast/value.dart';
 import '../lexer/lexer.dart';
+import 'definition_parser.dart';
+import 'directive_parser.dart';
+import 'executable_parser.dart';
 import 'parse_element_result.dart';
+import 'parse_result.dart';
 import 'parser_options.dart';
+import 'recovery.dart';
+import 'selection_parser.dart';
 import 'syntax_abort.dart';
 import 'token_cursor.dart';
 import 'value_parser.dart';
@@ -22,6 +30,29 @@ final class Parser {
   /// The limits and the working-draft grammar this parser accepts.
   final ParserOptions options;
 
+  /// Parses [source] as a document. A definition with a syntax error is
+  /// reported and left out, and parsing resumes at the next definition.
+  ParseResult parse(Source source) {
+    final sink = DiagnosticSink();
+    final cursor = _cursor(source, sink);
+    final definitions = _definitions(cursor);
+    final recovery = Recovery(cursor);
+    final parsed = <Definition>[];
+    do {
+      final first = cursor.token;
+      final balance = cursor.balance;
+      try {
+        parsed.add(definitions.definition());
+      } on SyntaxAbort {
+        recovery.skipDefinition(first, balance);
+      }
+    } while (!cursor.peek(.eof) && !cursor.isStopped);
+    final document = Document(parsed, start: 0, end: source.body.length);
+    return sink.hasErrors
+        ? ParseFailure(document, sink.diagnostics)
+        : ParseSuccess(document, sink.diagnostics);
+  }
+
   /// Parses [source] as one value, such as `[1, $a]`; with [isConst], a
   /// variable is an error.
   ParseElementResult<Value> parseValue(Source source, {bool isConst = false}) =>
@@ -36,6 +67,21 @@ final class Parser {
     sink,
     maxDepth: options.maxDepth,
   );
+
+  DefinitionParser _definitions(TokenCursor cursor) {
+    final values = ValueParser(cursor);
+    final directives = DirectiveParser(cursor, values);
+    final selections = SelectionParser(
+      cursor,
+      values,
+      directives,
+      allowsEmpty: options.allowEmptySelectionSets,
+    );
+    return DefinitionParser(
+      cursor,
+      ExecutableParser(cursor, values, directives, selections),
+    );
+  }
 
   /// Parses [source] with [parse], which must read it to the end.
   ParseElementResult<T> _element<T extends Node>(

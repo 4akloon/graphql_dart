@@ -106,6 +106,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `TokenCursor.fail`, which throws the internal `SyntaxAbort`; it never
   leaves `Parser`. The cursor is silent at error tokens (the lexer
   reported them) and at an offset that already has a diagnostic.
+  `Recovery` resynchronises (R1.5): `Parser.parse` drops a failed
+  definition and skips to the next definition keyword, `{` or description;
+  `SelectionParser` drops a failed selection and skips to a name, `...` or
+  `}`; both only at the bracket `balance` where the failed part started,
+  and always consume a token. A selection set left empty fails too.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

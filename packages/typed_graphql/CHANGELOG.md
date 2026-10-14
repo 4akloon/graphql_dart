@@ -30,3 +30,7 @@
 - `Parser` with `ParserOptions` (`maxTokens`, `maxDepth`, working-draft
   switches): `parseValue` and `parseTypeRef` return a
   `ParseElementResult`; diagnostics `GQL007`–`GQL010`.
+- `Parser.parse`: operations, fragments, selections, variables and
+  descriptions, with `ParseSuccess` / `ParseFailure(partial)`,
+  `requireDocument` and `GraphQLSyntaxException`; error recovery at
+  definitions and selections; diagnostics `GQL011`–`GQL012`.
