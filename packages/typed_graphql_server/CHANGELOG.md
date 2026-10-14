@@ -3,5 +3,6 @@
 ## 0.0.1 - Unreleased
 
 - Package skeleton.
-- `repository` points at the package folder, so pub.dev can rewrite the README's
-  relative links once the repository is verified (to confirm at M16); the README says the package is not usable yet.
+- `repository` points at the package folder; pub.dev is expected to rewrite
+  relative README links from it (to confirm at M16).
+- The README says the package is not usable yet.

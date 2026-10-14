@@ -78,8 +78,9 @@ query root: Query
   `BuildFailure`, `DecodeSuccess` or `DecodeFailure`: a `switch` over them is
   checked by the compiler, and a parse or build failure carries the partial
   result.
-- **Every problem has a code and a place.** A `Diagnostic` has a stable id
-  (`GQL008`), a message and the span of the source it is about. All of them
+- **Every problem has a code, and a place when you give the source.** A
+  `Diagnostic` has a stable id (`GQL008`), a message and, when the source is
+  given, the span it is about. All of them
   are reported in one pass, not only the first.
 - **No `dynamic`.** Arbitrary JSON is a `JsonValue`, a sealed family you can
   switch over.

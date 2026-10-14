@@ -82,7 +82,8 @@ void main() {
     });
   }
 
-  // A skeleton is a package whose library exports nothing: an agent that lands on it must not try it.
+  // A skeleton is a package whose library exports nothing: an agent that
+  // lands on it must not try it.
   for (final package in const WorkspacePackages().publishable()) {
     final path = 'packages/${package.name}/README.md';
     final outline = ReadmeOutline(File(path).readAsStringSync());

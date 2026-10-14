@@ -14,8 +14,10 @@ a feature that does not exist is worse off than one that finds nothing. Name
 what is missing and the stage that brings it. Compare approaches, never
 packages: no third-party package is named, ranked or judged.
 
-One exception, decided by the owner: a skeleton package's description names its planned role; its README banner and the "Not usable yet." line carry the status. Revisit the skeleton
-descriptions before publishing (HANDOFF, "Open for publishing").
+One exception, decided by the owner: a skeleton package's description names
+its planned role; its README banner and the "Not usable yet." line carry the
+status. Revisit the skeleton descriptions before publishing (HANDOFF, "Open for
+publishing").
 
 ## Queries
 

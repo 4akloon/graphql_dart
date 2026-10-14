@@ -48,8 +48,9 @@ The superpowers skills: `brainstorming`, `writing-plans`,
 ## Open for publishing (M16)
 
 - Every publishable pubspec's `repository` points at its package folder
-  (`https://github.com/4akloon/graphql_dart/tree/main/packages/<pkg>`), so
-  pub.dev can rewrite relative README links once the repository is verified.
+  (`https://github.com/4akloon/graphql_dart/tree/main/packages/<pkg>`);
+  pub.dev is expected to rewrite relative README links from it (to confirm at
+  M16).
   What pub.dev checks for verification is still open: confirm it before
   publishing ([discovery.md](../discovery.md), "Repository verification").
 - The five skeleton pubspec descriptions (server, shelf, client, codegen,
