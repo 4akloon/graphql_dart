@@ -8,25 +8,6 @@ import 'package:test/test.dart';
 import 'support/csv_table.dart';
 import 'support/graphql_js_suite.dart';
 
-/// The graphql-js language test files whose every test has a row (R10.3).
-/// A port task adds its file here with its rows.
-const Set<String> portedFiles = {
-  'lexer-test.ts',
-  'blockString-test.ts',
-  'parser-test.ts',
-  'schema-parser-test.ts',
-  'printer-test.ts',
-  'schema-printer-test.ts',
-  'printString-test.ts',
-  'visitor-test.ts',
-  'schemaCoordinateLexer-test.ts',
-  'printLocation-test.ts',
-  'source-test.ts',
-  'predicates-test.ts',
-  'kind-test.ts',
-  'diagnostics-test.ts',
-};
-
 void main() {
   final table = CsvTable.parse(
     File('mapping/language.csv').readAsStringSync(),
@@ -79,9 +60,16 @@ void main() {
     }
   });
 
+  test('names only graphql-js files that exist', () {
+    final names = {for (final row in table.rows) row['graphql_js_file']};
+    expect(GraphqlJsSuite.files, containsAll(names));
+  }, skip: !GraphqlJsSuite.isAvailable);
+
+  // Spec §8: every file of the graphql-js language tests has a row for
+  // each of its tests, so a new upstream file or test fails here.
   group('rows cover every test of', () {
-    for (final file in portedFiles) {
-      test(file, skip: !GraphqlJsSuite.isAvailable, () {
+    for (final file in GraphqlJsSuite.files) {
+      test(file, () {
         final mapped = {
           for (final row in table.rows)
             if (row['graphql_js_file'] == file) (row['group'], row['test']),

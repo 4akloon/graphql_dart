@@ -41,7 +41,9 @@ TYPED_GRAPHQL_FUZZ_ITERATIONS=100000 TYPED_GRAPHQL_FUZZ_SEED=7 dart test test/fu
 
 A failure names its case and the `Random` seed that replays it.
 `round_trip_fuzz_test.dart` prints random documents and coordinates and
-parses them back.
+parses them back; `hostile_text_fuzz_test.dart` feeds random and mutated
+text to every parser entry point and checks that it reports, within the
+sink limit, and never throws.
 
 ## License
 

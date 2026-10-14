@@ -40,6 +40,19 @@ final class GraphqlJsSuite {
   /// Whether graphql-js was fetched into `reference/`.
   static bool get isAvailable => Directory(directory).existsSync();
 
+  /// The names of the test files in [directory], sorted; empty when
+  /// graphql-js was not fetched.
+  static List<String> get files {
+    if (!isAvailable) {
+      return const [];
+    }
+    return [
+      for (final entity in Directory(directory).listSync())
+        if (entity is File && entity.path.endsWith('.ts'))
+          entity.uri.pathSegments.last,
+    ]..sort();
+  }
+
   static final RegExp _block = RegExp(r"^(\s*)(describe|it)\('([^']*)'");
 
   /// Each test as its group path and its name, in file order.

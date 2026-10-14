@@ -231,3 +231,4 @@ kind-test.ts,Kind,is a type level namespace with type level enum members,skipped
 diagnostics-test.ts,parse diagnostics channel,emits start and end around a successful parse,skipped,,Node.js diagnostics_channel tracing has no Dart counterpart.
 diagnostics-test.ts,parse diagnostics channel,"emits start, error, and end when the parser throws",skipped,,Node.js diagnostics_channel tracing has no Dart counterpart.
 diagnostics-test.ts,parse diagnostics channel,does not call tracing methods when no subscribers are attached,skipped,,Node.js diagnostics_channel tracing has no Dart counterpart.
+blockString-fuzz.ts,printBlockString,correctly print random strings,ported,test/language/block_string_fuzz_test.dart,
