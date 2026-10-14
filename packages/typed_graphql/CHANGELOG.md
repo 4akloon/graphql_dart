@@ -219,3 +219,8 @@
 - A value printed in a schema validation message about a scalar or enum
   type is bounded as the other value messages are, so a deeply nested value
   cannot overflow the printer.
+- Operation validation framework (M4): `DocumentValidator` runs every
+  `ValidationRule` in one walk and returns `ValidDocument` or
+  `InvalidDocument`; `ValidationContext` gives rules the schema, `TypeInfo`,
+  fragments, variable usages and a step budget (`GQL230`); custom rules
+  report `GQL231`. The Operation Validation guide.

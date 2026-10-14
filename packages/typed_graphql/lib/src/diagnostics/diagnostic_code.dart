@@ -324,4 +324,14 @@ enum DiagnosticCode(
   /// (spec §4.2), or a chain of more than 100 wrappers, the most a query
   /// can read.
   introspectionTypeTooDeep('GQL155'),
+
+  /// `GQL230`: validating a document needed more work than the
+  /// validator's step budget allows, such as fragments that expand to
+  /// more fields than the budget, or many operations each spreading a
+  /// long chain of fragments. Validation stops there.
+  documentTooComplex('GQL230'),
+
+  /// `GQL231`: a problem a custom validation rule reports (R3.6); its
+  /// message says what the rule checks.
+  customRuleViolation('GQL231'),
 }
