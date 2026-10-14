@@ -1,15 +1,19 @@
+import '../../language/printer/printer.dart';
+import '../model/input_value.dart';
 import '../model/schema_type.dart';
 import '../schema.dart';
 import 'applied_directive_rules.dart';
 import 'default_value_rules.dart';
+import 'deprecation_rules.dart';
 import 'name_rules.dart';
+import 'node_span.dart';
 import 'type_reference_rules.dart';
 import 'unique_names.dart';
 import 'validation_report.dart';
 
 /// The rules of an input object type (spec §3.10): unique and valid
-/// field names, valid applied directives, known field types and valid
-/// default values.
+/// field names, valid applied directives, known input types, no
+/// deprecated required field and valid default values.
 final class InputObjectRules(
   /// Receives the errors.
   final ValidationReport report,
@@ -33,11 +37,30 @@ final class InputObjectRules(
         report,
         schema,
       ).check(field.appliedDirectives, .inputFieldDefinition);
-      TypeReferenceRules(report, schema).isKnownType(field.type, field.span);
+      _type('${type.name}.${field.name}', field);
+      DeprecationRules(
+        report,
+      ).checkRequired('Required input field ${type.name}.${field.name}', field);
       DefaultValueRules(
         report,
         schema,
       ).check('${type.name}.${field.name}', field);
     }
+  }
+
+  void _type(String coordinate, InputValue field) {
+    if (!TypeReferenceRules(
+          report,
+          schema,
+        ).isKnownType(field.type, field.span) ||
+        schema.isInputType(field.type)) {
+      return;
+    }
+    report.error(
+      .notInputType,
+      'The type of $coordinate must be Input Type but got: '
+      '${const Printer().print(field.type)}.',
+      [const NodeSpan().within(field.span, field.type)],
+    );
   }
 }

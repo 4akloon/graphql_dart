@@ -272,7 +272,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   returns `ValueProblem`s (message, node, path); `LeafValueChecker` holds
   the literal rules of the built-in scalars and enums, and a custom scalar
   accepts any literal. `DefaultValueRules` and `AppliedDirectiveRules`
-  turn the problems into `GQL123` and `GQL124`.
+  turn the problems into `GQL123` and `GQL124`. `DeprecationRules` holds
+  the required-and-deprecated rule of arguments and input fields;
+  `DirectiveReferenceRules` walks `@name` and type-name keys with a stack
+  and a visited set.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

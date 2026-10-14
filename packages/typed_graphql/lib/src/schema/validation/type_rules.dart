@@ -40,9 +40,9 @@ final class TypeRules(
 
   void _kind(SchemaType type) {
     switch (type) {
-      case ObjectType(:final name, :final fields, :final interfaces) ||
-          InterfaceType(:final name, :final fields, :final interfaces):
-        FieldRules(report, schema).check(name, fields);
+      case ObjectType(:final fields, :final interfaces) ||
+          InterfaceType(:final fields, :final interfaces):
+        FieldRules(report, schema).check(type, fields);
         InterfaceRules(report, schema).check(interfaces);
       case UnionType():
         UnionRules(report, schema).check(type);

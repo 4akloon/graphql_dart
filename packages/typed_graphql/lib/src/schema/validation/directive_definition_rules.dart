@@ -2,12 +2,14 @@ import '../build/built_ins.dart';
 import '../schema.dart';
 import 'applied_directive_rules.dart';
 import 'argument_rules.dart';
+import 'directive_reference_rules.dart';
 import 'name_rules.dart';
 import 'unique_names.dart';
 import 'validation_report.dart';
 
 /// The rules of the directive definitions of a schema (spec §3.13), as
-/// graphql-js's `validateDirectives`.
+/// graphql-js's `validateDirectives`: valid names, at least one location,
+/// valid arguments and no reference to itself.
 final class DirectiveDefinitionRules(
   /// Receives the errors.
   final ValidationReport report,
@@ -27,10 +29,18 @@ final class DirectiveDefinitionRules(
         report,
         schema,
       ).check(directive.appliedDirectives, .directiveDefinition);
+      if (directive.locations.isEmpty) {
+        report.error(
+          .missingDirectiveLocations,
+          'Directive @${directive.name} must include 1 or more locations.',
+          [directive.span],
+        );
+      }
       ArgumentRules(
         report,
         schema,
       ).check('@${directive.name}', directive.arguments);
+      DirectiveReferenceRules(report, schema).check(directive);
     }
   }
 

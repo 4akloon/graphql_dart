@@ -151,3 +151,9 @@
   with graphql-js's `validateInputLiteral` messages and paths: default
   values of arguments and input fields (`GQL123`) and the arguments of
   applied directives (`GQL124`), `@oneOf` input objects included.
+- Schema validation checks fields and directive definitions: an object or
+  interface type without fields (`GQL125`), a field of an input type
+  (`GQL126`), an argument or input field of an output type (`GQL127`), a
+  deprecated required argument or input field (`GQL128`), a directive
+  without locations (`GQL129`) and a directive that references itself,
+  directly or through types and directives (`GQL130`).

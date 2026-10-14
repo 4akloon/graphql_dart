@@ -197,5 +197,28 @@ enum DiagnosticCode(
 
   /// `GQL124`: an argument of an applied directive whose value is not a
   /// value of the argument's type (spec §5.6.1).
-  invalidDirectiveArgumentValue('GQL124');
+  invalidDirectiveArgumentValue('GQL124'),
+
+  /// `GQL125`: an object or interface type without fields (spec §3.6,
+  /// §3.7).
+  missingFields('GQL125'),
+
+  /// `GQL126`: a field whose type is an input object type (spec §3.6).
+  notOutputType('GQL126'),
+
+  /// `GQL127`: an argument or an input field whose type is an object,
+  /// interface or union type (spec §3.6.1, §3.10).
+  notInputType('GQL127'),
+
+  /// `GQL128`: a required argument or input field (non-null, without
+  /// a default value) marked `@deprecated` (spec §3.6.1, §3.10).
+  deprecatedRequiredInput('GQL128'),
+
+  /// `GQL129`: a directive definition without locations, which only
+  /// a schema built in code can have (spec §3.13).
+  missingDirectiveLocations('GQL129'),
+
+  /// `GQL130`: a directive definition that references itself, directly
+  /// or through the types and directives it references (spec §3.13).
+  directiveSelfReference('GQL130');
 }
