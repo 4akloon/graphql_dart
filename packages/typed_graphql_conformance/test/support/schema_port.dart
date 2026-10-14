@@ -16,9 +16,8 @@ final class SchemaPort {
   /// [text] as a type reference, such as `[String!]`.
   TypeRef type(String text) => _element(_parser.parseTypeRef(Source(text)));
 
-  /// A reference to the type named [name], as an interface or a union
-  /// member.
-  NamedType named(String name) => NamedType(Name(name));
+  /// A reference to the type [name], for interfaces and union members.
+  NamedTypeReference reference(String name) => NamedTypeReference(name);
 
   /// [text] as a constant value, such as `{ a: 1 }`.
   Value value(String text) =>
@@ -84,6 +83,17 @@ final class SchemaPort {
       extended,
     ).where((definition) => !before.contains(definition)).join('\n\n');
   }
+
+  /// graphql-js's `validateSchema`: [schema] validated.
+  SchemaValidationResult validate(Schema schema) =>
+      const SchemaValidator().validate(schema);
+
+  /// The diagnostics of `validateSchema(schema)`, each as its code id and
+  /// message, such as `GQL116 Unknown type "X".`.
+  List<String> validationErrors(Schema schema) => [
+    for (final diagnostic in validate(schema).diagnostics)
+      '${diagnostic.code.id} ${diagnostic.message}',
+  ];
 
   /// The ids of the codes of [result]'s diagnostics, such as `GQL103`.
   List<String> codes(BuildResult result) => [

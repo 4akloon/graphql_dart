@@ -81,7 +81,7 @@ void main() {
   });
 
   test('a union keeps a repeated member for validation to report', () {
-    const member = NamedType(Name('A'));
+    const member = NamedTypeReference('A');
     final union = UnionType('U', memberTypes: [member, member]);
     expect(union.memberTypes, hasLength(2));
   });
@@ -93,13 +93,13 @@ void main() {
       throwsUnsupportedError,
     );
     expect(
-      () => type.interfaces.add(const NamedType(Name('I'))),
+      () => type.interfaces.add(const NamedTypeReference('I')),
       throwsUnsupportedError,
     );
   });
 
   test('every list of every kind cannot be modified', () {
-    const member = NamedType(Name('A'));
+    const member = NamedTypeReference('A');
     final additions = <void Function()>[
       () => ObjectType('T').appliedDirectives.add(AppliedDirective('d')),
       () => InterfaceType('I').interfaces.add(member),

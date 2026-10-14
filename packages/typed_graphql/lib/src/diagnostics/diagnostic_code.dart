@@ -78,7 +78,8 @@ enum DiagnosticCode(
   emptySelectionSet('GQL012'),
 
   /// `GQL013`: an enum value named `true`, `false` or `null` (spec
-  /// §3.9, `EnumValue`).
+  /// §3.9, `EnumValue`); schema validation reports one in a schema built
+  /// in code.
   reservedEnumValueName('GQL013'),
 
   /// `GQL014`: working-draft grammar that the parser's options leave off:
@@ -93,29 +94,35 @@ enum DiagnosticCode(
 
   /// `GQL101`: a second type definition with the name of a type already
   /// defined in the document or in the schema being extended; the second
-  /// is ignored.
+  /// is ignored. Schema validation reports a repeat in a schema built in
+  /// code.
   duplicateTypeName('GQL101'),
 
   /// `GQL102`: a second directive definition with the name of a directive
   /// already defined in the document or in the schema being extended; the
-  /// second is ignored.
+  /// second is ignored. Schema validation reports a repeat in a schema
+  /// built in code.
   duplicateDirectiveName('GQL102'),
 
   /// `GQL103`: a definition or an extension of a built-in: a built-in
   /// scalar, an introspection type or a built-in directive (R2.6); it is
-  /// ignored.
+  /// ignored. Schema validation reports a built-in name declared in a
+  /// schema built in code.
   builtInRedefinition('GQL103'),
 
   /// `GQL104`: a second field or input field with one name in a type, its
-  /// extensions included; the second is ignored.
+  /// extensions included; the second is ignored. Schema validation
+  /// reports a repeat in a schema built in code.
   duplicateFieldName('GQL104'),
 
   /// `GQL105`: a second argument with one name in a field or a directive
-  /// definition; the second is ignored.
+  /// definition; the second is ignored. Schema validation reports a
+  /// repeat in a schema built in code.
   duplicateArgumentName('GQL105'),
 
   /// `GQL106`: a second value with one name in an enum type, its
-  /// extensions included; the second is ignored.
+  /// extensions included; the second is ignored. Schema validation
+  /// reports a repeat in a schema built in code.
   duplicateEnumValueName('GQL106'),
 
   /// `GQL107`: a second schema definition, or one in a document that
@@ -134,5 +141,187 @@ enum DiagnosticCode(
 
   /// `GQL110`: an extension of a type of another kind, such as
   /// `extend input` of an object type; it is ignored.
-  extensionKindMismatch('GQL110');
+  extensionKindMismatch('GQL110'),
+
+  /// `GQL111`: a schema without a query root type (spec §3.3.1).
+  missingQueryRootType('GQL111'),
+
+  /// `GQL112`: a root operation type that is not an object type, such as
+  /// `query: SomeInterface` (spec §3.3.1).
+  rootTypeNotObject('GQL112'),
+
+  /// `GQL113`: one object type that is the root type of two operations
+  /// (spec §3.3.1).
+  sharedRootType('GQL113'),
+
+  /// `GQL114`: a name of a type, field, argument, enum value or directive
+  /// that begins with `__`, which introspection reserves (spec §3.4).
+  reservedName('GQL114'),
+
+  /// `GQL115`: a name that is empty or not of the name syntax
+  /// `[_A-Za-z][_0-9A-Za-z]*` (spec §2.1.9), in a schema built in code.
+  invalidName('GQL115'),
+
+  /// `GQL116`: a reference to a type the schema does not have: the type
+  /// of a field, an argument or an input field, an implemented interface,
+  /// a union member or a root type (spec §3.4).
+  unknownType('GQL116'),
+
+  /// `GQL117`: a directive applied to a schema element that the schema
+  /// does not define (spec §3.13).
+  unknownDirective('GQL117'),
+
+  /// `GQL118`: a directive applied at a location its definition does not
+  /// list, such as `@deprecated` on an object type (spec §3.13).
+  misplacedDirective('GQL118'),
+
+  /// `GQL119`: a directive that is not `repeatable` applied twice to one
+  /// schema element (spec §3.13).
+  repeatedDirective('GQL119'),
+
+  /// `GQL120`: an applied directive given one argument twice
+  /// (spec §5.4.2).
+  duplicateDirectiveArgument('GQL120'),
+
+  /// `GQL121`: an applied directive given an argument its definition
+  /// does not have (spec §5.4.1).
+  unknownDirectiveArgument('GQL121'),
+
+  /// `GQL122`: an applied directive without a required argument: one of
+  /// non-null type and without a default value (spec §5.4.2.1).
+  missingDirectiveArgument('GQL122'),
+
+  /// `GQL123`: a default value of an argument or an input field that is
+  /// not a value of its type (spec §3.6.1, §3.10).
+  invalidDefaultValue('GQL123'),
+
+  /// `GQL124`: an argument of an applied directive whose value is not a
+  /// value of the argument's type (spec §5.6.1).
+  invalidDirectiveArgumentValue('GQL124'),
+
+  /// `GQL125`: an object or interface type without fields (spec §3.6,
+  /// §3.7).
+  missingFields('GQL125'),
+
+  /// `GQL126`: a field whose type is an input object type (spec §3.6).
+  notOutputType('GQL126'),
+
+  /// `GQL127`: an argument or an input field whose type is an object,
+  /// interface or union type (spec §3.6.1, §3.10).
+  notInputType('GQL127'),
+
+  /// `GQL128`: a required argument or input field (non-null, without
+  /// a default value) marked `@deprecated` (spec §3.6.1, §3.10).
+  deprecatedRequiredInput('GQL128'),
+
+  /// `GQL129`: a directive definition without locations, which only
+  /// a schema built in code can have (spec §3.13).
+  missingDirectiveLocations('GQL129'),
+
+  /// `GQL130`: a directive definition that references itself, directly
+  /// or through the types and directives it references (spec §3.13).
+  directiveSelfReference('GQL130'),
+
+  /// `GQL131`: an object or interface type that implements a type
+  /// that is not an interface type (spec §3.6, §3.7).
+  implementsNonInterface('GQL131'),
+
+  /// `GQL132`: an interface type that implements itself, directly or
+  /// through the interfaces it inherits (spec §3.7).
+  circularImplementation('GQL132'),
+
+  /// `GQL133`: an object or interface type that names one interface twice
+  /// among the interfaces it implements (spec §3.6, §3.7).
+  repeatedInterface('GQL133'),
+
+  /// `GQL134`: a type that implements an interface but not the
+  /// interfaces that interface implements (spec §3.7).
+  missingTransitiveInterface('GQL134'),
+
+  /// `GQL135`: a type without a field of an interface it implements
+  /// (spec §3.6.3 `IsValidImplementation`).
+  missingInterfaceField('GQL135'),
+
+  /// `GQL136`: a field whose type is not a subtype of the type of
+  /// the interface field it implements (spec §3.6.3
+  /// `IsValidImplementationFieldType`).
+  invalidImplementationFieldType('GQL136'),
+
+  /// `GQL137`: a field without an argument of the interface field it
+  /// implements (spec §3.6.3).
+  missingInterfaceArgument('GQL137'),
+
+  /// `GQL138`: an argument whose type is not the type of the same
+  /// argument of the interface field (spec §3.6.3).
+  invalidImplementationArgumentType('GQL138'),
+
+  /// `GQL139`: a required argument of a field that the interface field
+  /// it implements does not have (spec §3.6.3).
+  requiredExtraArgument('GQL139'),
+
+  /// `GQL140`: a deprecated field that implements an interface
+  /// field that is not deprecated (spec §3.6.3).
+  deprecatedImplementationField('GQL140'),
+
+  /// `GQL141`: a union type without member types (spec §3.8).
+  missingUnionMembers('GQL141'),
+
+  /// `GQL142`: a union type that names one member type twice
+  /// (spec §3.8).
+  repeatedUnionMember('GQL142'),
+
+  /// `GQL143`: a union member that is not an object type (spec §3.8).
+  nonObjectUnionMember('GQL143'),
+
+  /// `GQL144`: an enum type without values (spec §3.9).
+  missingEnumValues('GQL144'),
+
+  /// `GQL145`: an input object type without fields (spec §3.10).
+  missingInputFields('GQL145'),
+
+  /// `GQL146`: a field of a `@oneOf` input object type of non-null
+  /// type (spec §3.10.1).
+  nonNullOneOfField('GQL146'),
+
+  /// `GQL147`: a field of a `@oneOf` input object type with a default
+  /// value (spec §3.10.1).
+  defaultedOneOfField('GQL147'),
+
+  /// `GQL148`: an input object type that cannot be given a finite
+  /// value: it reaches itself through non-null fields, or through every
+  /// field of a `@oneOf` type (spec §3.10.1 `InputObjectHasUnbreakableCycle`).
+  infiniteInputValue('GQL148'),
+
+  /// `GQL149`: an input field whose default value contains itself,
+  /// directly or through the default values of other fields (spec §3.10).
+  defaultValueCycle('GQL149'),
+
+  /// `GQL150`: an introspection result that is not an object with a
+  /// `__schema` object, such as a whole response instead of its `data`
+  /// (spec §4).
+  invalidIntrospectionResult('GQL150'),
+
+  /// `GQL151`: a member an introspection result must have that is
+  /// absent or null, such as the `fields` of an `OBJECT` type (spec §4.2).
+  missingIntrospectionMember('GQL151'),
+
+  /// `GQL152`: a type in an introspection result whose `kind` is absent
+  /// or not a named type kind (spec §4.2.1).
+  unknownIntrospectionKind('GQL152'),
+
+  /// `GQL153`: a member of an introspection result of the wrong JSON
+  /// type, a default value that is not a constant GraphQL value, an
+  /// unknown directive location or a `NON_NULL` inside a `NON_NULL`
+  /// (spec §4.2).
+  malformedIntrospectionMember('GQL153'),
+
+  /// `GQL154`: a type reference in an introspection result to a type its
+  /// `types` do not list: the query was not a full one (spec §4.2).
+  unknownIntrospectionType('GQL154'),
+
+  /// `GQL155`: a list or non-null type reference in an introspection
+  /// result without its `ofType`: the type is deeper than the query read
+  /// (spec §4.2), or a chain of more than 100 wrappers, the most a query
+  /// can read.
+  introspectionTypeTooDeep('GQL155');
 }

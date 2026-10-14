@@ -1,12 +1,12 @@
 import 'package:test/test.dart';
+import 'package:typed_graphql/typed_graphql.dart';
 
 import '../support/dedent.dart';
 import '../support/schema_port.dart';
 
 // Ported from graphql-js src/utilities/__tests__/extendSchema-test.ts:
-// repeated extensions, interfaces, root types and directives. graphql-js
-// also checks validateSchema; that check returns with schema validation
-// in M3b.
+// repeated extensions, interfaces, root types and directives. Where
+// graphql-js checks validateSchema, the port checks SchemaValidator.
 void main() {
   const dedent = Dedent();
   const port = SchemaPort();
@@ -124,6 +124,7 @@ void main() {
         port.schemaChanges(schema, extendedSchema),
         '$changes\n\n$newTypesSdl',
       );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('extends interfaces by adding new fields', () {
@@ -176,6 +177,7 @@ void main() {
           }
         '''),
       );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('extends interfaces by adding new implemented interfaces', () {
@@ -227,6 +229,7 @@ void main() {
           }
         '''),
       );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('allows extension of interface with missing Object fields', () {
@@ -256,6 +259,10 @@ void main() {
             newField: String
           }
         '''),
+      );
+      expect(
+        port.validate(extendedSchema),
+        isA<InvalidSchema>(),
       );
     });
 
@@ -288,6 +295,7 @@ void main() {
           }
         '''),
       );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('may extend mutations and subscriptions', () {
@@ -353,6 +361,7 @@ void main() {
       ''');
       final extendedSchema = port.extend(schema, extensionSdl);
       expect(port.schemaChanges(schema, extendedSchema), extensionSdl);
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
   });
 }

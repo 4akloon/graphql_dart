@@ -28,6 +28,7 @@ void main() {
   /// The category of the types in the library file [path], from `lib/`.
   String categoryOf(String path) => switch (path.split('/')) {
     ['src', 'schema', 'scalars', ...] => 'scalars',
+    ['src', 'schema', 'introspection', ...] => 'introspection',
     ['src', final layer, ...] => layer,
     _ => throw ArgumentError.value(path, 'path', 'is not under lib/src'),
   };

@@ -13,26 +13,9 @@ final class RandomSchema {
   final RandomParts parts;
 
   /// The 19 directive locations of the September2025 edition.
-  static const List<String> _locations = [
-    'QUERY',
-    'MUTATION',
-    'SUBSCRIPTION',
-    'FIELD',
-    'FRAGMENT_DEFINITION',
-    'FRAGMENT_SPREAD',
-    'INLINE_FRAGMENT',
-    'VARIABLE_DEFINITION',
-    'SCHEMA',
-    'SCALAR',
-    'OBJECT',
-    'FIELD_DEFINITION',
-    'ARGUMENT_DEFINITION',
-    'INTERFACE',
-    'UNION',
-    'ENUM',
-    'ENUM_VALUE',
-    'INPUT_OBJECT',
-    'INPUT_FIELD_DEFINITION',
+  static final List<DirectiveLocation> _locations = [
+    for (final location in DirectiveLocation.values)
+      if (location != .directiveDefinition) location,
   ];
 
   /// A schema of up to six types and two directive definitions. A type
@@ -88,14 +71,14 @@ final class RandomSchema {
       1 => ObjectType(
         name,
         description: description,
-        interfaces: parts.some(2, () => NamedType(parts.name())),
+        interfaces: parts.some(2, () => NamedTypeReference(parts.name().value)),
         appliedDirectives: applied,
         fields: _members(3, _field),
       ),
       2 => InterfaceType(
         name,
         description: description,
-        interfaces: parts.some(2, () => NamedType(parts.name())),
+        interfaces: parts.some(2, () => NamedTypeReference(parts.name().value)),
         appliedDirectives: applied,
         fields: _members(3, _field),
       ),
@@ -103,7 +86,10 @@ final class RandomSchema {
         name,
         description: description,
         appliedDirectives: applied,
-        memberTypes: parts.some(3, () => NamedType(parts.name())),
+        memberTypes: parts.some(
+          3,
+          () => NamedTypeReference(parts.name().value),
+        ),
       ),
       4 => EnumType(
         name,
@@ -166,10 +152,11 @@ final class RandomSchema {
 
   /// A random name made unique by [index]; no built-in name ends in `_`
   /// and a digit, and neither does `Query`. A `__` prefix is reserved for
-  /// introspection, so it is avoided.
+  /// introspection, so it is avoided; the name `_` would make one with
+  /// the suffix (`__1`), so any leading `_` is.
   String _unique(int index) {
     final name = parts.enumValueName().value;
-    return '${name.startsWith('__') ? 'x$name' : name}_$index';
+    return '${name.startsWith('_') ? 'x$name' : name}_$index';
   }
 
   String? _description() => parts.description()?.value;

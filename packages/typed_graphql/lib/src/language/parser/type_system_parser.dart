@@ -1,4 +1,5 @@
 import '../ast/directive.dart';
+import '../ast/directive_location.dart';
 import '../ast/name.dart';
 import '../ast/type_system_definition.dart';
 import 'directive_parser.dart';
@@ -43,33 +44,6 @@ final class TypeSystemParser {
     'enum',
     'input',
     'directive',
-  };
-
-  /// The working draft's location for directives on a directive
-  /// definition.
-  static const String directiveDefinitionLocation = 'DIRECTIVE_DEFINITION';
-
-  /// The September2025 directive locations (spec §3.13).
-  static const Set<String> locations = {
-    'QUERY',
-    'MUTATION',
-    'SUBSCRIPTION',
-    'FIELD',
-    'FRAGMENT_DEFINITION',
-    'FRAGMENT_SPREAD',
-    'INLINE_FRAGMENT',
-    'VARIABLE_DEFINITION',
-    'SCHEMA',
-    'SCALAR',
-    'OBJECT',
-    'FIELD_DEFINITION',
-    'ARGUMENT_DEFINITION',
-    'INTERFACE',
-    'UNION',
-    'ENUM',
-    'ENUM_VALUE',
-    'INPUT_OBJECT',
-    'INPUT_FIELD_DEFINITION',
   };
 
   /// The definition that [keyword], one of [keywords], starts, after an
@@ -244,22 +218,21 @@ final class TypeSystemParser {
     return directives.directives(isConst: true);
   }
 
-  /// `DirectiveLocation`: one of [locations], or the working draft's
-  /// [directiveDefinitionLocation].
+  /// `DirectiveLocation`: a [DirectiveLocation]; the working draft's
+  /// `DIRECTIVE_DEFINITION` only with [allowsDirectiveExtensions].
   Name _location() {
     final token = cursor.token;
     final name = cursor.name();
-    if (name.value == directiveDefinitionLocation) {
-      if (!allowsDirectiveExtensions) {
-        cursor.fail(
-          .workingDraftFeatureDisabled,
-          'The $directiveDefinitionLocation location is a working-draft '
-          'feature; enable it with ParserOptions.allowDirectiveExtensions.',
-          at: token,
-        );
-      }
-    } else if (!locations.contains(name.value)) {
+    final location = DirectiveLocation.named(name.value);
+    if (location == null) {
       cursor.unexpected(token);
+    } else if (location == .directiveDefinition && !allowsDirectiveExtensions) {
+      cursor.fail(
+        .workingDraftFeatureDisabled,
+        'The DIRECTIVE_DEFINITION location is a working-draft feature; '
+        'enable it with ParserOptions.allowDirectiveExtensions.',
+        at: token,
+      );
     }
     return name;
   }

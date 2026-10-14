@@ -1,9 +1,11 @@
 # Schema
 
-The schema layer turns SDL into an immutable `Schema`, extends it, and prints it
-back. A schema is plain data: named types, directive definitions and the names
-of the root types. It has no behaviour; the codecs of its scalars are held
-apart (see the Scalars & Codecs topic).
+The schema layer turns SDL into an immutable `Schema`, extends it, prints it
+back, validates it, resolves schema coordinates in it and exchanges it with
+introspection results (see the Introspection topic). A schema is plain
+data: named types, directive definitions and the names of the root types.
+It has no behaviour; the codecs of its scalars are held apart (see the
+Scalars & Codecs topic).
 
 ## Building a schema from SDL
 
@@ -112,7 +114,7 @@ The elements of the model:
 | `SchemaField` | A field of an object or interface: `name`, `type`, `arguments`, `description` |
 | `InputValue` | An argument or an input field, with its `defaultValue` |
 | `SchemaEnumValue` | A value of an enum |
-| `SchemaDirective` | A directive definition: `arguments`, `isRepeatable`, `locations` |
+| `SchemaDirective` | A directive definition: `arguments`, `isRepeatable`, `locations` (`DirectiveLocation` values, whose `spelling` is the SDL name) |
 | `AppliedDirective` | A directive applied to an element, with its arguments as written |
 
 The spec's own names, `FieldDefinition`, `EnumValueDefinition` and
@@ -185,6 +187,85 @@ null
 null
 ```
 
+### Resolving a coordinate
+
+`schema.resolve(coordinate)` finds the element a schema coordinate names
+(September2025, "Resolving a Schema Coordinate"). It returns a sealed
+`CoordinateTarget`, one kind per form, holding the element and the elements that
+contain it: `TypeTarget`, `FieldTarget`, `ArgumentTarget`, `InputFieldTarget`,
+`EnumValueTarget`, `DirectiveTarget` and `DirectiveArgumentTarget`. It returns
+null when the schema has no such element, also when a containing element is
+missing or of the wrong kind. Meta-fields such as `__typename` and the
+introspection types are not elements of a schema, so they resolve to null too.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  final source = Source('''
+type Query {
+  hero(episode: Episode): Character
+}
+
+enum Episode { NEWHOPE EMPIRE JEDI }
+
+interface Character {
+  name: String!
+}
+
+directive @cost(units: Int) on FIELD_DEFINITION
+''');
+  final document = const Parser().parse(source).requireDocument();
+  final schema = switch (const SchemaBuilder().fromSdl(document)) {
+    BuildSuccess(:final schema) => schema,
+    BuildFailure(:final diagnostics) => throw StateError('$diagnostics'),
+  };
+  const texts = [
+    'Character',
+    'Query.hero(episode:)',
+    'Episode.JEDI',
+    '@cost(units:)',
+    'Query.villain',
+    'Episode.JEDI.name',
+    'Query.__typename',
+  ];
+  for (final text in texts) {
+    final target = switch (const Parser().parseSchemaCoordinate(Source(text))) {
+      ParseElementSuccess(:final value) => describe(schema.resolve(value)),
+      ParseElementFailure(:final diagnostics) => '${diagnostics.first.message}',
+    };
+    print('$text: $target');
+  }
+}
+
+String describe(CoordinateTarget? target) => switch (target) {
+  TypeTarget(:final type) => 'the type ${type.name}',
+  FieldTarget(:final type, :final field) =>
+    'the field ${type.name}.${field.name}',
+  ArgumentTarget(:final field, :final argument) =>
+    'the argument ${argument.name} of ${field.name}',
+  InputFieldTarget(:final inputField) => 'the input field ${inputField.name}',
+  EnumValueTarget(:final type, :final enumValue) =>
+    'the value ${enumValue.name} of ${type.name}',
+  DirectiveTarget(:final directive) => 'the directive @${directive.name}',
+  DirectiveArgumentTarget(:final directive, :final argument) =>
+    'the argument ${argument.name} of @${directive.name}',
+  null => 'nothing',
+};
+```
+
+It prints:
+
+```text
+Character: the type Character
+Query.hero(episode:): the argument episode of hero
+Episode.JEDI: the value JEDI of Episode
+@cost(units:): the argument units of @cost
+Query.villain: nothing
+Episode.JEDI.name: Expected <EOF>, found ".".
+Query.__typename: nothing
+```
+
 ## Built-ins
 
 Every schema has the five built-in scalars (`String`, `Int`, `Float`, `Boolean`,
@@ -210,7 +291,7 @@ void main() {
   print(schema.typeNamed('__Schema')?.name);
   final deprecated = schema.directiveNamed('deprecated');
   print(deprecated?.arguments.map((argument) => argument.name).toList());
-  print(deprecated?.locations);
+  print(deprecated?.locations.map((location) => location.spelling).toList());
 
   // @defer and @stream are opt-in.
   print(schema.directiveNamed('defer'));
@@ -435,6 +516,72 @@ false
 true
 ```
 
+## Validating a schema
+
+`SchemaValidator().validate(schema)` checks a schema against every type-system
+rule of the specification and returns a sealed `SchemaValidationResult`:
+
+- `ValidSchema(schema)` when no rule is broken. Only the validator and
+  `ValidSchema.assumeValid(schema)` make one, so code that takes a `ValidSchema`
+  knows the schema was checked. `assumeValid` checks nothing: keep it for a
+  schema known to be valid, such as one generated from a schema that was
+  validated before.
+- `InvalidSchema(schema, diagnostics)` with every problem: a `GQL1xx` code,
+  graphql-js's message and the place of the element (or the node inside it,
+  such as a default value) the problem is about. The problems come in
+  graphql-js's order: the roots, the directives applied to the schema, the
+  directive definitions, then the types in declaration order.
+
+Validation never throws, and a schema built in code is validated the same way
+as one built from SDL.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  report(
+    validate('''
+type Query { hero: Character }
+interface Character { name: String! }
+type Human implements Character { name: String! }
+'''),
+  );
+  report(
+    validate('''
+schema { query: Query mutation: Character subscription: Query }
+type Query { hero: Character }
+interface Character { name: String! }
+'''),
+  );
+}
+
+SchemaValidationResult validate(String sdl) {
+  final source = Source(sdl, name: 'schema.graphql');
+  final document = const Parser().parse(source).requireDocument();
+  return switch (const SchemaBuilder().fromSdl(document, source: source)) {
+    BuildSuccess(:final schema) => const SchemaValidator().validate(schema),
+    BuildFailure(:final diagnostics) => throw StateError('$diagnostics'),
+  };
+}
+
+void report(SchemaValidationResult result) {
+  switch (result) {
+    case ValidSchema(:final schema):
+      print('valid, ${schema.types.length} types');
+    case InvalidSchema(:final diagnostics):
+      diagnostics.forEach(print);
+  }
+}
+```
+
+It prints:
+
+```text
+valid, 3 types
+schema.graphql:1:33: error GQL112: Mutation root type must be Object type if provided, it cannot be Character.
+schema.graphql:1:17: error GQL113: All root types must be different, "Query" type is used as query and subscription root types.
+```
+
 ## What building does not check
 
 Building a schema does not validate it. A field may name a type that does not
@@ -470,5 +617,5 @@ null
 Query
 ```
 
-Checking a schema against the rules of the specification arrives in a later
-release of this package.
+Checking a schema against the rules of the specification is the validator's
+work: see "Validating a schema" above.

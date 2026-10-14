@@ -58,9 +58,10 @@ void main() {
 ```
 
 > **Status: under construction.** Nothing is published to pub.dev yet, and
-> every API may change before 0.1.0. Stage M2 (language) is done, and
-> M3a brings the schema: building it from SDL, extending and printing it.
-> Schema validation and introspection (M3b) come next.
+> every API may change before 0.1.0. Stages M2 (language) and M3
+> (the schema: building it from SDL, extending, printing and validating it,
+> resolving schema coordinates, and introspection in both directions) are
+> done.
 
 ## Table of contents
 
@@ -101,13 +102,13 @@ This repository is a Dart **pub workspace**. Dart SDK: `^3.13.0`.
 
 | Package | Role | Status |
 |---|---|---|
-| [`typed_graphql`](packages/typed_graphql) | Core: language, type system, validation, wire protocol, diagnostics. Pure Dart, depends only on `meta`. | diagnostics, protocol types, the language, the schema model, SDL and scalar codecs (M1, M2, M3a) |
+| [`typed_graphql`](packages/typed_graphql) | Core: language, type system, validation, wire protocol, diagnostics. Pure Dart, depends only on `meta`. | diagnostics, protocol types, the language, the schema model, SDL, scalar codecs, schema validation, introspection (M1, M2, M3) |
 | [`typed_graphql_server`](packages/typed_graphql_server) | Typed schema builder, executor, subscriptions, DataLoader, HTTP / graphql-ws / graphql-sse handlers. | skeleton (M5) |
 | [`typed_graphql_shelf`](packages/typed_graphql_shelf) | `shelf` adapter with an optional GraphiQL page. | skeleton (M7) |
 | [`typed_graphql_client`](packages/typed_graphql_client) | Client runtime: links, transports, normalized cache, `MockLink`. | skeleton (M11) |
 | [`typed_graphql_codegen`](packages/typed_graphql_codegen) | Code generation engine and CLI, without `analyzer`. | skeleton (M8, M10) |
 | [`typed_graphql_builder`](packages/typed_graphql_builder) | `build_runner` builders and the annotation front end. | skeleton (M9) |
-| [`typed_graphql_conformance`](packages/typed_graphql_conformance) | Repository tool: ported graphql-js suites, fuzzers, benchmarks. Never published. | language and schema suites, fuzzers (M2, M3a) |
+| [`typed_graphql_conformance`](packages/typed_graphql_conformance) | Repository tool: ported graphql-js suites, fuzzers, benchmarks. Never published. | language, schema and introspection suites, fuzzers (M2, M3) |
 
 ## Install
 
@@ -143,7 +144,7 @@ the test suite, so what they print is what the package does:
 
 - [Getting started](packages/typed_graphql/doc/getting_started.md) · [Language](packages/typed_graphql/doc/language.md) ·
   [Diagnostics](packages/typed_graphql/doc/diagnostics.md) · [Wire protocol](packages/typed_graphql/doc/protocol.md) ·
-  [Schema](packages/typed_graphql/doc/schema.md) · [Scalars and codecs](packages/typed_graphql/doc/scalars.md)
+  [Schema](packages/typed_graphql/doc/schema.md) · [Scalars and codecs](packages/typed_graphql/doc/scalars.md) · [Introspection](packages/typed_graphql/doc/introspection.md)
 - API reference: run `dart doc` in `packages/typed_graphql` and open
   `doc/api/index.html`; the types are grouped under the same topics.
 - A runnable [example](packages/typed_graphql/example/example.dart)

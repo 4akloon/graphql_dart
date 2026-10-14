@@ -2,8 +2,9 @@
 
 Every problem the package finds in a document, a schema or a payload is a
 `Diagnostic`: a stable code, a severity, a message for people and the place in
-the source it is about. Parsing and building a schema return diagnostics
-instead of throwing, and validation will report through the same model.
+the source it is about. Parsing, building a schema from SDL or from an
+introspection result, and validating a schema return diagnostics instead of
+throwing, and operation validation will report through the same model.
 
 ## Sources and spans
 
@@ -107,7 +108,7 @@ digit is the area:
 | Ids | Area |
 |---|---|
 | `GQL0xx` | lexer and syntax |
-| `GQL1xx` | type system: building a schema |
+| `GQL1xx` | type system: building, validating and introspecting a schema |
 | `GQL2xx` | operation validation |
 | `GQL3xx` | coercion and execution |
 | `GQL4xx` | transports and protocols |

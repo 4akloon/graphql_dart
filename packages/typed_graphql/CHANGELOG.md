@@ -116,3 +116,98 @@
   protocol, schema, scalars and codecs), a runnable `example/example.dart`
   and `dart doc` categories for every exported type. The programs in the
   guides are run by the test suite.
+- **Breaking:** `SchemaDirective.locations` is a `List<DirectiveLocation>`.
+  `DirectiveLocation` names the nineteen September2025 locations and the
+  working draft's `DIRECTIVE_DEFINITION` (`spelling`, `named`,
+  `isExecutable`); the parser accepts exactly its spellings.
+- **Breaking:** the interfaces of `ObjectType` and `InterfaceType` and the
+  members of `UnionType` are `NamedTypeReference`s (a name and a span)
+  instead of `NamedType` nodes, so a reference added by `extend` from
+  another source points into that source. `Schema.rootTypeSpan` gives
+  where a root type was named (`rootTypeSpans` in the constructor).
+- `SchemaType.isInputType`, `isOutputType`, `isLeafType`,
+  `isCompositeType` and `isAbstractType`; `Schema.namedTypeOf`,
+  `isInputType`, `isOutputType` (for a `TypeRef`), `implementations`,
+  `possibleTypes`, `isSubType`, `isTypeSubTypeOf` and `typesOverlap`, as
+  graphql-js names them, for validation and execution.
+- `SchemaValidator` and the sealed `SchemaValidationResult`: `ValidSchema`
+  (made only by the validator or `ValidSchema.assumeValid`) or
+  `InvalidSchema(schema, diagnostics)`. The root-type rules: `GQL111` for
+  a missing query root, `GQL112` for a root that is not an object type,
+  `GQL113` for one type used as two roots.
+- Schema validation checks names: `GQL114` for a name that begins with
+  `__`, `GQL115` for a name of invalid syntax and `GQL013` for an enum
+  value named `true`, `false` or `null`; and, in a schema built in code,
+  repeated types, directives, fields, arguments and enum values
+  (`GQL101`–`GQL106`, the builder's messages) and redefined built-ins
+  (`GQL103`).
+- Schema validation reports unknown types (`GQL116`, at the type name; a
+  root that names no type included) and checks applied directives: unknown
+  (`GQL117`), misplaced (`GQL118`), repeated when not repeatable
+  (`GQL119`), with a repeated (`GQL120`), unknown (`GQL121`) or missing
+  required (`GQL122`) argument, with graphql-js's SDL-rule messages.
+  `TypeComparator.namedType` gives the named type node inside wrappers.
+- Schema validation checks constant values against their input types,
+  with graphql-js's `validateInputLiteral` messages and paths: default
+  values of arguments and input fields (`GQL123`) and the arguments of
+  applied directives (`GQL124`), `@oneOf` input objects included.
+- Schema validation checks fields and directive definitions: an object or
+  interface type without fields (`GQL125`), a field of an input type
+  (`GQL126`), an argument or input field of an output type (`GQL127`), a
+  deprecated required argument or input field (`GQL128`), a directive
+  without locations (`GQL129`) and a directive that references itself,
+  directly or through types and directives (`GQL130`).
+- Schema validation checks implemented interfaces, with graphql-js's
+  messages: a non-interface (`GQL131`), a circular implementation
+  (`GQL132`), a repeat (`GQL133`), a missing inherited interface
+  (`GQL134`), and, for each interface field, a missing field (`GQL135`),
+  a field type that is not a subtype (`GQL136`), a missing argument
+  (`GQL137`), an argument of another type (`GQL138`), an added required
+  argument (`GQL139`) and a deprecated implementation of a live field
+  (`GQL140`).
+- Schema validation checks unions, enums and input objects, with
+  graphql-js's messages: a union without members (`GQL141`), with a
+  repeated member (`GQL142`) or a member that is not an object type
+  (`GQL143`); an enum without values (`GQL144`); an input object without
+  fields (`GQL145`); a `@oneOf` field that is non-null (`GQL146`) or has a
+  default (`GQL147`); an input object that cannot be given a finite value
+  (`GQL148`) and a default value that contains itself (`GQL149`).
+- `IntrospectionQuery`: graphql-js's `getIntrospectionQuery` as a const
+  value with `includes*` flags and `typeDepth` (0 to 100, else a
+  `RangeError`); `text` is the query. `IntrospectionQuery.full` reads
+  every field September2025 introspection has.
+- `Schema.toIntrospection([query])` writes the schema as the `data` of its
+  answer to an `IntrospectionQuery` (graphql-js's
+  `introspectionFromSchema`), `IntrospectionQuery.full` by default: the
+  declared types, the built-in scalars they use, then the introspection
+  types; the declared directives, then the built-in ones. A reference to
+  a type the schema lacks is an `ArgumentError`.
+- `SchemaBuilder.fromIntrospection(result)` builds a schema from the `data`
+  of an introspection result (graphql-js's `buildClientSchema`) and returns
+  the sealed `BuildResult`: structural problems are `GQL150` to `GQL155`
+  diagnostics whose message starts with the JSON path. Built-in types and
+  directives in the result stay undeclared; listing `@defer` or `@stream`
+  turns on `includesDeferAndStream`.
+- `Schema.toIntrospection` lists every member of a union, also one that is
+  not an object, so the validator sees it after a round trip.
+- `Schema.resolve(SchemaCoordinate)` finds the element a schema coordinate
+  names as a sealed `CoordinateTarget` (`TypeTarget`, `FieldTarget`,
+  `ArgumentTarget`, `InputFieldTarget`, `EnumValueTarget`,
+  `DirectiveTarget`, `DirectiveArgumentTarget`), or null: also when a
+  containing element is missing or of the wrong kind, and for meta-fields
+  and introspection types, which are not schema elements.
+- The Schema guide covers validating a schema and resolving a schema
+  coordinate, and the new Introspection guide covers the introspection query
+  and results; the new types carry their dartdoc category.
+- Hardening of schema validation against hostile input: constant-time
+  sub type and overlap queries, linear-time union, implementation and
+  directive-reference rules, rules that stop at the error limit, and
+  `Int` literals checked before they are parsed. A value in a validation
+  message prints in full only when small (a deviation from graphql-js);
+  an introspection result with more than 100 `ofType` wrappers is `GQL155`.
+- `IntrospectionQuery.checkTypeDepth()` is the range check of `typeDepth`;
+  `Schema.toIntrospection` calls it, so a depth outside 0 to 100 is a
+  `RangeError` there too. The introspection reader ignores directive
+  deprecation and drops a result's redefinition of a built-in directive; the
+  Introspection guide and the M3 spec list these and the other differences
+  from graphql-js.

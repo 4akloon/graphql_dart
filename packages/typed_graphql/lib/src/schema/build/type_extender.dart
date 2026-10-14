@@ -98,7 +98,7 @@ final class TypeExtender(
         memberTypes: [
           ...type.memberTypes,
           for (final node in matching.whereType<UnionTypeExtension>())
-            ...node.types,
+            ..._elements.references(node.types),
         ],
         span: type.span,
       ),
@@ -141,7 +141,7 @@ final class TypeExtender(
     interfaces: [
       ...type.interfaces,
       for (final node in nodes.whereType<ObjectTypeExtension>())
-        ...node.interfaces,
+        ..._elements.references(node.interfaces),
     ],
     appliedDirectives: _directives(type, nodes),
     fields: [
@@ -159,7 +159,7 @@ final class TypeExtender(
         interfaces: [
           ...type.interfaces,
           for (final node in nodes.whereType<InterfaceTypeExtension>())
-            ...node.interfaces,
+            ..._elements.references(node.interfaces),
         ],
         appliedDirectives: _directives(type, nodes),
         fields: [

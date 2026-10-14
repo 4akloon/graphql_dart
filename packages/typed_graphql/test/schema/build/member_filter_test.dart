@@ -98,7 +98,7 @@ type B { f: Int }''');
   test('keeps the interfaces and directives of a type with a repeat', () {
     final built = Built('type T implements I @d { a: Int a: Int }');
     final type = built.partial.typeNamed('T') as ObjectType;
-    expect(type.interfaces.single.name.value, 'I');
+    expect(type.interfaces.single.name, 'I');
     expect(type.appliedDirectives.single.name, 'd');
     expect(type.fields.single.name, 'a');
   });

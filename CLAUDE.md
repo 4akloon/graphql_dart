@@ -29,7 +29,12 @@ graphql-js language suite and the language fuzzers. M3a (schema core)
 delivers the schema model, SDL building and extension, the SDL printer,
 scalar codecs, the graphql-js schema builder, extension and printer suites
 and the SDL fuzzers. M3c (core documentation) delivers the guides, the
-example and the dartdoc categories.
+example and the dartdoc categories. M3b (schema validation) delivers the type
+relations, the schema validator, the introspection query, introspection
+results in both directions, coordinate resolution, the graphql-js
+`validateSchema`, `buildClientSchema`, `introspectionFromSchema` and
+`resolveSchemaCoordinate` suites, the introspection and coordinate fuzzers,
+and the Introspection guide.
 
 ## Documents
 
@@ -132,7 +137,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   definition's draft parts report `GQL014` instead of a generic error.
   `Parser.parseSchemaCoordinate` runs `SchemaCoordinateParser` over a
   cursor on a `SchemaCoordinateLexer` (the cursor reads any
-  `TokenSource`); `ParserOptions` do not apply to it.
+  `TokenSource`); `ParserOptions` do not apply to it. A directive
+  definition's locations are checked against `DirectiveLocation`
+  (`ast/directive_location.dart`), whose `spelling` is the SDL name.
 - `printer/`: `Printer` prints any node as graphql-js's `print` does, to
   the character (80-column wrapping included), through collaborators:
   `ValuePrinter` (values, types, arguments, directives), `ExecutablePrinter`,
@@ -179,13 +186,17 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `NamedType` already name language nodes, so the schema's take a
   `Schema` prefix. `SchemaType` is the sealed family of named types
   (`ScalarType`, `ObjectType`, `InterfaceType`, `UnionType`, `EnumType`,
-  `InputObjectType`). Types are language `TypeRef` nodes (implemented
-  interfaces and union members `NamedType` nodes), resolved by name;
+  `InputObjectType`). Types are language `TypeRef` nodes, resolved by
+  name; implemented interfaces and union members are `NamedTypeReference`s,
+  a name and the span where it was written (an extension's reference has a
+  span in the extension's source, unlike the type's own span);
   defaults and directive arguments are constant language `Value` nodes.
   Every element has `SourceSpan? span`. `deprecationReason`,
   `specifiedByUrl` and `isOneOf` read the applied directives through the
   internal `AppliedDirectives`; the directives stay in the element's list.
-  Elements compare by identity.
+  Elements compare by identity. `SchemaDirective.locations` are
+  `DirectiveLocation` values; a code-built node with another spelling is an
+  `ArgumentError` in the reader.
 - `build/BuiltIns` (const): the five built-in scalars, the five specified
   directives, `defer` and `stream` (graphql-js's definitions, not in the
   specified five) and the introspection types, read once from the internal
@@ -193,7 +204,14 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 - `Schema` (`schema.dart`) lists only what was declared; `typeNamed` and
   `directiveNamed` fall back to `BuiltIns` (`defer` and `stream` only with
   `includesDeferAndStream`). Roots are names (`queryTypeName`, ...,
-  `rootTypeName(OperationType)`).
+  `rootTypeName(OperationType)`); `rootTypeSpan(OperationType)` is the
+  span of the name in the schema definition or extension, null for a
+  default root. The type relations M4 needs live on `Schema`
+  (`namedTypeOf`, `implementations`, `possibleTypes`, `isSubType`,
+  `isTypeSubTypeOf`, `typesOverlap`) over the internal `relations/`
+  (`ImplementationIndex`, built on first use; `TypeComparator`, which walks
+  wrappers without recursion); the kind predicates (`isInputType`, ...)
+  are getters of `SchemaType`.
 - `build/SchemaBuilder` (const, `includesDeferAndStream`): `fromSdl(document,
   source:)` returns the sealed `BuildResult` (`BuildSuccess(schema)` |
   `BuildFailure(partial, diagnostics)`). A run sorts the definitions
@@ -234,6 +252,64 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `LiteralConverter` turns a constant `Value` into the `JsonValue` a codec
   decodes (an enum value becomes its name), so codecs have no
   `parseLiteral`.
+- `introspection/IntrospectionQuery` (const): graphql-js's
+  `getIntrospectionQuery` options as `includes*` flags and `typeDepth`;
+  `text` writes the operation and its three fragments line by line (the
+  `ofType` levels with a loop). `full` is every September2025 field:
+  directive deprecation is working-draft and stays off.
+  `Schema.toIntrospection` runs `IntrospectionWriter` (the `__schema`
+  object, which types and directives are listed), `TypeWriter` (`FullType`
+  and `InputValue`, only the fields the query reads) and `TypeRefWriter`
+  (`TypeRef`, built from the innermost level out, cut at `typeDepth`);
+  an unknown type is an `ArgumentError`, not a guessed kind.
+  `SchemaBuilder.fromIntrospection` runs `IntrospectionReader` (the
+  `__schema` object: types, then roots, then directives, as graphql-js
+  reads them) over `IntrospectionObject` (one JSON object and its parent,
+  so the path is built only for a report: a deep `ofType` chain stays
+  linear), `NamedTypeReader`, `MemberReader`, `DirectiveDefinitionReader`
+  and `TypeRefReader` (the `ofType` chain with a loop). Problems are
+  `GQL150`-`GQL155` with the JSON path in the message; kind misuse is
+  left to the validator.
+- `coordinates/`: `Schema.resolve(coordinate)` runs `CoordinateResolver`
+  (September2025 §2.14 "Resolving a Schema Coordinate") and returns the
+  sealed `CoordinateTarget`, one kind per coordinate form holding the
+  elements that contain it (equal when they hold the same elements), or
+  null for any miss (spec §9). Names starting with `__` resolve to null.
+- `validation/SchemaValidator` (const): `validate(schema)` returns the
+  sealed `SchemaValidationResult` (`ValidSchema` | `InvalidSchema(schema,
+  diagnostics)`); `ValidSchema` has a private constructor and
+  `ValidSchema.assumeValid`. One class per rule family (spec §7), each
+  `XRules(report, schema).check()`, run in graphql-js's order (roots,
+  directive definitions, types) into a `ValidationReport`, which keeps
+  report order (elements may come from several sources, so no offset
+  sort) and gives the first span of an error as its place and the others
+  as related. Messages are graphql-js's `validateSchema` messages.
+  `TypeRules` walks the types and hands each to the family of its kind
+  (`FieldRules`, `EnumRules`, `InputObjectRules`, ...);
+  `DirectiveDefinitionRules` walks the directives; both share
+  `ArgumentRules`, `NameRules` (syntax, `__`, reserved enum values) and
+  `UniqueNames` (repeats, which only a schema built in code can hold).
+  Every element also goes through `AppliedDirectiveRules` (at its
+  `DirectiveLocation`) and `TypeReferenceRules` (unknown types). An error
+  about a node an element holds (its type, a default value, an applied
+  directive's argument) points at the node through `NodeSpan.within`: the
+  element's source with the node's offsets, as graphql-js points.
+  `ValueChecker` checks a constant `Value` against a `TypeRef` with its own
+  stack (paths share their parents, so a deep value costs linear time) and
+  returns `ValueProblem`s (message, node, path); `LeafValueChecker` holds
+  the literal rules of the built-in scalars and enums, and a custom scalar
+  accepts any literal. `DefaultValueRules` and `AppliedDirectiveRules`
+  turn the problems into `GQL123` and `GQL124`. `DeprecationRules` holds
+  the required-and-deprecated rule of arguments and input fields;
+  `DirectiveReferenceRules` walks `@name` and type-name keys with a stack
+  and a visited set. `InterfaceRules` checks the references of an object or
+  interface type and hands each interface to `ImplementationRules`
+  (spec §3.6.3 `IsValidImplementation`). The two input cycles are found
+  without recursion: `FiniteValueRules` propagates the types known to have
+  a finite value through reverse edges (graphql-js's one-pass algorithm),
+  then reports each cycle among the rest once; `DefaultValueCycleRules`
+  walks default values depth-first and, created once per run, remembers
+  the fields it walked across types.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
@@ -342,9 +418,10 @@ in `It prints:` and a `text` fence with its exact output; a fragment or a
 signature is a `text` fence. A guide has no relative link (dartdoc breaks
 it) and names another guide by its topic. Every exported public type has
 `/// {@category <folder>}` in its doc comment (`schema/scalars/` is
-`scalars`); a new exported folder needs its category in
-`dartdoc_options.yaml` and its guide. `dart doc` reports 0 warnings. A stage
-that adds API adds its section to the guide of its layer in the same commit.
+`scalars`, `schema/introspection/` is `introspection`); a new exported
+folder needs its category in `dartdoc_options.yaml` and its guide. `dart doc`
+reports 0 warnings. A stage that adds API adds its section to the guide of
+its layer in the same commit.
 
 **Self-review before saying "done".**
 1. `wc -l` of every file touched, and the longest method added.
@@ -395,8 +472,11 @@ that adds API adds its section to the guide of its layer in the same commit.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
 - Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`
   and `mapping/schema.csv`, checked by `test/mapping_test.dart` there; port
-  helpers in its `test/support/` (`SchemaPort` for the schema suites).
+  helpers in its `test/support/` (`SchemaPort` for the schema suites,
+  `ValidationPort` for `validateSchema`, `IntrospectionPort` for
+  `buildClientSchema`).
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
-  round trip, hostile SDL); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
+  round trip, hostile SDL, introspection round trip, hostile
+  introspection, coordinates); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
   `TYPED_GRAPHQL_FUZZ_SEED` tune them.
 - CI: `.github/workflows/ci.yml`.

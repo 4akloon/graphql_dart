@@ -90,9 +90,20 @@ directive @auth(role: String) repeatable on FIELD_DEFINITION | OBJECT
       expect(directive.name, 'auth');
       expect(directive.description, 'Marks a field');
       expect(directive.isRepeatable, isTrue);
-      expect(directive.locations, ['FIELD_DEFINITION', 'OBJECT']);
+      expect(directive.locations, [
+        DirectiveLocation.fieldDefinition,
+        DirectiveLocation.object,
+      ]);
       expect(directive.arguments.single.name, 'role');
       expect(directive.span?.location, const SourceLocation(11, 1));
+    });
+
+    test('rejects a location no parser accepts, in a node built in code', () {
+      final node = DirectiveDefinition(
+        const Name('d'),
+        locations: const [Name('FIELDS')],
+      );
+      expect(() => reader.directive(node), throwsArgumentError);
     });
 
     test('gives no spans without a source', () {

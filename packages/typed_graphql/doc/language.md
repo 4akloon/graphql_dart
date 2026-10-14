@@ -513,6 +513,9 @@ Query.hero(episode:) is the argument episode of Query.hero
 GraphQL request:1:7: error GQL001: Invalid character: " ".
 ```
 
+A coordinate is only text until a schema resolves it: `Schema.resolve` finds the
+element it names (see "Resolving a coordinate" in the Schema topic).
+
 ## Tokens
 
 `Lexer(source, sink).advance()` returns the next `Token`: a `TokenKind`, the

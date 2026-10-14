@@ -30,10 +30,10 @@ void main() {
   test('defines @deprecated as September2025 does', () {
     final deprecated = builtIns.directiveNamed('deprecated')!;
     expect(deprecated.locations, [
-      'FIELD_DEFINITION',
-      'ARGUMENT_DEFINITION',
-      'INPUT_FIELD_DEFINITION',
-      'ENUM_VALUE',
+      DirectiveLocation.fieldDefinition,
+      DirectiveLocation.argumentDefinition,
+      DirectiveLocation.inputFieldDefinition,
+      DirectiveLocation.enumValue,
     ]);
     final reason = deprecated.argumentNamed('reason')!;
     expect(const Printer().print(reason.type), 'String!');
@@ -49,7 +49,7 @@ void main() {
       'if',
       'label',
     ]);
-    expect(builtIns.stream.locations, ['FIELD']);
+    expect(builtIns.stream.locations, [DirectiveLocation.field]);
     expect(builtIns.stream.arguments.map((argument) => argument.name), [
       'initialCount',
       'if',
@@ -96,11 +96,19 @@ void main() {
   });
 
   test('gives the specified directives their locations', () {
-    const common = ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGMENT'];
+    const common = [
+      DirectiveLocation.field,
+      DirectiveLocation.fragmentSpread,
+      DirectiveLocation.inlineFragment,
+    ];
     expect(builtIns.directiveNamed('include')!.locations, common);
     expect(builtIns.directiveNamed('skip')!.locations, common);
-    expect(builtIns.directiveNamed('specifiedBy')!.locations, ['SCALAR']);
-    expect(builtIns.directiveNamed('oneOf')!.locations, ['INPUT_OBJECT']);
+    expect(builtIns.directiveNamed('specifiedBy')!.locations, [
+      DirectiveLocation.scalar,
+    ]);
+    expect(builtIns.directiveNamed('oneOf')!.locations, [
+      DirectiveLocation.inputObject,
+    ]);
   });
 
   test('types introspection fields with their nullability', () {
@@ -142,7 +150,10 @@ void main() {
     expect(defaultOf(builtIns.defer, 'label'), isNull);
     expect(defaultOf(builtIns.stream, 'initialCount'), '0');
     expect(defaultOf(builtIns.stream, 'if'), 'true');
-    expect(builtIns.defer.locations, ['FRAGMENT_SPREAD', 'INLINE_FRAGMENT']);
+    expect(builtIns.defer.locations, [
+      DirectiveLocation.fragmentSpread,
+      DirectiveLocation.inlineFragment,
+    ]);
   });
 
   test('finds a scalar or an introspection type by name', () {

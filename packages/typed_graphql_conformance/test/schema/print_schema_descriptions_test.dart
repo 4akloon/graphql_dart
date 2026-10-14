@@ -39,7 +39,7 @@ void main() {
           UnionType(
             'SomeUnion',
             description: '',
-            memberTypes: [port.named('Query')],
+            memberTypes: [port.reference('Query')],
           ),
           ObjectType('Query', description: '', fields: fields()),
           EnumType(
@@ -56,7 +56,7 @@ void main() {
             'someDirective',
             description: '',
             arguments: arguments(),
-            locations: ['QUERY'],
+            locations: [.query],
           ),
         ],
       );

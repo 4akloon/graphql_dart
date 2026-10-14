@@ -14,7 +14,8 @@ void main() {
   group('extendSchema', () {
     test('Throws on unknown types', () {
       // References are names: the build succeeds and schema validation
-      // reports the unknown type from M3b.
+      // reports the unknown type, after the query root: an extension adds
+      // no default roots.
       final extendedSchema = port.extend(Schema(), '''
         type Query {
           unknown: UnknownType
@@ -22,6 +23,10 @@ void main() {
       ''');
       expect(extendedSchema.typeNamed('Query'), isA<ObjectType>());
       expect(extendedSchema.typeNamed('UnknownType'), isNull);
+      expect(port.validationErrors(extendedSchema), [
+        'GQL111 Query root type must be provided.',
+        'GQL116 Unknown type "UnknownType".',
+      ]);
     });
 
     test('does not allow replacing a default directive', () {
@@ -36,13 +41,24 @@ void main() {
       expect(result.diagnostics.single.span?.text, 'include');
     });
 
+    test('Rejects invalid SDL', () {
+      // Adapted: the extension builds; the validator reports the directive,
+      // after the query root that the empty schema lacks.
+      final extended = port.extend(Schema(), 'extend schema @unknown');
+      expect(port.validationErrors(extended), [
+        'GQL111 Query root type must be provided.',
+        'GQL117 Unknown directive "@unknown".',
+      ]);
+    });
+
     test('Allows to disable SDL validation', () {
       // Adapted: the builder never validates, so an unknown directive
-      // extends without an option; schema validation (M3b) is what
-      // `assumeValid` turns off.
+      // extends without an option; `ValidSchema.assumeValid` is
+      // graphql-js's `assumeValid`.
       final schema = port.build('type Query { foo: String }');
       final extended = port.extend(schema, 'extend schema @unknown');
       expect(extended.appliedDirectives.single.name, 'unknown');
+      expect(ValidSchema.assumeValid(extended).schema, same(extended));
     });
 
     test('does not allow replacing an existing enum value', () {

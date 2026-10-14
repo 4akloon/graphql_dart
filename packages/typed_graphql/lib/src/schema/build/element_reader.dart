@@ -1,10 +1,14 @@
 import '../../language/ast/directive.dart';
+import '../../language/ast/directive_location.dart';
 import '../../language/ast/enum_value_definition.dart';
 import '../../language/ast/field_definition.dart';
 import '../../language/ast/input_value_definition.dart';
+import '../../language/ast/name.dart';
+import '../../language/ast/type_ref.dart';
 import '../../language/ast/type_system_definition.dart';
 import '../model/applied_directive.dart';
 import '../model/input_value.dart';
+import '../model/named_type_reference.dart';
 import '../model/schema_directive.dart';
 import '../model/schema_enum_value.dart';
 import '../model/schema_field.dart';
@@ -48,6 +52,12 @@ final class const ElementReader(
     span: spans.of(node),
   );
 
+  /// References to the types [nodes] name, each with its span.
+  List<NamedTypeReference> references(List<NamedType> nodes) => [
+    for (final node in nodes)
+      NamedTypeReference(node.name.value, span: spans.of(node)),
+  ];
+
   /// The directives applied to an element, in order.
   List<AppliedDirective> appliedAll(List<Directive> nodes) => [
     for (final node in nodes)
@@ -64,8 +74,18 @@ final class const ElementReader(
     description: node.description?.value,
     arguments: node.arguments.map(inputValue).toList(),
     isRepeatable: node.isRepeatable,
-    locations: [for (final location in node.locations) location.value],
+    locations: node.locations.map(_location).toList(),
     appliedDirectives: appliedAll(node.directives),
     span: spans.of(node),
   );
+
+  /// The location [name] spells. The parser accepts no other name, so an
+  /// unknown one comes from a document built in code: a programmer error.
+  static DirectiveLocation _location(Name name) =>
+      DirectiveLocation.named(name.value) ??
+      (throw ArgumentError.value(
+        name.value,
+        'locations',
+        'Not a directive location',
+      ));
 }

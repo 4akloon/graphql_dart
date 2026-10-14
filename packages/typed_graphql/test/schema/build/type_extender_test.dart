@@ -11,7 +11,7 @@ void main() {
         InputValue(:final name) => name,
         SchemaEnumValue(:final name) => name,
         AppliedDirective(:final name) => name,
-        NamedType(:final name) => name.value,
+        NamedTypeReference(:final name) => name,
         _ => fail('unexpected $element'),
       },
   ];

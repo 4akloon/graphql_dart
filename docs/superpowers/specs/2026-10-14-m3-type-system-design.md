@@ -107,6 +107,9 @@ behaviour, and the server and client register codecs by scalar name.
 pass; each rule family is a separate class in `schema/validation/`:
 
 - root operation types exist, are object types and are distinct;
+- every referenced type exists: the type of a field, an argument or an input
+  field, an implemented interface, a union member, a root type (the builder
+  keeps references as names, so it builds a schema with an unknown one);
 - names: no `__` prefix outside the introspection types, valid name syntax;
 - object and interface types have at least one field; field and argument types
   are output / input types as the position requires;
@@ -117,7 +120,10 @@ pass; each rule family is a separate class in `schema/validation/`:
 - `@oneOf` input objects: fields are nullable and without defaults;
 - directives: argument types, uniqueness of non-repeatable directives, valid
   locations, no self-referencing directive definition, `@deprecated` only
-  where allowed, applied-directive arguments checked against the definition.
+  where allowed, applied-directive arguments checked against the definition;
+  every applied directive is defined (graphql-js checks this and the unique,
+  known and required directive arguments on SDL before building; here the
+  validator checks them on any schema).
 
 The result is the sealed `SchemaValidationResult`: `ValidSchema` or
 `InvalidSchema(diagnostics)`. `ValidSchema` is a `final class` with a private
@@ -131,10 +137,13 @@ in the message.
 - `IntrospectionQuery` generates the query. Options switch the
   working-draft fields (`isOneOf`, `specifiedByUrl`, descriptions of inputs, the
   deprecation of arguments and input fields) on and off.
-- `SchemaBuilder.fromIntrospection(JsonValue)` builds a `Schema`. A malformed
-  response is a `DecodeFailure` with a path; an unknown or inconsistent element
-  is a diagnostic; nothing throws. The result goes through the same sealed
-  `BuildResult` as SDL.
+- `SchemaBuilder.fromIntrospection(JsonValue)` builds a `Schema` and returns
+  the same sealed `BuildResult` as SDL; nothing throws. A malformed response
+  (a missing member, a wrong JSON type, an unknown kind or type, a type deeper
+  than the query read) is a `GQL150`-`GQL155` diagnostic whose message starts
+  with the JSON path, as a `DecodeFailure` prints it (deviation 7). Kind
+  misuse (an input type as a field type, a root of the wrong kind) builds and
+  is left to schema validation.
 - `Schema.toIntrospection()` produces the response (`introspectionFromSchema`).
   Default values are printed as GraphQL literals, as the introspection format
   requires.
@@ -192,19 +201,47 @@ stay green after every task, no allowlist grows.
    language nodes.
 6. The hostile-SDL fuzzer for `fromSdl` / `extend` ships with M3a, the
    introspection and coordinate fuzzers with M3b.
-7. The printer prints every applied directive as written; graphql-js prints
+7. A malformed introspection response is not a `DecodeFailure`: one response
+   can have many problems, so `fromIntrospection` reports them all as
+   diagnostics in its `BuildResult`, with the JSON path in each message (M3b
+   plan, ruling 2).
+8. The printer prints every applied directive as written; graphql-js prints
    only `@deprecated`, `@specifiedBy` and `@oneOf`. SDL to schema to SDL then
    loses nothing.
-8. The default-roots check of the printer is stricter than graphql-js's
+9. The default-roots check of the printer is stricter than graphql-js's
    `isSchemaOfCommonNames`: a non-root type named `Query`, `Mutation` or
    `Subscription` also forces the schema block, so building the printed SDL
    infers the same roots.
-9. Roots named by `extend schema` are not overridden by types named `Query`,
+10. Roots named by `extend schema` are not overridden by types named `Query`,
    `Mutation` or `Subscription`; graphql-js's `buildASTSchema` without a
    schema definition does override them.
-10. An empty argument description prints the arguments one per line;
+11. An empty argument description prints the arguments one per line;
     graphql-js, which tests `!description`, keeps them on one line. Matching
     it would lose the empty description when the printed SDL is built again.
-11. `extend scalar String` (any built-in) is `GQL103`.
-12. `GQL109` has no "Did you mean" suggestion; it also covers an unknown
+12. `extend scalar String` (any built-in) is `GQL103`.
+13. `GQL109` has no "Did you mean" suggestion; it also covers an unknown
     `extend directive` target.
+14. A value in a validation message prints in full only when it is small
+    (up to 1000 nodes and characters); a larger object prints as `{ ... }`.
+    graphql-js prints the whole value in every message about it, which costs
+    the size of the value for each missing field at each level of nesting
+    (hostile input; R0.5). The same bound, with the error limit, stops
+    `ValueChecker` once the report is full.
+15. An introspection result whose `ofType` chain has more than 100 wrappers,
+    the most `IntrospectionQuery` can read, is `GQL155`; graphql-js reads any
+    depth.
+16. A result's `isDeprecated: true` with a null `deprecationReason` is read as
+    deprecated (bare `@deprecated`); graphql-js reads only the reason.
+17. An explicit reason equal to the default, `"No longer supported"`, comes
+    back as a bare `@deprecated`, as SDL writes the default; graphql-js keeps
+    the argument.
+18. Duplicate type names in a result both build, and the validator reports
+    `GQL101`; graphql-js keeps the last one.
+19. The reader ignores directive deprecation (`isDeprecated` and
+    `deprecationReason` of a directive): it is working-draft, and the
+    built-in `@deprecated` has no `DIRECTIVE_DEFINITION` location, so the
+    validator would reject the schema (`GQL118`). A result's redefinition of a
+    built-in directive (`include`, `skip`, `deprecated`, `specifiedBy`,
+    `oneOf`) is dropped, which graphql-js does for types only, and a directive
+    named `defer` or `stream` is dropped too and switches on
+    `includesDeferAndStream` whatever its arguments.

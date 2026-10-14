@@ -28,3 +28,25 @@
 - Hostile-SDL fuzzer (R10.4): random and mutated type-system text, built
   and used to extend a schema, stays within the sink limit, reaches every
   build diagnostic and never throws.
+- Ported graphql-js `validation-test.ts` (schema validation), with
+  `ValidationPort`: each error as its message and `line:column` locations,
+  compared with graphql-js's; template-named tests become loops.
+- The build and extend ports check `validateSchema` where graphql-js does
+  (`SchemaPort.validate`, `validationErrors`); SDL validation is the
+  validator's: an unknown directive is `GQL117`, an unknown type `GQL116`.
+- Ported graphql-js `getIntrospectionQuery-test.ts`; each query is parsed,
+  since operation validation arrives in M4.
+- Ported graphql-js `introspectionFromSchema-test.ts`; the schemas are
+  written as SDL.
+- Ported graphql-js `buildClientSchema-test.ts` over `IntrospectionPort`
+  (`cycleIntrospection` and editable results): a structural problem is a
+  `GQL150`-`GQL155` diagnostic with its JSON path, and kind misuse is
+  checked with schema validation; the two execution tests wait for M5.
+- Ported graphql-js `resolveSchemaCoordinate-test.ts`; where graphql-js
+  throws or resolves a meta-field, the port expects null.
+- Fuzzers for introspection and schema coordinates: a random schema
+  written as introspection builds back to what introspection carries and
+  writes the same result again; a broken result gives only bounded
+  `GQL150`-`GQL155` diagnostics with a path; every element's coordinate
+  resolves to it, and hostile coordinate text never throws. Random type
+  names no longer start with `_`.
