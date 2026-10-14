@@ -44,3 +44,9 @@
   checked with schema validation; the two execution tests wait for M5.
 - Ported graphql-js `resolveSchemaCoordinate-test.ts`; where graphql-js
   throws or resolves a meta-field, the port expects null.
+- Fuzzers for introspection and schema coordinates: a random schema
+  written as introspection builds back to what introspection carries and
+  writes the same result again; a broken result gives only bounded
+  `GQL150`-`GQL155` diagnostics with a path; every element's coordinate
+  resolves to it, and hostile coordinate text never throws. Random type
+  names no longer start with `_`.

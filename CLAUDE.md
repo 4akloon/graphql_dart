@@ -471,6 +471,7 @@ that adds API adds its section to the guide of its layer in the same commit.
   `ValidationPort` for `validateSchema`, `IntrospectionPort` for
   `buildClientSchema`).
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
-  round trip, hostile SDL); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
+  round trip, hostile SDL, introspection round trip, hostile
+  introspection, coordinates); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
   `TYPED_GRAPHQL_FUZZ_SEED` tune them.
 - CI: `.github/workflows/ci.yml`.

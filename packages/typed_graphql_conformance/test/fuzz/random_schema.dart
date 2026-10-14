@@ -152,10 +152,11 @@ final class RandomSchema {
 
   /// A random name made unique by [index]; no built-in name ends in `_`
   /// and a digit, and neither does `Query`. A `__` prefix is reserved for
-  /// introspection, so it is avoided.
+  /// introspection, so it is avoided; the name `_` would make one with
+  /// the suffix (`__1`), so any leading `_` is.
   String _unique(int index) {
     final name = parts.enumValueName().value;
-    return '${name.startsWith('__') ? 'x$name' : name}_$index';
+    return '${name.startsWith('_') ? 'x$name' : name}_$index';
   }
 
   String? _description() => parts.description()?.value;
