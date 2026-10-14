@@ -205,28 +205,43 @@ stay green after every task, no allowlist grows.
    can have many problems, so `fromIntrospection` reports them all as
    diagnostics in its `BuildResult`, with the JSON path in each message (M3b
    plan, ruling 2).
-7. The printer prints every applied directive as written; graphql-js prints
+8. The printer prints every applied directive as written; graphql-js prints
    only `@deprecated`, `@specifiedBy` and `@oneOf`. SDL to schema to SDL then
    loses nothing.
-8. The default-roots check of the printer is stricter than graphql-js's
+9. The default-roots check of the printer is stricter than graphql-js's
    `isSchemaOfCommonNames`: a non-root type named `Query`, `Mutation` or
    `Subscription` also forces the schema block, so building the printed SDL
    infers the same roots.
-9. Roots named by `extend schema` are not overridden by types named `Query`,
+10. Roots named by `extend schema` are not overridden by types named `Query`,
    `Mutation` or `Subscription`; graphql-js's `buildASTSchema` without a
    schema definition does override them.
-10. An empty argument description prints the arguments one per line;
+11. An empty argument description prints the arguments one per line;
     graphql-js, which tests `!description`, keeps them on one line. Matching
     it would lose the empty description when the printed SDL is built again.
-11. `extend scalar String` (any built-in) is `GQL103`.
-12. `GQL109` has no "Did you mean" suggestion; it also covers an unknown
+12. `extend scalar String` (any built-in) is `GQL103`.
+13. `GQL109` has no "Did you mean" suggestion; it also covers an unknown
     `extend directive` target.
-13. A value in a validation message prints in full only when it is small
+14. A value in a validation message prints in full only when it is small
     (up to 1000 nodes and characters); a larger object prints as `{ ... }`.
     graphql-js prints the whole value in every message about it, which costs
     the size of the value for each missing field at each level of nesting
     (hostile input; R0.5). The same bound, with the error limit, stops
     `ValueChecker` once the report is full.
-14. An introspection result whose `ofType` chain has more than 100 wrappers,
+15. An introspection result whose `ofType` chain has more than 100 wrappers,
     the most `IntrospectionQuery` can read, is `GQL155`; graphql-js reads any
     depth.
+16. A result's `isDeprecated: true` with a null `deprecationReason` is read as
+    deprecated (bare `@deprecated`); graphql-js reads only the reason.
+17. An explicit reason equal to the default, `"No longer supported"`, comes
+    back as a bare `@deprecated`, as SDL writes the default; graphql-js keeps
+    the argument.
+18. Duplicate type names in a result both build, and the validator reports
+    `GQL101`; graphql-js keeps the last one.
+19. The reader ignores directive deprecation (`isDeprecated` and
+    `deprecationReason` of a directive): it is working-draft, and the
+    built-in `@deprecated` has no `DIRECTIVE_DEFINITION` location, so the
+    validator would reject the schema (`GQL118`). A result's redefinition of a
+    built-in directive (`include`, `skip`, `deprecated`, `specifiedBy`,
+    `oneOf`) is dropped, which graphql-js does for types only, and a directive
+    named `defer` or `stream` is dropped too and switches on
+    `includesDeferAndStream` whatever its arguments.

@@ -89,8 +89,23 @@ Character: [{"kind":"OBJECT","name":"Droid","ofType":null}]
 
 `SchemaBuilder().fromIntrospection(json)` builds a schema from an answer and
 returns a `BuildResult`, like `fromSdl`. The built-in scalars, directives and
-introspection types in the answer stay built-in, and `@deprecated` comes back
-as written, so SDL printed from the schema matches the server's.
+introspection types in the answer stay built-in. A deprecation comes back as
+SDL writes it: a deprecated element with the default reason, "No longer
+supported", is a bare `@deprecated`, and so is `isDeprecated: true` with no
+reason. Printed SDL therefore matches what a server built from SDL has.
+
+Where the reader differs from graphql-js's `buildClientSchema`:
+
+- A directive in the answer named like a built-in (`include`, `skip`,
+  `deprecated`, `specifiedBy`, `oneOf`) is dropped, whatever its definition.
+  graphql-js drops built-in types only.
+- A directive named `defer` or `stream` is dropped too and switches on
+  `includesDeferAndStream`, whatever its arguments.
+- Directive deprecation (`isDeprecated` of a directive) is ignored: it is
+  working-draft, and the built-in `@deprecated` cannot be applied to a
+  directive definition, so keeping it would make the schema invalid.
+- Two types with one name both build and the validator reports `GQL101`;
+  graphql-js keeps the last.
 
 A broken answer (a missing field, a value of the wrong JSON type, an unknown
 kind, a reference to a type the answer does not list, an `ofType` chain deeper
@@ -99,6 +114,12 @@ starts with the JSON path of the problem; the elements it is about are left
 out of the partial schema. Like `fromSdl`, it does not validate: a schema from
 a server you do not trust goes through `SchemaValidator` next (see "Validating
 a schema" in the Schema topic).
+
+Validating costs work and memory in proportion to the size of the schema: the
+rules are linear in its size, but a hostile server can send a very large
+answer. The reader bounds only what it can, such as the `ofType` chain
+(100 wrappers) and the text of a value in a message. Limit the size of the
+answer you accept before you decode it.
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';

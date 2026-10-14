@@ -205,3 +205,9 @@
   `Int` literals checked before they are parsed. A value in a validation
   message prints in full only when small (a deviation from graphql-js);
   an introspection result with more than 100 `ofType` wrappers is `GQL155`.
+- `IntrospectionQuery.checkTypeDepth()` is the range check of `typeDepth`;
+  `Schema.toIntrospection` calls it, so a depth outside 0 to 100 is a
+  `RangeError` there too. The introspection reader ignores directive
+  deprecation and drops a result's redefinition of a built-in directive; the
+  Introspection guide and the M3 spec list these and the other differences
+  from graphql-js.
