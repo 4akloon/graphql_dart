@@ -30,6 +30,7 @@ void main() {
 
     test('has "Should I use this?" right after Install', () {
       final headings = core.headings;
+      expect(headings, contains('Install'));
       expect(
         headings.indexOf('Should I use this?'),
         headings.indexOf('Install') + 1,
@@ -49,17 +50,28 @@ void main() {
   });
 
   // The spec forbids naming, ranking or judging a third-party package in
-  // the repository's own texts.
-  for (final path in [
-    'README.md',
-    for (final package in const WorkspacePackages().publishable())
-      'packages/${package.name}/README.md',
-  ]) {
-    test('$path names no third-party GraphQL package', () {
-      final text = File(path).readAsStringSync().toLowerCase();
+  // the repository's own texts. CLAUDE.md and the roadmap may name the
+  // package this project does not depend on, so they are not scanned.
+  final scanned = {
+    'README.md': File('README.md').readAsStringSync(),
+    'llms.txt': File('llms.txt').readAsStringSync(),
+    'docs/discovery.md': File('docs/discovery.md').readAsStringSync(),
+    for (final package in const WorkspacePackages().publishable()) ...{
+      'packages/${package.name}/README.md': File(
+        'packages/${package.name}/README.md',
+      ).readAsStringSync(),
+      'packages/${package.name}/pubspec.yaml description':
+          package.field('description') ?? '',
+    },
+  };
+  for (final MapEntry(:key, :value) in scanned.entries) {
+    test('$key names no third-party GraphQL package', () {
+      final text = value.toLowerCase();
       // A name inside `typed_graphql_codegen` is ours, so it must start a word.
       for (final name in const [
         'package:gql',
+        'package:graphql',
+        'gql_',
         'graphql_flutter',
         'ferry',
         'artemis',
@@ -70,11 +82,14 @@ void main() {
     });
   }
 
-  // A skeleton exports nothing: an agent that lands on it must not try it.
+  // A skeleton is a package whose library exports nothing: an agent that lands on it must not try it.
   for (final package in const WorkspacePackages().publishable()) {
     final path = 'packages/${package.name}/README.md';
     final outline = ReadmeOutline(File(path).readAsStringSync());
-    if (outline.status != 'skeleton') continue;
+    final library = File(
+      'packages/${package.name}/lib/${package.name}.dart',
+    ).readAsStringSync();
+    if (library.contains(RegExp('^export ', multiLine: true))) continue;
     test('$path says it is not usable yet, under the status banner', () {
       final opening = outline.opening;
       final banner = opening.indexWhere(

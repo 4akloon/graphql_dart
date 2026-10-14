@@ -27,6 +27,16 @@ void main() {
     expect(found.single.line, 2);
   });
 
+  test('finds both targets of an image inside a link', () {
+    final found = links.relativeIn('[![CI](https://x.dev/b.svg)](LICENSE)');
+    expect(found.map((link) => link.target), ['LICENSE']);
+  });
+
+  test('finds the relative image of a linked badge too', () {
+    final found = links.relativeIn('[![CI](img/b.svg)](LICENSE)');
+    expect(found.map((link) => link.target), ['img/b.svg', 'LICENSE']);
+  });
+
   test('leaves out links inside fenced code', () {
     expect(links.relativeIn('```text\n[a](b.md)\n```\n'), isEmpty);
   });

@@ -101,7 +101,9 @@ the repository. pub.dev package URLs are added at M16.
 
 Every relative link of the root README, this page and every package README
 leads to a file or folder, and an anchor to a heading; the checker is the
-core documentation suite's `MarkdownLinks`.
+core documentation suite's `MarkdownLinks`. It reads Markdown links and
+images only: an HTML `<a href>` or `<img src>` is not checked. A package
+README link must also stay in the package folder (`PackageLinkRule`).
 
 ## After a release
 

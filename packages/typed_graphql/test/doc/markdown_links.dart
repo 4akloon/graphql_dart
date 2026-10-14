@@ -15,15 +15,17 @@ final class MarkdownLink(
 }
 
 /// Finds the relative links and the anchors of Markdown text. Web links
-/// are left alone: the tests run offline.
+/// are left alone: the tests run offline. Only Markdown syntax is read: an
+/// HTML `<a href>` or `<img src>` is not checked.
 final class MarkdownLinks {
   /// Creates the reader.
   const MarkdownLinks();
 
   // An inline link may carry a quoted title after the target; a reference
-  // definition (`[a]: path`) starts its line.
+  // definition (`[a]: path`) starts its line. The match starts at `](`, so
+  // both targets of a linked image `[![alt](img)](page)` are found.
   static final RegExp _link = RegExp(
-    r'\[[^\]]*\]\(([^)\s]+)(?:\s+(?:"[^"]*"|'
+    r'\]\(([^)\s]+)(?:\s+(?:"[^"]*"|'
     "'[^']*'"
     r'))?\)',
   );
