@@ -239,3 +239,6 @@
 - The value rules: `ValuesOfCorrectTypeRule`, `InputObjectFieldNamesRule`,
   `UniqueInputFieldNamesRule` and `InputObjectRequiredFieldsRule`
   (`GQL218`-`GQL221`).
+- The directive rules: `KnownDirectivesRule`, `DirectivesInValidLocationsRule`
+  and `UniqueDirectivesPerLocationRule` (`GQL222`-`GQL224`); graphql-js's
+  `KnownDirectivesRule` is split in two.

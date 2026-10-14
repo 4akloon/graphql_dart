@@ -409,6 +409,17 @@ enum DiagnosticCode(
   /// type (spec §5.6.4).
   inputObjectRequiredFields('GQL221'),
 
+  /// `GQL222`: a directive the schema does not define (spec §5.7.1).
+  knownDirectives('GQL222'),
+
+  /// `GQL223`: a directive applied at a location its definition does not
+  /// list (spec §5.7.2).
+  directivesInValidLocations('GQL223'),
+
+  /// `GQL224`: a non-repeatable directive applied more than once at one
+  /// location (spec §5.7.3).
+  uniqueDirectivesPerLocation('GQL224'),
+
   /// `GQL226`: a variable whose type is not an input type (spec §5.8.2).
   variablesAreInputTypes('GQL226'),
 

@@ -4,12 +4,14 @@ import '../language/ast/document.dart';
 import '../language/visitor/ast_walker.dart';
 import '../schema/validation/schema_validation_result.dart';
 import 'document_validation_result.dart';
+import 'rules/directives_in_valid_locations_rule.dart';
 import 'rules/executable_definitions_rule.dart';
 import 'rules/fields_on_correct_type_rule.dart';
 import 'rules/fragments_on_composite_types_rule.dart';
 import 'rules/input_object_field_names_rule.dart';
 import 'rules/input_object_required_fields_rule.dart';
 import 'rules/known_argument_names_rule.dart';
+import 'rules/known_directives_rule.dart';
 import 'rules/known_fragment_names_rule.dart';
 import 'rules/known_operation_types_rule.dart';
 import 'rules/known_type_names_rule.dart';
@@ -21,6 +23,7 @@ import 'rules/provided_required_arguments_rule.dart';
 import 'rules/scalar_leafs_rule.dart';
 import 'rules/single_field_subscriptions_rule.dart';
 import 'rules/unique_argument_names_rule.dart';
+import 'rules/unique_directives_per_location_rule.dart';
 import 'rules/unique_fragment_names_rule.dart';
 import 'rules/unique_input_field_names_rule.dart';
 import 'rules/unique_operation_names_rule.dart';
@@ -80,6 +83,9 @@ final class const DocumentValidator({
     NoUnusedFragmentsRule(),
     PossibleFragmentSpreadsRule(),
     NoFragmentCyclesRule(),
+    KnownDirectivesRule(),
+    DirectivesInValidLocationsRule(),
+    UniqueDirectivesPerLocationRule(),
     KnownArgumentNamesRule(),
     UniqueArgumentNamesRule(),
     ValuesOfCorrectTypeRule(),
