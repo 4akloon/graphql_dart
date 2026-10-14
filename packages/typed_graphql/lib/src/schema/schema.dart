@@ -1,8 +1,11 @@
 import '../diagnostics/source_span.dart';
 import '../language/ast/operation_type.dart';
+import '../language/ast/schema_coordinate.dart';
 import '../language/ast/type_ref.dart';
 import '../protocol/json_value.dart';
 import 'build/built_ins.dart';
+import 'coordinates/coordinate_resolver.dart';
+import 'coordinates/coordinate_target.dart';
 import 'introspection/introspection_query.dart';
 import 'introspection/introspection_writer.dart';
 import 'model/applied_directive.dart';
@@ -129,6 +132,12 @@ final class Schema({
   JsonObject toIntrospection([
     IntrospectionQuery query = IntrospectionQuery.full,
   ]) => IntrospectionWriter(this, query).write();
+
+  /// The element [coordinate] names (spec §9); null when the schema has
+  /// none, also when an element that contains it is missing or of the
+  /// wrong kind. Meta-fields and introspection types have no coordinate.
+  CoordinateTarget? resolve(SchemaCoordinate coordinate) =>
+      CoordinateResolver(this).resolve(coordinate);
 
   /// The named type inside [type]'s wrappers; null when no type has its
   /// name.

@@ -77,6 +77,7 @@ void main() {
         'utilities/__tests__/getIntrospectionQuery-test.ts',
         'utilities/__tests__/introspectionFromSchema-test.ts',
         'utilities/__tests__/printSchema-test.ts',
+        'utilities/__tests__/resolveSchemaCoordinate-test.ts',
       ],
     ),
   ];

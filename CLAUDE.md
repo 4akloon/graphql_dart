@@ -266,6 +266,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   and `TypeRefReader` (the `ofType` chain with a loop). Problems are
   `GQL150`-`GQL155` with the JSON path in the message; kind misuse is
   left to the validator.
+- `coordinates/`: `Schema.resolve(coordinate)` runs `CoordinateResolver`
+  (September2025 §2.14 "Resolving a Schema Coordinate") and returns the
+  sealed `CoordinateTarget`, one kind per coordinate form holding the
+  elements that contain it (equal when they hold the same elements), or
+  null for any miss (spec §9). Names starting with `__` resolve to null.
 - `validation/SchemaValidator` (const): `validate(schema)` returns the
   sealed `SchemaValidationResult` (`ValidSchema` | `InvalidSchema(schema,
   diagnostics)`); `ValidSchema` has a private constructor and

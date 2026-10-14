@@ -190,3 +190,9 @@
   turns on `includesDeferAndStream`.
 - `Schema.toIntrospection` lists every member of a union, also one that is
   not an object, so the validator sees it after a round trip.
+- `Schema.resolve(SchemaCoordinate)` finds the element a schema coordinate
+  names as a sealed `CoordinateTarget` (`TypeTarget`, `FieldTarget`,
+  `ArgumentTarget`, `InputFieldTarget`, `EnumValueTarget`,
+  `DirectiveTarget`, `DirectiveArgumentTarget`), or null: also when a
+  containing element is missing or of the wrong kind, and for meta-fields
+  and introspection types, which are not schema elements.

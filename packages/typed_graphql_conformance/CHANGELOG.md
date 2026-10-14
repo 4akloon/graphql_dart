@@ -42,3 +42,5 @@
   (`cycleIntrospection` and editable results): a structural problem is a
   `GQL150`-`GQL155` diagnostic with its JSON path, and kind misuse is
   checked with schema validation; the two execution tests wait for M5.
+- Ported graphql-js `resolveSchemaCoordinate-test.ts`; where graphql-js
+  throws or resolves a meta-field, the port expects null.

@@ -185,6 +185,85 @@ null
 null
 ```
 
+### Resolving a coordinate
+
+`schema.resolve(coordinate)` finds the element a schema coordinate names
+(September2025, "Resolving a Schema Coordinate"). It returns a sealed
+`CoordinateTarget`, one kind per form, holding the element and the elements that
+contain it: `TypeTarget`, `FieldTarget`, `ArgumentTarget`, `InputFieldTarget`,
+`EnumValueTarget`, `DirectiveTarget` and `DirectiveArgumentTarget`. It returns
+null when the schema has no such element, also when a containing element is
+missing or of the wrong kind. Meta-fields such as `__typename` and the
+introspection types are not elements of a schema, so they resolve to null too.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  final source = Source('''
+type Query {
+  hero(episode: Episode): Character
+}
+
+enum Episode { NEWHOPE EMPIRE JEDI }
+
+interface Character {
+  name: String!
+}
+
+directive @cost(units: Int) on FIELD_DEFINITION
+''');
+  final document = const Parser().parse(source).requireDocument();
+  final schema = switch (const SchemaBuilder().fromSdl(document)) {
+    BuildSuccess(:final schema) => schema,
+    BuildFailure(:final diagnostics) => throw StateError('$diagnostics'),
+  };
+  const texts = [
+    'Character',
+    'Query.hero(episode:)',
+    'Episode.JEDI',
+    '@cost(units:)',
+    'Query.villain',
+    'Episode.JEDI.name',
+    'Query.__typename',
+  ];
+  for (final text in texts) {
+    final target = switch (const Parser().parseSchemaCoordinate(Source(text))) {
+      ParseElementSuccess(:final value) => describe(schema.resolve(value)),
+      ParseElementFailure(:final diagnostics) => '${diagnostics.first.message}',
+    };
+    print('$text: $target');
+  }
+}
+
+String describe(CoordinateTarget? target) => switch (target) {
+  TypeTarget(:final type) => 'the type ${type.name}',
+  FieldTarget(:final type, :final field) =>
+    'the field ${type.name}.${field.name}',
+  ArgumentTarget(:final field, :final argument) =>
+    'the argument ${argument.name} of ${field.name}',
+  InputFieldTarget(:final inputField) => 'the input field ${inputField.name}',
+  EnumValueTarget(:final type, :final enumValue) =>
+    'the value ${enumValue.name} of ${type.name}',
+  DirectiveTarget(:final directive) => 'the directive @${directive.name}',
+  DirectiveArgumentTarget(:final directive, :final argument) =>
+    'the argument ${argument.name} of @${directive.name}',
+  null => 'nothing',
+};
+```
+
+It prints:
+
+```text
+Character: the type Character
+Query.hero(episode:): the argument episode of hero
+Episode.JEDI: the value JEDI of Episode
+@cost(units:): the argument units of @cost
+Query.villain: nothing
+Episode.JEDI.name: Expected <EOF>, found ".".
+Query.__typename: nothing
+```
+
 ## Built-ins
 
 Every schema has the five built-in scalars (`String`, `Int`, `Float`, `Boolean`,

@@ -66,6 +66,7 @@ export 'src/protocol/response_payload.dart';
 export 'src/schema/build/build_result.dart';
 export 'src/schema/build/built_ins.dart';
 export 'src/schema/build/schema_builder.dart';
+export 'src/schema/coordinates/coordinate_target.dart';
 export 'src/schema/introspection/introspection_query.dart';
 export 'src/schema/model/applied_directive.dart';
 export 'src/schema/model/input_value.dart';
