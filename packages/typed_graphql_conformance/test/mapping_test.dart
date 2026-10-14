@@ -13,6 +13,8 @@ import 'support/graphql_js_suite.dart';
 const Set<String> portedFiles = {
   'lexer-test.ts',
   'blockString-test.ts',
+  'parser-test.ts',
+  'schema-parser-test.ts',
 };
 
 void main() {
