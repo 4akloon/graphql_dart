@@ -5,6 +5,7 @@ import '../schema.dart';
 import 'build_report.dart';
 import 'document_definitions.dart';
 import 'element_reader.dart';
+import 'member_filter.dart';
 import 'type_reader.dart';
 import 'unique_definitions.dart';
 
@@ -35,10 +36,11 @@ final class SchemaAssembly(
       report,
       Schema(includesDeferAndStream: includesDeferAndStream),
     );
+    final filter = MemberFilter(report);
     final elements = ElementReader(report.spans);
     final types = [
       for (final type in unique.types(definitions.types))
-        TypeReader(elements).type(type),
+        TypeReader(elements).type(filter.definition(type)),
     ];
     final schema = definitions.schemas.firstOrNull;
     final roots = schema == null ? _defaultRoots(types) : _roots(schema);
@@ -46,7 +48,7 @@ final class SchemaAssembly(
       types: types,
       directives: [
         for (final directive in unique.directives(definitions.directives))
-          elements.directive(directive),
+          elements.directive(filter.directive(directive)),
       ],
       queryTypeName: roots[OperationType.query],
       mutationTypeName: roots[OperationType.mutation],

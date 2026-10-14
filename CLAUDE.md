@@ -195,7 +195,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `DiagnosticSink` limits them. Without `source` every span is null.
 - Construction problems use graphql-js's SDL-rule messages; a repeat points
   at its name and relates to the span of the definition it repeats; the
-  first definition wins (`UniqueDefinitions`).
+  first definition wins (`UniqueDefinitions`). `MemberFilter` drops repeated
+  members and arguments from syntax nodes with `withChildren` before the
+  readers see them.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

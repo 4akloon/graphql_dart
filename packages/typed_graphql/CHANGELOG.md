@@ -86,3 +86,6 @@
 - The builder keeps the first type or directive of each name: `GQL101`
   and `GQL102` for a repeat, `GQL103` for a redefined built-in scalar,
   introspection type or directive.
+- The builder keeps the first member of each name: `GQL104` for a
+  repeated field or input field, `GQL105` for a repeated argument,
+  `GQL106` for a repeated enum value.

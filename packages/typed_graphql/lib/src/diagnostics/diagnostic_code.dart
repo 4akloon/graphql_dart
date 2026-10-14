@@ -102,5 +102,17 @@ enum DiagnosticCode(
   /// `GQL103`: a definition or an extension of a built-in: a built-in
   /// scalar, an introspection type or a built-in directive (R2.6); it is
   /// ignored.
-  builtInRedefinition('GQL103');
+  builtInRedefinition('GQL103'),
+
+  /// `GQL104`: a second field or input field with one name in a type, its
+  /// extensions included; the second is ignored.
+  duplicateFieldName('GQL104'),
+
+  /// `GQL105`: a second argument with one name in a field or a directive
+  /// definition; the second is ignored.
+  duplicateArgumentName('GQL105'),
+
+  /// `GQL106`: a second value with one name in an enum type, its
+  /// extensions included; the second is ignored.
+  duplicateEnumValueName('GQL106');
 }
