@@ -188,13 +188,14 @@ input Filter @oneOf {
       ]);
     });
 
-    test('reads a long ofType chain without recursion', () {
+    /// A result whose only field has [wrappers] `LIST` levels around `Int`.
+    JsonObject resultWithWrappers(int wrappers) {
       JsonValue reference = JsonObject({
         'kind': const JsonString('SCALAR'),
         'name': const JsonString('Int'),
         'ofType': const JsonNull(),
       });
-      for (var i = 0; i < 10000; i++) {
+      for (var i = 0; i < wrappers; i++) {
         reference = JsonObject({
           'kind': const JsonString('LIST'),
           'name': const JsonNull(),
@@ -217,15 +218,51 @@ input Filter @oneOf {
         'kind': const JsonString('SCALAR'),
         'name': const JsonString('Int'),
       });
-      final result = JsonObject({
+      return JsonObject({
         '__schema': JsonObject({
           'queryType': JsonObject({'name': const JsonString('Query')}),
           'types': JsonArray([query, scalar]),
         }),
       });
+    }
+
+    test('reads the deepest chain a query can ask for and prints it', () {
+      final result = const SchemaBuilder().fromIntrospection(
+        resultWithWrappers(100),
+      );
+      final schema = switch (result) {
+        BuildSuccess(:final schema) => schema,
+        BuildFailure() => fail('${messagesOf(result)}'),
+      };
+      final printed = const SchemaPrinter().print(schema);
+      expect(printed, contains('${'[' * 100}Int${']' * 100}'));
+    });
+
+    test('reports a chain one level deeper than a query can ask for', () {
+      final result = const SchemaBuilder().fromIntrospection(
+        resultWithWrappers(101),
+      );
       expect(
-        const SchemaBuilder().fromIntrospection(result),
-        isA<BuildSuccess>(),
+        messagesOf(result).single,
+        endsWith(
+          'type${'.ofType' * 100}: Decorated type deeper than introspection '
+          'query.',
+        ),
+      );
+    });
+
+    test('reports a chain of 10000 levels at once, without recursion', () {
+      final watch = Stopwatch()..start();
+      final result = const SchemaBuilder().fromIntrospection(
+        resultWithWrappers(10000),
+      );
+      expect(watch.elapsed, lessThan(const Duration(seconds: 2)));
+      expect(
+        messagesOf(result).single,
+        endsWith(
+          'type${'.ofType' * 100}: Decorated type deeper than introspection '
+          'query.',
+        ),
       );
     });
   });

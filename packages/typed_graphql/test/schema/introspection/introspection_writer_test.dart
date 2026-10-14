@@ -114,7 +114,18 @@ void main() {
       final json = schema.toIntrospection(
         const IntrospectionQuery(typeDepth: 100),
       );
-      expect(json.toString(), contains('"kind":"LIST"'));
+      final schemaJson = json.toJson()['__schema']! as Map<String, Object?>;
+      var hops = 0;
+      var reference =
+          fieldOf(typeOf(schemaJson, 'Query'), 'a')['type']!
+              as Map<String, Object?>;
+      while (reference.containsKey('ofType')) {
+        reference = reference['ofType']! as Map<String, Object?>;
+        hops++;
+      }
+      // The 101st level is the last the query reads, and has no ofType.
+      expect(hops, 100);
+      expect(reference['kind'], 'LIST');
     });
 
     test('prints default values as GraphQL', () {

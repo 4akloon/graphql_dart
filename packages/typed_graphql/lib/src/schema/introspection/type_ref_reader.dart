@@ -7,7 +7,9 @@ import 'introspection_object.dart';
 /// references (graphql-js's `getType` in `buildClientSchema`).
 ///
 /// The `ofType` chain is walked with a loop, so a hostile chain cannot
-/// overflow the stack.
+/// overflow the stack, and it may hold at most [maxWrappers] wrappers: the
+/// most `IntrospectionQuery` can ask for. A longer chain is reported, so
+/// the type built from a result stays shallow enough for the printers.
 final class TypeRefReader(
   /// The names the result's `types` list; a reference to another name is
   /// reported, as graphql-js reports it.
@@ -15,6 +17,11 @@ final class TypeRefReader(
 ) {
   /// Creates a reader.
   this;
+
+  /// The most list and non-null wrappers around a named type: an
+  /// `IntrospectionQuery` reads `typeDepth` (at most 100) `ofType` levels
+  /// below the type.
+  static const int maxWrappers = 100;
 
   /// The type at [key] of [owner]; null, after a report, when it is
   /// absent, malformed, deeper than the query read or names an unknown
@@ -51,7 +58,7 @@ final class TypeRefReader(
     var level = outer;
     while (_isWrapper(level)) {
       wrappers.add(level);
-      if (level.json['ofType'] case null || JsonNull()) {
+      if (wrappers.length > maxWrappers || _isUnwrapped(level)) {
         level.report(
           .introspectionTypeTooDeep,
           'Decorated type deeper than introspection query.',
@@ -67,6 +74,12 @@ final class TypeRefReader(
     final name = named(level);
     return name == null ? null : _wrap(NamedType(Name(name)), wrappers);
   }
+
+  bool _isUnwrapped(IntrospectionObject level) =>
+      switch (level.json['ofType']) {
+        null || JsonNull() => true,
+        _ => false,
+      };
 
   bool _isWrapper(IntrospectionObject level) =>
       switch (level.optionalString('kind')) {
