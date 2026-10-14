@@ -1,5 +1,8 @@
+import '../../diagnostics/diagnostic_sink.dart';
 import '../../diagnostics/source.dart';
 import '../../language/ast/document.dart';
+import '../../protocol/json_value.dart';
+import '../introspection/introspection_reader.dart';
 import '../schema.dart';
 import 'build_report.dart';
 import 'build_result.dart';
@@ -48,6 +51,25 @@ final class const SchemaBuilder({
       report,
     ).extend(schema, DocumentDefinitions.of(document));
     return _result(extended, report);
+  }
+
+  /// The schema the `data` of an introspection result describes
+  /// (graphql-js's `buildClientSchema`; spec §4), such as
+  /// `Schema.toIntrospection` writes and a server answers
+  /// `IntrospectionQuery.full` with.
+  ///
+  /// Structural problems are `GQL150` to `GQL155` diagnostics, each
+  /// message led by the JSON path of the problem; the elements they are
+  /// about are left out of the partial schema. Like [fromSdl], it does not
+  /// validate: a field of an input type builds, and schema validation
+  /// reports it. Elements have no span; [includesDeferAndStream] does not
+  /// apply, as the result says whether `@defer` and `@stream` exist.
+  BuildResult fromIntrospection(JsonValue result) {
+    final sink = DiagnosticSink();
+    final schema = IntrospectionReader(sink).read(result);
+    return sink.hasErrors
+        ? BuildFailure(schema, sink.diagnostics)
+        : BuildSuccess(schema);
   }
 
   BuildResult _result(Schema schema, BuildReport report) => report.hasErrors

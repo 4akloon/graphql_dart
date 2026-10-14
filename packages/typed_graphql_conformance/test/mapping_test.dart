@@ -74,6 +74,7 @@ void main() {
         'utilities/__tests__/buildASTSchema-test.ts',
         'utilities/__tests__/extendSchema-test.ts',
         'utilities/__tests__/getIntrospectionQuery-test.ts',
+        'utilities/__tests__/introspectionFromSchema-test.ts',
         'utilities/__tests__/printSchema-test.ts',
       ],
     ),

@@ -84,3 +84,71 @@ It prints:
 {"name":"Query","kind":"OBJECT"}
 Character: [{"kind":"OBJECT","name":"Droid","ofType":null}]
 ```
+
+## Reading an answer
+
+`SchemaBuilder().fromIntrospection(json)` builds a schema from an answer and
+returns a `BuildResult`, like `fromSdl`. The built-in scalars, directives and
+introspection types in the answer stay built-in, and `@deprecated` comes back
+as written, so SDL printed from the schema matches the server's.
+
+A broken answer (a missing field, a value of the wrong JSON type, an unknown
+kind, a reference to a type the answer does not list, an `ofType` chain deeper
+than the query reads) gives a `GQL150` to `GQL155` diagnostic whose message
+starts with the JSON path of the problem; the elements it is about are left
+out of the partial schema. Like `fromSdl`, it does not validate: a schema from
+a server you do not trust goes through `SchemaValidator` next (see "Validating
+a schema" in the Schema topic).
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  final source = Source('''
+"The entry point."
+type Query {
+  hero(episode: Episode = JEDI): String @deprecated(reason: "Use heroes.")
+  heroes: [String!]!
+}
+
+enum Episode { NEWHOPE EMPIRE JEDI }
+''');
+  final document = const Parser().parse(source).requireDocument();
+  final schema = switch (const SchemaBuilder().fromSdl(document)) {
+    BuildSuccess(:final schema) => schema,
+    BuildFailure(:final diagnostics) => throw StateError('$diagnostics'),
+  };
+
+  // The server's answer, read back into a schema on the client.
+  final result = schema.toIntrospection();
+  if (const SchemaBuilder().fromIntrospection(result) case BuildSuccess(
+    schema: final client,
+  )) {
+    print(const SchemaPrinter().print(client));
+  }
+
+  // A broken answer: every problem says where it is.
+  const text = '{"__schema": {"queryType": {"name": "Query"}, "types": [{}]}}';
+  if (const JsonReader().parse(text) case DecodeSuccess(:final value)) {
+    const SchemaBuilder().fromIntrospection(value).diagnostics.forEach(print);
+  }
+}
+```
+
+It prints:
+
+```text
+"""The entry point."""
+type Query {
+  hero(episode: Episode = JEDI): String @deprecated(reason: "Use heroes.")
+  heroes: [String!]!
+}
+
+enum Episode {
+  NEWHOPE
+  EMPIRE
+  JEDI
+}
+error GQL151: $.__schema.types[0]: Introspection result missing name.
+error GQL154: $.__schema.queryType: Invalid or incomplete schema, unknown type: Query. Ensure that a full introspection query is used in order to build a client schema.
+```

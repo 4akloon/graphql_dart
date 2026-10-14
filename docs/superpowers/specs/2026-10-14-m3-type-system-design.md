@@ -137,10 +137,13 @@ in the message.
 - `IntrospectionQuery` generates the query. Options switch the
   working-draft fields (`isOneOf`, `specifiedByUrl`, descriptions of inputs, the
   deprecation of arguments and input fields) on and off.
-- `SchemaBuilder.fromIntrospection(JsonValue)` builds a `Schema`. A malformed
-  response is a `DecodeFailure` with a path; an unknown or inconsistent element
-  is a diagnostic; nothing throws. The result goes through the same sealed
-  `BuildResult` as SDL.
+- `SchemaBuilder.fromIntrospection(JsonValue)` builds a `Schema` and returns
+  the same sealed `BuildResult` as SDL; nothing throws. A malformed response
+  (a missing member, a wrong JSON type, an unknown kind or type, a type deeper
+  than the query read) is a `GQL150`-`GQL155` diagnostic whose message starts
+  with the JSON path, as a `DecodeFailure` prints it (deviation 7). Kind
+  misuse (an input type as a field type, a root of the wrong kind) builds and
+  is left to schema validation.
 - `Schema.toIntrospection()` produces the response (`introspectionFromSchema`).
   Default values are printed as GraphQL literals, as the introspection format
   requires.
@@ -198,6 +201,10 @@ stay green after every task, no allowlist grows.
    language nodes.
 6. The hostile-SDL fuzzer for `fromSdl` / `extend` ships with M3a, the
    introspection and coordinate fuzzers with M3b.
+7. A malformed introspection response is not a `DecodeFailure`: one response
+   can have many problems, so `fromIntrospection` reports them all as
+   diagnostics in its `BuildResult`, with the JSON path in each message (M3b
+   plan, ruling 2).
 7. The printer prints every applied directive as written; graphql-js prints
    only `@deprecated`, `@specifiedBy` and `@oneOf`. SDL to schema to SDL then
    loses nothing.

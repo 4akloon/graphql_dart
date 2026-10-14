@@ -147,6 +147,16 @@ void main() {
       expect(typeOf(schema, 'A')['possibleTypes'], isNull);
     });
 
+    test('writes every union member, also one that is not an object', () {
+      final schema = schemaOf('''
+        type Query { a: U }
+        interface I { a: Int }
+        type A { a: Int }
+        union U = A | I
+      ''');
+      expect(namesOf(typeOf(schema, 'U')['possibleTypes']), ['A', 'I']);
+    });
+
     test('writes only the fields the query reads', () {
       final schema = schemaOf(
         '"Q" type Query { a: Int }',

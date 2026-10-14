@@ -294,5 +294,33 @@ enum DiagnosticCode(
 
   /// `GQL149`: an input field whose default value contains itself,
   /// directly or through the default values of other fields (spec §3.10).
-  defaultValueCycle('GQL149');
+  defaultValueCycle('GQL149'),
+
+  /// `GQL150`: an introspection result that is not an object with a
+  /// `__schema` object, such as a whole response instead of its `data`
+  /// (spec §4).
+  invalidIntrospectionResult('GQL150'),
+
+  /// `GQL151`: a member an introspection result must have that is
+  /// absent or null, such as the `fields` of an `OBJECT` type (spec §4.2).
+  missingIntrospectionMember('GQL151'),
+
+  /// `GQL152`: a type in an introspection result whose `kind` is absent
+  /// or not a named type kind (spec §4.2.1).
+  unknownIntrospectionKind('GQL152'),
+
+  /// `GQL153`: a member of an introspection result of the wrong JSON
+  /// type, a default value that is not a constant GraphQL value, an
+  /// unknown directive location or a `NON_NULL` inside a `NON_NULL`
+  /// (spec §4.2).
+  malformedIntrospectionMember('GQL153'),
+
+  /// `GQL154`: a type reference in an introspection result to a type its
+  /// `types` do not list: the query was not a full one (spec §4.2).
+  unknownIntrospectionType('GQL154'),
+
+  /// `GQL155`: a list or non-null type reference in an introspection
+  /// result without its `ofType`: the type is deeper than the query read
+  /// (spec §4.2).
+  introspectionTypeTooDeep('GQL155');
 }

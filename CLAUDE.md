@@ -258,6 +258,14 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   and `InputValue`, only the fields the query reads) and `TypeRefWriter`
   (`TypeRef`, built from the innermost level out, cut at `typeDepth`);
   an unknown type is an `ArgumentError`, not a guessed kind.
+  `SchemaBuilder.fromIntrospection` runs `IntrospectionReader` (the
+  `__schema` object: types, then roots, then directives, as graphql-js
+  reads them) over `IntrospectionObject` (one JSON object and its parent,
+  so the path is built only for a report: a deep `ofType` chain stays
+  linear), `NamedTypeReader`, `MemberReader`, `DirectiveDefinitionReader`
+  and `TypeRefReader` (the `ofType` chain with a loop). Problems are
+  `GQL150`-`GQL155` with the JSON path in the message; kind misuse is
+  left to the validator.
 - `validation/SchemaValidator` (const): `validate(schema)` returns the
   sealed `SchemaValidationResult` (`ValidSchema` | `InvalidSchema(schema,
   diagnostics)`); `ValidSchema` has a private constructor and

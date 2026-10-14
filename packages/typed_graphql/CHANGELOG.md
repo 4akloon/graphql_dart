@@ -182,3 +182,11 @@
   declared types, the built-in scalars they use, then the introspection
   types; the declared directives, then the built-in ones. A reference to
   a type the schema lacks is an `ArgumentError`.
+- `SchemaBuilder.fromIntrospection(result)` builds a schema from the `data`
+  of an introspection result (graphql-js's `buildClientSchema`) and returns
+  the sealed `BuildResult`: structural problems are `GQL150` to `GQL155`
+  diagnostics whose message starts with the JSON path. Built-in types and
+  directives in the result stay undeclared; listing `@defer` or `@stream`
+  turns on `includesDeferAndStream`.
+- `Schema.toIntrospection` lists every member of a union, also one that is
+  not an object, so the validator sees it after a round trip.

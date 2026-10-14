@@ -65,10 +65,13 @@ final class TypeWriter(
       _ => const JsonNull(),
     },
     'possibleTypes': switch (type) {
-      InterfaceType() || UnionType() => JsonArray([
+      InterfaceType() => JsonArray([
         for (final possible in schema.possibleTypes(type))
           references.named(possible.name),
       ]),
+      // Every member, as graphql-js writes them, so that a member that is
+      // not an object survives the round trip to the validator.
+      UnionType(:final memberTypes) => _named(memberTypes),
       _ => const JsonNull(),
     },
   };

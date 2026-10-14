@@ -36,3 +36,5 @@
   validator's: an unknown directive is `GQL117`, an unknown type `GQL116`.
 - Ported graphql-js `getIntrospectionQuery-test.ts`; each query is parsed,
   since operation validation arrives in M4.
+- Ported graphql-js `introspectionFromSchema-test.ts`; the schemas are
+  written as SDL.
