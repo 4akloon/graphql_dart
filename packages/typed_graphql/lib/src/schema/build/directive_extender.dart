@@ -22,19 +22,23 @@ final class DirectiveExtender(
   /// [directives] with [extensions] applied, in the order of
   /// [directives]; an extension applies to the first directive of its
   /// name.
+  ///
+  /// The extensions of one directive are grouped first (document order
+  /// kept) and the directive is rebuilt once, so extending it N times is
+  /// linear.
   List<SchemaDirective> applyAll(
     List<SchemaDirective> directives,
     List<DirectiveExtension> extensions,
   ) {
-    final extended = [...directives];
     final indexes = <String, int>{};
     for (final (index, directive) in directives.indexed) {
       indexes.putIfAbsent(directive.name, () => index);
     }
+    final grouped = <int, List<DirectiveExtension>>{};
     for (final node in extensions) {
       final name = node.name.value;
       if (indexes[name] case final index?) {
-        extended[index] = _extend(extended[index], node);
+        (grouped[index] ??= []).add(node);
       } else if (base.directiveNamed(name) != null) {
         report.error(
           .builtInRedefinition,
@@ -49,20 +53,31 @@ final class DirectiveExtender(
         );
       }
     }
+    final extended = [...directives];
+    for (final MapEntry(key: index, value: nodes) in grouped.entries) {
+      extended[index] = _extend(directives[index], nodes);
+    }
     return extended;
   }
 
-  SchemaDirective _extend(SchemaDirective directive, DirectiveExtension node) =>
-      SchemaDirective(
-        directive.name,
-        description: directive.description,
-        arguments: directive.arguments,
-        isRepeatable: directive.isRepeatable,
-        locations: directive.locations,
-        appliedDirectives: [
-          ...directive.appliedDirectives,
-          ...ElementReader(report.spans).appliedAll(node.directives),
-        ],
-        span: directive.span,
-      );
+  /// Every field of [directive] but the applied directives, which gain
+  /// those of [nodes]; a field added to [SchemaDirective] must be copied
+  /// here too.
+  SchemaDirective _extend(
+    SchemaDirective directive,
+    List<DirectiveExtension> nodes,
+  ) => SchemaDirective(
+    directive.name,
+    description: directive.description,
+    arguments: directive.arguments,
+    isRepeatable: directive.isRepeatable,
+    locations: directive.locations,
+    appliedDirectives: [
+      ...directive.appliedDirectives,
+      for (final node in nodes) ..._elements.appliedAll(node.directives),
+    ],
+    span: directive.span,
+  );
+
+  final ElementReader _elements = ElementReader(report.spans);
 }

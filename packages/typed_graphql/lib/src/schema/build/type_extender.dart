@@ -33,15 +33,18 @@ final class TypeExtender(
 
   /// [types] with [extensions] applied, in the order of [types]; an
   /// extension applies to the first type of its name.
+  ///
+  /// The extensions of one type are grouped first (document order kept) and
+  /// the type is rebuilt once, so extending a type N times is linear.
   List<SchemaType> applyAll(
     List<SchemaType> types,
     List<TypeExtension> extensions,
   ) {
-    final extended = [...types];
     final indexes = <String, int>{};
     for (final (index, type) in types.indexed) {
       indexes.putIfAbsent(type.name, () => index);
     }
+    final grouped = <int, List<TypeExtension>>{};
     for (final node in extensions) {
       final name = node.name.value;
       if (const BuiltIns().typeNamed(name) != null) {
@@ -51,8 +54,7 @@ final class TypeExtender(
           node.name,
         );
       } else if (indexes[name] case final index?) {
-        final type = extended[index];
-        extended[index] = _extend(type, node) ?? _mismatch(type, node);
+        (grouped[index] ??= []).add(node);
       } else {
         report.error(
           .unknownExtensionTarget,
@@ -61,10 +63,62 @@ final class TypeExtender(
         );
       }
     }
+    final extended = [...types];
+    for (final MapEntry(key: index, value: nodes) in grouped.entries) {
+      extended[index] = _extendAll(types[index], nodes);
+    }
     return extended;
   }
 
-  SchemaType _mismatch(SchemaType type, TypeExtension node) {
+  /// [type] extended by the [nodes] of its kind, which are in document
+  /// order; the others are reported.
+  SchemaType _extendAll(SchemaType type, List<TypeExtension> nodes) {
+    final matching = <TypeExtension>[];
+    for (final node in nodes) {
+      if (_isSameKind(type, node)) {
+        matching.add(node);
+      } else {
+        _reportMismatch(type, node);
+      }
+    }
+    if (matching.isEmpty) return type;
+    return switch (type) {
+      ScalarType() => ScalarType(
+        type.name,
+        description: type.description,
+        appliedDirectives: _directives(type, matching),
+        span: type.span,
+      ),
+      final ObjectType type => _object(type, matching),
+      final InterfaceType type => _interface(type, matching),
+      UnionType() => UnionType(
+        type.name,
+        description: type.description,
+        appliedDirectives: _directives(type, matching),
+        memberTypes: [
+          ...type.memberTypes,
+          for (final node in matching.whereType<UnionTypeExtension>())
+            ...node.types,
+        ],
+        span: type.span,
+      ),
+      final EnumType type => _enum(type, matching),
+      final InputObjectType type => _inputObject(type, matching),
+    };
+  }
+
+  bool _isSameKind(SchemaType type, TypeExtension node) =>
+      switch ((type, node)) {
+        (ScalarType(), ScalarTypeExtension()) ||
+        (ObjectType(), ObjectTypeExtension()) ||
+        (InterfaceType(), InterfaceTypeExtension()) ||
+        (UnionType(), UnionTypeExtension()) ||
+        (EnumType(), EnumTypeExtension()) ||
+        (InputObjectType(), InputObjectTypeExtension()) => true,
+        _ => false,
+      };
+
+  void _reportMismatch(SchemaType type, TypeExtension node) {
     final kind = switch (node) {
       ScalarTypeExtension() => 'scalar',
       ObjectTypeExtension() => 'object',
@@ -79,74 +133,50 @@ final class TypeExtender(
       node.name,
       related: type.span,
     );
-    return type;
   }
 
-  /// [type] extended by [node]; null when their kinds differ.
-  SchemaType? _extend(SchemaType type, TypeExtension node) =>
-      switch ((type, node)) {
-        (ScalarType(), ScalarTypeExtension()) => ScalarType(
-          type.name,
-          description: type.description,
-          appliedDirectives: _directives(type, node),
-          span: type.span,
-        ),
-        (final ObjectType type, final ObjectTypeExtension node) => _object(
-          type,
-          node,
-        ),
-        (final InterfaceType type, final InterfaceTypeExtension node) =>
-          _interface(type, node),
-        (final UnionType type, final UnionTypeExtension node) => UnionType(
-          type.name,
-          description: type.description,
-          appliedDirectives: _directives(type, node),
-          memberTypes: [...type.memberTypes, ...node.types],
-          span: type.span,
-        ),
-        (final EnumType type, final EnumTypeExtension node) => _enum(
-          type,
-          node,
-        ),
-        (final InputObjectType type, final InputObjectTypeExtension node) =>
-          _inputObject(type, node),
-        _ => null,
-      };
-
-  ObjectType _object(ObjectType type, ObjectTypeExtension node) => ObjectType(
+  ObjectType _object(ObjectType type, List<TypeExtension> nodes) => ObjectType(
     type.name,
     description: type.description,
-    interfaces: [...type.interfaces, ...node.interfaces],
-    appliedDirectives: _directives(type, node),
+    interfaces: [
+      ...type.interfaces,
+      for (final node in nodes.whereType<ObjectTypeExtension>())
+        ...node.interfaces,
+    ],
+    appliedDirectives: _directives(type, nodes),
     fields: [
       ...type.fields,
-      for (final field in _members<FieldDefinition>(type, node))
+      for (final field in _members<FieldDefinition>(type, nodes))
         _elements.field(field),
     ],
     span: type.span,
   );
 
-  InterfaceType _interface(InterfaceType type, InterfaceTypeExtension node) =>
+  InterfaceType _interface(InterfaceType type, List<TypeExtension> nodes) =>
       InterfaceType(
         type.name,
         description: type.description,
-        interfaces: [...type.interfaces, ...node.interfaces],
-        appliedDirectives: _directives(type, node),
+        interfaces: [
+          ...type.interfaces,
+          for (final node in nodes.whereType<InterfaceTypeExtension>())
+            ...node.interfaces,
+        ],
+        appliedDirectives: _directives(type, nodes),
         fields: [
           ...type.fields,
-          for (final field in _members<FieldDefinition>(type, node))
+          for (final field in _members<FieldDefinition>(type, nodes))
             _elements.field(field),
         ],
         span: type.span,
       );
 
-  EnumType _enum(EnumType type, EnumTypeExtension node) => EnumType(
+  EnumType _enum(EnumType type, List<TypeExtension> nodes) => EnumType(
     type.name,
     description: type.description,
-    appliedDirectives: _directives(type, node),
+    appliedDirectives: _directives(type, nodes),
     values: [
       ...type.values,
-      for (final value in _members<EnumValueDefinition>(type, node))
+      for (final value in _members<EnumValueDefinition>(type, nodes))
         _elements.enumValue(value),
     ],
     span: type.span,
@@ -154,33 +184,40 @@ final class TypeExtender(
 
   InputObjectType _inputObject(
     InputObjectType type,
-    InputObjectTypeExtension node,
+    List<TypeExtension> nodes,
   ) => InputObjectType(
     type.name,
     description: type.description,
-    appliedDirectives: _directives(type, node),
+    appliedDirectives: _directives(type, nodes),
     fields: [
       ...type.fields,
-      for (final field in _members<InputValueDefinition>(type, node))
+      for (final field in _members<InputValueDefinition>(type, nodes))
         _elements.inputValue(field),
     ],
     span: type.span,
   );
 
-  ElementReader get _elements => ElementReader(report.spans);
+  final ElementReader _elements = ElementReader(report.spans);
 
-  List<AppliedDirective> _directives(SchemaType type, TypeExtension node) => [
+  List<AppliedDirective> _directives(
+    SchemaType type,
+    List<TypeExtension> nodes,
+  ) => [
     ...type.appliedDirectives,
-    ..._elements.appliedAll(node.directives),
+    for (final node in nodes) ..._elements.appliedAll(node.directives),
   ];
 
-  /// The members of [node] that [type] does not have yet.
-  Iterable<T> _members<T extends Node>(SchemaType type, TypeExtension node) {
+  /// The members of [nodes] that [type] does not have yet, filtered in one
+  /// pass so a repeat across two extensions is found.
+  Iterable<T> _members<T extends Node>(
+    SchemaType type,
+    List<TypeExtension> nodes,
+  ) {
     final original = base.typeNamed(type.name);
     return MemberFilter(report)
         .members(
           type.name,
-          node.children,
+          [for (final node in nodes) ...node.children],
           _memberSpans(type),
           inSchema: original == null
               ? const {}

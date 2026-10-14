@@ -22,7 +22,7 @@ final class Sdl {
 
   static Document _parse(Source source) {
     const parser = Parser(
-      options: ParserOptions(allowDirectiveExtensions: true),
+      options: ParserOptions(maxTokens: null, allowDirectiveExtensions: true),
     );
     return switch (parser.parse(source)) {
       ParseSuccess(:final document) => document,
