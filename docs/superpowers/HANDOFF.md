@@ -1,6 +1,6 @@
 # Handoff: where typed_graphql stands and how to continue
 
-Last updated: 2026-10-14 (M3a implemented, final review pending). Read this
+Last updated: 2026-10-14 (M3a merged into `main` locally, not pushed). Read this
 first on a new device or in a new Claude session. Session memory and scratch
 directories do not travel; this file and the repository hold everything
 needed.
@@ -12,7 +12,7 @@ needed.
 | Architecture | [spec](specs/2026-10-13-typed-graphql-design.md), [requirements](../requirements.md), [roadmap](../roadmap.md) | — | — |
 | M1 Foundations | the architecture spec (no stage spec) | [plan](plans/2026-10-13-m1-foundations.md) | done: merged into `main` locally (not pushed); next is M2 |
 | M2 Language | [spec](specs/2026-10-14-m2-language-design.md) | M2a: [plan](plans/2026-10-14-m2a-language-core.md); M2b: [plan](plans/2026-10-14-m2b-language-tools.md) | M2a and M2b merged into `main` locally (M2a pushed, M2b not); M2 is complete; next is M3 (schema) |
-| M3 Type system | [spec](specs/2026-10-14-m3-type-system-design.md) | M3a: [plan](plans/2026-10-14-m3a-schema-core.md) | M3a implemented on its branch, final review pending; then the M3b plan (validation, introspection) |
+| M3 Type system | [spec](specs/2026-10-14-m3-type-system-design.md) | M3a: [plan](plans/2026-10-14-m3a-schema-core.md) | M3a merged into `main` locally (not pushed); next is the M3b plan (validation, introspection) |
 
 **Decisions (2026-10-14):**
 - Layer order is diagnostics < language < protocol < schema < validation; the
@@ -45,7 +45,7 @@ The superpowers skills: `brainstorming`, `writing-plans`,
 
 ## Open for M3b
 
-Found by the M3a reviews; none blocks the merge of M3a.
+Found by the M3a reviews.
 
 - **CSV conversion.** Every row of `mapping/schema.csv` whose reason says
   validation arrives in M3b (23 rows) must gain the `validateSchema`
@@ -74,9 +74,9 @@ Found by the M3a reviews; none blocks the merge of M3a.
   `maxDepth` (about 1000) or `null` can overflow the stack on deeply nested
   object values; the default 128 is safe. Make object-value parsing iterative
   or cap `maxDepth` (M2 follow-up).
-- **Merge** the docs branch `docs/m4-m7-decisions` (commit 0891b33: R4.18 to
-  R4.20, R3.8, R5.14 and R5.15) into `main`; remove its worktree and the stray
-  branch.
+- **Conformance in Chrome.** `typed_graphql_conformance/test/support_test.dart`
+  uses `dart:io` without `@TestOn('vm')`; the package is not web-targeted and CI
+  runs only the core in Chrome. Annotate it or keep the package VM-only.
 
 ## Rules the user set
 
