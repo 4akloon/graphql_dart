@@ -55,6 +55,8 @@ cd packages/typed_graphql && dart test                         # one package (ev
 cd packages/typed_graphql && dart test --compiler exe          # AOT (sealed switches, sdk#56010)
 cd packages/typed_graphql && dart test -p chrome --compiler dart2js
 cd packages/typed_graphql && dart test -p chrome --compiler dart2wasm
+cd packages/typed_graphql && dart test test/doc                 # snippets, links, category tags
+cd packages/typed_graphql && dart doc                       # must report "Found 0 warnings and 0 errors"
 cd packages/<package> && dart pub publish --dry-run            # never without --dry-run
 ```
 
