@@ -465,4 +465,13 @@ enum DiagnosticCode(
   /// `GQL234`: an operation with more directives, fragments expanded, than
   /// the maximum `MaxDirectivesRule` allows.
   maxDirectivesExceeded('GQL234'),
+
+  /// `GQL235`: a field that returns an introspection type, such as
+  /// `__schema`, in a document checked by `NoIntrospectionRule`.
+  introspectionDisabled('GQL235'),
+
+  /// `GQL236`: a `__schema` or `__type` field with a path through three or
+  /// more of `fields`, `interfaces`, `possibleTypes` and `inputFields`,
+  /// fragments expanded (`MaxIntrospectionDepthRule`).
+  maxIntrospectionDepthExceeded('GQL236'),
 }

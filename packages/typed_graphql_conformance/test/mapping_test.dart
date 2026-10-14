@@ -44,8 +44,12 @@ void main() {
     test('ported and adapted rows name a Dart test that exists', () {
       // `name(` and the quoted argument, with any whitespace between: the
       // formatter moves a long name to its own line.
-      RegExp call(String name, String argument) =>
-          RegExp('$name\\(\\s*${RegExp.escape("'$argument'")}');
+      // A name with an apostrophe is written in double quotes.
+      RegExp call(String name, String argument) {
+        final escaped = RegExp.escape(argument);
+        return RegExp('$name\\(\\s*(?:\'$escaped\'|"$escaped")');
+      }
+
       for (final row in table.rows.where((row) => row['status'] != 'skipped')) {
         final file = File('${row['dart_file']}');
         expect(file.existsSync(), isTrue, reason: '$row');
@@ -60,11 +64,6 @@ void main() {
 
   // A row names its graphql-js file relative to `prefix`, under `src/`;
   // `covered` lists the files whose every test must have a row.
-  // The suites of the limit rules, which M4b ports.
-  const waitingForM4b = {
-    'MaxIntrospectionDepthRule-test.ts',
-    'NoSchemaIntrospectionCustomRule-test.ts',
-  };
   final tables = [
     (
       path: 'mapping/language.csv',
@@ -90,7 +89,7 @@ void main() {
       prefix: '',
       covered: [
         for (final file in GraphqlJsSuite.filesIn('validation/__tests__'))
-          if (!waitingForM4b.contains(file)) 'validation/__tests__/$file',
+          'validation/__tests__/$file',
       ],
     ),
   ];

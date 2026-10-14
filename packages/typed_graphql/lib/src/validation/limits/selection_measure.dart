@@ -30,14 +30,19 @@ final class SelectionMeasure(
 
   /// The value of [operation], or null once the context's step budget is
   /// spent.
-  int? measure(OperationDefinition operation) {
+  int? measure(OperationDefinition operation) => measureSelections(
+    operation.selectionSet.selections,
+    own: quantity.ofOperation(operation),
+  );
+
+  /// The value of [selections], fragments expanded, plus [own], or null once
+  /// the context's step budget is spent.
+  ///
+  /// Fragment values are memoised for the life of the measure, so asking
+  /// for the selections of many fields still visits each fragment once.
+  int? measureSelections(List<Selection> selections, {int own = 0}) {
     final inProgress = <String>{};
-    final stack = [
-      _Frame(
-        operation.selectionSet.selections,
-        quantity.ofOperation(operation),
-      ),
-    ];
+    final stack = [_Frame(selections, own)];
     while (true) {
       final frame = stack.last;
       if (frame.index < frame.selections.length) {

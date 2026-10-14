@@ -256,3 +256,5 @@
   operations; the discovery query "validate a GraphQL operation dart"
   works today.
 - `MaxDepthRule`, `MaxAliasesRule` and `MaxDirectivesRule` limit an operation's depth, aliases and directives, fragments expanded (`GQL232`-`GQL234`).
+- `NoIntrospectionRule` (`GQL235`) and `MaxIntrospectionDepthRule` (`GQL236`), graphql-js's introspection rules; the depth rule is linear in the document with fragments expanded.
+- `DocumentValidator.recommendedRules`: the specified rules and `MaxIntrospectionDepthRule`.

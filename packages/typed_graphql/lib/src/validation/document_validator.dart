@@ -4,6 +4,7 @@ import '../language/ast/document.dart';
 import '../language/visitor/ast_walker.dart';
 import '../schema/validation/schema_validation_result.dart';
 import 'document_validation_result.dart';
+import 'limits/max_introspection_depth_rule.dart';
 import 'rules/directives_in_valid_locations_rule.dart';
 import 'rules/executable_definitions_rule.dart';
 import 'rules/fields_on_correct_type_rule.dart';
@@ -103,6 +104,16 @@ final class const DocumentValidator({
     VariablesInAllowedPositionRule(),
     OverlappingFieldsCanBeMergedRule(),
     UniqueInputFieldNamesRule(),
+  ];
+
+  /// [specifiedRules] and [MaxIntrospectionDepthRule], graphql-js's
+  /// `recommendedRules`.
+  ///
+  /// The default of [rules] stays [specifiedRules]; whether it should
+  /// become this list is an open decision.
+  static const List<ValidationRule> recommendedRules = [
+    ...specifiedRules,
+    MaxIntrospectionDepthRule(),
   ];
 
   /// Validates [document] against [schema]; diagnostics point into

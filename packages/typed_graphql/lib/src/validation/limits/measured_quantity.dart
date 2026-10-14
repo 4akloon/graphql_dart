@@ -14,14 +14,30 @@ enum MeasuredQuantity {
   aliases,
 
   /// The directives, wherever they are applied.
-  directives;
+  directives,
+
+  /// The fields named `fields`, `interfaces`, `possibleTypes` or
+  /// `inputFields` on a path, as graphql-js's `MaxIntrospectionDepthRule`
+  /// counts them.
+  introspectionLists;
+
+  static const Set<String> _listFieldNames = {
+    'fields',
+    'interfaces',
+    'possibleTypes',
+    'inputFields',
+  };
 
   /// Whether children combine by sum (a count) rather than by maximum.
-  bool get isAdditive => this != depth;
+  bool get isAdditive => this == aliases || this == directives;
 
   /// What [selection] adds, not counting what it contains.
   int ofSelection(Selection selection) => switch (this) {
     depth => selection is Field ? 1 : 0,
+    introspectionLists =>
+      selection is Field && _listFieldNames.contains(selection.name.value)
+          ? 1
+          : 0,
     aliases => selection is Field && selection.alias != null ? 1 : 0,
     directives => switch (selection) {
       Field(directives: final applied) ||

@@ -92,6 +92,8 @@ export 'src/validation/document_validator.dart';
 export 'src/validation/limits/max_aliases_rule.dart';
 export 'src/validation/limits/max_depth_rule.dart';
 export 'src/validation/limits/max_directives_rule.dart';
+export 'src/validation/limits/max_introspection_depth_rule.dart';
+export 'src/validation/limits/no_introspection_rule.dart';
 export 'src/validation/rules/directives_in_valid_locations_rule.dart';
 export 'src/validation/rules/executable_definitions_rule.dart';
 export 'src/validation/rules/fields_on_correct_type_rule.dart';
