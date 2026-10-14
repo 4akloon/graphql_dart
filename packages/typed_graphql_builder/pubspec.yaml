@@ -2,7 +2,7 @@ name: typed_graphql_builder
 description: >-
   build_runner builders for typed_graphql: the client and SDL-first generators and the annotation front end for code-first servers.
 version: 0.0.1
-repository: https://github.com/4akloon/graphql_dart
+repository: https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_builder
 issue_tracker: https://github.com/4akloon/graphql_dart/issues
 topics: [graphql]
 

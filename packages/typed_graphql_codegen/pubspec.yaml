@@ -2,7 +2,7 @@ name: typed_graphql_codegen
 description: >-
   The typed_graphql code generator and its CLI: Dart client code from .graphql operations and SDL-first server code, without the analyzer.
 version: 0.0.1
-repository: https://github.com/4akloon/graphql_dart
+repository: https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_codegen
 issue_tracker: https://github.com/4akloon/graphql_dart/issues
 topics: [graphql]
 
