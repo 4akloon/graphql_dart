@@ -80,25 +80,25 @@ void main() {
 
 GraphQL in Dart is often handled by hand: regular expressions over query
 text, `Map<String, dynamic>` for responses, exceptions for bad input. Each
-fails late and far from its cause, and the Dart ecosystem has no
-implementation of the whole specification, `@defer` and `@stream` included
-([research](docs/research/README.md)). typed_graphql
-takes the design every serious implementation converged on: a hand-written
-error-resilient parser, typestate for validated schemas and documents,
-validation rules fused into one walk, a synchronous fast path in the executor,
-and document-first, operation-based client code generation. Compared with
-those approaches:
+fails late and far from its cause. This repository is built to cover the whole
+specification, `@defer` and `@stream` included, with one design: a
+hand-written error-resilient parser, typestate for validated schemas and
+documents, validation rules fused into one walk, a synchronous fast path in
+the executor, and document-first, operation-based client code generation (the
+reasoning is in the [research](docs/research/README.md)). Compared with those
+approaches:
 
 - **Typed end to end.** Arbitrary JSON is `JsonValue`, a sealed family you
   can switch over, not a dynamic map; there is no `dynamic` in any public
   signature.
-- **Every problem at once (from M2).** Parsing and validation will report
-  every diagnostic with a stable code (`GQL0xx`–`GQL5xx`) and a source
-  location.
-- **Conformance is measured (from M2).** The graphql-js v17 suites will be
-  ported with a mapping table, and every suite will also run AOT-compiled and
-  in the browser. M1 already runs its own tests on the VM, dart2js and
-  dart2wasm.
+- **Every problem at once.** The parser reports every syntax error in one
+  pass, and schema building and validation report every diagnostic, each with
+  a stable code (`GQL0xx`-`GQL5xx`) and a source location. Operation
+  validation (M4) will do the same.
+- **Conformance is measured.** The graphql-js v17 language and schema suites
+  are ported with a mapping table (`typed_graphql_conformance`), and the core
+  tests also run AOT-compiled and in the browser (dart2js and dart2wasm). The
+  validation and execution suites will be ported with their stages.
 - **Independent.** The core is pure Dart and depends only on `meta`.
 
 ## Packages
