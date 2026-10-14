@@ -207,10 +207,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `TypeExtender` appends an extension's members, interfaces, union members
   and directives after the type's own, in document order, and keeps the
   definition's span; the extensions of one type are grouped and applied in
-  one pass, so N extensions cost linear time. `extend(schema, document, source:)` is the same run
-  over a base schema, without default roots; a member the base already has
-  is "already exists in the schema" (no related span). `DirectiveExtender`
-  applies `extend directive`.
+  one pass, so N extensions cost linear time.
+  `extend(schema, document, source:)` is the same run over a base schema,
+  without default roots; a member the base already has is "already exists in
+  the schema" (no related span). `DirectiveExtender` applies
+  `extend directive`.
 - `print/SchemaPrinter` (const): graphql-js's `printSchema` layout through
   `TypePrinter` (a type or directive definition) and `MemberPrinter`
   (descriptions, member blocks, arguments, applied directives); values and
