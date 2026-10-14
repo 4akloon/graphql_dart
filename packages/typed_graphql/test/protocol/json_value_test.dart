@@ -42,6 +42,17 @@ void main() {
       expect(JsonNumber(1e300).asInt, isNull);
       expect(JsonNumber(9007199254740992.0).asInt, isNull);
     });
+
+    test('asInt is null for int.minValue, whose abs overflows', () {
+      expect(JsonNumber(-9223372036854775807 - 1).asInt, isNull);
+    });
+
+    test('asInt holds the bounds of the safe range on both sides', () {
+      expect(JsonNumber(-9007199254740991).asInt, -9007199254740991);
+      expect(JsonNumber(-9007199254740992.0).asInt, isNull);
+      expect(JsonNumber(-0.0).asInt, 0);
+      expect(JsonNumber(1e20).asInt, isNull);
+    });
   });
 
   group('equality', () {

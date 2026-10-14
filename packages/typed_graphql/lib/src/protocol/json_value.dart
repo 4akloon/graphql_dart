@@ -78,7 +78,7 @@ final class JsonNumber(
   /// The bound gives the same answer on every platform: past it the web
   /// has already rounded the number, the VM has not.
   int? get asInt {
-    if (value % 1 != 0 || value.abs() > maxSafeInteger) {
+    if (value % 1 != 0 || value < -maxSafeInteger || value > maxSafeInteger) {
       return null;
     }
     return value.toInt();
