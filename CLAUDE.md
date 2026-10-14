@@ -99,6 +99,13 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   (`*_scanner.dart`) share a
   `SourceReader` (text, `describe`, `report`); `CharacterClass` holds the
   character tests.
+- `parser/`: `Parser(options:)` is const and stateless; each call builds a
+  `TokenCursor` (current token, one lookahead, graphql-js's `expect*`,
+  `many`, `any`, `delimitedMany`, `nested` for `maxDepth`) and grammar
+  collaborators (`*_parser.dart`) over it. A syntax error is reported by
+  `TokenCursor.fail`, which throws the internal `SyntaxAbort`; it never
+  leaves `Parser`. The cursor is silent at error tokens (the lexer
+  reported them) and at an offset that already has a diagnostic.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

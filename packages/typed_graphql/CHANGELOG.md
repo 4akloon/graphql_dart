@@ -27,3 +27,6 @@
 - `Lexer`: names, numbers (raw lexemes), punctuators, comments, strings
   with escapes and block strings, and a token limit, with diagnostics
   `GQL001`–`GQL006` instead of exceptions.
+- `Parser` with `ParserOptions` (`maxTokens`, `maxDepth`, working-draft
+  switches): `parseValue` and `parseTypeRef` return a
+  `ParseElementResult`; diagnostics `GQL007`–`GQL010`.

@@ -48,5 +48,21 @@ enum DiagnosticCode(
 
   /// `GQL006`: a document with more tokens than the limit; the rest is not
   /// read.
-  tokenLimitExceeded('GQL006');
+  tokenLimitExceeded('GQL006'),
+
+  /// `GQL007`: the parser needed a certain token, such as `:` or a name,
+  /// and found another.
+  expectedToken('GQL007'),
+
+  /// `GQL008`: a token that cannot appear where it is, such as `)` at the
+  /// start of a value or an unknown definition keyword.
+  unexpectedToken('GQL008'),
+
+  /// `GQL009`: a variable inside a constant value, such as a default value
+  /// or an argument of a type-system directive.
+  variableInConstant('GQL009'),
+
+  /// `GQL010`: selection sets, lists, objects and list types nested deeper
+  /// than the parser's `maxDepth`; the definition is dropped.
+  depthLimitExceeded('GQL010');
 }

@@ -56,6 +56,9 @@ final class Lexer {
   int _tokenCount = 0;
   bool _isLimitReached = false;
 
+  /// The document being read.
+  Source get source => _reader.source;
+
   /// The tokens returned so far, comments and the end not counted.
   int get tokenCount => _tokenCount;
 
