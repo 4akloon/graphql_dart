@@ -164,6 +164,19 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `RequestErrorResult`) read with a static `decode(JsonValue)` and write with
   `toJson()`; equality is equality of their JSON.
 
+**Schema** (`schema/`; M3). Imports `diagnostics`, `language` and
+`protocol`.
+- `model/`: the immutable schema model (R2.1). Its elements are
+  `SchemaField`, `InputValue` (arguments and input fields),
+  `SchemaEnumValue`, `SchemaDirective` and `AppliedDirective`; the spec's
+  names `FieldDefinition`, `EnumValueDefinition`, `DirectiveDefinition` and
+  `NamedType` already name language nodes, so the schema's take a
+  `Schema` prefix. Types are language `TypeRef` nodes, resolved by name;
+  defaults and directive arguments are constant language `Value` nodes.
+  Every element has `SourceSpan? span`. `deprecationReason`,
+  `specifiedByUrl` and `isOneOf` read the applied directives through the
+  internal `AppliedDirectives`, which stay in the element's list.
+
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
 `ArgumentError`, `RangeError`, `StateError`.

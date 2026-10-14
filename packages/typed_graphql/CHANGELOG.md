@@ -66,3 +66,6 @@
 - `Printer` prints schema coordinates, the same in both forms.
 - `SourceExcerpt` and `SourceSpan.excerpt`: a location shown in its lines
   with a caret, as graphql-js's `printLocation` prints it.
+- Schema model elements: `SchemaField`, `InputValue`, `SchemaEnumValue`,
+  `SchemaDirective` and `AppliedDirective`, with `deprecationReason` read
+  from `@deprecated` and lookups of arguments by name.
