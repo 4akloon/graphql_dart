@@ -16,7 +16,7 @@ final class const AppliedDirectives(
   this;
 
   /// The reason `@deprecated` gives when it has no `reason` argument
-  /// (spec §3.13, "@deprecated").
+  /// (spec §3.13.3).
   static const String defaultDeprecationReason = 'No longer supported';
 
   /// The reason of the first `@deprecated`: its `reason` string, or

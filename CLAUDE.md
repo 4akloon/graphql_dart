@@ -171,7 +171,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `SchemaEnumValue`, `SchemaDirective` and `AppliedDirective`; the spec's
   names `FieldDefinition`, `EnumValueDefinition`, `DirectiveDefinition` and
   `NamedType` already name language nodes, so the schema's take a
-  `Schema` prefix. Types are language `TypeRef` nodes, resolved by name;
+  `Schema` prefix. `SchemaType` is the sealed family of named types
+  (`ScalarType`, `ObjectType`, `InterfaceType`, `UnionType`, `EnumType`,
+  `InputObjectType`). Types are language `TypeRef` nodes (implemented
+  interfaces and union members `NamedType` nodes), resolved by name;
   defaults and directive arguments are constant language `Value` nodes.
   Every element has `SourceSpan? span`. `deprecationReason`,
   `specifiedByUrl` and `isOneOf` read the applied directives through the

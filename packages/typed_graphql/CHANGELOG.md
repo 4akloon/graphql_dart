@@ -69,3 +69,6 @@
 - Schema model elements: `SchemaField`, `InputValue`, `SchemaEnumValue`,
   `SchemaDirective` and `AppliedDirective`, with `deprecationReason` read
   from `@deprecated` and lookups of arguments by name.
+- `SchemaType`, the sealed family of named types: `ScalarType`
+  (`specifiedByUrl`), `ObjectType`, `InterfaceType`, `UnionType`,
+  `EnumType` and `InputObjectType` (`isOneOf`), with lookups by name.
