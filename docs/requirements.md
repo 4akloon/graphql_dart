@@ -65,6 +65,7 @@ stage.
 | R3.5 | Opt-in limit rules: `MaxDepth`, `MaxComplexity`, `MaxAliases`, `MaxDirectives`, `NoIntrospection` | MUST | M4 |
 | R3.6 | A public API for custom rules | MUST | M4 |
 | R3.7 | `@defer` / `@stream` validation rules | MUST | M14 |
+| R3.8 | Cost analysis rule `MaxCost` following the IBM draft `@cost` / `@listSize` directives (not yet in the specification, so schemas stay portable); the directives are opt-in built-in directives defined when the analyzer is built | MUST | M4 |
 
 ## R4. Execution and the typed builder
 
@@ -87,6 +88,9 @@ stage.
 | R4.15 | DataLoader: `BatchLoader`, `GroupedLoader`, request-scoped, microtask dispatch plus level flush | MUST | M6 |
 | R4.16 | `executeIncrementally` for `@defer` / `@stream` | MUST | M14 |
 | R4.17 | Allocation and throughput benchmarks of the executor | MUST | M5 |
+| R4.18 | Look-ahead: `info.selection`, a tree of the requested fields computed once from the `OperationPlan` (fragments flattened, `@skip` / `@include` applied, type conditions resolved with `forType`, aliases and arguments per occurrence, `__typename` hidden, a `fingerprint` per sub-selection usable as a DataLoader key, `@defer`red fields flagged `isDeferred`); string-path access (`has('posts.comments')`, children and arguments accessors); typed field handles only if the builder yields them at no extra cost. The field-to-column mapping lives at the call site; the library offers only a whitelist helper and no built-in preload | MUST | M5 |
+| R4.19 | `Authorizer`: a typed hook called by the executor around field resolution and exposed to look-ahead and the pipeline, plus a lint / test helper that reports schema fields and types with no authorization coverage; no policy engine | MUST | M5 |
+| R4.20 | `CancelSignal` in the execution context, observable by resolvers; an execution timeout in the pipeline options; cancellation and timeout reported as errors with stable codes (`GQL3xx`); subscriptions end on cancellation | MUST | M5 |
 
 ## R5. Server pipeline and transports
 
@@ -105,6 +109,8 @@ stage.
 | R5.11 | Federation subgraph support (vocabulary chosen at the stage) | MUST | M15 |
 | R5.12 | Response cache, OpenTelemetry-style tracing, request batching | LATER | — |
 | R5.13 | Relay helpers: connection builder, `Node` interface | LATER | — |
+| R5.14 | Cost limit in the request pipeline: a cost analyzer enforces a configured maximum, using `@cost` / `@listSize` (R3.8) | MUST | M6 |
+| R5.15 | `ServerProfile` with `development` and `production`; `production` is secure by default: introspection, "did you mean" suggestions and batching off; errors masked (generic message, stable code, details only in logs and extensions hooks); depth, cost and alias limits and CSRF protection on; `development` is permissive (introspection, suggestions, GraphiQL in the shelf adapter); each protection is also configurable on its own | MUST | M6 |
 
 ## R6. Server code generation
 

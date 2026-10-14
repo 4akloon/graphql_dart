@@ -98,6 +98,16 @@ Legend: ✅ take · ⚠️ adapt · ❌ avoid.
 | Links | `Stream`-returning chain | `Future`-only links retrofitted for `@defer` | 04 §0.8 |
 | APQ | working APQ + trusted documents | graphql_flutter's "out of service" APQ (02 D10) | 01 §12.7, 02 |
 
+### Decisions (2026-10-14)
+
+| Question | Decision | Why |
+|---|---|---|
+| Look-ahead on the server (R4.18) | `info.selection` tree from the `OperationPlan`; string paths in M5, typed handles only if free; column mapping at the call site, no built-in preload | Backends build dynamic queries from the requested fields; the schema must not know about SQL |
+| Server defaults (R5.15) | `ServerProfile` with `development` and `production`; `production` is secure by default, each protection still configurable | A forgotten flag must not expose a production server |
+| Authorization (R4.19) | A typed `Authorizer` hook plus a coverage lint; no policy engine | Stays small; policy engines are application territory |
+| Cost model (R3.8, R5.14) | IBM draft `@cost` / `@listSize`, opt-in built-ins, analyzer in the pipeline | Schemas stay portable to other implementations |
+| Cancellation and timeouts (R4.20) | `CancelSignal` in the execution context, timeout in pipeline options, `GQL3xx` codes, in M5 | Cheaper to design into the context now than to retrofit |
+
 ## 3. Open questions (decided at their stage)
 
 | Question | Stage |

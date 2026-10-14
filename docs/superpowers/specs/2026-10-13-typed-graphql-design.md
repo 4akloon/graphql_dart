@@ -277,7 +277,30 @@ final schema = b.build(query: queryType, mutation: mutationType); // ExecutableS
   de-duplicated, dispatched after the current microtask burst, with a forced flush
   by the executor at level boundaries.
 - Introspection: ordinary object types whose resolvers read the `ValidSchema`; an
-  `IntrospectionPolicy`, off by default in production profiles.
+  `IntrospectionPolicy`, off by default in the `production` profile (see
+  `ServerProfile`, section 5).
+- **Look-ahead** (R4.18). `info.selection` is a processed tree of the requested
+  fields, computed once from the `OperationPlan`: fragments flattened,
+  `@skip` / `@include` applied, type conditions resolved through the parent type
+  (`forType`), aliases and arguments kept per occurrence, `__typename` hidden.
+  A sub-selection has a `fingerprint` usable as a DataLoader key; `@defer`red
+  fields are present with an `isDeferred` flag (the defer machinery is M14). M5
+  offers string paths (`has('posts.comments')`, children and arguments
+  accessors); typed handles (`has(user.posts)`) only if the builder yields them at
+  no extra cost. The field-to-column (SQL) mapping lives at the call site, never
+  in the schema; the library offers only a small whitelist helper from requested
+  field names to columns. There is no built-in preload (the parent loaded a
+  relation, the child reads it): the pattern is documented. Generated selection
+  classes come with codegen (M8).
+- **Authorization** (R4.19). Only a typed `Authorizer` hook, called by the
+  executor around field resolution and exposed to look-ahead and the pipeline,
+  plus a lint / test helper that reports fields and types with no authorization
+  coverage. There is no policy engine.
+- **Cancellation and timeouts** (R4.20). A `CancelSignal` travels in the execution
+  context and resolvers can observe it; the pipeline options carry an execution
+  timeout; cancellation and timeout are errors with stable `GQL3xx` codes;
+  subscriptions end on cancellation. Designing it into the context now is cheaper
+  than retrofitting it.
 
 **Generators.** Both emit builder code through one shared emitter; only the input
 model differs (analyzer elements vs a parsed `ValidSchema`). They never rewrite user
@@ -309,6 +332,20 @@ documents (an allowlist from the manifest the client generator emits); the
 introspection policy and error masking; CSRF prevention (GET requires a header or a
 non-simple content type). Later: response cache, OpenTelemetry-style tracing,
 request batching.
+
+**Cost analysis** (R3.8, R5.14). The cost model follows the IBM draft `@cost` /
+`@listSize` directives, which are not yet in the official specification, so
+schemas stay portable. They are defined as additional, opt-in built-in directives
+in the type system when the analyzer is built (M4). A cost analyzer in the
+pipeline enforces a configured maximum.
+
+**`ServerProfile`** (R5.15). One switch with two profiles. `production`, the
+secure-by-default one: introspection off, "did you mean" suggestions off, errors
+masked (internal errors become a generic message with a stable code; details only
+in logs and extensions hooks), depth, cost and alias limits on, batching off, CSRF
+protection on. `development` is permissive: introspection, suggestions, GraphiQL in
+the shelf adapter. Each protection is also configurable individually; the exact
+option names are decided at the M6 spec.
 
 **Transport-agnostic handlers.** The handler core is
 `HttpRequestData → HttpResponseData`, without `dart:io`:
