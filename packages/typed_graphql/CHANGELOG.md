@@ -47,3 +47,22 @@
 - Parser recovery no longer mistakes a directive named like a keyword
   (`@query`) for the start of a definition.
 - `NonNullType.withChildren` throws a `StateError` in release builds too.
+- `AstVisitor`, `VisitAction` and `AstWalker`: a depth-first walk of any
+  syntax tree with `enter` and `leave`, which can skip a subtree or stop.
+- `ParallelVisitor`: several visitors in one walk, each called as if it
+  walked alone.
+- `AstTransformer`: rebuilds a syntax tree bottom-up; `rewrite` keeps,
+  replaces or removes a node, and unchanged branches keep their instance.
+  Removing the name of a `Field` with an alias or of a
+  `DirectiveDefinition` is a `StateError`, not a silent rename.
+- Schema coordinate nodes: the `SchemaCoordinate` family
+  (`TypeCoordinate`, `MemberCoordinate`, `ArgumentCoordinate`,
+  `DirectiveCoordinate`, `DirectiveArgumentCoordinate`).
+- `SchemaCoordinateLexer` and `TokenKind.dot`: the tokens of a schema
+  coordinate, with `GQL001` for any character a coordinate cannot hold;
+  `Lexer` and `SchemaCoordinateLexer` implement `TokenSource`.
+- `Parser.parseSchemaCoordinate`: a schema coordinate such as
+  `Query.hero(episode:)` as a `ParseElementResult<SchemaCoordinate>`.
+- `Printer` prints schema coordinates, the same in both forms.
+- `SourceExcerpt` and `SourceSpan.excerpt`: a location shown in its lines
+  with a caret, as graphql-js's `printLocation` prints it.

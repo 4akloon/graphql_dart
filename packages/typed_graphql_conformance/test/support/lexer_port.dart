@@ -39,6 +39,24 @@ final class LexerPort {
     }
   }
 
+  /// The first token of [text] from a [SchemaCoordinateLexer].
+  Map<String, Object?> coordinateLexOne(String text) {
+    final source = Source(text);
+    final lexer = SchemaCoordinateLexer(source, DiagnosticSink());
+    return _json(source, lexer.advance());
+  }
+
+  /// The first diagnostic of reading [count] tokens of [text] with a
+  /// [SchemaCoordinateLexer], which graphql-js throws.
+  Map<String, Object?> coordinateSyntaxError(String text, {int count = 2}) {
+    final sink = DiagnosticSink();
+    final lexer = SchemaCoordinateLexer(Source(text), sink);
+    for (var i = 0; i < count; i++) {
+      lexer.advance();
+    }
+    return const ErrorJson().of(sink.diagnostics.first);
+  }
+
   /// The first comment token of [text]: graphql-js reads it as
   /// `lexOne(text).prev`.
   Map<String, Object?> firstComment(String text) {
@@ -56,6 +74,14 @@ final class LexerPort {
       ..advance()
       ..advance();
     return const ErrorJson().of(sink.diagnostics.first);
+  }
+
+  /// `String(error)` for the first diagnostic of lexing one token of
+  /// [text].
+  String printedSyntaxError(String text) {
+    final sink = DiagnosticSink();
+    Lexer(Source(text), sink).advance();
+    return const ErrorJson().printed(sink.diagnostics.first);
   }
 
   /// [kind] as graphql-js's `TokenKind` value, such as `Name` or `{`.

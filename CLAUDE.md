@@ -22,9 +22,10 @@ Minimum SDK: Dart 3.13 (`sdk: ^3.13.0`) in every package and in generated
 code. No dependency on `package:gql` or its ecosystem.
 
 Status: under construction. M1 (foundations) delivered the workspace, the
-code rules, CI, the diagnostics model and the protocol data types. M2a
-(language core) delivers the syntax trees, the lexer, the parser, the
-printer and the ported graphql-js language suites.
+code rules, CI, the diagnostics model and the protocol data types. M2
+(language) delivers the syntax trees, the lexer, the parser, the printer,
+visitors and transformers, schema coordinates, source excerpts, every
+graphql-js language suite and the language fuzzers.
 
 ## Documents
 
@@ -72,7 +73,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   1-based `SourceLocation` (column in UTF-16 code units). The table of line
   starts is built on the first call. `\r\n`, `\n` and `\r` end a line.
 - `SourceSpan(source, start, end)` is a range of offsets; a diagnostic points
-  at one.
+  at one. `SourceSpan.excerpt` (`SourceExcerpt`) shows its start in its
+  lines with a caret, as graphql-js's `printSourceLocation`.
 - `DiagnosticCode` is the catalog: one enum value per problem, id `GQLnxx`,
   a doc comment that says when it is reported. Ids are public API: never
   renumber, reuse or remove one. Ranges: `GQL0xx` syntax, `GQL1xx` type
@@ -99,7 +101,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `error` token over the run and one diagnostic, with graphql-js's message
   minus "Syntax Error: ". `maxTokens` is counted here (R1.6). Scanners
   (`*_scanner.dart`) share a `SourceReader` (text, `describe`, `report`);
-  `CharacterClass` holds the character tests.
+  `CharacterClass` holds the character tests. `SchemaCoordinateLexer`
+  lexes a schema coordinate: names, `.`, `(`, `)`, `:`, `@` and no
+  ignored tokens; any other character is a `GQL001` (`GQL002` for a lone
+  surrogate) "Invalid character". `TokenKind.dot` exists for it only. Both
+  lexers implement `TokenSource`, which the parser reads.
 - `parser/`: `Parser(options:)` is const and stateless; each call builds a
   `TokenCursor` (current token, one lookahead, graphql-js's `expect*`,
   `many`, `any`, `delimitedMany`, `nested` for `maxDepth`) and grammar
@@ -118,6 +124,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   grammar before the base ones. `DirectiveExtensionGrammar` is always
   registered; with `allowDirectiveExtensions` off, it and the directive
   definition's draft parts report `GQL014` instead of a generic error.
+  `Parser.parseSchemaCoordinate` runs `SchemaCoordinateParser` over a
+  cursor on a `SchemaCoordinateLexer` (the cursor reads any
+  `TokenSource`); `ParserOptions` do not apply to it.
 - `printer/`: `Printer` prints any node as graphql-js's `print` does, to
   the character (80-column wrapping included), through collaborators:
   `ValuePrinter` (values, types, arguments, directives), `ExecutablePrinter`,
@@ -127,6 +136,18 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `Printer(isMinified: true)` passes the canonical text through `Minifier`
   (graphql-js's `stripIgnoredCharacters`: a space only between two
   non-punctuators or before `...`, block strings in their shortest form).
+  A `SchemaCoordinate` prints the same in both forms and never goes
+  through `Minifier`, whose document lexer would reject its `.`.
+- `visitor/`: `AstWalker().walk(root, visitor)` walks depth-first through
+  `children` with its own stack (no recursion), calling
+  `AstVisitor.enter` (returns `VisitAction.next`, `skip` or `stop`) and
+  `leave`; a skipped node is not left, a stop leaves nothing.
+  `ParallelVisitor` keeps a skip or stop state per visitor, as graphql-js's
+  `visitInParallel`; it is stateful, so use one per walk.
+  `AstTransformer.transform` rewrites bottom-up, also without recursion:
+  `rewrite(node)` sees rewritten children and returns the node, a
+  replacement or null (removed); the parent is rebuilt with
+  `withChildren`, so removing a required child is a `StateError`.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,
@@ -214,6 +235,15 @@ Learned in M2a:
   library overrides `rebuildFrom(Object? read)` without the internal
   `ChildReader`.
 
+Learned in M2b:
+- Recursion over a syntax tree overflows the stack on the web long before
+  the VM; walk deep structures with an explicit stack.
+- A cascade cannot stand in a branch of `?:`: `c ? [...]..sort() : x` does
+  not parse. Write an `if` with two returns.
+- In a document, `{` after a body-less type extension (`extend enum E @d`)
+  opens that extension's body, as in graphql-js: a shorthand query can
+  only come first.
+
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
 refer to identifiers in `[brackets]`; a boolean property starts with
@@ -271,4 +301,6 @@ fails when it finds none.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
 - Conformance mapping table: `packages/typed_graphql_conformance/mapping/language.csv`,
   checked by `test/mapping_test.dart` there; port helpers in its `test/support/`.
+- Fuzzers: `packages/typed_graphql_conformance/test/fuzz/`;
+  `TYPED_GRAPHQL_FUZZ_ITERATIONS` and `TYPED_GRAPHQL_FUZZ_SEED` tune them.
 - CI: `.github/workflows/ci.yml`.

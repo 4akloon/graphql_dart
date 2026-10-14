@@ -2,7 +2,8 @@
 /// wire protocol, with diagnostics instead of exceptions.
 ///
 /// Under construction: this release has the diagnostics model, the protocol
-/// data types, and the language (syntax trees, lexer, parser, printer).
+/// data types, and the language (syntax trees, lexer, parser, printer,
+/// visitors, transformers and schema coordinates).
 library;
 
 export 'src/diagnostics/diagnostic.dart';
@@ -10,6 +11,7 @@ export 'src/diagnostics/diagnostic_code.dart';
 export 'src/diagnostics/diagnostic_severity.dart';
 export 'src/diagnostics/diagnostic_sink.dart';
 export 'src/diagnostics/source.dart';
+export 'src/diagnostics/source_excerpt.dart';
 export 'src/diagnostics/source_location.dart';
 export 'src/diagnostics/source_span.dart';
 export 'src/language/ast/argument.dart';
@@ -25,6 +27,7 @@ export 'src/language/ast/node.dart';
 export 'src/language/ast/object_field.dart';
 export 'src/language/ast/operation_type.dart';
 export 'src/language/ast/operation_type_definition.dart';
+export 'src/language/ast/schema_coordinate.dart';
 export 'src/language/ast/selection.dart';
 export 'src/language/ast/selection_set.dart';
 export 'src/language/ast/type_ref.dart';
@@ -34,14 +37,21 @@ export 'src/language/ast/value.dart';
 export 'src/language/ast/variable_definition.dart';
 export 'src/language/lexer/block_string.dart';
 export 'src/language/lexer/lexer.dart';
+export 'src/language/lexer/schema_coordinate_lexer.dart';
 export 'src/language/lexer/token.dart';
 export 'src/language/lexer/token_kind.dart';
+export 'src/language/lexer/token_source.dart';
 export 'src/language/parser/graphql_syntax_exception.dart';
 export 'src/language/parser/parse_element_result.dart';
 export 'src/language/parser/parse_result.dart';
 export 'src/language/parser/parser.dart';
 export 'src/language/parser/parser_options.dart';
 export 'src/language/printer/printer.dart';
+export 'src/language/visitor/ast_transformer.dart';
+export 'src/language/visitor/ast_visitor.dart';
+export 'src/language/visitor/ast_walker.dart';
+export 'src/language/visitor/parallel_visitor.dart';
+export 'src/language/visitor/visit_action.dart';
 export 'src/protocol/decode_result.dart';
 export 'src/protocol/graphql_error.dart';
 export 'src/protocol/graphql_request.dart';

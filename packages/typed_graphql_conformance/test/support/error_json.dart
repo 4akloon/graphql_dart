@@ -6,6 +6,16 @@ final class ErrorJson {
   /// Creates the converter; it keeps no state.
   const ErrorJson();
 
+  /// `String(error)`: the message, then the excerpt of its location, as
+  /// graphql-js's `GraphQLError.toString` prints a syntax error.
+  String printed(Diagnostic diagnostic) {
+    final message = 'Syntax Error: ${diagnostic.message}';
+    return switch (diagnostic.span) {
+      final span? => '$message\n\n${span.excerpt}',
+      null => message,
+    };
+  }
+
   /// `{message: 'Syntax Error: ...', locations: [{line, column}]}`.
   Map<String, Object?> of(Diagnostic diagnostic) {
     final location = diagnostic.span?.location;

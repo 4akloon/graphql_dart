@@ -24,14 +24,14 @@ void main() {
   });
 
   group('punctuators and names', () {
-    test('lexes every punctuator', () {
+    test('lexes every punctuator but the coordinate dot', () {
       final kinds = [
         for (final token in Lexed(r'! $ & ( ) ... : = @ [ ] { | }').tokens)
           token.kind,
       ];
       expect(kinds, [
         for (final kind in TokenKind.values)
-          if (kind.isPunctuator) kind,
+          if (kind.isPunctuator && kind != TokenKind.dot) kind,
       ]);
     });
 
@@ -107,6 +107,12 @@ void main() {
         '1:1 GQL001 Unexpected "..", did you mean "..."?',
       ]);
       expect(Lexed("'a'").errors.first, contains('did you mean to use a'));
+    });
+
+    test('a single dot in a document is an unexpected character', () {
+      final lexed = Lexed('a.b');
+      expect(lexed.errors, ['1:2 GQL001 Unexpected character: ".".']);
+      expect(lexed.described, ['name 0:1 a', 'error 1:2', 'name 2:3 b']);
     });
 
     test('names a control character and a supplementary character', () {

@@ -3,9 +3,11 @@ import '../../diagnostics/source.dart';
 import '../ast/definition.dart';
 import '../ast/document.dart';
 import '../ast/node.dart';
+import '../ast/schema_coordinate.dart';
 import '../ast/type_ref.dart';
 import '../ast/value.dart';
 import '../lexer/lexer.dart';
+import '../lexer/schema_coordinate_lexer.dart';
 import 'definition_parser.dart';
 import 'directive_extension_grammar.dart';
 import 'directive_parser.dart';
@@ -15,6 +17,7 @@ import 'parse_element_result.dart';
 import 'parse_result.dart';
 import 'parser_options.dart';
 import 'recovery.dart';
+import 'schema_coordinate_parser.dart';
 import 'selection_parser.dart';
 import 'syntax_abort.dart';
 import 'token_cursor.dart';
@@ -66,6 +69,15 @@ final class Parser {
   ParseElementResult<TypeRef> parseTypeRef(Source source) =>
       _element(source, (cursor) => ValueParser(cursor).typeRef());
 
+  /// Parses [source] as a schema coordinate, such as `Query.hero(id:)`,
+  /// which holds no ignored tokens. [options] do not apply: a coordinate
+  /// has no limits and no working-draft syntax.
+  ParseElementResult<SchemaCoordinate> parseSchemaCoordinate(Source source) {
+    final sink = DiagnosticSink();
+    final cursor = TokenCursor(SchemaCoordinateLexer(source, sink), sink);
+    return _complete(cursor, SchemaCoordinateParser(cursor).coordinate);
+  }
+
   TokenCursor _cursor(Source source, DiagnosticSink sink) => TokenCursor(
     Lexer(source, sink, maxTokens: options.maxTokens),
     sink,
@@ -111,8 +123,18 @@ final class Parser {
   ) {
     final sink = DiagnosticSink();
     final cursor = _cursor(source, sink);
+    return _complete(cursor, () => parse(cursor));
+  }
+
+  /// The element [parse] reads from [cursor], which must then be at the
+  /// end; a failure when the cursor's sink has an error.
+  ParseElementResult<T> _complete<T extends Node>(
+    TokenCursor cursor,
+    T Function() parse,
+  ) {
+    final sink = cursor.sink;
     try {
-      final element = parse(cursor);
+      final element = parse();
       cursor.expect(.eof);
       if (!sink.hasErrors) {
         return ParseElementSuccess(element, sink.diagnostics);

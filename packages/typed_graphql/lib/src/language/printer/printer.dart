@@ -10,6 +10,7 @@ import '../ast/name.dart';
 import '../ast/node.dart';
 import '../ast/object_field.dart';
 import '../ast/operation_type_definition.dart';
+import '../ast/schema_coordinate.dart';
 import '../ast/selection.dart';
 import '../ast/selection_set.dart';
 import '../ast/type_ref.dart';
@@ -29,6 +30,9 @@ import 'value_printer.dart';
 /// characters, for the wire and for persisted-query hashes.
 ///
 /// Parsing the output gives a tree equivalent to the input.
+///
+/// Printing recurses over the tree, so it is bounded by the parser's
+/// `maxDepth`; a tree built in code that is deeper can overflow the stack.
 final class Printer {
   /// Creates a printer; [isMinified] selects the minified form.
   const Printer({this.isMinified = false});
@@ -52,7 +56,12 @@ final class Printer {
   /// subclass this library does not define.
   String print(Node node) {
     final canonical = _canonical(node);
-    return isMinified ? const Minifier().minify(canonical) : canonical;
+    // A coordinate has no ignored characters, and the document lexer of
+    // the minifier would reject its `.`.
+    final isDocumentText = node is! SchemaCoordinate;
+    return isMinified && isDocumentText
+        ? const Minifier().minify(canonical)
+        : canonical;
   }
 
   String _canonical(Node node) => switch (node) {
@@ -71,8 +80,26 @@ final class Printer {
     InputValueDefinition() => _members.inputValue(node),
     EnumValueDefinition() => _members.enumValue(node),
     OperationTypeDefinition() => _members.operationType(node),
+    SchemaCoordinate() => _coordinate(node),
     _ => throw ArgumentError.value(node, 'node', 'is not a GraphQL node'),
   };
+
+  /// graphql-js's `print` of a coordinate, with no space anywhere.
+  static String _coordinate(SchemaCoordinate coordinate) =>
+      switch (coordinate) {
+        TypeCoordinate(:final name) => name.value,
+        MemberCoordinate(:final name, :final memberName) =>
+          '${name.value}.${memberName.value}',
+        ArgumentCoordinate(
+          :final name,
+          :final fieldName,
+          :final argumentName,
+        ) =>
+          '${name.value}.${fieldName.value}(${argumentName.value}:)',
+        DirectiveCoordinate(:final name) => '@${name.value}',
+        DirectiveArgumentCoordinate(:final name, :final argumentName) =>
+          '@${name.value}(${argumentName.value}:)',
+      };
 
   String _definition(Definition definition) => switch (definition) {
     ExecutableDefinition() => _executable.definition(definition),

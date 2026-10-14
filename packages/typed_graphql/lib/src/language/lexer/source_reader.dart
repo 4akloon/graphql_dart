@@ -4,6 +4,7 @@ import '../../diagnostics/diagnostic_sink.dart';
 import '../../diagnostics/source.dart';
 import '../../diagnostics/source_span.dart';
 import 'character_class.dart';
+import 'token.dart';
 
 /// What the scanners of one lexer share: the text, its characters and the
 /// sink errors go to.
@@ -41,6 +42,16 @@ final class SourceReader {
         _classes.isLeadingSurrogate(unit) &&
         _classes.isTrailingSurrogate(unitAt(offset + 1));
     return isPair ? 2 : 0;
+  }
+
+  /// The name that starts at [start], whose first character is a name
+  /// start.
+  Token name(int start) {
+    var end = start + 1;
+    while (_classes.isNameContinue(unitAt(end))) {
+      end++;
+    }
+    return Token(.name, start, end, value: slice(start, end));
   }
 
   /// The character at [offset] as messages show it, as graphql-js's

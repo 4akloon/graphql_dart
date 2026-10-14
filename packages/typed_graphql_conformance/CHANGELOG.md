@@ -8,4 +8,14 @@
   checks it.
 - Ported graphql-js suites: `lexer-test.ts`, `blockString-test.ts`,
   `parser-test.ts`, `schema-parser-test.ts`, `printer-test.ts`,
-  `schema-printer-test.ts`, `printString-test.ts`.
+  `schema-printer-test.ts`, `printString-test.ts`, `visitor-test.ts`,
+  `schemaCoordinateLexer-test.ts`, `printLocation-test.ts`, `source-test.ts`,
+  `predicates-test.ts`, `kind-test.ts`, `diagnostics-test.ts`,
+  `blockString-fuzz.ts`; the mapping test requires rows for every graphql-js
+  language test file.
+- Round-trip fuzzer (R10.4): random documents and schema coordinates,
+  printed canonical and minified, parse back to equivalent trees;
+  `TYPED_GRAPHQL_FUZZ_ITERATIONS` and `TYPED_GRAPHQL_FUZZ_SEED` tune it.
+- Hostile-text fuzzer (R1.6, R10.4): random and mutated text through every
+  parser entry point stays within the sink limit, and every diagnostic has
+  a source excerpt.

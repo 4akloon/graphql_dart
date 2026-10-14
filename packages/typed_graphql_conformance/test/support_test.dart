@@ -19,6 +19,10 @@ void main() {
         {'a': 'x', 'b': ''},
       ]);
     });
+
+    test('rejects a record with more fields than the header', () {
+      expect(() => CsvTable.parse('a,b\nx,y,z'), throwsFormatException);
+    });
   });
 
   group('GraphqlJsSuite', () {

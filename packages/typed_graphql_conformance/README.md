@@ -8,7 +8,8 @@
 
 > **Status: under construction.** Stage M2 of the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)
-> ports the graphql-js language suites; nothing is exported.
+> ports every graphql-js language suite and adds the language fuzzers;
+> nothing is exported.
 
 ## Ported suites
 
@@ -27,7 +28,23 @@ per graphql-js test, with the same group and test names.
 | `reason` | why, for `adapted` and `skipped` |
 
 `test/mapping_test.dart` checks the table; with `reference/` fetched it also
-checks that every test of a ported file has a row.
+checks that every test of every graphql-js language test file has a row.
+
+## Fuzzing
+
+`test/fuzz/` holds the fuzzers of R10.4. They run with the other tests, a
+fixed number of cases from a fixed seed; set the environment to run more or
+other cases:
+
+```sh
+TYPED_GRAPHQL_FUZZ_ITERATIONS=100000 TYPED_GRAPHQL_FUZZ_SEED=7 dart test test/fuzz
+```
+
+A failure names its case and the `Random` seed that replays it.
+`round_trip_fuzz_test.dart` prints random documents and coordinates and
+parses them back; `hostile_text_fuzz_test.dart` feeds random and mutated
+text to every parser entry point and checks that it reports, within the
+sink limit, and never throws.
 
 ## License
 

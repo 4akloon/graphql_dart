@@ -35,6 +35,7 @@ final class AstJson {
     Selection() ||
     VariableDefinition() => _executable(node),
     TypeSystemExtension() => _extension(node),
+    SchemaCoordinate() => _coordinate(node),
     _ => _typeSystem(node),
   };
 
@@ -54,6 +55,31 @@ final class AstJson {
   /// A list graphql-js leaves `undefined` when absent, such as `arguments`.
   List<Object?>? _optional(List<Node> nodes) =>
       nodes.isEmpty ? null : _all(nodes);
+
+  Map<String, Object?> _coordinate(SchemaCoordinate node) => switch (node) {
+    TypeCoordinate(:final name) => _node(node, 'TypeCoordinate', {
+      'name': of(name),
+    }),
+    MemberCoordinate(:final name, :final memberName) => _node(
+      node,
+      'MemberCoordinate',
+      {'name': of(name), 'memberName': of(memberName)},
+    ),
+    ArgumentCoordinate(:final name, :final fieldName, :final argumentName) =>
+      _node(node, 'ArgumentCoordinate', {
+        'name': of(name),
+        'fieldName': of(fieldName),
+        'argumentName': of(argumentName),
+      }),
+    DirectiveCoordinate(:final name) => _node(node, 'DirectiveCoordinate', {
+      'name': of(name),
+    }),
+    DirectiveArgumentCoordinate(:final name, :final argumentName) => _node(
+      node,
+      'DirectiveArgumentCoordinate',
+      {'name': of(name), 'argumentName': of(argumentName)},
+    ),
+  };
 
   Map<String, Object?> _value(Value value) => switch (value) {
     Variable(:final name) => _node(value, 'Variable', {'name': of(name)}),
