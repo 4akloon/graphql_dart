@@ -353,6 +353,18 @@ enum DiagnosticCode(
   /// one (spec §5.3.3).
   scalarLeafs('GQL207'),
 
+  /// `GQL208`: an argument that the field or directive does not define
+  /// (spec §5.4.1).
+  knownArgumentNames('GQL208'),
+
+  /// `GQL209`: a field or directive that names an argument more than once
+  /// (spec §5.4.2).
+  uniqueArgumentNames('GQL209'),
+
+  /// `GQL210`: a non-null argument without a default value that a field or
+  /// directive does not provide (spec §5.4.3).
+  providedRequiredArguments('GQL210'),
+
   /// `GQL212`: a type name in a type condition or a variable definition
   /// that the schema does not define (spec §5.5.1.2, §5.8.1).
   knownTypeNames('GQL212'),

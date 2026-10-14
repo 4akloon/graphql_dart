@@ -231,3 +231,5 @@
   `VariablesAreInputTypesRule`, `ScalarLeafsRule` and
   `FieldsOnCorrectTypeRule` (`GQL205`, `GQL207`, `GQL212`, `GQL213`,
   `GQL226`).
+- The argument rules: `KnownArgumentNamesRule`, `UniqueArgumentNamesRule` and
+  `ProvidedRequiredArgumentsRule` (`GQL208`-`GQL210`).
