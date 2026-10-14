@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 
 import 'source.dart';
+import 'source_excerpt.dart';
 import 'source_location.dart';
 
 /// A range of a [Source]: from [start] up to, not including, [end], both
@@ -28,6 +29,10 @@ final class const SourceSpan(
 
   /// The text the span covers.
   String get text => source.body.substring(start, end);
+
+  /// [start] shown in its lines with a caret, as graphql-js's
+  /// `printLocation`; see [SourceExcerpt].
+  String get excerpt => const SourceExcerpt().of(source, location);
 
   @override
   bool operator ==(Object other) =>

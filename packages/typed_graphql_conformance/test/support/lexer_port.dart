@@ -76,6 +76,14 @@ final class LexerPort {
     return const ErrorJson().of(sink.diagnostics.first);
   }
 
+  /// `String(error)` for the first diagnostic of lexing one token of
+  /// [text].
+  String printedSyntaxError(String text) {
+    final sink = DiagnosticSink();
+    Lexer(Source(text), sink).advance();
+    return const ErrorJson().printed(sink.diagnostics.first);
+  }
+
   /// [kind] as graphql-js's `TokenKind` value, such as `Name` or `{`.
   String kindOf(TokenKind kind) => kind.isPunctuator
       ? kind.description.replaceAll('"', '')

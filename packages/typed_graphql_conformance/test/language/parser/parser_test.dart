@@ -24,8 +24,6 @@ void main() {
   }
 
   group('Parser', () {
-    // Adapted: String(error) adds a printLocation excerpt, which arrives in
-    // M2b; Dart checks the message, the position and the location.
     test('parse provides useful errors', () {
       final failure = const Parser().parse(Source('{')).diagnostics.first;
 
@@ -34,6 +32,17 @@ void main() {
         error('Syntax Error: Expected Name, found <EOF>.', 1, 2),
       );
       expect(failure.span?.start, 1);
+
+      expect(
+        const ErrorJson().printed(failure),
+        dedent('''
+          Syntax Error: Expected Name, found <EOF>.
+
+          GraphQL request:1:2
+          1 | {
+            |  ^
+        '''),
+      );
 
       expect(
         port.syntaxError('''
@@ -61,17 +70,20 @@ void main() {
       );
     });
 
-    // Adapted: the printLocation excerpt arrives in M2b; Dart checks the
-    // message, the location and the source name.
     test('parse provides useful error when using source', () {
       final source = Source('query', name: 'MyQuery.graphql');
       final failure = const Parser().parse(source).diagnostics.first;
 
       expect(
-        const ErrorJson().of(failure),
-        error('Syntax Error: Expected "{", found <EOF>.', 1, 6),
+        const ErrorJson().printed(failure),
+        dedent('''
+          Syntax Error: Expected "{", found <EOF>.
+
+          MyQuery.graphql:1:6
+          1 | query
+            |      ^
+        '''),
       );
-      expect(failure.span?.source.name, 'MyQuery.graphql');
     });
 
     test('limits by a maximum number of tokens', () {

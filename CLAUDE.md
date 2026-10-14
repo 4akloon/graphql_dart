@@ -72,7 +72,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   1-based `SourceLocation` (column in UTF-16 code units). The table of line
   starts is built on the first call. `\r\n`, `\n` and `\r` end a line.
 - `SourceSpan(source, start, end)` is a range of offsets; a diagnostic points
-  at one.
+  at one. `SourceSpan.excerpt` (`SourceExcerpt`) shows its start in its
+  lines with a caret, as graphql-js's `printSourceLocation`.
 - `DiagnosticCode` is the catalog: one enum value per problem, id `GQLnxx`,
   a doc comment that says when it is reported. Ids are public API: never
   renumber, reuse or remove one. Ranges: `GQL0xx` syntax, `GQL1xx` type

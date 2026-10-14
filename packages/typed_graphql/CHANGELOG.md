@@ -62,3 +62,5 @@
 - `Parser.parseSchemaCoordinate`: a schema coordinate such as
   `Query.hero(episode:)` as a `ParseElementResult<SchemaCoordinate>`.
 - `Printer` prints schema coordinates, the same in both forms.
+- `SourceExcerpt` and `SourceSpan.excerpt`: a location shown in its lines
+  with a caret, as graphql-js's `printLocation` prints it.

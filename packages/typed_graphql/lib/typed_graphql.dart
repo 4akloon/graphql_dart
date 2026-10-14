@@ -10,6 +10,7 @@ export 'src/diagnostics/diagnostic_code.dart';
 export 'src/diagnostics/diagnostic_severity.dart';
 export 'src/diagnostics/diagnostic_sink.dart';
 export 'src/diagnostics/source.dart';
+export 'src/diagnostics/source_excerpt.dart';
 export 'src/diagnostics/source_location.dart';
 export 'src/diagnostics/source_span.dart';
 export 'src/language/ast/argument.dart';

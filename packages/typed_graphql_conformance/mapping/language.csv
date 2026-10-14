@@ -5,7 +5,7 @@ lexer-test.ts,Lexer,records line and column,ported,test/language/lexer_test.dart
 lexer-test.ts,Lexer,"can be Object.toStringified, JSON.stringified, or jsutils.inspected",skipped,,Dart tokens have no JS inspect/JSON protocol.
 lexer-test.ts,Lexer,skips whitespace and comments,ported,test/language/lexer_test.dart,
 lexer-test.ts,Lexer,reports unexpected characters,ported,test/language/lexer_test.dart,
-lexer-test.ts,Lexer,errors respect whitespace,adapted,test/language/lexer_test.dart,The printLocation source excerpt arrives in M2b: only message and location 3:2 are checked.
+lexer-test.ts,Lexer,errors respect whitespace,ported,test/language/lexer_test.dart,
 lexer-test.ts,Lexer,updates line numbers in error for file context,skipped,,Source has no locationOffset.
 lexer-test.ts,Lexer,updates column numbers in error for file context,skipped,,Source has no locationOffset.
 lexer-test.ts,Lexer,lexes strings,ported,test/language/lexer_strings_test.dart,
@@ -48,8 +48,8 @@ blockString-test.ts,printBlockString,correctly prints single-line with leading s
 blockString-test.ts,printBlockString,correctly prints single-line with trailing backslash,ported,test/language/block_string_test.dart,
 blockString-test.ts,printBlockString,correctly prints multi-line with internal indent,ported,test/language/block_string_test.dart,
 blockString-test.ts,printBlockString,correctly prints string with a first line indentation,ported,test/language/block_string_test.dart,
-parser-test.ts,Parser,parse provides useful errors,adapted,test/language/parser/parser_test.dart,"The printLocation excerpt of String(error) arrives in M2b: Dart checks message, position and location."
-parser-test.ts,Parser,parse provides useful error when using source,adapted,test/language/parser/parser_test.dart,"The printLocation excerpt arrives in M2b: Dart checks message, location and source name."
+parser-test.ts,Parser,parse provides useful errors,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,parse provides useful error when using source,ported,test/language/parser/parser_test.dart,
 parser-test.ts,Parser,limits by a maximum number of tokens,ported,test/language/parser/parser_test.dart,
 parser-test.ts,Parser,exposes the tokenCount,adapted,test/language/parser/parser_test.dart,The parser exposes no tokenCount: Lexer.tokenCount after reading the document is checked.
 parser-test.ts,Parser,parses variable inline values,ported,test/language/parser/parser_test.dart,
@@ -210,3 +210,8 @@ schemaCoordinateLexer-test.ts,SchemaCoordinateLexer,can be stringified,skipped,,
 schemaCoordinateLexer-test.ts,SchemaCoordinateLexer,tracks a schema coordinate,ported,test/language/schema_coordinate_lexer_test.dart,
 schemaCoordinateLexer-test.ts,SchemaCoordinateLexer,forbids ignored tokens,ported,test/language/schema_coordinate_lexer_test.dart,
 schemaCoordinateLexer-test.ts,SchemaCoordinateLexer,lex reports a useful syntax errors,ported,test/language/schema_coordinate_lexer_test.dart,
+printLocation-test.ts,printSourceLocation,prints minified documents,ported,test/language/print_location_test.dart,
+printLocation-test.ts,printSourceLocation,prints single digit line number with no padding,adapted,test/language/print_location_test.dart,"Source has no locationOffset: eight line breaks put the error on line 9, so the excerpt also shows line 8."
+printLocation-test.ts,printSourceLocation,prints line numbers with correct padding,adapted,test/language/print_location_test.dart,"Source has no locationOffset: eight line breaks put the error on line 9, so the excerpt also shows line 8."
+source-test.ts,Source,can be Object.toStringified,skipped,,Symbol.toStringTag is JavaScript only.
+source-test.ts,Source,rejects invalid locationOffset,skipped,,Source has no locationOffset.

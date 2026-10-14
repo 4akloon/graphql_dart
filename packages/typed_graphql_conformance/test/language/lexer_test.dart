@@ -3,11 +3,13 @@
 import 'package:test/test.dart';
 
 import '../support/contain.dart';
+import '../support/dedent.dart';
 import '../support/lexer_port.dart';
 
 void main() {
   const port = LexerPort();
   const contain = Contain();
+  const dedent = Dedent();
 
   void expectSyntaxError(String text, String message, int line, int column) {
     expect(port.syntaxError(text), {
@@ -61,13 +63,18 @@ void main() {
       expectSyntaxError('.', 'Syntax Error: Unexpected character: ".".', 1, 1);
     });
 
-    // Adapted: the printLocation source excerpt arrives in M2b, so only the message and the location are compared.
     test('errors respect whitespace', () {
-      expectSyntaxError(
-        '\n\n ~\n',
-        'Syntax Error: Unexpected character: "~".',
-        3,
-        2,
+      expect(
+        port.printedSyntaxError(['', '', ' ~', ''].join('\n')),
+        dedent('''
+          Syntax Error: Unexpected character: "~".
+
+          GraphQL request:3:2
+          2 |
+          3 |  ~
+            |  ^
+          4 |
+        '''),
       );
     });
 
