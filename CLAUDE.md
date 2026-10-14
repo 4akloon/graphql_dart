@@ -253,6 +253,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `text` writes the operation and its three fragments line by line (the
   `ofType` levels with a loop). `full` is every September2025 field:
   directive deprecation is working-draft and stays off.
+  `Schema.toIntrospection` runs `IntrospectionWriter` (the `__schema`
+  object, which types and directives are listed), `TypeWriter` (`FullType`
+  and `InputValue`, only the fields the query reads) and `TypeRefWriter`
+  (`TypeRef`, built from the innermost level out, cut at `typeDepth`);
+  an unknown type is an `ArgumentError`, not a guessed kind.
 - `validation/SchemaValidator` (const): `validate(schema)` returns the
   sealed `SchemaValidationResult` (`ValidSchema` | `InvalidSchema(schema,
   diagnostics)`); `ValidSchema` has a private constructor and

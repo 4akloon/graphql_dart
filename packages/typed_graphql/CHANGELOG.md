@@ -176,3 +176,9 @@
   value with `includes*` flags and `typeDepth` (0 to 100, else a
   `RangeError`); `text` is the query. `IntrospectionQuery.full` reads
   every field September2025 introspection has.
+- `Schema.toIntrospection([query])` writes the schema as the `data` of its
+  answer to an `IntrospectionQuery` (graphql-js's
+  `introspectionFromSchema`), `IntrospectionQuery.full` by default: the
+  declared types, the built-in scalars they use, then the introspection
+  types; the declared directives, then the built-in ones. A reference to
+  a type the schema lacks is an `ArgumentError`.

@@ -1,7 +1,10 @@
 import '../diagnostics/source_span.dart';
 import '../language/ast/operation_type.dart';
 import '../language/ast/type_ref.dart';
+import '../protocol/json_value.dart';
 import 'build/built_ins.dart';
+import 'introspection/introspection_query.dart';
+import 'introspection/introspection_writer.dart';
 import 'model/applied_directive.dart';
 import 'model/schema_directive.dart';
 import 'model/schema_type.dart';
@@ -116,6 +119,16 @@ final class Schema({
     .mutation => mutationTypeName,
     .subscription => subscriptionTypeName,
   };
+
+  /// This schema as the `data` of its answer to [query] (graphql-js's
+  /// `introspectionFromSchema`; spec §4), which `SchemaBuilder`'s
+  /// `fromIntrospection` reads back.
+  ///
+  /// It describes a schema that validation accepts: a reference to a type
+  /// the schema lacks is an [ArgumentError].
+  JsonObject toIntrospection([
+    IntrospectionQuery query = IntrospectionQuery.full,
+  ]) => IntrospectionWriter(this, query).write();
 
   /// The named type inside [type]'s wrappers; null when no type has its
   /// name.

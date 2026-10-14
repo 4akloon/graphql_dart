@@ -34,3 +34,53 @@ query IntrospectionQuery {
 true
 false
 ```
+
+## Answering from a schema
+
+`schema.toIntrospection(query)` writes the `data` a server answers the query
+with, as a `JsonObject`. It writes only the fields the query reads, so the
+answer to a narrower query is smaller. A union lists every member as a
+possible type, even one that is not an object type, so the validator still
+sees it on the client. Introspect a validated schema: a reference to a type
+the schema does not have is an `ArgumentError`.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  final source = Source('''
+type Query { hero: Character }
+interface Character { name: String! }
+type Droid implements Character { name: String! }
+''');
+  final document = const Parser().parse(source).requireDocument();
+  final schema = switch (const SchemaBuilder().fromSdl(document)) {
+    BuildSuccess(:final schema) => schema,
+    BuildFailure(:final diagnostics) => throw StateError('$diagnostics'),
+  };
+
+  final result = schema.toIntrospection();
+  if (result.fields['__schema'] case JsonObject(:final fields)) {
+    print(fields['queryType']);
+    if (fields['types'] case JsonArray(:final items)) {
+      for (final type in items) {
+        if (type case JsonObject(
+          fields: {
+            'name': JsonString(value: final name),
+            'possibleTypes': JsonArray(items: final possible),
+          },
+        )) {
+          print('$name: $possible');
+        }
+      }
+    }
+  }
+}
+```
+
+It prints:
+
+```text
+{"name":"Query","kind":"OBJECT"}
+Character: [{"kind":"OBJECT","name":"Droid","ofType":null}]
+```
