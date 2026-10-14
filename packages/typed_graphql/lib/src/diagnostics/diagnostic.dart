@@ -4,6 +4,9 @@ import 'source_location.dart';
 import 'source_span.dart';
 
 /// One problem found in a document, a schema or a payload; immutable.
+///
+/// Two diagnostics are equal when their code, severity, message, span and
+/// related spans are, so tests compare lists of them directly.
 final class Diagnostic(
   /// The stable code; its [DiagnosticCode.id] appears in messages.
   final DiagnosticCode code,
@@ -37,11 +40,36 @@ final class Diagnostic(
     for (final place in related) place.location,
   ];
 
+  @override
+  bool operator ==(Object other) =>
+      other is Diagnostic &&
+      other.code == code &&
+      other.severity == severity &&
+      other.message == message &&
+      other.span == span &&
+      _sameSpans(other.related, related);
+
+  @override
+  int get hashCode =>
+      Object.hash(code, severity, message, span, Object.hashAll(related));
+
   /// `name:line:column: severity GQLnnn: message`, without the place when
   /// there is no [span]: the form a terminal links to the source.
   @override
   String toString() {
     final place = span == null ? '' : '$span: ';
     return '$place${severity.name} ${code.id}: $message';
+  }
+
+  static bool _sameSpans(List<SourceSpan> left, List<SourceSpan> right) {
+    if (left.length != right.length) {
+      return false;
+    }
+    for (var i = 0; i < left.length; i++) {
+      if (left[i] != right[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 }

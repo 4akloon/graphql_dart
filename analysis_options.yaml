@@ -7,6 +7,12 @@
 # must print "No issues found!".
 include: package:lints/recommended.yaml
 
+analyzer:
+  language:
+    # Inference never falls back to dynamic silently (M2a).
+    strict-inference: true
+    strict-raw-types: true
+
 linter:
   rules:
     # Types and signatures (Effective Dart: Design, Usage)
@@ -112,7 +118,7 @@ linter:
     - sort_pub_dependencies
 
     # Staged, not enabled yet: enable one at a time and fix its findings.
-    #   strict-casts, strict-inference, strict-raw-types (analyzer: language:)
+    #   strict-casts (analyzer: language:)
     #   avoid_positional_boolean_parameters, avoid_redundant_argument_values,
     #   avoid_equals_and_hash_code_on_mutable_classes (add @immutable),
     #   cast_nullable_to_non_nullable, comment_references, discarded_futures,

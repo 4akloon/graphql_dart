@@ -76,7 +76,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   renumber, reuse or remove one. Ranges: `GQL0xx` syntax, `GQL1xx` type
   system, `GQL2xx` operation validation, `GQL3xx` coercion and execution,
   `GQL4xx` transports, `GQL5xx` code generation; `GQL000` is the sink limit.
-- `Diagnostic(code, severity, message, span:, related:)`.
+- `Diagnostic(code, severity, message, span:, related:)`; equal when all
+  five are, so tests compare lists of diagnostics.
 - `DiagnosticSink` collects diagnostics in report order and stops after
   `maxErrors` errors (default 100) with one `GQL000`. Lexer, parser and rules
   take a sink through their constructor; the public API turns it into a
@@ -105,7 +106,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 
 The rules follow typed_openapi's (R10.1). `analysis_options.yaml` is adapted
 from typed_openapi's: its comments are this repo's own, and it additionally
-enables `simple_directive_paths`, `no_dynamic_casts` and `no_raw_types`.
+enables `simple_directive_paths`, `no_dynamic_casts` and `no_raw_types`, and
+the analyzer's `strict-inference` and `strict-raw-types` (write `<Object?>[]`
+where a literal has no context type).
 The workspace suite in `test/quality/` (run `dart test` at the root) enforces
 what a lint cannot (R10.2).
 

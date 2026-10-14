@@ -98,7 +98,7 @@ void main() {
 
     test('read rejects nesting past maxDepth too', () {
       const reader = JsonReader(maxDepth: 2);
-      expect(reader.read([[]]), isA<DecodeSuccess<JsonValue>>());
+      expect(reader.read([<Object?>[]]), isA<DecodeSuccess<JsonValue>>());
       expect(
         reader.read([
           [<Object?>[]],
