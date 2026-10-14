@@ -426,6 +426,7 @@ it) and names another guide by its topic. Every exported public type has
 folder needs its category in `dartdoc_options.yaml` and its guide. `dart doc`
 reports 0 warnings. A stage that adds API adds its section to the guide of
 its layer in the same commit.
+
 A stage that adds a capability adds its query to `docs/discovery.md`, its
 line in the core's README and its `llms.txt` entry; a README, a pubspec
 description and `llms.txt` say only what works today. A link in a package

@@ -48,6 +48,8 @@ stage that makes it true.
 6. print GraphQL schema SDL dart
 7. decode GraphQL response errors dart
 8. GraphQL request response JSON types dart
+9. validate a GraphQL schema dart
+10. GraphQL introspection query schema dart
 
 Not yet targeted, because they do not work yet: validate an operation (M4),
 execute (M5), serve (M7), generate a client (M10). The
@@ -73,8 +75,8 @@ state the topic rules, so their source is not confirmed on that page.
   `https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql`
   (the form the pub-dev maintainers give in
   [dart-lang/pub-dev#5068](https://github.com/dart-lang/pub-dev/issues/5068)).
-  This works only with **repository verification** (public GitHub repository
-  whose pubspecs point back at it). The generated API reference does not
+  This works only with **repository verification** (pub.dev verifies the
+  repository; the steps are unconfirmed, see the open check below). The generated API reference does not
   rewrite relative links, so doc comments keep using none (already a rule from
   M3c).
 - `issue_tracker` stays; images and badges use absolute URLs.
