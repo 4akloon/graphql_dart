@@ -163,7 +163,7 @@ stage.
 
 | ID | Requirement | Tag | Stage |
 |---|---|---|---|
-| R10.1 | typed_openapi code rules; its `analysis_options.yaml` verbatim | MUST | M1 |
+| R10.1 | typed_openapi code rules; its `analysis_options.yaml` adapted from typed_openapi's (comments rewritten; extra lints `simple_directive_paths`, `no_dynamic_casts`, `no_raw_types`) | MUST | M1 |
 | R10.2 | Size-limit ratchet and core layer-direction tests | MUST | M1 |
 | R10.3 | `typed_graphql_conformance` with ported graphql-js suites and a coverage mapping table | MUST | M2 onward |
 | R10.4 | Parse → print → parse fuzzing | MUST | M2 |

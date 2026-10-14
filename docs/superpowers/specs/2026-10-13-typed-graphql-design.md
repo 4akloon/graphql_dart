@@ -394,7 +394,8 @@ data builders; `typed_graphql_flutter` if needed.
 ## 7. Quality, conformance and documentation
 
 **Code rules.** The typed_openapi rules (its `CLAUDE.md`, `CONTRIBUTING.md`) apply,
-with `analysis_options.yaml` copied verbatim and the SDK floor raised to 3.13
+with `analysis_options.yaml` adapted from typed_openapi's (comments rewritten; extra lints
+`simple_directive_paths`, `no_dynamic_casts`, `no_raw_types`) and the SDK floor raised to 3.13
 (primary constructors allowed). In short: files in `lib/` ≤ 300 lines, test files
 ≤ 500, methods ≤ 40, ≤ 5 parameters, nesting ≤ 3, one public class or sealed family
 per file, all enforced by a ratchet test; no `part` files, no top-level functions

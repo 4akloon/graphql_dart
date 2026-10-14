@@ -19,7 +19,7 @@ A test in the core enforces the order of the layers.
 - `sdk: ^3.13.0` in every package (R0.5). Workspace members use `resolution: workspace`. Use stable Dart 3.13 features only, with no experiment flags.
 - The core package is pure Dart: no `dart:io` and no dependency except `meta`. It must compile with dart2js and dart2wasm (R0.6).
 - M1 declares no dependencies other than the workspace packages, `meta`, `test` and `lints`.
-- `analysis_options.yaml` is typed_openapi's, verbatim (R10.1). Never silence a lint: no `// ignore:` anywhere.
+- `analysis_options.yaml` is adapted from typed_openapi's (R10.1): comments rewritten, plus the lints `simple_directive_paths`, `no_dynamic_casts`, `no_raw_types`. Findings 4 and Task 1 below record the original verbatim plan, which the user replaced. Never silence a lint: no `// ignore:` anywhere.
 - Code limits (`CLAUDE.md`, enforced from Task 4 on):
   - a file in `lib/` has at most 300 lines and a test file at most 500;
   - a method has at most 40 lines and at most 5 parameters;
@@ -5946,7 +5946,7 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 
 ## Code rules
 
-The rules of typed_openapi, with its `analysis_options.yaml` verbatim (R10.1).
+The rules of typed_openapi, with its `analysis_options.yaml` adapted (R10.1).
 The workspace suite in `test/quality/` (run `dart test` at the root) enforces
 what a lint cannot (R10.2).
 
@@ -6724,7 +6724,7 @@ The M1 row of `docs/roadmap.md` lists these requirements. Each is quoted from `d
 | R0.6 | The core package is pure Dart: no `dart:io`, no dependencies except `meta`; it compiles with dart2js and dart2wasm | Task 1: the core pubspec has only `meta`. Task 5: `rejects dart:io and packages other than meta`, `lib/src follows the layer rule`. Tasks 9, 12 and 14: the core passes in Chrome with dart2js and dart2wasm. |
 | R1.7 (Source) | Every node has `start`/`end` offsets; `Source` computes line/column lazily | M1 has the `Source` part. Task 6: `Source.locationOf` builds the line table on the first call (`late final _lineStarts`), and `SourceSpan` carries `start`/`end` offsets. AST nodes get them in M2. |
 | R1.12 | Stable `DiagnosticCode` catalog with ranges `GQL0xx`–`GQL5xx`, each code documented | Task 7: `DiagnosticCode`, with the range table in its doc comment and `GQL000` documented. Tests: `every id is GQL and three digits`, `ids are unique and sorted`, `keeps the ids already published`. `public_member_api_docs` makes every new code carry a doc comment. |
-| R10.1 | typed_openapi code rules; its `analysis_options.yaml` verbatim | Task 1: the verbatim `analysis_options.yaml`. Task 4: the code rules of `CLAUDE.md` (limits, no `part`, no `dynamic`, no catch without `on`, no top-level functions, one public type per file, no grab-bag names). Task 13: `CLAUDE.md` and `CONTRIBUTING.md` state them. |
+| R10.1 | typed_openapi code rules; its `analysis_options.yaml` adapted from typed_openapi's | Task 1: the adapted `analysis_options.yaml`. Task 4: the code rules of `CLAUDE.md` (limits, no `part`, no `dynamic`, no catch without `on`, no top-level functions, one public type per file, no grab-bag names). Task 13: `CLAUDE.md` and `CONTRIBUTING.md` state them. |
 | R10.2 | Size-limit ratchet and core layer-direction tests | Task 4: `code_rules_test.dart`, with empty allowlists that only shrink. Task 5: `layers_test.dart`. Task 14, Step 2 proves that both fail on a violation. |
 | R10.5 | CI: minimum SDK + stable; AOT runs; dart2js and dart2wasm for the core and the client; publish dry-run | Task 12: `ci.yml`, with the jobs `test` (3.13.0 and stable), `aot`, `web` (core) and `publish-dry-run`. The client joins `web` in M11 (finding 8). |
 | R11.4 | Process documents in English (`docs/`), `CLAUDE.md`, `CONTRIBUTING.md` | Task 13: `CLAUDE.md`, `CONTRIBUTING.md`, `docs/superpowers/HANDOFF.md`, the `docs/README.md` index. Task 14 updates the handoff. |
