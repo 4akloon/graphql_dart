@@ -13,6 +13,8 @@ void main() {
       id(format: String): ID
     }
 
+    union Result = Business
+
     type Business implements Node {
       id(format: String): ID
       email: String @private(scope: "loggedIn")
@@ -55,6 +57,12 @@ void main() {
         FieldTarget(business, business.fieldNamed('email')!),
       );
       expect(resolve('Node.id'), FieldTarget(node, node.fieldNamed('id')!));
+    });
+
+    test('gives null for a member of a union, which has no fields', () {
+      expect(resolve('Result'), TypeTarget(schema.typeNamed('Result')!));
+      expect(resolve('Result.Business'), isNull);
+      expect(resolve('Result.x'), isNull);
     });
 
     test('resolves an input field and an enum value', () {
