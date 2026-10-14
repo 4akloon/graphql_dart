@@ -345,6 +345,25 @@ enum DiagnosticCode(
   /// `@include` there (spec §5.2.4.1).
   singleFieldSubscriptions('GQL204'),
 
+  /// `GQL205`: a field the parent type does not define and that is no
+  /// meta-field (spec §5.3.1).
+  fieldsOnCorrectType('GQL205'),
+
+  /// `GQL207`: a leaf field with a selection, or a composite field without
+  /// one (spec §5.3.3).
+  scalarLeafs('GQL207'),
+
+  /// `GQL212`: a type name in a type condition or a variable definition
+  /// that the schema does not define (spec §5.5.1.2, §5.8.1).
+  knownTypeNames('GQL212'),
+
+  /// `GQL213`: a fragment or inline fragment whose type condition is not
+  /// an object, interface or union type (spec §5.5.1.3).
+  fragmentsOnCompositeTypes('GQL213'),
+
+  /// `GQL226`: a variable whose type is not an input type (spec §5.8.2).
+  variablesAreInputTypes('GQL226'),
+
   /// `GQL230`: validating a document needed more work than the
   /// validator's step budget allows, such as fragments that expand to
   /// more fields than the budget, or many operations each spreading a

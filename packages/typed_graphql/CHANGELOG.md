@@ -227,3 +227,7 @@
 - The operation rules: `ExecutableDefinitionsRule`, `KnownOperationTypesRule`,
   `UniqueOperationNamesRule`, `LoneAnonymousOperationRule` and
   `SingleFieldSubscriptionsRule` (`GQL200`-`GQL204`).
+- The type rules: `KnownTypeNamesRule`, `FragmentsOnCompositeTypesRule`,
+  `VariablesAreInputTypesRule`, `ScalarLeafsRule` and
+  `FieldsOnCorrectTypeRule` (`GQL205`, `GQL207`, `GQL212`, `GQL213`,
+  `GQL226`).

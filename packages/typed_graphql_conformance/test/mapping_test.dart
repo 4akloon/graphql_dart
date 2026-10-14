@@ -85,10 +85,15 @@ void main() {
       prefix: '',
       covered: const [
         'validation/__tests__/ExecutableDefinitionsRule-test.ts',
+        'validation/__tests__/FieldsOnCorrectTypeRule-test.ts',
+        'validation/__tests__/FragmentsOnCompositeTypesRule-test.ts',
         'validation/__tests__/KnownOperationTypesRules-test.ts',
+        'validation/__tests__/KnownTypeNamesRule-test.ts',
         'validation/__tests__/LoneAnonymousOperationRule-test.ts',
+        'validation/__tests__/ScalarLeafsRule-test.ts',
         'validation/__tests__/SingleFieldSubscriptionsRule-test.ts',
         'validation/__tests__/UniqueOperationNamesRule-test.ts',
+        'validation/__tests__/VariablesAreInputTypesRule-test.ts',
       ],
     ),
   ];

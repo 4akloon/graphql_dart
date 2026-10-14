@@ -5,10 +5,15 @@ import '../language/visitor/ast_walker.dart';
 import '../schema/validation/schema_validation_result.dart';
 import 'document_validation_result.dart';
 import 'rules/executable_definitions_rule.dart';
+import 'rules/fields_on_correct_type_rule.dart';
+import 'rules/fragments_on_composite_types_rule.dart';
 import 'rules/known_operation_types_rule.dart';
+import 'rules/known_type_names_rule.dart';
 import 'rules/lone_anonymous_operation_rule.dart';
+import 'rules/scalar_leafs_rule.dart';
 import 'rules/single_field_subscriptions_rule.dart';
 import 'rules/unique_operation_names_rule.dart';
+import 'rules/variables_are_input_types_rule.dart';
 import 'validation_context.dart';
 import 'validation_rule.dart';
 
@@ -53,6 +58,11 @@ final class const DocumentValidator({
     UniqueOperationNamesRule(),
     LoneAnonymousOperationRule(),
     SingleFieldSubscriptionsRule(),
+    KnownTypeNamesRule(),
+    FragmentsOnCompositeTypesRule(),
+    VariablesAreInputTypesRule(),
+    ScalarLeafsRule(),
+    FieldsOnCorrectTypeRule(),
   ];
 
   /// Validates [document] against [schema]; diagnostics point into
