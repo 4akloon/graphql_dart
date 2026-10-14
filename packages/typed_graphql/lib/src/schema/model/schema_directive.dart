@@ -3,6 +3,7 @@ import '../../language/ast/directive_location.dart';
 import 'applied_directive.dart';
 import 'applied_directives.dart';
 import 'input_value.dart';
+import 'named_lookup.dart';
 
 /// A directive definition, `"desc" directive @name(args) repeatable on
 /// LOCATIONS` (spec §3.13).
@@ -46,13 +47,12 @@ final class SchemaDirective(
   String? get deprecationReason =>
       AppliedDirectives(appliedDirectives).deprecationReason;
 
+  // late: reads [arguments], which is set before the first lookup.
+  late final NamedLookup<InputValue> _argumentLookup = NamedLookup(
+    arguments,
+    (argument) => argument.name,
+  );
+
   /// The argument named [name]; null when there is none.
-  InputValue? argumentNamed(String name) {
-    for (final argument in arguments) {
-      if (argument.name == name) {
-        return argument;
-      }
-    }
-    return null;
-  }
+  InputValue? argumentNamed(String name) => _argumentLookup.named(name);
 }

@@ -26,6 +26,10 @@ final class DefaultValueRules(
       return;
     }
     for (final problem in ValueChecker(schema).check(value, input.type)) {
+      // The problems are found as they are read: stop at the limit.
+      if (report.isFull) {
+        return;
+      }
       report.error(
         .invalidDefaultValue,
         '$coordinate has invalid default value${problem.pathText}: '

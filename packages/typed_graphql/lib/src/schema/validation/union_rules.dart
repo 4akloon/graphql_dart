@@ -1,3 +1,4 @@
+import '../../diagnostics/source_span.dart';
 import '../model/schema_type.dart';
 import '../schema.dart';
 import 'type_reference_rules.dart';
@@ -26,30 +27,35 @@ final class UnionRules(
       );
     }
     final included = <String>{};
+    // One pass over the members; the places of a name are only needed by
+    // the errors, and a union of M repeats must not cost M times M.
+    final places = <String, List<SourceSpan?>>{};
     for (final member in type.memberTypes) {
+      (places[member.name] ??= []).add(member.span);
+    }
+    for (final member in type.memberTypes) {
+      if (report.isFull) {
+        return;
+      }
       if (!TypeReferenceRules(
         report,
         schema,
       ).isKnown(member.name, member.span)) {
         continue;
       }
-      final spans = [
-        for (final reference in type.memberTypes)
-          if (reference.name == member.name) reference.span,
-      ];
       if (!included.add(member.name)) {
         report.error(
           .repeatedUnionMember,
           'Union type ${type.name} can only include type ${member.name} '
           'once.',
-          spans,
+          places[member.name]!,
         );
       } else if (schema.typeNamed(member.name) is! ObjectType) {
         report.error(
           .nonObjectUnionMember,
           'Union type ${type.name} can only include Object types, it cannot '
           'include ${member.name}.',
-          spans,
+          places[member.name]!,
         );
       }
     }

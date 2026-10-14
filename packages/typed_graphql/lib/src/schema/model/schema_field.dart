@@ -3,6 +3,7 @@ import '../../language/ast/type_ref.dart';
 import 'applied_directive.dart';
 import 'applied_directives.dart';
 import 'input_value.dart';
+import 'named_lookup.dart';
 
 /// A field of an object or interface type, `"desc" name(args): Type @d`
 /// (spec §3.6).
@@ -41,13 +42,12 @@ final class SchemaField(
   String? get deprecationReason =>
       AppliedDirectives(appliedDirectives).deprecationReason;
 
+  // late: reads [arguments], which is set before the first lookup.
+  late final NamedLookup<InputValue> _argumentLookup = NamedLookup(
+    arguments,
+    (argument) => argument.name,
+  );
+
   /// The argument named [name]; null when there is none.
-  InputValue? argumentNamed(String name) {
-    for (final argument in arguments) {
-      if (argument.name == name) {
-        return argument;
-      }
-    }
-    return null;
-  }
+  InputValue? argumentNamed(String name) => _argumentLookup.named(name);
 }

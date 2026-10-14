@@ -100,13 +100,14 @@ final class _CycleReport(
 
   void run() {
     for (final state in states.values) {
+      if (report.isFull) return;
       if (!state.hasFiniteValue && !_visited.contains(state)) _walk(state);
     }
   }
 
   void _walk(_State root) {
     _enter(root);
-    while (_frames.isNotEmpty) {
+    while (_frames.isNotEmpty && !report.isFull) {
       final frame = _frames.last;
       if (frame.next == frame.state.targets.length) {
         _frames.removeLast();
@@ -135,6 +136,9 @@ final class _CycleReport(
   }
 
   void _report(_State target, int position) {
+    // A cycle's text costs its length; once the report is full nobody
+    // reads it.
+    if (report.isFull) return;
     final cycle = _path.sublist(position);
     report.error(
       .infiniteInputValue,

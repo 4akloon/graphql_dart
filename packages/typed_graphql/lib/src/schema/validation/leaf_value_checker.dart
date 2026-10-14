@@ -13,8 +13,10 @@ final class const LeafValueChecker() {
   this;
 
   static const Printer _printer = Printer();
-  static final BigInt _minInt = BigInt.from(-2147483648);
-  static final BigInt _maxInt = BigInt.from(2147483647);
+  static const int _minInt = -2147483648;
+  static const int _maxInt = 2147483647;
+  static const int _longestInt = 11;
+  static final RegExp _integer = RegExp(r'^-?(0|[1-9][0-9]*)$');
 
   /// The message of why [value] is not a value of [type]; null when it is.
   String? errorOf(Value value, SchemaType type) => switch (type) {
@@ -33,13 +35,17 @@ final class const LeafValueChecker() {
   };
 
   String? _intError(Value value) {
-    // A node built in code may hold any text; tryParse keeps it an error.
+    // A node built in code may hold any text, which stays an error. The
+    // text is checked before it is parsed: parsing digits takes quadratic
+    // time, and neither "0x10" nor "+5" is an integer literal.
     final text = value is IntValue ? value.value : null;
-    final number = text == null ? null : BigInt.tryParse(text);
-    if (number == null) {
+    if (text == null || !_integer.hasMatch(text)) {
       return 'Int cannot represent non-integer value: ${_printer.print(value)}';
     }
-    if (number < _minInt || number > _maxInt) {
+    // No literal of more than eleven characters (ten digits and a sign) is
+    // in range, and the rule needs no number to say so.
+    final number = text.length > _longestInt ? null : int.parse(text);
+    if (number == null || number < _minInt || number > _maxInt) {
       return 'Int cannot represent non 32-bit signed integer value: $text';
     }
     return null;

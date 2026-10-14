@@ -5,6 +5,8 @@ import '../../language/ast/value.dart';
 import '../../language/printer/printer.dart';
 import '../model/schema_type.dart';
 import '../schema.dart';
+import 'bounded_value_printer.dart';
+import 'input_object_shape.dart';
 import 'leaf_value_checker.dart';
 import 'value_problem.dart';
 
@@ -27,56 +29,72 @@ final class ValueChecker(
   static const Printer _printer = Printer();
 
   /// The problems of [value] as a value of [type], in report order.
-  List<ValueProblem> check(Value value, TypeRef type) {
-    final problems = <ValueProblem>[];
+  ///
+  /// The problems are found as the result is read, so a caller that stops
+  /// at its error limit stops the work too.
+  Iterable<ValueProblem> check(Value value, TypeRef type) sync* {
+    final shapes = <InputObjectType, InputObjectShape>{};
     final work = <_Work>[_Check(value, type, null)];
     while (work.isNotEmpty) {
       switch (work.removeLast()) {
-        case _Report(:final problem):
-          problems.add(problem);
+        case _Report(:final message, :final node, :final path):
+          yield ValueProblem(message(), node, _Path.keys(path));
         case _Check(:final value, :final type, :final path):
-          work.addAll(_step(value, type, path).reversed);
+          work.addAll(_step(value, type, path, shapes).reversed);
       }
     }
-    return problems;
   }
 
-  List<_Work> _step(Value value, TypeRef type, _Path? path) =>
-      switch ((value, type)) {
-        (Variable(), _) => [
-          _report(
-            'Expected a constant value, found: ${_printer.print(value)}.',
-            value,
-            path,
-          ),
-        ],
-        (NullValue(), NonNullType()) => [
-          _report(
-            'Expected value of non-null type "${_printer.print(type)}" not '
-            'to be null.',
-            value,
-            path,
-          ),
-        ],
-        (_, NonNullType(type: final inner)) => [_Check(value, inner, path)],
-        (NullValue(), _) => const [],
-        (ListValue(:final values), ListType(type: final inner)) => [
-          for (final (index, item) in values.indexed)
-            _Check(item, inner, _Path(path, index)),
-        ],
-        // A value that is not a list is a list of one (spec §3.11).
-        (_, ListType(type: final inner)) => [_Check(value, inner, path)],
-        (_, NamedType(:final name)) => switch (schema.typeNamed(name.value)) {
-          final InputObjectType object => _object(value, object, path),
-          final type? => [
-            if (const LeafValueChecker().errorOf(value, type) case final m?)
-              _report(m, value, path),
-          ],
-          null => const [],
-        },
-      };
+  List<_Work> _step(
+    Value value,
+    TypeRef type,
+    _Path? path,
+    Map<InputObjectType, InputObjectShape> shapes,
+  ) => switch ((value, type)) {
+    (Variable(), _) => [
+      _report(
+        'Expected a constant value, found: ${_printer.print(value)}.',
+        value,
+        path,
+      ),
+    ],
+    (NullValue(), NonNullType()) => [
+      _report(
+        'Expected value of non-null type "${_printer.print(type)}" not '
+        'to be null.',
+        value,
+        path,
+      ),
+    ],
+    (_, NonNullType(type: final inner)) => [_Check(value, inner, path)],
+    (NullValue(), _) => const [],
+    (ListValue(:final values), ListType(type: final inner)) => [
+      for (final (index, item) in values.indexed)
+        _Check(item, inner, _Path(path, index)),
+    ],
+    // A value that is not a list is a list of one (spec §3.11).
+    (_, ListType(type: final inner)) => [_Check(value, inner, path)],
+    (_, NamedType(:final name)) => switch (schema.typeNamed(name.value)) {
+      final InputObjectType object => _object(
+        value,
+        shapes[object] ??= InputObjectShape(object),
+        object,
+        path,
+      ),
+      final type? => [
+        if (const LeafValueChecker().errorOf(value, type) case final m?)
+          _report(m, value, path),
+      ],
+      null => const [],
+    },
+  };
 
-  List<_Work> _object(Value value, InputObjectType type, _Path? path) {
+  List<_Work> _object(
+    Value value,
+    InputObjectShape shape,
+    InputObjectType type,
+    _Path? path,
+  ) {
     if (value is! ObjectValue) {
       return [
         _report(
@@ -87,37 +105,70 @@ final class ValueChecker(
         ),
       ];
     }
-    // Only for lookups; as graphql-js's keyMap, a repeated field's last
-    // value counts.
-    final given = {for (final field in value.fields) field.name.value: field};
+    // Printed at most once, however many problems name this object.
+    final text = _ObjectText(value);
     return [
-      for (final field in type.fields)
-        if (given[field.name] case final node?)
-          _Check(node.value, field.type, _Path(path, field.name))
-        else if (field.type is NonNullType && field.defaultValue == null)
-          _report(
-            'Expected value of type "${type.name}" to include required field '
-            '"${field.name}", found: ${_printer.print(value)}.',
-            value,
-            path,
-          ),
+      ..._declaredFields(value, shape, type, path, text),
       for (final node in value.fields)
-        if (type.fieldNamed(node.name.value) == null)
-          _report(
-            'Expected value of type "${type.name}" not to include unknown '
-            'field "${node.name.value}", found: ${_printer.print(value)}.',
+        if (shape.indexOf(node.name.value) == null)
+          _reportLater(
+            () =>
+                'Expected value of type "${type.name}" not to include '
+                'unknown field "${node.name.value}", found: ${text.value}.',
             node,
             path,
           ),
-      if (type.isOneOf) ?_oneOf(value, type, path),
+      if (type.isOneOf) ?_oneOf(value, shape, type, path),
+    ];
+  }
+
+  // The fields the value gives, checked, and the required ones it lacks,
+  // reported, in declaration order. As graphql-js's keyMap, a repeated
+  // field's last value counts.
+  List<_Work> _declaredFields(
+    ObjectValue value,
+    InputObjectShape shape,
+    InputObjectType type,
+    _Path? path,
+    _ObjectText text,
+  ) {
+    final given = {for (final field in value.fields) field.name.value: field};
+    final entries = <(int, ObjectField?)>[
+      for (final MapEntry(:key, :value) in given.entries)
+        if (shape.indexOf(key) case final index?) (index, value),
+      for (final index in shape.requiredIndexes)
+        if (!given.containsKey(shape.fields[index].name)) (index, null),
+    ];
+    entries.sort((a, b) => a.$1.compareTo(b.$1));
+    return [
+      for (final (index, node) in entries)
+        if (node != null)
+          _Check(
+            node.value,
+            shape.fields[index].type,
+            _Path(path, shape.fields[index].name),
+          )
+        else
+          _reportLater(
+            () =>
+                'Expected value of type "${type.name}" to include required '
+                'field "${shape.fields[index].name}", found: ${text.value}.',
+            value,
+            path,
+          ),
     ];
   }
 
   // Spec §3.10 "OneOf Input Objects": exactly one field, not null.
-  _Work? _oneOf(ObjectValue value, InputObjectType type, _Path? path) {
+  _Work? _oneOf(
+    ObjectValue value,
+    InputObjectShape shape,
+    InputObjectType type,
+    _Path? path,
+  ) {
     final known = [
       for (final node in value.fields)
-        if (type.fieldNamed(node.name.value) != null) node,
+        if (shape.indexOf(node.name.value) != null) node,
     ];
     final message =
         'Within OneOf Input Object type "${type.name}", exactly one field '
@@ -134,7 +185,13 @@ final class ValueChecker(
   }
 
   static _Report _report(String message, Node node, _Path? path) =>
-      _Report(ValueProblem(message, node, _Path.keys(path)));
+      _Report(() => message, node, path);
+
+  static _Report _reportLater(
+    String Function() message,
+    Node node,
+    _Path? path,
+  ) => _Report(message, node, path);
 }
 
 sealed class _Work {}
@@ -161,6 +218,20 @@ final class _Path(final _Path? parent, final Object key) {
   }
 }
 
-final class _Report(final ValueProblem problem) extends _Work {
+// A problem whose message is built when it is read, so a problem that is
+// never read costs nothing.
+final class _Report(
+  final String Function() message,
+  final Node node,
+  final _Path? path,
+) extends _Work {
   this;
+}
+
+// The text of an object for the messages about it: made on first use and
+// shared, so an object with a thousand problems is printed once.
+final class _ObjectText(final ObjectValue object) {
+  this;
+
+  late final String value = const BoundedValuePrinter().print(object);
 }

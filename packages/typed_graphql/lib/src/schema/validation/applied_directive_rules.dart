@@ -108,6 +108,10 @@ final class AppliedDirectiveRules(
 
   void _value(AppliedDirective applied, InputValue parameter, Value value) {
     for (final problem in ValueChecker(schema).check(value, parameter.type)) {
+      // The problems are found as they are read: stop at the limit.
+      if (report.isFull) {
+        return;
+      }
       report.error(
         .invalidDirectiveArgumentValue,
         'Argument "@${applied.name}(${parameter.name}:)" has invalid '

@@ -19,6 +19,10 @@ final class ValidationReport {
   /// Whether an error was reported.
   bool get hasErrors => _sink.hasErrors;
 
+  /// Whether the limit was reached: later errors are dropped, so a rule
+  /// may stop and skip building the text of an error that nobody reads.
+  bool get isFull => _sink.isFull;
+
   /// The errors, in report order.
   List<Diagnostic> get diagnostics => _sink.diagnostics;
 

@@ -30,7 +30,15 @@ final class InterfaceRules(
     List<SchemaField> fields,
   ) {
     final implemented = <String>{};
+    final declared = {for (final reference in interfaces) reference.name};
+    // The first of two fields with one name counts.
+    final fieldsByName = {
+      for (final field in fields.reversed) field.name: field,
+    };
     for (final reference in interfaces) {
+      if (report.isFull) {
+        return;
+      }
       if (!TypeReferenceRules(
         report,
         schema,
@@ -53,8 +61,11 @@ final class InterfaceRules(
             _spansOf(interfaces, interface.name),
           );
         case final InterfaceType interface:
-          _ancestors(type, interfaces, interface);
-          ImplementationRules(report, schema).check(type, fields, interface);
+          _ancestors(type, interfaces, declared, interface);
+          ImplementationRules(
+            report,
+            schema,
+          ).check(type, fieldsByName, interface);
         case final other?:
           _notInterface(type, interfaces, other);
         case null:
@@ -79,11 +90,12 @@ final class InterfaceRules(
   void _ancestors(
     SchemaType type,
     List<NamedTypeReference> interfaces,
+    Set<String> declared,
     InterfaceType interface,
   ) {
     for (final transitive in interface.interfaces) {
       if (schema.typeNamed(transitive.name) == null ||
-          interfaces.any((reference) => reference.name == transitive.name)) {
+          declared.contains(transitive.name)) {
         continue;
       }
       final spans = [

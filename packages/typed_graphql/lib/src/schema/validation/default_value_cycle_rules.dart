@@ -30,12 +30,13 @@ final class DefaultValueCycleRules {
   // with the span of each default value; _positions indexes it by field.
   final List<(String, SourceSpan?)> _path = [];
   final Map<String, int> _positions = {};
+  final Map<InputObjectType, List<_Target>> _targets = {};
 
   /// Reports the cycles reached from the fields of [type].
   void check(InputObjectType type) {
     final work = <_Work>[];
     _pushFields(work, type, const {});
-    while (work.isNotEmpty) {
+    while (work.isNotEmpty && !report.isFull) {
       switch (work.removeLast()) {
         case _Literal(:final type, :final value):
           _literal(work, type, value);
@@ -71,15 +72,27 @@ final class DefaultValueCycleRules {
     Map<String, Value> given,
   ) {
     final items = <_Work>[
-      for (final field in type.fields)
-        if (schema.namedTypeOf(field.type) case final InputObjectType target)
-          switch (given[field.name]) {
-            final value? => _Literal(target, value),
-            null => _Field(field, '${type.name}.${field.name}', target),
-          },
+      for (final (field, coordinate, target) in _targetsOf(type))
+        if (given[field.name] case final value?)
+          _Literal(target, value)
+        else if (!_isSettled(coordinate))
+          _Field(field, coordinate, target),
     ];
     work.addAll(items.reversed);
   }
+
+  // The fields of input object types, computed once per type: a literal
+  // with many objects must not scan the type's fields, build their
+  // coordinates and resolve their types again for each of them.
+  List<_Target> _targetsOf(InputObjectType type) => _targets[type] ??= [
+    for (final field in type.fields)
+      if (schema.namedTypeOf(field.type) case final InputObjectType target)
+        (field, '${type.name}.${field.name}', target),
+  ];
+
+  // A walked field that is not on the path finds nothing more.
+  bool _isSettled(String coordinate) =>
+      _visited.contains(coordinate) && !_positions.containsKey(coordinate);
 
   void _field(
     List<_Work> work,
@@ -105,6 +118,9 @@ final class DefaultValueCycleRules {
   }
 
   void _report(String coordinate, int position) {
+    // A cycle's text costs its length; once the report is full nobody
+    // reads it.
+    if (report.isFull) return;
     final via = [for (final (name, _) in _path.skip(position + 1)) name];
     report.error(
       .defaultValueCycle,
@@ -115,6 +131,8 @@ final class DefaultValueCycleRules {
     );
   }
 }
+
+typedef _Target = (InputValue field, String coordinate, InputObjectType type);
 
 sealed class _Work {}
 

@@ -25,15 +25,18 @@ final class ImplementationRules(
 
   static const Printer _printer = Printer();
 
-  /// Reports how [type], whose fields are [fields], fails to implement the
-  /// fields of [interface].
+  /// Reports how [type], whose fields by name are [fieldsByName], fails to
+  /// implement the fields of [interface].
   void check(
     SchemaType type,
-    List<SchemaField> fields,
+    Map<String, SchemaField> fieldsByName,
     InterfaceType interface,
   ) {
     for (final expected in interface.fields) {
-      final field = fields.where((f) => f.name == expected.name).firstOrNull;
+      if (report.isFull) {
+        return;
+      }
+      final field = fieldsByName[expected.name];
       if (field == null) {
         report.error(
           .missingInterfaceField,
