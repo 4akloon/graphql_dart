@@ -10,7 +10,10 @@ import 'support/graphql_js_suite.dart';
 
 /// The graphql-js language test files whose every test has a row (R10.3).
 /// A port task adds its file here with its rows.
-const Set<String> portedFiles = {};
+const Set<String> portedFiles = {
+  'lexer-test.ts',
+  'blockString-test.ts',
+};
 
 void main() {
   final table = CsvTable.parse(

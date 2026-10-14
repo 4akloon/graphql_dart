@@ -6,3 +6,4 @@
 - Depends on `typed_graphql` only.
 - `mapping/language.csv`, the conformance mapping table, and the test that
   checks it.
+- Ported graphql-js suites: `lexer-test.ts`, `blockString-test.ts`.
