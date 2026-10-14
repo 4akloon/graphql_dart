@@ -69,7 +69,10 @@ void main() {
     (
       path: 'mapping/schema.csv',
       prefix: '',
-      covered: const ['utilities/__tests__/printSchema-test.ts'],
+      covered: const [
+        'utilities/__tests__/buildASTSchema-test.ts',
+        'utilities/__tests__/printSchema-test.ts',
+      ],
     ),
   ];
   for (final (:path, :prefix, :covered) in tables) {

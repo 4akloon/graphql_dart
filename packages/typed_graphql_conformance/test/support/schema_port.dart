@@ -26,7 +26,8 @@ final class SchemaPort {
 
   /// The directives applied in [text], such as `@deprecated(reason: "x")`.
   List<AppliedDirective> applied(String text) {
-    final directives = switch (_document('scalar Applied $text').definitions) {
+    final directives = switch (_document(Source('scalar Applied $text'))
+        .definitions) {
       [ScalarTypeDefinition(:final directives)] => directives,
       _ => fail('Not directives: $text'),
     };
@@ -41,14 +42,35 @@ final class SchemaPort {
 
   /// graphql-js's `buildSchema`: [sdl] built; fails the test on a
   /// diagnostic.
-  Schema build(String sdl) =>
-      switch (const SchemaBuilder().fromSdl(_document(sdl))) {
-        BuildSuccess(:final schema) => schema,
-        BuildFailure(:final diagnostics) => fail('$diagnostics'),
+  Schema build(String sdl) => switch (buildResult(sdl)) {
+    BuildSuccess(:final schema) => schema,
+    BuildFailure(:final diagnostics) => fail('$diagnostics'),
+  };
+
+  /// [sdl] built, for a test that expects diagnostics.
+  BuildResult buildResult(String sdl) {
+    final source = Source(sdl);
+    return const SchemaBuilder().fromSdl(_document(source), source: source);
+  }
+
+  /// The ids of the codes of [result]'s diagnostics, such as `GQL103`.
+  List<String> codes(BuildResult result) => [
+    for (final diagnostic in result.diagnostics) diagnostic.code.id,
+  ];
+
+  /// graphql-js's `assertScalarType` and its siblings: the type of
+  /// [schema] named [name]; fails the test unless it is a [T].
+  T assertType<T extends SchemaType>(Schema schema, String name) =>
+      switch (schema.typeNamed(name)) {
+        final T type => type,
+        final other => fail('$name is $other, not a $T.'),
       };
 
   /// graphql-js's `printSchema`.
   String print(Schema schema) => const SchemaPrinter().print(schema);
+
+  /// graphql-js's `printType`: [type] printed alone.
+  String printType(SchemaType type) => print(Schema(types: [type]));
 
   /// graphql-js's `expectPrintedSchema`: [schema] printed, after checking
   /// that building and printing the text gives it back.
@@ -93,7 +115,10 @@ final class SchemaPort {
         defaultValue: defaultValue == null ? null : value(defaultValue),
       );
 
-  Document _document(String sdl) => switch (_parser.parse(Source(sdl))) {
+  /// [sdl] parsed; fails the test on a syntax error.
+  Document document(String sdl) => _document(Source(sdl));
+
+  Document _document(Source source) => switch (_parser.parse(source)) {
     ParseSuccess(:final document) => document,
     ParseFailure(:final diagnostics) => fail('$diagnostics'),
   };

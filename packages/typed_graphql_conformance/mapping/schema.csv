@@ -38,3 +38,60 @@ utilities/__tests__/printSchema-test.ts,Type System Printer,One-line prints a sh
 utilities/__tests__/printSchema-test.ts,Type System Printer,Print Introspection Schema,adapted,test/schema/print_introspection_schema_test.dart,"graphql-js 17 prints the working-draft introspection types; the expected text is the September2025 edition, printed from a schema declaring the built-in directives and introspection types"
 utilities/__tests__/printSchema-test.ts,Type System Printer,prints viral schema correctly,ported,test/schema/print_schema_descriptions_test.dart,
 utilities/__tests__/printSchema-test.ts,Type System Printer,prints schema with description and default root operation types correctly,ported,test/schema/print_schema_descriptions_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,can use built schema for limited execution,skipped,,execution arrives in M5
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,can build a schema directly from the source,skipped,,execution arrives in M5
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Ignores non-type system definitions,adapted,test/schema/build_schema_test.dart,an operation or fragment in SDL is GQL100 instead of being ignored
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Match order of default types and directives,adapted,test/schema/build_schema_test.dart,"built-ins are shared instances of BuiltIns, never listed in a schema; the test compares the lookups"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Empty type,ported,test/schema/build_schema_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple type,ported,test/schema/build_schema_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,include standard type only if it is used,adapted,test/schema/build_schema_test.dart,every schema finds every built-in scalar; the test checks that only declared types are listed and printed
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,With directives,ported,test/schema/build_schema_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Supports descriptions,ported,test/schema/build_schema_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,"Maintains @include, @skip & @specifiedBy",adapted,test/schema/build_schema_test.dart,built-in directives are not listed in Schema.directives; the test checks the lookups
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Overriding directives excludes specified,adapted,test/schema/build_schema_test.dart,redefining a built-in directive is GQL103 instead of replacing it
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,"Adding directives maintains @include, @skip, @deprecated, @specifiedBy, and @oneOf",adapted,test/schema/build_schema_test.dart,built-in directives are not listed in Schema.directives; the test checks the lookups
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Type modifiers,ported,test/schema/build_schema_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Recursive type,ported,test/schema/build_schema_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Two types circular,ported,test/schema/build_schema_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Single argument field,ported,test/schema/build_schema_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple type with multiple arguments,ported,test/schema/build_schema_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Empty interface,adapted,test/schema/build_schema_types_test.dart,the parsed node has an empty interfaces list where graphql-js leaves the property undefined
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple type with interface,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple interface hierarchy,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Empty enum,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple output enum,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple input enum,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Multiple value enum,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Empty union,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple Union,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Multiple Union,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Can build recursive Union,adapted,test/schema/build_schema_types_test.dart,schema validation arrives in M3b; the test checks what the builder keeps
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Custom Scalar,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Empty Input Object,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple Input Object,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple argument field with default,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Custom scalar argument field with default,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple type with mutation,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Simple type with subscription,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Unreferenced type implementing referenced interface,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Unreferenced interface implementing referenced interface,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Unreferenced type implementing referenced union,ported,test/schema/build_schema_types_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Supports @deprecated,ported,test/schema/build_schema_elements_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Supports @specifiedBy,ported,test/schema/build_schema_elements_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Correctly extend scalar type,adapted,test/schema/build_schema_extensions_test.dart,"every applied directive is printed; the model keeps no extension nodes, so their check is dropped"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Correctly extend object type,adapted,test/schema/build_schema_extensions_test.dart,"the model keeps no extension nodes, so their check is dropped"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Correctly extend interface type,adapted,test/schema/build_schema_extensions_test.dart,"the model keeps no extension nodes, so their check is dropped"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Correctly extend union type,adapted,test/schema/build_schema_extensions_test.dart,"the model keeps no extension nodes, so their check is dropped"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Correctly extend enum type,adapted,test/schema/build_schema_extensions_test.dart,"the model keeps no extension nodes, so their check is dropped"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Correctly extend input object type,adapted,test/schema/build_schema_extensions_test.dart,"the model keeps no extension nodes, so their check is dropped"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Correctly assign AST nodes,adapted,test/schema/build_schema_elements_test.dart,the model keeps source spans instead of AST nodes; the test compares their text
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Root operation types with custom names,ported,test/schema/build_schema_elements_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Default root operation type names,ported,test/schema/build_schema_elements_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,can build invalid schema,adapted,test/schema/build_schema_elements_test.dart,schema validation arrives in M3b; the test checks what the builder keeps
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Do not override standard types,adapted,test/schema/build_schema_elements_test.dart,redefining a built-in type is GQL103 instead of being ignored
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Allows to reference introspection types,ported,test/schema/build_schema_elements_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Rejects invalid SDL,skipped,,SDL validation (unknown directives) arrives with schema validation in M3b
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Allows to disable SDL validation,skipped,,"the builder never validates, so there is nothing to disable"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,buildSchema parses directives on directive definitions,ported,test/schema/build_schema_elements_test.dart,
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Throws on unknown types,adapted,test/schema/build_schema_elements_test.dart,"references are names, so the build succeeds; schema validation reports the unknown type from M3b"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,correctly processes viral schema,ported,test/schema/build_schema_elements_test.dart,
