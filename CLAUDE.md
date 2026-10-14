@@ -183,6 +183,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   directives, `defer` and `stream` (graphql-js's definitions, not in the
   specified five) and the introspection types, read once from the internal
   `BuiltInSdl` text of September2025 Appendix D; they have no span.
+- `Schema` (`schema.dart`) lists only what was declared; `typeNamed` and
+  `directiveNamed` fall back to `BuiltIns` (`defer` and `stream` only with
+  `includesDeferAndStream`). Roots are names (`queryTypeName`, ...,
+  `rootTypeName(OperationType)`).
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

@@ -75,3 +75,6 @@
 - `BuiltIns`: the built-in scalars (`String`, `Int`, `Float`, `Boolean`,
   `ID`), the five specified directives, `@defer` and `@stream`, and the
   introspection types of September2025.
+- `Schema`: declared types and directives in declaration order, root
+  operation type names, description and applied directives;
+  `typeNamed` and `directiveNamed` also find the built-ins.
