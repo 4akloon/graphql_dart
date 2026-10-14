@@ -59,6 +59,7 @@ export 'src/protocol/json_reader.dart';
 export 'src/protocol/json_value.dart';
 export 'src/protocol/path_segment.dart';
 export 'src/protocol/response_payload.dart';
+export 'src/schema/build/built_ins.dart';
 export 'src/schema/model/applied_directive.dart';
 export 'src/schema/model/input_value.dart';
 export 'src/schema/model/schema_directive.dart';

@@ -179,6 +179,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   Every element has `SourceSpan? span`. `deprecationReason`,
   `specifiedByUrl` and `isOneOf` read the applied directives through the
   internal `AppliedDirectives`, which stay in the element's list.
+- `build/BuiltIns` (const): the five built-in scalars, the five specified
+  directives, `defer` and `stream` (graphql-js's definitions, not in the
+  specified five) and the introspection types, read once from the internal
+  `BuiltInSdl` text of September2025 Appendix D; they have no span.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

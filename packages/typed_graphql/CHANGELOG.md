@@ -72,3 +72,6 @@
 - `SchemaType`, the sealed family of named types: `ScalarType`
   (`specifiedByUrl`), `ObjectType`, `InterfaceType`, `UnionType`,
   `EnumType` and `InputObjectType` (`isOneOf`), with lookups by name.
+- `BuiltIns`: the built-in scalars (`String`, `Int`, `Float`, `Boolean`,
+  `ID`), the five specified directives, `@defer` and `@stream`, and the
+  introspection types of September2025.
