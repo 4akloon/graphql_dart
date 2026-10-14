@@ -134,5 +134,16 @@ enum DiagnosticCode(
 
   /// `GQL110`: an extension of a type of another kind, such as
   /// `extend input` of an object type; it is ignored.
-  extensionKindMismatch('GQL110');
+  extensionKindMismatch('GQL110'),
+
+  /// `GQL111`: a schema without a query root type (spec §3.3.1).
+  missingQueryRootType('GQL111'),
+
+  /// `GQL112`: a root operation type that is not an object type, such as
+  /// `query: SomeInterface` (spec §3.3.1).
+  rootTypeNotObject('GQL112'),
+
+  /// `GQL113`: one object type that is the root type of two operations
+  /// (spec §3.3.1).
+  sharedRootType('GQL113');
 }

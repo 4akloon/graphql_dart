@@ -248,6 +248,16 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   decodes (an enum value becomes its name), so codecs have no
   `parseLiteral`.
 
+- `validation/SchemaValidator` (const): `validate(schema)` returns the
+  sealed `SchemaValidationResult` (`ValidSchema` | `InvalidSchema(schema,
+  diagnostics)`); `ValidSchema` has a private constructor and
+  `ValidSchema.assumeValid`. One class per rule family (spec §7), each
+  `XRules(report, schema).check()`, run in graphql-js's order (roots,
+  directive definitions, types) into a `ValidationReport`, which keeps
+  report order (elements may come from several sources, so no offset
+  sort) and gives the first span of an error as its place and the others
+  as related. Messages are graphql-js's `validateSchema` messages.
+
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
 `ArgumentError`, `RangeError`, `StateError`.

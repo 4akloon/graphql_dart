@@ -130,3 +130,8 @@
   `isInputType`, `isOutputType` (for a `TypeRef`), `implementations`,
   `possibleTypes`, `isSubType`, `isTypeSubTypeOf` and `typesOverlap`, as
   graphql-js names them, for validation and execution.
+- `SchemaValidator` and the sealed `SchemaValidationResult`: `ValidSchema`
+  (made only by the validator or `ValidSchema.assumeValid`) or
+  `InvalidSchema(schema, diagnostics)`. The root-type rules: `GQL111` for
+  a missing query root, `GQL112` for a root that is not an object type,
+  `GQL113` for one type used as two roots.

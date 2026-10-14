@@ -435,6 +435,72 @@ false
 true
 ```
 
+## Validating a schema
+
+`SchemaValidator().validate(schema)` checks a schema against every type-system
+rule of the specification and returns a sealed `SchemaValidationResult`:
+
+- `ValidSchema(schema)` when no rule is broken. Only the validator and
+  `ValidSchema.assumeValid(schema)` make one, so code that takes a `ValidSchema`
+  knows the schema was checked. `assumeValid` checks nothing: keep it for a
+  schema known to be valid, such as one generated from a schema that was
+  validated before.
+- `InvalidSchema(schema, diagnostics)` with every problem: a `GQL1xx` code,
+  graphql-js's message and the place of the element (or the node inside it,
+  such as a default value) the problem is about. The problems come in
+  graphql-js's order: the roots, the directive definitions, then the types in
+  declaration order.
+
+Validation never throws, and a schema built in code is validated the same way
+as one built from SDL.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  report(
+    validate('''
+type Query { hero: Character }
+interface Character { name: String! }
+type Human implements Character { name: String! }
+'''),
+  );
+  report(
+    validate('''
+schema { query: Query mutation: Character subscription: Query }
+type Query { hero: Character }
+interface Character { name: String! }
+'''),
+  );
+}
+
+SchemaValidationResult validate(String sdl) {
+  final source = Source(sdl, name: 'schema.graphql');
+  final document = const Parser().parse(source).requireDocument();
+  return switch (const SchemaBuilder().fromSdl(document, source: source)) {
+    BuildSuccess(:final schema) => const SchemaValidator().validate(schema),
+    BuildFailure(:final diagnostics) => throw StateError('$diagnostics'),
+  };
+}
+
+void report(SchemaValidationResult result) {
+  switch (result) {
+    case ValidSchema(:final schema):
+      print('valid, ${schema.types.length} types');
+    case InvalidSchema(:final diagnostics):
+      diagnostics.forEach(print);
+  }
+}
+```
+
+It prints:
+
+```text
+valid, 3 types
+schema.graphql:1:33: error GQL112: Mutation root type must be Object type if provided, it cannot be Character.
+schema.graphql:1:17: error GQL113: All root types must be different, "Query" type is used as query and subscription root types.
+```
+
 ## What building does not check
 
 Building a schema does not validate it. A field may name a type that does not
@@ -470,5 +536,5 @@ null
 Query
 ```
 
-Checking a schema against the rules of the specification arrives in a later
-release of this package.
+Checking a schema against the rules of the specification is the validator's
+work: see "Validating a schema" above.

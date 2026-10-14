@@ -83,3 +83,5 @@ export 'src/schema/scalars/scalar_codec.dart';
 export 'src/schema/scalars/scalar_codecs.dart';
 export 'src/schema/scalars/string_codec.dart';
 export 'src/schema/schema.dart';
+export 'src/schema/validation/schema_validation_result.dart';
+export 'src/schema/validation/schema_validator.dart';
