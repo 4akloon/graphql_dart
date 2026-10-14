@@ -35,6 +35,16 @@ void main() {
     );
   });
 
+  test('"It prints:" before a fence not tagged text is an error', () {
+    expect(
+      () => snippets.of(
+        'a.md',
+        '```dart\nmain() {}\n```\n\nIt prints:\n\n```\nhi\n```\n',
+      ),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
   test('a tag such as dartpad is an error, not a skipped program', () {
     expect(
       () => snippets.of('a.md', '```dartpad\nmain() {}\n```\n'),

@@ -20,7 +20,14 @@ final class MarkdownLinks {
   /// Creates the reader.
   const MarkdownLinks();
 
-  static final RegExp _link = RegExp(r'\[[^\]]*\]\(([^)\s]+)\)');
+  // An inline link may carry a quoted title after the target; a reference
+  // definition (`[a]: path`) starts its line.
+  static final RegExp _link = RegExp(
+    r'\[[^\]]*\]\(([^)\s]+)(?:\s+(?:"[^"]*"|'
+    "'[^']*'"
+    r'))?\)',
+  );
+  static final RegExp _definition = RegExp(r'^\s*\[[^\]]+\]:\s*(\S+)');
   static final RegExp _heading = RegExp(r'^#{1,6}\s+(.*?)\s*#*\s*$');
   static final RegExp _web = RegExp('^(?:[a-z][a-z0-9+.-]*:)');
 
@@ -28,7 +35,10 @@ final class MarkdownLinks {
   /// left out.
   List<MarkdownLink> relativeIn(String markdown) => [
     for (final (index, line) in _prose(markdown).indexed)
-      for (final match in _link.allMatches(line))
+      for (final match in [
+        ..._link.allMatches(line),
+        ?_definition.firstMatch(line),
+      ])
         if (!_web.hasMatch(match[1]!)) MarkdownLink(index + 1, match[1]!),
   ];
 

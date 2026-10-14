@@ -88,6 +88,9 @@ final class SnippetRunner(
         '${folder.path}/s$index.dart',
       ).writeAsStringSync('${snippet.code}\n');
     }
+    File(
+      '${folder.path}/analysis_options.yaml',
+    ).writeAsStringSync(_formatterOptions());
     final result = await _start(['format', '--output=none', folder.path]);
     if (result.hasTimedOut) {
       throw StateError('dart format timed out after $timeLimit');
@@ -99,6 +102,22 @@ final class SnippetRunner(
       ).allMatches(result.output.replaceAll('\r\n', '\n')))
         snippets[int.parse(match[1]!)].place,
     ];
+  }
+
+  /// The `formatter:` block of the repo's `analysis_options.yaml`, alone:
+  /// the temp folder is outside the workspace, so it would format with the
+  /// defaults (`trailing_commas: automate`), not the repo's `preserve`. The
+  /// file's `include:` cannot resolve there, so the rest is left out.
+  String _formatterOptions() {
+    final root = File(packageConfig).parent.parent.path;
+    final lines = File('$root/analysis_options.yaml').readAsLinesSync();
+    final start = lines.indexWhere((line) => line.startsWith('formatter:'));
+    if (start < 0) throw StateError('No formatter: block in $root');
+    final end = lines.indexWhere(
+      (line) => line.isNotEmpty && !line.startsWith(RegExp(r'\s|#')),
+      start + 1,
+    );
+    return '${lines.sublist(start, end < 0 ? lines.length : end).join('\n')}\n';
   }
 
   /// Starts `dart` with [arguments] and waits for it, killing it when it

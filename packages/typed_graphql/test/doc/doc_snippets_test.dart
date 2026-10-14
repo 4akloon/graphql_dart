@@ -21,22 +21,24 @@ void main() {
       ...const DocSnippets().of(path, markdown),
   ];
   final runs = <DocSnippet, Future<SnippetRun>>{};
-  // `late`: the folder and the runner need the package configuration,
-  // which only `Isolate.packageConfig` (a Future) gives, and `setUpAll`
-  // sets both before any test reads them.
-  late final Directory directory;
+  // `late`: the runner needs the package configuration, which only
+  // `Isolate.packageConfig` (a Future) gives, and `setUpAll` sets it before
+  // any test reads it. The folder is null until created, so a failure to
+  // create it does not hide its cause in `tearDownAll`.
   late final SnippetRunner runner;
+  Directory? directory;
 
   // Compiled with `--compiler exe` there is no package configuration and
   // every program is skipped, so nothing is set up or removed.
   setUpAll(() async {
     if (!SnippetRunner.isAvailable) return;
     final configuration = await Isolate.packageConfig;
-    directory = Directory.systemTemp.createTempSync('typed_graphql_doc_');
-    runner = SnippetRunner(configuration!.toFilePath(), directory);
+    final created = Directory.systemTemp.createTempSync('typed_graphql_doc_');
+    directory = created;
+    runner = SnippetRunner(configuration!.toFilePath(), created);
   });
   tearDownAll(() {
-    if (SnippetRunner.isAvailable) directory.deleteSync(recursive: true);
+    directory?.deleteSync(recursive: true);
   });
 
   test('every guide holds at least one program', () {

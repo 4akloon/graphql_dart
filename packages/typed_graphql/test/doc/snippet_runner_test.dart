@@ -87,6 +87,13 @@ void main() {
     expect(places, ['a.md:1']);
   }, skip: skip);
 
+  test('formats with the repo options, which keep trailing commas', () async {
+    final places = await runner.unformattedPlaces([
+      program("void main() {\n  print(\n    'a',\n  );\n}"),
+    ]);
+    expect(places, isEmpty);
+  }, skip: skip);
+
   test('reports a program that throws', () async {
     final run = await runner.run(
       program("void main() { throw StateError('no'); }"),

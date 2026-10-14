@@ -16,6 +16,17 @@ void main() {
     expect(found.map((link) => link.line), [1, 2]);
   });
 
+  test('finds a link that has a quoted title', () {
+    final found = links.relativeIn('[a](doc/a.md "The A") [b](b.md \'B\')');
+    expect(found.map((link) => link.target), ['doc/a.md', 'b.md']);
+  });
+
+  test('finds the target of a reference definition', () {
+    final found = links.relativeIn('Text\n[a]: doc/a.md\n[b]: https://x.dev\n');
+    expect(found.map((link) => link.target), ['doc/a.md']);
+    expect(found.single.line, 2);
+  });
+
   test('leaves out links inside fenced code', () {
     expect(links.relativeIn('```text\n[a](b.md)\n```\n'), isEmpty);
   });

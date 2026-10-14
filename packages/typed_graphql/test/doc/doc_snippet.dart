@@ -34,8 +34,9 @@ final class DocSnippets {
   const DocSnippets();
 
   /// The snippets of [markdown], the content of [file]. An output with no
-  /// program before it, and a fence tagged `dart` plus anything else, are
-  /// a [FormatException].
+  /// program before it, and a fence tagged `dart` plus anything else, and
+  /// an `It prints:` followed by a fence not tagged `text`, are a
+  /// [FormatException].
   List<DocSnippet> of(String file, String markdown) {
     final fences = const MarkdownFences().of(markdown);
     final snippets = <DocSnippet>[];
@@ -46,6 +47,12 @@ final class DocSnippets {
       if (_isOutput(fence) &&
           (index == 0 || fences[index - 1].info != 'dart')) {
         throw FormatException('$file:${fence.line}: output without a program');
+      }
+      if (fence.info != 'text' && fence.precedingText.endsWith(_outputIntro)) {
+        throw FormatException(
+          '$file:${fence.line}: "$_outputIntro" must be followed by a text '
+          'fence, not "${fence.info}"',
+        );
       }
       if (fence.info == 'dart') {
         snippets.add(
@@ -63,6 +70,8 @@ final class DocSnippets {
     return snippets;
   }
 
+  static const String _outputIntro = 'It prints:';
+
   bool _isOutput(MarkdownFence fence) =>
-      fence.info == 'text' && fence.precedingText.endsWith('It prints:');
+      fence.info == 'text' && fence.precedingText.endsWith(_outputIntro);
 }
