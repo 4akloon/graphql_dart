@@ -365,6 +365,10 @@ enum DiagnosticCode(
   /// directive does not provide (spec §5.4.3).
   providedRequiredArguments('GQL210'),
 
+  /// `GQL211`: two fragment definitions with the same name (spec
+  /// §5.5.1.1).
+  uniqueFragmentNames('GQL211'),
+
   /// `GQL212`: a type name in a type condition or a variable definition
   /// that the schema does not define (spec §5.5.1.2, §5.8.1).
   knownTypeNames('GQL212'),
@@ -372,6 +376,22 @@ enum DiagnosticCode(
   /// `GQL213`: a fragment or inline fragment whose type condition is not
   /// an object, interface or union type (spec §5.5.1.3).
   fragmentsOnCompositeTypes('GQL213'),
+
+  /// `GQL214`: a fragment definition that no operation spreads, directly or
+  /// through other fragments (spec §5.5.1.4).
+  noUnusedFragments('GQL214'),
+
+  /// `GQL215`: a fragment spread whose fragment the document does not
+  /// define (spec §5.5.2.1).
+  knownFragmentNames('GQL215'),
+
+  /// `GQL216`: a fragment that spreads itself, directly or through other
+  /// fragments (spec §5.5.2.2).
+  noFragmentCycles('GQL216'),
+
+  /// `GQL217`: a fragment spread or inline fragment whose type condition
+  /// can never apply to the parent type (spec §5.5.2.3).
+  possibleFragmentSpreads('GQL217'),
 
   /// `GQL226`: a variable whose type is not an input type (spec §5.8.2).
   variablesAreInputTypes('GQL226'),

@@ -233,3 +233,6 @@
   `GQL226`).
 - The argument rules: `KnownArgumentNamesRule`, `UniqueArgumentNamesRule` and
   `ProvidedRequiredArgumentsRule` (`GQL208`-`GQL210`).
+- The fragment rules: `UniqueFragmentNamesRule`, `KnownFragmentNamesRule`,
+  `NoUnusedFragmentsRule`, `NoFragmentCyclesRule` and
+  `PossibleFragmentSpreadsRule` (`GQL211`, `GQL214`-`GQL217`).
