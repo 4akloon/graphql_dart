@@ -87,7 +87,8 @@ void main() {
           'extend type T @d extend directive @d @e '
           'extend union U = D extend enum E { C } '
           'extend input In { c: Int } extend interface I @d '
-          'extend scalar S @d extend type T @d { f: Int }',
+          'extend scalar S @d extend type T @d { f: Int } '
+          'extend schema @d { subscription: S }',
     };
 
     for (final MapEntry(key: name, value: text) in texts.entries) {
