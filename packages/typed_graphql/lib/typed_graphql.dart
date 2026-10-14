@@ -41,6 +41,7 @@ export 'src/language/parser/parse_element_result.dart';
 export 'src/language/parser/parse_result.dart';
 export 'src/language/parser/parser.dart';
 export 'src/language/parser/parser_options.dart';
+export 'src/language/printer/printer.dart';
 export 'src/protocol/decode_result.dart';
 export 'src/protocol/graphql_error.dart';
 export 'src/protocol/graphql_request.dart';

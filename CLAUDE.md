@@ -117,6 +117,12 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   grammar before the base ones. `DirectiveExtensionGrammar` is always
   registered; with `allowDirectiveExtensions` off, it and the directive
   definition's draft parts report `GQL014` instead of a generic error.
+- `printer/`: `Printer` prints any node as graphql-js's `print` does, to
+  the character (80-column wrapping included), through collaborators:
+  `ValuePrinter` (values, types, arguments, directives), `ExecutablePrinter`,
+  `TypeMemberPrinter`, `TypeSystemPrinter`, `ExtensionPrinter`, over the
+  `PrintLayout` combinators (`join`, `wrap`, `indent`, `block`) and
+  `QuotedString`. An empty selection set prints as `{}`.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

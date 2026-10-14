@@ -40,3 +40,5 @@
   `allowDirectiveExtensions`, the working draft's directive extensions,
   directives on directive definitions and the `DIRECTIVE_DEFINITION`
   location; diagnostic `GQL014`.
+- `Printer`: canonical GraphQL text from any node, as graphql-js prints
+  it.
