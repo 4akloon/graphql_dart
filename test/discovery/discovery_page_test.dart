@@ -48,6 +48,11 @@ void main() {
     });
   }
 
+  test("the roadmap's rules for plans link to it", () {
+    final rules = ReadmeOutline(roadmap).section('Rules for plans');
+    expect(linkedFrom('docs/roadmap.md', rules), contains('docs/discovery.md'));
+  });
+
   test('CONTRIBUTING.md links to it', () {
     final contributing = File('CONTRIBUTING.md').readAsStringSync();
     expect(

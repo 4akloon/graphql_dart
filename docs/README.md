@@ -5,6 +5,7 @@
 | `superpowers/HANDOFF.md` | Where the project stands, how a stage is done, the user's rules; read first |
 | `requirements.md` | Requirements R0–R11 with tags and owning stages |
 | `roadmap.md` | Stages M1–M16: scope, requirement IDs, dependencies |
+| `discovery.md` | How agents find the packages: queries, metadata, README and `llms.txt` rules |
 | `superpowers/specs/` | The architecture spec and one design spec per stage |
 | `superpowers/plans/` | Step-by-step implementation plans, one per stage |
 | `research/README.md` | Research summary and the decisions log |
