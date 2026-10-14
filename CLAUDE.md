@@ -1,0 +1,213 @@
+# CLAUDE.md
+
+Guidance for working in this repository. It is binding for people and agents.
+
+## Project
+
+`typed_graphql` is a from-scratch GraphQL implementation for Dart: the whole
+specification (September2025 edition) and its protocols, fully typed on the
+server and the client. It is a Dart pub workspace of pure-Dart packages:
+
+| Package | Role | Stage |
+|---|---|---|
+| `packages/typed_graphql` | Core: `diagnostics/`, `language/`, `protocol/`, `schema/`, `validation/`; depends only on `meta` | M1–M4 |
+| `packages/typed_graphql_server` | Typed schema builder, executor, request pipeline, transport handlers | M5–M7 |
+| `packages/typed_graphql_shelf` | `shelf` adapter (HTTP, WebSocket, GraphiQL in development) | M7 |
+| `packages/typed_graphql_client` | Client runtime: links, transports, normalized cache | M11–M12 |
+| `packages/typed_graphql_codegen` | Code generation engine and CLI, without `analyzer` | M8, M10 |
+| `packages/typed_graphql_builder` | `build_runner` builders; the only `analyzer` user | M9 |
+| `packages/typed_graphql_conformance` | `publish_to: none`: ported graphql-js suites, fuzzers, benchmarks | M2 on |
+
+Minimum SDK: Dart 3.13 (`sdk: ^3.13.0`) in every package and in generated
+code. No dependency on `package:gql` or its ecosystem.
+
+Status: under construction. M1 (foundations) delivers the workspace, the code
+rules, CI, the diagnostics model and the protocol data types.
+
+## Documents
+
+- `docs/requirements.md` - requirements R0–R11; quote their ids in specs,
+  plans and tests.
+- `docs/roadmap.md` - stages M1–M16 and the rules for plans.
+- `docs/superpowers/specs/2026-10-13-typed-graphql-design.md` - the
+  architecture; a stage spec refines it, never overrides it silently.
+- `docs/superpowers/plans/` - one plan per stage; `HANDOFF.md` - where the
+  work stands and the rules the user set. Read it first in a new session.
+- `docs/research/` - the research and the decisions log (`README.md`).
+- `reference/` (git-ignored) - the specifications, protocols and graphql-js;
+  fetch them with `tool/fetch_reference.sh`. Never edit it.
+
+## Commands
+
+```sh
+dart pub get                                                   # repo root, once and after pubspec edits
+dart format --output=none --set-exit-if-changed packages test  # must change 0 files
+dart analyze --fatal-infos                                     # repo root; must print "No issues found!"
+dart test                                                      # repo root: the code rules
+cd packages/typed_graphql && dart test                         # one package (every package has tests)
+cd packages/typed_graphql && dart test --compiler exe          # AOT (sealed switches, sdk#56010)
+cd packages/typed_graphql && dart test -p chrome --compiler dart2js
+cd packages/typed_graphql && dart test -p chrome --compiler dart2wasm
+cd packages/<package> && dart pub publish --dry-run            # never without --dry-run
+```
+
+Git commands run from the repo root. Commits are Conventional Commits with the
+package as the scope: `feat(typed_graphql): ...`, `test(workspace): ...`,
+`ci: ...`, `docs: ...`, `refactor(...)`.
+
+## Architecture
+
+**Core layers.** `packages/typed_graphql/lib/src/` has one folder per layer,
+lowest first: `diagnostics`, `language`, `protocol`, `schema`, `validation`. A
+library imports only its own layer and the layers before it; the core imports
+no platform library but `dart:async`, `dart:collection`, `dart:convert`,
+`dart:core`, `dart:math`, `dart:typed_data`, and no package but `meta`.
+`test/quality/layers_test.dart` enforces this (R0.6, R10.2). Libraries in
+`lib/src/` import each other with relative paths, never through the barrel.
+
+**Diagnostics** (`diagnostics/`).
+- `Source(body, name:)` holds a document; `locationOf(offset)` gives a
+  1-based `SourceLocation` (column in UTF-16 code units). The table of line
+  starts is built on the first call. `\r\n`, `\n` and `\r` end a line.
+- `SourceSpan(source, start, end)` is a range of offsets; a diagnostic points
+  at one.
+- `DiagnosticCode` is the catalog: one enum value per problem, id `GQLnxx`,
+  a doc comment that says when it is reported. Ids are public API: never
+  renumber, reuse or remove one. Ranges: `GQL0xx` syntax, `GQL1xx` type
+  system, `GQL2xx` operation validation, `GQL3xx` coercion and execution,
+  `GQL4xx` transports, `GQL5xx` code generation; `GQL000` is the sink limit.
+- `Diagnostic(code, severity, message, span:, related:)`.
+- `DiagnosticSink` collects diagnostics in report order and stops after
+  `maxErrors` errors (default 100) with one `GQL000`. Lexer, parser and rules
+  take a sink through their constructor; the public API turns it into a
+  sealed result.
+
+**Protocol** (`protocol/`).
+- `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,
+  `JsonString`, `JsonArray`, `JsonObject`): the type of arbitrary JSON in
+  every public signature (R0.2). Values compare by value; `1` equals `1.0`;
+  `JsonNumber.asInt` is the safe-integer view.
+- `JsonReader` turns untrusted text or `jsonDecode` output into a
+  `JsonValue`, or a `DecodeFailure` with a path (non-finite numbers, too deep
+  nesting, non-JSON objects).
+- `DecodeResult<T>` = `DecodeSuccess<T>(value)` | `DecodeFailure(message,
+  path:)`; `inside(segment)` prefixes the path. `PathSegment` =
+  `PathKey(name)` | `PathIndex(index)`.
+- `GraphQLError`, `GraphQLRequest` and `ResponsePayload` (`ExecutionResult` |
+  `RequestErrorResult`) read with a static `decode(JsonValue)` and write with
+  `toJson()`; equality is equality of their JSON.
+
+**Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
+`DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
+`ArgumentError`, `RangeError`, `StateError`.
+
+## Code rules
+
+The rules follow typed_openapi's (R10.1). `analysis_options.yaml` is adapted
+from typed_openapi's: its comments are this repo's own, and it additionally
+enables `simple_directive_paths`, `no_dynamic_casts` and `no_raw_types`.
+The workspace suite in `test/quality/` (run `dart test` at the root) enforces
+what a lint cannot (R10.2).
+
+**Limits** (all lines count, comments and blanks included: use `wc -l`):
+
+| Unit | Limit | Checked by |
+|---|---|---|
+| File in `lib/` or `bin/` | 300 lines | ratchet, allowlist may only shrink |
+| File in `test/` or `tool/` | 500 lines | ratchet |
+| Method, getter, operator, constructor in `lib/` | 40 lines | ratchet |
+| Parameters of a method in `lib/` | 5 (constructors exempt) | rule |
+| Nesting of `if`/`for`/`while`/`switch`/`try` | 3 levels | rule |
+| Public types per file in `lib/` | one public class or sealed family | rule |
+
+Allowed by no exception: `part` files, top-level functions other than
+`main`, `utils`/`helpers`/`common`/`misc` files in `lib/`, `dynamic`, a
+`catch` without `on`. Permanently exempt from the size limit: the catalog
+`diagnostics/diagnostic_code.dart`. Nothing else is exempt; the allowlists in
+`test/quality/code_rules_test.dart` start empty and stay so.
+
+**Before you write.** Run `wc -l` on the file you are about to extend. If the
+change would take it past the limit, extract first, in its own commit.
+
+**How to decompose.** Split by responsibility into collaborator classes, one
+per file, in the layer folder. A helper made public to leave a file stays out
+of the barrel unless it is API. No hidden state passed through fields: pass a
+parameter or a small immutable object. Do not abstract for a future need.
+
+**Readability.** Names say what a thing is or does; no abbreviations, no
+`Helper`/`Manager`/`Impl`. Booleans read as a state (`isFull`, `hasErrors`).
+A comment says why (a spec section, a requirement id, a trap), never what.
+Prefer a `switch` over a sealed type or a record to `is` chains; no `!` where
+a pattern can promote; no `late` without a comment on why it is set before it
+is read.
+
+**Dart 3.13.** Use primary constructors, dot shorthands, null-aware elements
+(`'key': ?value`), patterns, records, sealed and `final` classes. Learned in
+M1:
+- `public_member_api_docs` reports an undocumented primary constructor: give
+  the class a body with a documented `this;`.
+- `@immutable` only on a class whose constructors can all be `const`, or
+  `prefer_const_constructors_in_immutables` fires; subclasses inherit it.
+- A non-late field initializer can read a non-declaring parameter
+  (`final List<T> items = List.unmodifiable(items);`); a `late` one cannot.
+- `==` of a generic class checks `is C<Object?>`, not `is C<T>`, or two equal
+  values with different static types differ.
+- In tests, `expect` arguments have no context type: write full names, not
+  dot shorthands.
+
+**Dart style the lints do not check.** Acronyms longer than two letters are
+words (`Json`, `Sse`); doc comments start with a one-sentence summary and
+refer to identifiers in `[brackets]`; a boolean property starts with
+"Whether"; never silence a lint (`// ignore:` is not used); no nullable
+`Future`, `Stream` or collection return; never catch `Error`.
+
+**Tests.** Tests come in the same commit as the code; a new branch of logic
+has a test that fails without it. A test names the behaviour and checks one
+thing. Tests that need `dart:io` start with `@TestOn('vm')`, because the core
+suite also runs in Chrome. Every package keeps at least one test: `dart test`
+fails when it finds none.
+
+**Self-review before saying "done".**
+1. `wc -l` of every file touched, and the longest method added.
+2. Could a new reader say in one sentence what each new class and method is
+   for? If not, rename or split.
+3. Is there code, a parameter or a flag nothing uses yet? Remove it.
+4. Format, analyze and every affected suite are clean, and `CLAUDE.md`,
+   `docs/` and the package `CHANGELOG.md` say what changed.
+
+## Design rules
+
+- **Nothing is guessed silently.** Every problem in user input is a
+  diagnostic with a stable code and a place, or a `DecodeFailure` with a
+  path.
+- **A new diagnostic code** goes into `DiagnosticCode` in id order, with a
+  doc comment, in the commit that first reports it.
+- **No `dynamic`, no `Map<String, dynamic>`** in a public signature;
+  arbitrary JSON is `JsonValue`.
+- **The core stays pure Dart** and runs on the VM, AOT, dart2js and
+  dart2wasm. `analyzer` is used only by `typed_graphql_builder`.
+- **Dependencies arrive with the stage that first uses them.** M1 declares
+  only workspace packages, `meta`, `test` and `lints`.
+- **Conformance is measured.** A ported graphql-js test is recorded in the
+  conformance mapping table in the same commit (from M2).
+- **Deterministic output.** Printers and generators sort what they emit and
+  never iterate a hash-ordered collection.
+
+## Process
+
+- One stage = one design spec and one plan in `docs/superpowers/`. Plans hold
+  all the code, checked before they are written; tasks are TDD, one commit
+  each, and every task leaves the tree green.
+- Repository text is English. User-facing changes go into the package's
+  `CHANGELOG.md` (`## 0.0.1 - Unreleased`, `- **Breaking:** ...` for breaking
+  entries).
+- Outward actions (pushing, tags, publishing, issues, PRs) need the user's
+  explicit yes. `dart pub publish` runs only with `--dry-run`.
+
+## Where things are
+
+- Code rules suite: `test/quality/` at the workspace root (`code_rules.dart`
+  and its scanners).
+- Core layer test: `packages/typed_graphql/test/quality/layers_test.dart`.
+- Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
+- CI: `.github/workflows/ci.yml`.
