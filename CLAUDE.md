@@ -217,7 +217,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 - `scalars/`: `ScalarCodec<T>` (`decode(JsonValue)` → `DecodeResult<T>`,
   never throws; `encode(T)` → `JsonValue`, an `ArgumentError` for a value the
   type cannot hold) and the five built-in codecs with graphql-js's messages.
-  A codec is not a field of `ScalarType` (R2.9).
+  A codec is not a field of `ScalarType` (R2.9): `ScalarCodecs` maps names to
+  codecs (`withCodec` gives a new registry; built-ins cannot be replaced).
+  `LiteralConverter` turns a constant `Value` into the `JsonValue` a codec
+  decodes (an enum value becomes its name), so codecs have no
+  `parseLiteral`.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

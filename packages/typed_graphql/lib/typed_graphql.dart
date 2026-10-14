@@ -73,6 +73,8 @@ export 'src/schema/scalars/boolean_codec.dart';
 export 'src/schema/scalars/float_codec.dart';
 export 'src/schema/scalars/id_codec.dart';
 export 'src/schema/scalars/int_codec.dart';
+export 'src/schema/scalars/literal_converter.dart';
 export 'src/schema/scalars/scalar_codec.dart';
+export 'src/schema/scalars/scalar_codecs.dart';
 export 'src/schema/scalars/string_codec.dart';
 export 'src/schema/schema.dart';

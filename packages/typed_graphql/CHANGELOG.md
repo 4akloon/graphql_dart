@@ -106,3 +106,6 @@
 - `ScalarCodec<T>` (`decode` to a `DecodeResult`, `encode` to a
   `JsonValue`) and the built-in codecs `IntCodec` (signed 32-bit),
   `FloatCodec` (finite), `StringCodec`, `BooleanCodec` and `IdCodec`.
+- `ScalarCodecs`: an immutable registry of codecs by scalar name, with the
+  built-in ones; `LiteralConverter`: a constant literal to the `JsonValue`
+  a codec decodes.
