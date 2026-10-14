@@ -87,8 +87,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 - `ast/`: every node extends `Node` (`start`, `end`, `children` in
   graphql-js key order, `withChildren`, `isEquivalentTo`). Leaves are
   `const`; a node with a list copies it with `List.unmodifiable`. A node
-  overrides `rebuildFrom(ChildReader)` for `withChildren`. `scalars` lists
-  what `isEquivalentTo` compares besides children.
+  overrides `rebuildFrom(ChildReader)` for `withChildren`; the two
+  type-system families delegate it to a `*_rebuilder.dart` (size limit).
+  `scalars` lists what `isEquivalentTo` compares besides children.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

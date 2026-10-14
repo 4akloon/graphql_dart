@@ -19,3 +19,6 @@
 - Executable nodes: `OperationDefinition`, `FragmentDefinition`, the
   `Selection` family, `SelectionSet`, `VariableDefinition`, `Argument`,
   `Directive`.
+- Type system nodes: the `TypeSystemDefinition` and `TypeSystemExtension`
+  families (with `TypeDefinition` and `TypeExtension`), field, input value,
+  enum value and root operation type definitions.
