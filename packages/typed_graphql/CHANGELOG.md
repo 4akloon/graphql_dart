@@ -109,3 +109,6 @@
 - `ScalarCodecs`: an immutable registry of codecs by scalar name, with the
   built-in ones; `LiteralConverter`: a constant literal to the `JsonValue`
   a codec decodes.
+- `BuiltIns.isBuiltInDirective`: whether a name is a built-in directive,
+  `@defer` and `@stream` by a flag. Extending one type or directive many
+  times builds in linear time.

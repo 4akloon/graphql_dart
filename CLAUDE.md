@@ -181,7 +181,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   defaults and directive arguments are constant language `Value` nodes.
   Every element has `SourceSpan? span`. `deprecationReason`,
   `specifiedByUrl` and `isOneOf` read the applied directives through the
-  internal `AppliedDirectives`, which stay in the element's list.
+  internal `AppliedDirectives`; the directives stay in the element's list.
+  Elements compare by identity.
 - `build/BuiltIns` (const): the five built-in scalars, the five specified
   directives, `defer` and `stream` (graphql-js's definitions, not in the
   specified five) and the introspection types, read once from the internal
@@ -205,7 +206,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   definition or extension names, and only without a schema definition.
   `TypeExtender` appends an extension's members, interfaces, union members
   and directives after the type's own, in document order, and keeps the
-  definition's span. `extend(schema, document, source:)` is the same run
+  definition's span; the extensions of one type are grouped and applied in
+  one pass, so N extensions cost linear time. `extend(schema, document, source:)` is the same run
   over a base schema, without default roots; a member the base already has
   is "already exists in the schema" (no related span). `DirectiveExtender`
   applies `extend directive`.
@@ -213,10 +215,13 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `TypePrinter` (a type or directive definition) and `MemberPrinter`
   (descriptions, member blocks, arguments, applied directives); values and
   types go through the language `Printer`. Unlike graphql-js it prints
-  every applied directive as written. The schema definition is printed when
-  it has roots and a description, directives or other than the default root
-  names; `includesBuiltIns` prints schema definition, built-in directives,
-  own directives, built-in scalars, own types, introspection types.
+  every applied directive as written. The schema block is printed when the
+  schema has roots and either a description, applied directives, a root with
+  another name than its operation's default, or a non-root type named
+  `Query`, `Mutation` or `Subscription` (stricter than graphql-js, so the
+  printed SDL builds back to the same roots). `includesBuiltIns` prints, in
+  order: built-in directives, own directives, built-in scalars, own types,
+  introspection types.
 - `scalars/`: `ScalarCodec<T>` (`decode(JsonValue)` → `DecodeResult<T>`,
   never throws; `encode(T)` → `JsonValue`, an `ArgumentError` for a value the
   type cannot hold) and the five built-in codecs with graphql-js's messages.
