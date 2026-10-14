@@ -1,6 +1,6 @@
 # Handoff: where typed_graphql stands and how to continue
 
-Last updated: 2026-10-14 (M3a merged into `main` locally, not pushed). Read this
+Last updated: 2026-10-14 (M3a and M3c merged into `main` locally, not pushed). Read this
 first on a new device or in a new Claude session. Session memory and scratch
 directories do not travel; this file and the repository hold everything
 needed.
@@ -13,6 +13,7 @@ needed.
 | M1 Foundations | the architecture spec (no stage spec) | [plan](plans/2026-10-13-m1-foundations.md) | done: merged into `main` locally (not pushed); next is M2 |
 | M2 Language | [spec](specs/2026-10-14-m2-language-design.md) | M2a: [plan](plans/2026-10-14-m2a-language-core.md); M2b: [plan](plans/2026-10-14-m2b-language-tools.md) | M2a and M2b merged into `main` locally (M2a pushed, M2b not); M2 is complete; next is M3 (schema) |
 | M3 Type system | [spec](specs/2026-10-14-m3-type-system-design.md) | M3a: [plan](plans/2026-10-14-m3a-schema-core.md) | M3a merged into `main` locally (not pushed); next is the M3b plan (validation, introspection) |
+| M3c Core docs | [plan](plans/2026-10-14-m3c-core-docs.md) | — | merged into `main` locally (not pushed): six guides in `packages/typed_graphql/doc/`, `example/`, dartdoc categories, doc test suite (`test/doc/`), CI `dart doc` step. M3b must add a Validation section to `doc/schema.md`, a new dartdoc category/guide, and `doc/introspection.md` |
 
 **Decisions (2026-10-14):**
 - Layer order is diagnostics < language < protocol < schema < validation; the
@@ -42,6 +43,11 @@ The superpowers skills: `brainstorming`, `writing-plans`,
    scoped re-review. Residuals go into `docs/roadmap.md` with a reason.
 5. **Merge.** `git merge --no-ff` into main, re-run every suite on the merged
    tree, remove the worktree and the branch, update this file.
+
+## Open for publishing (M16)
+
+- pub.dev rewrites relative README links only when `repository` is verified and, for a monorepo, points at the package folder (`https://github.com/4akloon/graphql_dart/tree/main/packages/<pkg>`); today every pubspec points at the repo root, so relative links in package READMEs would 404.
+- Chrome runs (dart2js/dart2wasm) cannot launch under the 8 GB `ulimit`; CI covers them.
 
 ## Open for M3b
 
