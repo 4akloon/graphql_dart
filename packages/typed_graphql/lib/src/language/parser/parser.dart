@@ -7,8 +7,10 @@ import '../ast/type_ref.dart';
 import '../ast/value.dart';
 import '../lexer/lexer.dart';
 import 'definition_parser.dart';
+import 'directive_extension_grammar.dart';
 import 'directive_parser.dart';
 import 'executable_parser.dart';
+import 'extension_parser.dart';
 import 'parse_element_result.dart';
 import 'parse_result.dart';
 import 'parser_options.dart';
@@ -80,10 +82,25 @@ final class Parser {
       allowsEmpty: options.allowEmptySelectionSets,
     );
     final members = TypeMemberParser(cursor, values, directives);
+    final allowsDirectiveExtensions = options.allowDirectiveExtensions;
     return DefinitionParser(
       cursor,
       ExecutableParser(cursor, values, directives, selections),
-      TypeSystemParser(cursor, values, directives, members),
+      TypeSystemParser(
+        cursor,
+        values,
+        directives,
+        members,
+        allowsDirectiveExtensions: allowsDirectiveExtensions,
+      ),
+      ExtensionParser(cursor, directives, members),
+      [
+        DirectiveExtensionGrammar(
+          cursor,
+          directives,
+          isEnabled: allowsDirectiveExtensions,
+        ),
+      ],
     );
   }
 

@@ -1,15 +1,23 @@
 import '../ast/definition.dart';
 import '../lexer/token.dart';
+import 'definition_grammar.dart';
 import 'executable_parser.dart';
+import 'extension_parser.dart';
 import 'token_cursor.dart';
 import 'type_system_parser.dart';
 
 /// Parses one definition of a document: it reads the keyword, after an
 /// optional description, and hands over to the part of the grammar that
-/// owns it (spec §2.2).
+/// owns it (spec §2.2). The [grammars] come first.
 final class DefinitionParser {
   /// Creates a parser reading from [cursor].
-  DefinitionParser(this.cursor, this.executable, this.typeSystem);
+  DefinitionParser(
+    this.cursor,
+    this.executable,
+    this.typeSystem,
+    this.extensions,
+    this.grammars,
+  );
 
   /// The token stream.
   final TokenCursor cursor;
@@ -20,8 +28,19 @@ final class DefinitionParser {
   /// Schema, type and directive definitions.
   final TypeSystemParser typeSystem;
 
+  /// Schema and type extensions.
+  final ExtensionParser extensions;
+
+  /// The working-draft and experimental productions, asked in order.
+  final List<DefinitionGrammar> grammars;
+
   /// `Definition`, with graphql-js's messages for a misplaced description.
   Definition definition() {
+    for (final grammar in grammars) {
+      if (grammar.startsDefinition()) {
+        return grammar.definition();
+      }
+    }
     if (cursor.peek(.braceLeft)) {
       return executable.operation();
     }
@@ -46,6 +65,7 @@ final class DefinitionParser {
         'Unexpected description, only GraphQL definitions support '
         'descriptions.',
       ),
+      Token(kind: .name, value: 'extend') => extensions.extension(),
       _ => cursor.unexpected(keyword),
     };
   }

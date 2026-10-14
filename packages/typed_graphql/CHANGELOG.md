@@ -36,3 +36,7 @@
   definitions and selections; diagnostics `GQL011`–`GQL012`.
 - `Parser.parse` reads schema, type and directive definitions;
   diagnostic `GQL013`.
+- `Parser.parse` reads schema and type extensions and, with
+  `allowDirectiveExtensions`, the working draft's directive extensions,
+  directives on directive definitions and the `DIRECTIVE_DEFINITION`
+  location; diagnostic `GQL014`.

@@ -76,5 +76,11 @@ enum DiagnosticCode(
 
   /// `GQL013`: an enum value named `true`, `false` or `null` (spec
   /// §3.9, `EnumValue`).
-  reservedEnumValueName('GQL013');
+  reservedEnumValueName('GQL013'),
+
+  /// `GQL014`: working-draft grammar that the parser's options leave off:
+  /// a directive extension, directives on a directive definition or the
+  /// `DIRECTIVE_DEFINITION` location without
+  /// `ParserOptions.allowDirectiveExtensions`.
+  workingDraftFeatureDisabled('GQL014');
 }

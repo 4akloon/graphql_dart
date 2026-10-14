@@ -112,6 +112,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `}`; both only at the bracket `balance` where the failed part started,
   and always consume a token. A selection set left empty fails too.
   Type-system definitions and extensions share `TypeMemberParser`.
+  `DefinitionGrammar` is the internal extension point for working-draft and
+  experimental productions (R1.4): `DefinitionParser` asks each registered
+  grammar before the base ones. `DirectiveExtensionGrammar` is always
+  registered; with `allowDirectiveExtensions` off, it and the directive
+  definition's draft parts report `GQL014` instead of a generic error.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

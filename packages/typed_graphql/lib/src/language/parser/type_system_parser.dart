@@ -1,3 +1,4 @@
+import '../ast/directive.dart';
 import '../ast/name.dart';
 import '../ast/type_system_definition.dart';
 import 'directive_parser.dart';
@@ -8,7 +9,13 @@ import 'value_parser.dart';
 /// Parses schema, type and directive definitions (spec §3).
 final class TypeSystemParser {
   /// Creates a parser reading from [cursor].
-  TypeSystemParser(this.cursor, this.values, this.directives, this.members);
+  TypeSystemParser(
+    this.cursor,
+    this.values,
+    this.directives,
+    this.members, {
+    required this.allowsDirectiveExtensions,
+  });
 
   /// The token stream.
   final TokenCursor cursor;
@@ -22,6 +29,10 @@ final class TypeSystemParser {
   /// The shared members of types.
   final TypeMemberParser members;
 
+  /// Whether a directive definition may carry directives and name the
+  /// `DIRECTIVE_DEFINITION` location (working draft).
+  final bool allowsDirectiveExtensions;
+
   /// The keywords that start a type-system definition.
   static const Set<String> keywords = {
     'schema',
@@ -33,6 +44,10 @@ final class TypeSystemParser {
     'input',
     'directive',
   };
+
+  /// The working draft's location for directives on a directive
+  /// definition.
+  static const String directiveDefinitionLocation = 'DIRECTIVE_DEFINITION';
 
   /// The September2025 directive locations (spec §3.13).
   static const Set<String> locations = {
@@ -201,6 +216,7 @@ final class TypeSystemParser {
     cursor.expect(.at);
     final name = cursor.name();
     final arguments = members.arguments();
+    final directiveList = _directivesOfDirective();
     final isRepeatable = cursor.expectOptionalKeyword('repeatable');
     cursor.expectKeyword('on');
     final locations = cursor.delimitedMany(.pipe, _location);
@@ -208,6 +224,7 @@ final class TypeSystemParser {
       name,
       description: description,
       arguments: arguments,
+      directives: directiveList,
       isRepeatable: isRepeatable,
       locations: locations,
       start: start,
@@ -215,11 +232,33 @@ final class TypeSystemParser {
     );
   }
 
-  /// `DirectiveLocation`: one of [locations].
+  /// The working draft's `Directives[Const]?` of a directive definition.
+  List<Directive> _directivesOfDirective() {
+    if (cursor.peek(.at) && !allowsDirectiveExtensions) {
+      cursor.fail(
+        .workingDraftFeatureDisabled,
+        'Directives on a directive definition are a working-draft feature; '
+        'enable them with ParserOptions.allowDirectiveExtensions.',
+      );
+    }
+    return directives.directives(isConst: true);
+  }
+
+  /// `DirectiveLocation`: one of [locations], or the working draft's
+  /// [directiveDefinitionLocation].
   Name _location() {
     final token = cursor.token;
     final name = cursor.name();
-    if (!locations.contains(name.value)) {
+    if (name.value == directiveDefinitionLocation) {
+      if (!allowsDirectiveExtensions) {
+        cursor.fail(
+          .workingDraftFeatureDisabled,
+          'The $directiveDefinitionLocation location is a working-draft '
+          'feature; enable it with ParserOptions.allowDirectiveExtensions.',
+          at: token,
+        );
+      }
+    } else if (!locations.contains(name.value)) {
       cursor.unexpected(token);
     }
     return name;
