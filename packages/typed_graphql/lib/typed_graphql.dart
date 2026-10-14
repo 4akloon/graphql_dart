@@ -14,6 +14,8 @@ export 'src/diagnostics/source_location.dart';
 export 'src/diagnostics/source_span.dart';
 export 'src/protocol/decode_result.dart';
 export 'src/protocol/graphql_error.dart';
+export 'src/protocol/graphql_request.dart';
 export 'src/protocol/json_reader.dart';
 export 'src/protocol/json_value.dart';
 export 'src/protocol/path_segment.dart';
+export 'src/protocol/response_payload.dart';

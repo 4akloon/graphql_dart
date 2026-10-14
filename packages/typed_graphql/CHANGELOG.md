@@ -12,3 +12,5 @@
 - `JsonReader`: JSON text to `JsonValue`, with a nesting limit and no
   exceptions.
 - `GraphQLError`: the error format of the spec, read and written.
+- `GraphQLRequest` and `ResponsePayload` (`ExecutionResult`,
+  `RequestErrorResult`).
