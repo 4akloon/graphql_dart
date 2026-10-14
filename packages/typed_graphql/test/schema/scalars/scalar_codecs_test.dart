@@ -21,7 +21,7 @@ final class _DateCodec implements ScalarCodec<DateTime> {
 
 void main() {
   test('holds the five built-in codecs by name', () {
-    final codecs = ScalarCodecs();
+    const codecs = ScalarCodecs();
     expect(codecs.codecFor('Int'), isA<IntCodec>());
     expect(codecs.codecFor('Float'), isA<FloatCodec>());
     expect(codecs.codecFor('String'), isA<StringCodec>());
@@ -31,7 +31,7 @@ void main() {
   });
 
   test('adds a codec for a custom scalar in a new registry', () {
-    final codecs = ScalarCodecs();
+    const codecs = ScalarCodecs();
     final withDate = codecs.withCodec('Date', const _DateCodec());
     expect(withDate.codecFor('Date'), isA<_DateCodec>());
     expect(withDate.codecFor('Int'), isA<IntCodec>());
@@ -39,7 +39,7 @@ void main() {
   });
 
   test('decodes through a registered codec', () {
-    final codec = ScalarCodecs()
+    final codec = const ScalarCodecs()
         .withCodec('Date', const _DateCodec())
         .codecFor('Date');
     expect(
@@ -50,8 +50,24 @@ void main() {
 
   test('refuses to replace a built-in codec', () {
     expect(
-      () => ScalarCodecs().withCodec('Int', const StringCodec()),
+      () => const ScalarCodecs().withCodec('Int', const StringCodec()),
       throwsArgumentError,
     );
+  });
+
+  test('replaces a custom codec registered twice', () {
+    final codecs = const ScalarCodecs()
+        .withCodec('Date', const _DateCodec())
+        .withCodec('Date', const StringCodec());
+    expect(codecs.codecFor('Date'), isA<StringCodec>());
+  });
+
+  test('leaves the original registry unchanged after chaining', () {
+    const original = ScalarCodecs();
+    original
+        .withCodec('Date', const _DateCodec())
+        .withCodec('Time', const StringCodec());
+    expect(original.codecFor('Date'), isNull);
+    expect(original.codecFor('Time'), isNull);
   });
 }

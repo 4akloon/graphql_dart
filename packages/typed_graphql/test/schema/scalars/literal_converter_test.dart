@@ -57,6 +57,94 @@ void main() {
   });
 
   test('rejects a number node whose text is not a number', () {
-    expect(converter.convert(const IntValue('x')), isA<DecodeFailure>());
+    expect(
+      converter.convert(const IntValue('x')),
+      const DecodeFailure('"x" is not a number.'),
+    );
+  });
+
+  test('rejects text that only num.tryParse reads', () {
+    for (final text in ['0x1F', 'NaN', 'Infinity', ' 1']) {
+      expect(
+        converter.convert(IntValue(text)),
+        DecodeFailure('"$text" is not a number.'),
+        reason: text,
+      );
+    }
+  });
+
+  test('rejects a variable inside a list, with its path', () {
+    expect(
+      converter.convert(
+        ListValue([const IntValue('1'), const Variable(Name('v'))]),
+      ),
+      const DecodeFailure(
+        r'The variable "$v" has no value here.',
+        path: [PathIndex(1)],
+      ),
+    );
+  });
+
+  test('rejects a variable inside an object, with its path', () {
+    expect(
+      converter.convert(
+        ObjectValue([const ObjectField(Name('a'), Variable(Name('v')))]),
+      ),
+      const DecodeFailure(
+        r'The variable "$v" has no value here.',
+        path: [PathKey('a')],
+      ),
+    );
+  });
+
+  test('converts negative numbers and negative zero', () {
+    expect(convert('-3'), DecodeSuccess<JsonValue>(JsonNumber(-3)));
+    expect(convert('-0'), DecodeSuccess<JsonValue>(JsonNumber(0)));
+  });
+
+  test('converts an empty list and an empty object', () {
+    expect(convert('[]'), DecodeSuccess<JsonValue>(JsonArray(const [])));
+    expect(convert('{}'), DecodeSuccess<JsonValue>(JsonObject(const {})));
+  });
+
+  test('converts an enum value inside a list', () {
+    expect(
+      convert('[RED]'),
+      DecodeSuccess<JsonValue>(JsonArray(const [JsonString('RED')])),
+    );
+  });
+
+  test('converts a block string to its value', () {
+    expect(
+      convert('"""\n  a\n  b\n"""'),
+      const DecodeSuccess<JsonValue>(JsonString('a\nb')),
+    );
+  });
+
+  /// A list value nested [levels] deep, built without recursion.
+  Value nestedList(int levels) {
+    Value value = const IntValue('1');
+    for (var level = 0; level < levels; level++) {
+      value = ListValue([value]);
+    }
+    return value;
+  }
+
+  test('rejects nesting deeper than the supported depth without overflow', () {
+    expect(
+      converter.convert(nestedList(5000)),
+      isA<DecodeFailure>().having(
+        (failure) => failure.message,
+        'message',
+        contains('nested deeper than'),
+      ),
+    );
+  });
+
+  test('converts nesting just under the supported depth', () {
+    expect(
+      converter.convert(nestedList(JsonReader.maxSupportedDepth)),
+      isA<DecodeSuccess<JsonValue>>(),
+    );
   });
 }

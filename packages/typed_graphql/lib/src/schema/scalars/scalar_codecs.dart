@@ -11,9 +11,9 @@ import 'string_codec.dart';
 /// A registry is immutable: [withCodec] gives a new one.
 final class ScalarCodecs {
   /// A registry of the five built-in codecs.
-  ScalarCodecs() : _codecs = _builtIns;
+  const ScalarCodecs() : _codecs = _builtIns;
 
-  ScalarCodecs._(this._codecs);
+  const ScalarCodecs._(this._codecs);
 
   static const Map<String, ScalarCodec<Object>> _builtIns = {
     'Int': IntCodec(),

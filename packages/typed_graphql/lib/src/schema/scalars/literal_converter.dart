@@ -1,6 +1,7 @@
 import '../../language/ast/object_field.dart';
 import '../../language/ast/value.dart';
 import '../../protocol/decode_result.dart';
+import '../../protocol/json_reader.dart';
 import '../../protocol/json_value.dart';
 import '../../protocol/path_segment.dart';
 import 'scalar_codec.dart';
@@ -11,13 +12,18 @@ import 'scalar_codec.dart';
 /// An enum value becomes its name, as graphql-js's
 /// `valueFromASTUntyped`; of two object fields with one name the last
 /// wins (validation reports the repeat). A variable and a number too large
-/// to be finite are failures, with the path to them.
+/// to be finite are failures, with the path to them, and so is nesting deeper
+/// than [JsonReader.maxSupportedDepth] (the conversion recurses, and the web
+/// stack is shallow). An integer beyond 2^53 becomes a double on the web but
+/// stays exact on the VM; [JsonNumber.asInt] is the safe view.
 final class const LiteralConverter() {
   /// Creates a converter.
   this;
 
   /// [value] as JSON, or a failure.
-  DecodeResult<JsonValue> convert(Value value) => switch (value) {
+  DecodeResult<JsonValue> convert(Value value) => _convert(value, 0);
+
+  DecodeResult<JsonValue> _convert(Value value, int depth) => switch (value) {
     IntValue(value: final text) || FloatValue(value: final text) => _number(
       text,
     ),
@@ -25,23 +31,38 @@ final class const LiteralConverter() {
     BooleanValue(value: final flag) => DecodeSuccess(JsonBool(flag)),
     NullValue() => const DecodeSuccess(JsonNull()),
     EnumValue(value: final name) => DecodeSuccess(JsonString(name)),
-    ListValue(:final values) => _list(values),
-    ObjectValue(:final fields) => _object(fields),
+    ListValue() when depth >= JsonReader.maxSupportedDepth => _tooDeep(),
+    ObjectValue() when depth >= JsonReader.maxSupportedDepth => _tooDeep(),
+    ListValue(:final values) => _list(values, depth),
+    ObjectValue(:final fields) => _object(fields, depth),
     Variable(:final name) => DecodeFailure(
       'The variable "\$${name.value}" has no value here.',
     ),
   };
 
-  DecodeResult<JsonValue> _number(String text) => switch (num.tryParse(text)) {
-    final number? when number.isFinite => DecodeSuccess(JsonNumber(number)),
-    final _? => DecodeFailure('The number $text is too large.'),
-    null => DecodeFailure('"$text" is not a number.'),
-  };
+  DecodeFailure _tooDeep() => const DecodeFailure(
+    'arrays and objects are nested deeper than ${JsonReader.maxSupportedDepth}',
+  );
 
-  DecodeResult<JsonValue> _list(List<Value> values) {
+  // `num.tryParse` also reads `0x1F`, `NaN` and padded text, which no
+  // GraphQL number lexeme is: the lexeme shape is checked first.
+  static final RegExp _lexeme = RegExp(
+    r'^-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$',
+  );
+
+  DecodeResult<JsonValue> _number(String text) {
+    final number = _lexeme.hasMatch(text) ? num.tryParse(text) : null;
+    return switch (number) {
+      null => DecodeFailure('"$text" is not a number.'),
+      _ when number.isFinite => DecodeSuccess(JsonNumber(number)),
+      _ => DecodeFailure('The number $text is too large.'),
+    };
+  }
+
+  DecodeResult<JsonValue> _list(List<Value> values, int depth) {
     final items = <JsonValue>[];
     for (final (index, value) in values.indexed) {
-      switch (convert(value).inside(PathIndex(index))) {
+      switch (_convert(value, depth + 1).inside(PathIndex(index))) {
         case DecodeSuccess(value: final item):
           items.add(item);
         case final DecodeFailure failure:
@@ -51,11 +72,11 @@ final class const LiteralConverter() {
     return DecodeSuccess(JsonArray(items));
   }
 
-  DecodeResult<JsonValue> _object(List<ObjectField> fields) {
+  DecodeResult<JsonValue> _object(List<ObjectField> fields, int depth) {
     final converted = <String, JsonValue>{};
     for (final field in fields) {
       final name = field.name.value;
-      switch (convert(field.value).inside(PathKey(name))) {
+      switch (_convert(field.value, depth + 1).inside(PathKey(name))) {
         case DecodeSuccess(:final value):
           converted[name] = value;
         case final DecodeFailure failure:
