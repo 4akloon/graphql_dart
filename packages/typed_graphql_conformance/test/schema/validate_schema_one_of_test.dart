@@ -260,7 +260,8 @@ void main() {
     );
 
     test('checks each shared unbreakable OneOf subgraph once', () {
-      const chainLength = 16;
+      // 2^64 paths: a walk that does not share the subgraphs never ends.
+      const chainLength = 64;
       final oneOf = schemas.applied('@oneOf');
       final types = [
         InputObjectType(

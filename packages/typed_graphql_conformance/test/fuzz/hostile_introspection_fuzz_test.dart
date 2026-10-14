@@ -61,17 +61,21 @@ void main() {
 
   test('broken results never throw and reach every introspection code', () {
     final codes = <String>{};
-    for (var index = 0; index < budget.iterations; index++) {
+    final expected = [for (var id = 150; id <= 155; id++) 'GQL$id'];
+    // Past the budget, with any seed, until every code was reached or the
+    // extra iterations are spent: coverage must not depend on the seed.
+    final extra = budget.iterations >= 200 ? 3000 : 0;
+    for (var index = 0; index < budget.iterations + extra; index++) {
+      if (index >= budget.iterations && codes.containsAll(expected)) {
+        break;
+      }
       final json = resultFor(index);
       IntrospectionMutator(budget.randomFor(index)).mutate(json);
       codes.addAll(buildChecked(json, budget.replay(index)));
     }
     // A handful of iterations cannot be expected to break every way.
     if (budget.iterations >= 200) {
-      expect(
-        codes,
-        containsAll([for (var id = 150; id <= 155; id++) 'GQL$id']),
-      );
+      expect(codes, containsAll(expected));
     }
   });
 

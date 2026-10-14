@@ -124,10 +124,7 @@ void main() {
         port.schemaChanges(schema, extendedSchema),
         '$changes\n\n$newTypesSdl',
       );
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('extends interfaces by adding new fields', () {
@@ -180,10 +177,7 @@ void main() {
           }
         '''),
       );
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('extends interfaces by adding new implemented interfaces', () {
@@ -235,10 +229,7 @@ void main() {
           }
         '''),
       );
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('allows extension of interface with missing Object fields', () {
@@ -304,10 +295,7 @@ void main() {
           }
         '''),
       );
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('may extend mutations and subscriptions', () {
@@ -373,10 +361,7 @@ void main() {
       ''');
       final extendedSchema = port.extend(schema, extensionSdl);
       expect(port.schemaChanges(schema, extendedSchema), extensionSdl);
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
   });
 }

@@ -112,10 +112,7 @@ void main() {
           }
         '''),
       );
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('extends objects with standard type fields', () {
@@ -148,10 +145,8 @@ void main() {
           }
         '''),
       );
-      expect(
-        port.validate(extendedTwiceSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
+      expect(port.validationErrors(extendedTwiceSchema), isEmpty);
     });
 
     test('extends enums by adding new values', () {
@@ -184,10 +179,7 @@ void main() {
           }
         '''),
       );
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('extends unions by adding new types', () {
@@ -209,10 +201,7 @@ void main() {
         port.schemaChanges(schema, extendedSchema),
         'union SomeUnion = Foo | Biz | Bar',
       );
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('allows extension of union by adding itself', () {
@@ -262,10 +251,7 @@ void main() {
           }
         '''),
       );
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('extends scalars by adding new directives', () {
@@ -330,10 +316,7 @@ void main() {
         port.printType(foo),
         'scalar Foo @foo @specifiedBy(url: "https://example.com/foo_spec")',
       );
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
 
     test('builds scalars with specifiedBy directive from extensions', () {
@@ -357,10 +340,7 @@ void main() {
       final foo = port.assertType<ScalarType>(extendedSchema, 'Foo');
       expect(foo.specifiedByUrl, 'https://example.com/foo_spec');
       expect(foo.span?.text, 'scalar Foo');
-      expect(
-        port.validate(extendedSchema),
-        isA<ValidSchema>(),
-      );
+      expect(port.validationErrors(extendedSchema), isEmpty);
     });
   });
 }

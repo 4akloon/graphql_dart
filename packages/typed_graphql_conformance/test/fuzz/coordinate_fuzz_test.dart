@@ -103,7 +103,12 @@ void main() {
 
   test('hostile text never throws and reaches every outcome', () {
     final outcomes = {'parse failure': 0, 'null': 0, 'element': 0};
-    for (var index = 0; index < budget.iterations; index++) {
+    final extra = budget.iterations >= 200 ? 3000 : 0;
+    for (var index = 0; index < budget.iterations + extra; index++) {
+      // Past the budget, with any seed, until every outcome was reached.
+      if (index >= budget.iterations && outcomes.values.every((n) => n > 0)) {
+        break;
+      }
       final random = budget.randomFor(index);
       final schema = schemaFor(index);
       final text = hostileText(random, schema);
