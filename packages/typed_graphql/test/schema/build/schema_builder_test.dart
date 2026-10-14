@@ -52,6 +52,23 @@ void main() {
     expect(schema.span?.text, startsWith('"The API." schema'));
   });
 
+  test('takes the default root types besides an extension\'s', () {
+    final schema = Built('''
+      extend schema { mutation: Change }
+      type Query { a: Int }
+      type Mutation { a: Int }
+      type Change { a: Int }
+    ''').schema;
+    expect(schema.queryTypeName, 'Query');
+    expect(schema.mutationTypeName, 'Change');
+  });
+
+  test('reports a second schema definition', () {
+    expect(Built('schema { query: A } schema { query: B }').errors, [
+      '1:21 GQL107 Must provide only one schema definition.',
+    ]);
+  });
+
   test('keeps a reference to an unknown type: building does not validate', () {
     final field = Built('type Query { a: Missing }').schema.typeNamed('Query');
     expect(field, isA<ObjectType>());

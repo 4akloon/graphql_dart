@@ -114,5 +114,14 @@ enum DiagnosticCode(
 
   /// `GQL106`: a second value with one name in an enum type, its
   /// extensions included; the second is ignored.
-  duplicateEnumValueName('GQL106');
+  duplicateEnumValueName('GQL106'),
+
+  /// `GQL107`: a second schema definition, or one in a document that
+  /// extends a schema with root types; it is ignored.
+  duplicateSchemaDefinition('GQL107'),
+
+  /// `GQL108`: a second root type for one operation, in the schema
+  /// definition, its extensions or the schema being extended; the second
+  /// is ignored.
+  duplicateOperationType('GQL108');
 }

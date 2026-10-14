@@ -1,6 +1,7 @@
 import '../../language/ast/document.dart';
 import '../../language/ast/executable_definition.dart';
 import '../../language/ast/type_system_definition.dart';
+import '../../language/ast/type_system_extension.dart';
 
 /// The definitions of a document sorted by what the builder does with
 /// them, each list in document order.
@@ -15,6 +16,8 @@ final class DocumentDefinitions {
           types.add(definition);
         case DirectiveDefinition():
           directives.add(definition);
+        case SchemaExtension():
+          schemaExtensions.add(definition);
         case ExecutableDefinition():
           executables.add(definition);
       }
@@ -23,6 +26,9 @@ final class DocumentDefinitions {
 
   /// The schema definitions; a valid document has at most one.
   final List<SchemaDefinition> schemas = [];
+
+  /// The schema extensions.
+  final List<SchemaExtension> schemaExtensions = [];
 
   /// The type definitions.
   final List<TypeDefinition> types = [];

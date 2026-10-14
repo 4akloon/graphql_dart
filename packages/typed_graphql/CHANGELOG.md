@@ -89,3 +89,5 @@
 - The builder keeps the first member of each name: `GQL104` for a
   repeated field or input field, `GQL105` for a repeated argument,
   `GQL106` for a repeated enum value.
+- The builder applies schema extensions; `GQL107` for a second schema
+  definition, `GQL108` for a second root type of one operation.

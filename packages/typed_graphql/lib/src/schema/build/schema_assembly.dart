@@ -1,11 +1,13 @@
 import '../../language/ast/operation_type.dart';
 import '../../language/ast/type_system_definition.dart';
+import '../model/schema_directive.dart';
 import '../model/schema_type.dart';
 import '../schema.dart';
 import 'build_report.dart';
 import 'document_definitions.dart';
 import 'element_reader.dart';
 import 'member_filter.dart';
+import 'schema_definition_reader.dart';
 import 'type_reader.dart';
 import 'unique_definitions.dart';
 
@@ -19,12 +21,41 @@ final class SchemaAssembly(
   this;
 
   /// The schema [definitions] define; default root types are taken from
-  /// types named `Query`, `Mutation` and `Subscription` when no schema
-  /// definition names the roots (spec §3.3.1).
+  /// types named `Query`, `Mutation` and `Subscription` for the operations
+  /// no schema definition or extension names (spec §3.3.1).
   Schema fromSdl(
     DocumentDefinitions definitions, {
     required bool includesDeferAndStream,
   }) {
+    final base = Schema(includesDeferAndStream: includesDeferAndStream);
+    _reportExecutables(definitions);
+    final unique = UniqueDefinitions(report, base);
+    final types = _types(base, unique.types(definitions.types));
+    final header = SchemaDefinitionReader(
+      report,
+      _elements,
+    ).read(base, definitions.schemas, definitions.schemaExtensions);
+    final defaults = definitions.schemas.isEmpty
+        ? _defaultRoots(types)
+        : const <OperationType, String>{};
+    return Schema(
+      types: types,
+      directives: _directives(base, unique.directives(definitions.directives)),
+      queryTypeName: header.queryTypeName ?? defaults[OperationType.query],
+      mutationTypeName:
+          header.mutationTypeName ?? defaults[OperationType.mutation],
+      subscriptionTypeName:
+          header.subscriptionTypeName ?? defaults[OperationType.subscription],
+      description: header.description,
+      appliedDirectives: header.appliedDirectives,
+      includesDeferAndStream: base.includesDeferAndStream,
+      span: header.span,
+    );
+  }
+
+  ElementReader get _elements => ElementReader(report.spans);
+
+  void _reportExecutables(DocumentDefinitions definitions) {
     for (final executable in definitions.executables) {
       report.error(
         .executableDefinitionInSchema,
@@ -32,38 +63,22 @@ final class SchemaAssembly(
         executable,
       );
     }
-    final unique = UniqueDefinitions(
-      report,
-      Schema(includesDeferAndStream: includesDeferAndStream),
-    );
-    final filter = MemberFilter(report);
-    final elements = ElementReader(report.spans);
-    final types = [
-      for (final type in unique.types(definitions.types))
-        TypeReader(elements).type(filter.definition(type)),
-    ];
-    final schema = definitions.schemas.firstOrNull;
-    final roots = schema == null ? _defaultRoots(types) : _roots(schema);
-    return Schema(
-      types: types,
-      directives: [
-        for (final directive in unique.directives(definitions.directives))
-          elements.directive(filter.directive(directive)),
-      ],
-      queryTypeName: roots[OperationType.query],
-      mutationTypeName: roots[OperationType.mutation],
-      subscriptionTypeName: roots[OperationType.subscription],
-      description: schema?.description?.value,
-      appliedDirectives: elements.appliedAll(schema?.directives ?? const []),
-      includesDeferAndStream: includesDeferAndStream,
-      span: schema == null ? null : report.spans.of(schema),
-    );
   }
 
-  Map<OperationType, String> _roots(SchemaDefinition schema) => {
-    for (final root in schema.operationTypes)
-      root.operation: root.type.name.value,
-  };
+  List<SchemaType> _types(Schema base, List<TypeDefinition> nodes) => [
+    ...base.types,
+    for (final node in nodes)
+      TypeReader(_elements).type(MemberFilter(report).definition(node)),
+  ];
+
+  List<SchemaDirective> _directives(
+    Schema base,
+    List<DirectiveDefinition> nodes,
+  ) => [
+    ...base.directives,
+    for (final node in nodes)
+      _elements.directive(MemberFilter(report).directive(node)),
+  ];
 
   Map<OperationType, String> _defaultRoots(List<SchemaType> types) => {
     for (final type in types) ?_defaultRootNames[type.name]: type.name,

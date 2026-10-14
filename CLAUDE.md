@@ -197,7 +197,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   at its name and relates to the span of the definition it repeats; the
   first definition wins (`UniqueDefinitions`). `MemberFilter` drops repeated
   members and arguments from syntax nodes with `withChildren` before the
-  readers see them.
+  readers see them. `SchemaDefinitionReader` applies the schema definition
+  and `extend schema`; default roots fill only the operations that no schema
+  definition or extension names, and only without a schema definition.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
