@@ -107,6 +107,9 @@ behaviour, and the server and client register codecs by scalar name.
 pass; each rule family is a separate class in `schema/validation/`:
 
 - root operation types exist, are object types and are distinct;
+- every referenced type exists: the type of a field, an argument or an input
+  field, an implemented interface, a union member, a root type (the builder
+  keeps references as names, so it builds a schema with an unknown one);
 - names: no `__` prefix outside the introspection types, valid name syntax;
 - object and interface types have at least one field; field and argument types
   are output / input types as the position requires;
@@ -117,7 +120,10 @@ pass; each rule family is a separate class in `schema/validation/`:
 - `@oneOf` input objects: fields are nullable and without defaults;
 - directives: argument types, uniqueness of non-repeatable directives, valid
   locations, no self-referencing directive definition, `@deprecated` only
-  where allowed, applied-directive arguments checked against the definition.
+  where allowed, applied-directive arguments checked against the definition;
+  every applied directive is defined (graphql-js checks this and the unique,
+  known and required directive arguments on SDL before building; here the
+  validator checks them on any schema).
 
 The result is the sealed `SchemaValidationResult`: `ValidSchema` or
 `InvalidSchema(diagnostics)`. `ValidSchema` is a `final class` with a private

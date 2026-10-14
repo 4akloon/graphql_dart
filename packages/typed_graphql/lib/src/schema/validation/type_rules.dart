@@ -1,10 +1,14 @@
+import '../../language/ast/directive_location.dart';
 import '../build/built_ins.dart';
 import '../model/schema_type.dart';
 import '../schema.dart';
+import 'applied_directive_rules.dart';
 import 'enum_rules.dart';
 import 'field_rules.dart';
 import 'input_object_rules.dart';
+import 'interface_rules.dart';
 import 'name_rules.dart';
+import 'union_rules.dart';
 import 'unique_names.dart';
 import 'validation_report.dart';
 
@@ -26,19 +30,39 @@ final class TypeRules(
     _definitions();
     for (final type in schema.types) {
       NameRules(report).check(type.name, type.span);
-      switch (type) {
-        case ObjectType(:final name, :final fields) ||
-            InterfaceType(:final name, :final fields):
-          FieldRules(report).check(name, fields);
-        case EnumType():
-          EnumRules(report).check(type);
-        case InputObjectType():
-          InputObjectRules(report).check(type);
-        case ScalarType() || UnionType():
-          break;
-      }
+      AppliedDirectiveRules(
+        report,
+        schema,
+      ).check(type.appliedDirectives, _locationOf(type));
+      _kind(type);
     }
   }
+
+  void _kind(SchemaType type) {
+    switch (type) {
+      case ObjectType(:final name, :final fields, :final interfaces) ||
+          InterfaceType(:final name, :final fields, :final interfaces):
+        FieldRules(report, schema).check(name, fields);
+        InterfaceRules(report, schema).check(interfaces);
+      case UnionType():
+        UnionRules(report, schema).check(type);
+      case EnumType():
+        EnumRules(report, schema).check(type);
+      case InputObjectType():
+        InputObjectRules(report, schema).check(type);
+      case ScalarType():
+        break;
+    }
+  }
+
+  static DirectiveLocation _locationOf(SchemaType type) => switch (type) {
+    ScalarType() => .scalar,
+    ObjectType() => .object,
+    InterfaceType() => .interface,
+    UnionType() => .union,
+    EnumType() => .enumType,
+    InputObjectType() => .inputObject,
+  };
 
   // The builder drops these from SDL; a schema built in code may hold
   // them.

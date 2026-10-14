@@ -66,9 +66,18 @@ type Q { a: Int }''');
     expect(validated.errors.single, contains('used as query, mutation, and '));
   });
 
-  test('a root that names no type is left to the reference rules', () {
+  test('a root that names no type is an unknown type', () {
     final schema = Schema(queryTypeName: 'Missing');
-    expect(Validated.schema(schema).codes, isNot(contains('GQL112')));
+    expect(Validated.schema(schema).errors, [
+      'null GQL116 Unknown type "Missing".',
+    ]);
+  });
+
+  test('an unknown root points at its name in the schema', () {
+    final validated = Validated('''
+schema { query: Q mutation: Missing }
+type Q { a: Int }''');
+    expect(validated.errors, ['1:29 GQL116 Unknown type "Missing".']);
   });
 
   test('assumeValid wraps a schema without checking it', () {

@@ -1,4 +1,5 @@
 import '../schema.dart';
+import 'applied_directive_rules.dart';
 import 'directive_definition_rules.dart';
 import 'root_type_rules.dart';
 import 'schema_validation_result.dart';
@@ -22,6 +23,10 @@ final class const SchemaValidator() {
   SchemaValidationResult validate(Schema schema) {
     final report = ValidationReport();
     RootTypeRules(report, schema).check();
+    AppliedDirectiveRules(
+      report,
+      schema,
+    ).check(schema.appliedDirectives, .schema);
     DirectiveDefinitionRules(report, schema).check();
     TypeRules(report, schema).check();
     return report.hasErrors

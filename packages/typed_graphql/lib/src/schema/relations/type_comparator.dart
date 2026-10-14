@@ -9,12 +9,15 @@ final class const TypeComparator() {
 
   /// The name of the named type inside [type]'s list and non-null
   /// wrappers.
-  String namedTypeName(TypeRef type) {
+  String namedTypeName(TypeRef type) => namedType(type).name.value;
+
+  /// The named type node inside [type]'s list and non-null wrappers.
+  NamedType namedType(TypeRef type) {
     var current = type;
     while (true) {
       switch (current) {
-        case NamedType(:final name):
-          return name.value;
+        case NamedType():
+          return current;
         case ListType(type: final inner) || NonNullType(type: final inner):
           current = inner;
       }

@@ -141,3 +141,9 @@
   repeated types, directives, fields, arguments and enum values
   (`GQL101`–`GQL106`, the builder's messages) and redefined built-ins
   (`GQL103`).
+- Schema validation reports unknown types (`GQL116`, at the type name; a
+  root that names no type included) and checks applied directives: unknown
+  (`GQL117`), misplaced (`GQL118`), repeated when not repeatable
+  (`GQL119`), with a repeated (`GQL120`), unknown (`GQL121`) or missing
+  required (`GQL122`) argument, with graphql-js's SDL-rule messages.
+  `TypeComparator.namedType` gives the named type node inside wrappers.

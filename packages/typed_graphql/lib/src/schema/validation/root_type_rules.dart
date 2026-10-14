@@ -1,13 +1,14 @@
 import '../../language/ast/operation_type.dart';
 import '../model/schema_type.dart';
 import '../schema.dart';
+import 'type_reference_rules.dart';
 import 'validation_report.dart';
 
 /// The rules of the root operation types (spec §3.3.1): a query root
 /// exists, every root is an object type, and no object type is the root
 /// of two operations; graphql-js's `validateRootTypes`.
 ///
-/// A root that names no type is the reference rules' to report.
+/// A root that names no type is reported as an unknown type.
 final class RootTypeRules(
   /// Receives the errors.
   final ValidationReport report,
@@ -28,7 +29,14 @@ final class RootTypeRules(
     final operationsByRoot = <ObjectType, List<OperationType>>{};
     for (final operation in OperationType.values) {
       final name = schema.rootTypeName(operation);
-      switch (name == null ? null : schema.typeNamed(name)) {
+      if (name == null ||
+          !TypeReferenceRules(
+            report,
+            schema,
+          ).isKnown(name, schema.rootTypeSpan(operation))) {
+        continue;
+      }
+      switch (schema.typeNamed(name)) {
         case null:
           continue;
         case final ObjectType type:

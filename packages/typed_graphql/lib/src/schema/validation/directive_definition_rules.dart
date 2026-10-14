@@ -1,5 +1,6 @@
 import '../build/built_ins.dart';
 import '../schema.dart';
+import 'applied_directive_rules.dart';
 import 'argument_rules.dart';
 import 'name_rules.dart';
 import 'unique_names.dart';
@@ -22,7 +23,14 @@ final class DirectiveDefinitionRules(
     _definitions();
     for (final directive in schema.directives) {
       NameRules(report).check(directive.name, directive.span);
-      ArgumentRules(report).check('@${directive.name}', directive.arguments);
+      AppliedDirectiveRules(
+        report,
+        schema,
+      ).check(directive.appliedDirectives, .directiveDefinition);
+      ArgumentRules(
+        report,
+        schema,
+      ).check('@${directive.name}', directive.arguments);
     }
   }
 

@@ -160,5 +160,34 @@ enum DiagnosticCode(
 
   /// `GQL115`: a name that is empty or not of the name syntax
   /// `[_A-Za-z][_0-9A-Za-z]*` (spec §2.1.9), in a schema built in code.
-  invalidName('GQL115');
+  invalidName('GQL115'),
+
+  /// `GQL116`: a reference to a type the schema does not have: the type
+  /// of a field, an argument or an input field, an implemented interface,
+  /// a union member or a root type (spec §3.4).
+  unknownType('GQL116'),
+
+  /// `GQL117`: a directive applied to a schema element that the schema
+  /// does not define (spec §3.13).
+  unknownDirective('GQL117'),
+
+  /// `GQL118`: a directive applied at a location its definition does not
+  /// list, such as `@deprecated` on an object type (spec §3.13).
+  misplacedDirective('GQL118'),
+
+  /// `GQL119`: a directive that is not `repeatable` applied twice to one
+  /// schema element (spec §3.13).
+  repeatedDirective('GQL119'),
+
+  /// `GQL120`: an applied directive given one argument twice
+  /// (spec §5.4.2).
+  duplicateDirectiveArgument('GQL120'),
+
+  /// `GQL121`: an applied directive given an argument its definition
+  /// does not have (spec §5.4.1).
+  unknownDirectiveArgument('GQL121'),
+
+  /// `GQL122`: an applied directive without a required argument: one of
+  /// non-null type and without a default value (spec §5.4.2.1).
+  missingDirectiveArgument('GQL122');
 }

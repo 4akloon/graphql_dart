@@ -262,6 +262,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `DirectiveDefinitionRules` walks the directives; both share
   `ArgumentRules`, `NameRules` (syntax, `__`, reserved enum values) and
   `UniqueNames` (repeats, which only a schema built in code can hold).
+  Every element also goes through `AppliedDirectiveRules` (at its
+  `DirectiveLocation`) and `TypeReferenceRules` (unknown types). An error
+  about a node an element holds (its type, a default value, an applied
+  directive's argument) points at the node through `NodeSpan.within`: the
+  element's source with the node's offsets, as graphql-js points.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
