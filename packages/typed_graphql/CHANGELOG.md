@@ -91,3 +91,6 @@
   `GQL106` for a repeated enum value.
 - The builder applies schema extensions; `GQL107` for a second schema
   definition, `GQL108` for a second root type of one operation.
+- The builder applies type extensions of every kind; `GQL109` for an
+  extension of a missing type, `GQL110` for one of another kind,
+  `GQL103` for one of a built-in.

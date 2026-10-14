@@ -200,6 +200,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   readers see them. `SchemaDefinitionReader` applies the schema definition
   and `extend schema`; default roots fill only the operations that no schema
   definition or extension names, and only without a schema definition.
+  `TypeExtender` appends an extension's members, interfaces, union members
+  and directives after the type's own, in document order, and keeps the
+  definition's span.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

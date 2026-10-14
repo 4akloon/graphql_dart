@@ -8,6 +8,7 @@ import 'document_definitions.dart';
 import 'element_reader.dart';
 import 'member_filter.dart';
 import 'schema_definition_reader.dart';
+import 'type_extender.dart';
 import 'type_reader.dart';
 import 'unique_definitions.dart';
 
@@ -30,7 +31,10 @@ final class SchemaAssembly(
     final base = Schema(includesDeferAndStream: includesDeferAndStream);
     _reportExecutables(definitions);
     final unique = UniqueDefinitions(report, base);
-    final types = _types(base, unique.types(definitions.types));
+    final types = TypeExtender(report).applyAll(
+      _types(base, unique.types(definitions.types)),
+      definitions.typeExtensions,
+    );
     final header = SchemaDefinitionReader(
       report,
       _elements,

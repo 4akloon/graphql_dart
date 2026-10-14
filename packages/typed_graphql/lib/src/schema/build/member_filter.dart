@@ -11,7 +11,8 @@ import 'build_report.dart';
 /// the first of each name and reporting the others.
 ///
 /// It filters syntax nodes and rebuilds them with `withChildren`, so the
-/// readers see only kept members. The messages are graphql-js's
+/// readers see only kept members; a type extension is filtered against the
+/// members its type already has ([members]). The messages are graphql-js's
 /// (`UniqueFieldDefinitionNamesRule`, `UniqueEnumValueNamesRule`,
 /// `UniqueArgumentDefinitionNamesRule`).
 final class MemberFilter(
@@ -24,7 +25,7 @@ final class MemberFilter(
   /// [node] without repeated fields, input fields, enum values and field
   /// arguments.
   TypeDefinition definition(TypeDefinition node) =>
-      node.withChildren(_members(node.name.value, node.children))
+      node.withChildren(members(node.name.value, node.children, const {}))
           as TypeDefinition;
 
   /// [node] without repeated arguments.
@@ -32,8 +33,16 @@ final class MemberFilter(
       node.withChildren(_arguments('@${node.name.value}', node.children))
           as DirectiveDefinition;
 
-  List<Node> _members(String typeName, List<Node> children) {
-    final seen = <String, SourceSpan?>{};
+  /// [children] of a definition or an extension of the type [typeName]
+  /// without the members named in [earlier] or before in [children]; the
+  /// kept fields lose their repeated arguments. [earlier] maps the names of
+  /// the members the type already has to their spans.
+  List<Node> members(
+    String typeName,
+    List<Node> children,
+    Map<String, SourceSpan?> earlier,
+  ) {
+    final seen = {...earlier};
     final kept = <Node>[];
     for (final child in children) {
       final member = switch (child) {

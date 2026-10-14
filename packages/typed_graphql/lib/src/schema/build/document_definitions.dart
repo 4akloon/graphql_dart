@@ -14,6 +14,8 @@ final class DocumentDefinitions {
           schemas.add(definition);
         case TypeDefinition():
           types.add(definition);
+        case TypeExtension():
+          typeExtensions.add(definition);
         case DirectiveDefinition():
           directives.add(definition);
         case SchemaExtension():
@@ -32,6 +34,9 @@ final class DocumentDefinitions {
 
   /// The type definitions.
   final List<TypeDefinition> types = [];
+
+  /// The type extensions.
+  final List<TypeExtension> typeExtensions = [];
 
   /// The directive definitions.
   final List<DirectiveDefinition> directives = [];

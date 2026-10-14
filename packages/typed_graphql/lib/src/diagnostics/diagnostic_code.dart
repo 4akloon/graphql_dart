@@ -123,5 +123,13 @@ enum DiagnosticCode(
   /// `GQL108`: a second root type for one operation, in the schema
   /// definition, its extensions or the schema being extended; the second
   /// is ignored.
-  duplicateOperationType('GQL108');
+  duplicateOperationType('GQL108'),
+
+  /// `GQL109`: an extension of a type that neither the document nor the
+  /// schema being extended defines; it is ignored.
+  unknownExtensionTarget('GQL109'),
+
+  /// `GQL110`: an extension of a type of another kind, such as
+  /// `extend input` of an object type; it is ignored.
+  extensionKindMismatch('GQL110');
 }
