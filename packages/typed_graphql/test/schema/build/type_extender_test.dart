@@ -69,6 +69,16 @@ extend enum Color @key { GREEN }''').schema;
     expect(namesOf(color.appliedDirectives), ['key']);
   });
 
+  test('applies a valid extension after a mismatched one', () {
+    final built = Built(
+      'type A { a: Int } extend input A { b: Int } extend type A { c: Int }',
+    );
+    final a = built.partial.typeNamed('A') as ObjectType;
+    expect(namesOf(a.fields), ['a', 'c']);
+    expect(built.result.diagnostics, hasLength(1));
+    expect(built.result.diagnostics.single.code, DiagnosticCode.extensionKindMismatch);
+  });
+
   test('extends an input object type', () {
     final schema = Built('''
 input Filter { a: Int }
