@@ -8,7 +8,8 @@
 
 > **Status: under construction.** Stage M2 of the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)
-> ports the graphql-js language suites; nothing is exported.
+> ports every graphql-js language suite and adds the language fuzzers;
+> nothing is exported.
 
 ## Ported suites
 
@@ -27,7 +28,7 @@ per graphql-js test, with the same group and test names.
 | `reason` | why, for `adapted` and `skipped` |
 
 `test/mapping_test.dart` checks the table; with `reference/` fetched it also
-checks that every test of a ported file has a row.
+checks that every test of every graphql-js language test file has a row.
 
 ## Fuzzing
 

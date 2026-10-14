@@ -22,9 +22,10 @@ Minimum SDK: Dart 3.13 (`sdk: ^3.13.0`) in every package and in generated
 code. No dependency on `package:gql` or its ecosystem.
 
 Status: under construction. M1 (foundations) delivered the workspace, the
-code rules, CI, the diagnostics model and the protocol data types. M2a
-(language core) delivers the syntax trees, the lexer, the parser, the
-printer and the ported graphql-js language suites.
+code rules, CI, the diagnostics model and the protocol data types. M2
+(language) delivers the syntax trees, the lexer, the parser, the printer,
+visitors and transformers, schema coordinates, source excerpts, every
+graphql-js language suite and the language fuzzers.
 
 ## Documents
 
@@ -234,6 +235,15 @@ Learned in M2a:
   library overrides `rebuildFrom(Object? read)` without the internal
   `ChildReader`.
 
+Learned in M2b:
+- Recursion over a syntax tree overflows the stack on the web long before
+  the VM; walk deep structures with an explicit stack.
+- A cascade cannot stand in a branch of `?:`: `c ? [...]..sort() : x` does
+  not parse. Write an `if` with two returns.
+- In a document, `{` after a body-less type extension (`extend enum E @d`)
+  opens that extension's body, as in graphql-js: a shorthand query can
+  only come first.
+
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
 refer to identifiers in `[brackets]`; a boolean property starts with
@@ -291,4 +301,6 @@ fails when it finds none.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
 - Conformance mapping table: `packages/typed_graphql_conformance/mapping/language.csv`,
   checked by `test/mapping_test.dart` there; port helpers in its `test/support/`.
+- Fuzzers: `packages/typed_graphql_conformance/test/fuzz/`;
+  `TYPED_GRAPHQL_FUZZ_ITERATIONS` and `TYPED_GRAPHQL_FUZZ_SEED` tune them.
 - CI: `.github/workflows/ci.yml`.
