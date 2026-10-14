@@ -6,6 +6,7 @@ import '../model/schema_field.dart';
 import '../model/schema_type.dart';
 import '../relations/type_comparator.dart';
 import '../schema.dart';
+import 'cycle_finder.dart';
 import 'validation_report.dart';
 
 /// The rule that a directive definition does not reference itself, directly
@@ -13,8 +14,12 @@ import 'validation_report.dart';
 /// references (spec §3.13 "Type Validation", rules 2 and 3).
 ///
 /// The references form a graph of `@name` (a directive) and `Name` (a
-/// type) keys, walked with a stack and a visited set, so a cycle that does
-/// not pass through the directive checked ends the walk.
+/// type) keys. Its cycles are found once for all the directives, so the
+/// rule costs linear time in the size of the graph, not a walk per
+/// directive. A directive is a node by its name: of two directives with
+/// one name, the first is the node.
+///
+/// One instance serves one validation run.
 final class DirectiveReferenceRules(
   /// Receives the errors.
   final ValidationReport report,
@@ -25,25 +30,21 @@ final class DirectiveReferenceRules(
   /// Creates the rule for [schema].
   this;
 
+  // late: found on the first directive checked, for all of them.
+  late final Set<String> _cyclic = CycleFinder(_of).cyclicAmong([
+    for (final directive in schema.directives) '@${directive.name}',
+  ]);
+
   /// Reports [directive] when it references itself.
   void check(SchemaDirective directive) {
     final self = '@${directive.name}';
-    final visited = <String>{};
-    final pending = _ofDirective(directive);
-    while (pending.isNotEmpty) {
-      final reference = pending.removeLast();
-      if (reference == self) {
-        report.error(
-          .directiveSelfReference,
-          'Directive "$self" must not reference itself directly or '
-          'indirectly.',
-          [directive.span],
-        );
-        return;
-      }
-      if (visited.add(reference)) {
-        pending.addAll(_of(reference));
-      }
+    if (_cyclic.contains(self)) {
+      report.error(
+        .directiveSelfReference,
+        'Directive "$self" must not reference itself directly or '
+        'indirectly.',
+        [directive.span],
+      );
     }
   }
 

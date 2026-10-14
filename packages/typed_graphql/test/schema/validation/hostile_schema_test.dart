@@ -81,6 +81,30 @@ union U = ${names.join(' | ')}''');
     expect(errors.length, lessThanOrEqualTo(101));
   });
 
+  test('a chain of 8000 directives that apply each other is valid', () {
+    const count = 8000;
+    final directives = [
+      for (var i = 0; i < count - 1; i++)
+        'directive @d$i(a: Int @d${i + 1}) on ARGUMENT_DEFINITION',
+      'directive @d${count - 1} on ARGUMENT_DEFINITION',
+    ].join('\n');
+    final (elapsed, errors) = timed('type Query { a: Int }\n$directives');
+    expect(elapsed, lessThan(const Duration(seconds: 2)));
+    expect(errors, isEmpty);
+  });
+
+  test('a ring of 8000 directives reports each, up to the limit', () {
+    const count = 8000;
+    final directives = [
+      for (var i = 0; i < count; i++)
+        'directive @d$i(a: Int @d${(i + 1) % count}) on ARGUMENT_DEFINITION',
+    ].join('\n');
+    final (elapsed, errors) = timed('type Query { a: Int }\n$directives');
+    expect(elapsed, lessThan(const Duration(seconds: 2)));
+    expect(errors, hasLength(101));
+    expect(errors.first, contains('GQL130 Directive "@d0"'));
+  });
+
   test('an Int literal of four million digits is out of range, fast', () {
     final schema = Built('type Query { a: Int }').schema;
     final watch = Stopwatch()..start();

@@ -23,6 +23,7 @@ final class DirectiveDefinitionRules(
   /// Reports every problem of the declared directives of [schema].
   void check() {
     _definitions();
+    final references = DirectiveReferenceRules(report, schema);
     for (final directive in schema.directives) {
       NameRules(report).check(directive.name, directive.span);
       AppliedDirectiveRules(
@@ -40,7 +41,7 @@ final class DirectiveDefinitionRules(
         report,
         schema,
       ).check('@${directive.name}', directive.arguments);
-      DirectiveReferenceRules(report, schema).check(directive);
+      references.check(directive);
     }
   }
 
