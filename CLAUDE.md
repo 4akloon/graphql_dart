@@ -34,7 +34,11 @@ relations, the schema validator, the introspection query, introspection
 results in both directions, coordinate resolution, the graphql-js
 `validateSchema`, `buildClientSchema`, `introspectionFromSchema` and
 `resolveSchemaCoordinate` suites, the introspection and coordinate fuzzers,
-and the Introspection guide.
+and the Introspection guide. M4a (operation validation) delivers the rule
+framework, the 30 rules of spec §5 (`GQL200`-`GQL229`), field selection
+merging in linear time, the step budget (`GQL230`), every graphql-js
+validation suite, the hostile-document tests and the Operation Validation
+guide.
 
 ## Documents
 
@@ -315,6 +319,44 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   walks default values depth-first and, created once per run, remembers
   the fields it walked across types.
 
+**Validation** (`validation/`; M4). Imports every layer before it.
+- `DocumentValidator` (const: `rules`, `maxErrors`, `includesSuggestions`,
+  `maxSteps`) validates a `Document` against a `ValidSchema` and returns the
+  sealed `DocumentValidationResult` (`ValidDocument` | `InvalidDocument`).
+  `specifiedRules` are the 30 rules of spec §5 in graphql-js's order, three
+  graphql-js rules split so that one class reports one code.
+- A `ValidationRule` is const configuration; `createVisitor(context)` gives
+  a fresh `AstVisitor` per run. `ValidationWalk` walks the document once
+  with all of them (a `ParallelVisitor`), with `TypeInfo` (graphql-js's:
+  parent type, field definition, input type, directive, argument) entered
+  before the rules and left after them, and `UsageIndex` recording
+  variable usages and spreads per definition. Descriptions are not walked
+  (spec §2.2).
+- `ValidationContext`: `report(code, message, nodes)` (the first node is
+  the place, the others related), `fragmentNamed` (the last definition of a
+  name), `recursivelyReferencedFragments` and `recursiveVariableUsages`
+  (only from `leave(Document)`), `spend(steps)` (the step budget: past
+  `maxSteps` one `GQL230` and the run stops), `isAborted`, `maxErrors`.
+  A rule that needs operation closures reports at `leave(Document)`
+  (`OperationVisitor`), after the rules that report during the walk.
+- Shared pieces: `FragmentSpreadCollector`, `ValueProblemVisitor` (one
+  `ValueChecker` pass per literal, split by `ValueProblemKind` into
+  `GQL218`-`GQL221`), `FieldTypeSuggestions`, `MetaFields`.
+  `EngineOrderedSort` reproduces the order V8's sort gives graphql-js's
+  type suggestions, whose comparator is not a total order, so messages
+  match to the character. "Did you mean" text is
+  `diagnostics/Suggestions` over `LexicalDistance`.
+- `overlap/` is `OverlappingFieldsCanBeMergedRule` (R3.3; spec section 6 of
+  M4): `FieldMerging` merges each operation, and each fragment no earlier
+  root expanded, level by level over an explicit stack.
+  `SelectionCollector` groups `MergeItem`s by response name (each with its
+  `FragmentTrail`, a persistent list of the fragments spread to reach it),
+  `MergeSplit` classes them by `FieldShape` and by name and `ArgumentText`
+  per object parent and pairs each with the first item of every other
+  class, `ConflictJudge` judges a pair at its nearest distinct ancestors,
+  `ConflictTree` and `ConflictReports` build graphql-js's nested messages
+  and order them by the selection set graphql-js finds them in.
+
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
 `ArgumentError`, `RangeError`, `StateError`.
@@ -410,6 +452,14 @@ Learned in the discoverability stage:
   live under `~/fvm/versions/`; run `dart format --output=none
   --set-exit-if-changed packages test` with both before a push.
 
+Learned in M4a:
+- Equal messages need equal order: a comparator that is not a total
+  order sorts differently in Dart and in V8; `EngineOrderedSort` follows V8.
+- A ported template literal keeps its indentation: moving tests between
+  groups must not re-indent the query text, or every column shifts.
+- A work budget is measured, not guessed: about a million steps take a
+  second on the VM, so the default `maxSteps` is a million.
+
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
 refer to identifiers in `[brackets]`; a boolean property starts with
@@ -491,11 +541,13 @@ README that leaves the package folder is an absolute URL.
   `packages/typed_graphql/example/example.dart`. The documentation suite is
   `packages/typed_graphql/test/doc/`.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
-- Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`
-  and `mapping/schema.csv`, checked by `test/mapping_test.dart` there; port
-  helpers in its `test/support/` (`SchemaPort` for the schema suites,
-  `ValidationPort` for `validateSchema`, `IntrospectionPort` for
-  `buildClientSchema`).
+- Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`,
+  `mapping/schema.csv` and `mapping/validation.csv`, checked by
+  `test/mapping_test.dart` there; port helpers in its `test/support/`
+  (`SchemaPort` for the schema suites, `ValidationPort` for
+  `validateSchema`, `IntrospectionPort` for `buildClientSchema`,
+  `RulePort` for the validation rule suites).
+- Hostile-document tests: `packages/typed_graphql/test/validation/hostile_*_test.dart`.
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
   round trip, hostile SDL, introspection round trip, hostile
   introspection, coordinates); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and

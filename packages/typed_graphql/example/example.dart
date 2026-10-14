@@ -26,6 +26,19 @@ void main() {
   switch (result) {
     case BuildSuccess(:final schema):
       stdout.writeln('query root: ${schema.queryTypeName}');
+      // A request is checked against a valid schema by the spec's rules.
+      final request = Source('{ heroes }', name: 'request.graphql');
+      if (const SchemaValidator().validate(schema)
+          case final ValidSchema valid) {
+        final checked = const DocumentValidator().validate(
+          valid,
+          parser.parse(request).requireDocument(),
+          source: request,
+        );
+        if (checked case InvalidDocument(:final diagnostics)) {
+          diagnostics.forEach(stdout.writeln);
+        }
+      }
     case BuildFailure(:final diagnostics):
       diagnostics.forEach(stdout.writeln);
   }

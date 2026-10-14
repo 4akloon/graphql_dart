@@ -249,3 +249,9 @@
   in linear time (R3.3); with three or more conflicting fields of one
   response name it reports fewer conflicts than graphql-js.
 - `ValidationContext.maxErrors`.
+- The Operation Validation guide covers validating a document, the
+  specified rules and their codes, field selection merging and custom rules;
+  the example and the README tour validate a request.
+- pub.dev metadata, README and `llms.txt` say that the package validates
+  operations; the discovery query "validate a GraphQL operation dart"
+  works today.

@@ -37,7 +37,7 @@ adds its row (or turns it to "yes") together with its README line and its
 | GraphQL request response JSON types dart | M1 | yes |
 | validate a GraphQL schema dart | M3 | yes |
 | GraphQL introspection query schema dart | M3 | yes |
-| validate a GraphQL operation dart | M4 | no |
+| validate a GraphQL operation dart | M4 | yes |
 | execute a GraphQL query dart | M5 | no |
 | GraphQL server dart | M7 | no |
 | generate a typed GraphQL client dart | M10 | no |
