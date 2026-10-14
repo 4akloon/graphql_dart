@@ -22,6 +22,11 @@ void main() {
         ],
       };
 
+  test('spans a member coordinate from the type to the member', () {
+    final node = coordinateOf('T.f');
+    expect([node.start, node.end], [0, 3]);
+  });
+
   test('parses each of the five forms into its node', () {
     expect(
       coordinateOf('Query'),

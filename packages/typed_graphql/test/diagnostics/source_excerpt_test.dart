@@ -15,6 +15,17 @@ void main() {
     );
   });
 
+  test('ends a line at CRLF and at a lone CR', () {
+    expect(
+      excerpt.of(Source('a\r\n b\rc'), const SourceLocation(2, 2)),
+      'GraphQL request:2:2\n'
+      '1 | a\n'
+      '2 |  b\n'
+      '  |  ^\n'
+      '3 | c',
+    );
+  });
+
   test('leaves out the lines a document does not have', () {
     expect(
       excerpt.of(Source('{', name: 'a.graphql'), const SourceLocation(1, 2)),

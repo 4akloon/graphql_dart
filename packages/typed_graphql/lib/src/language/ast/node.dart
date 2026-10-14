@@ -45,6 +45,9 @@ abstract class const Node({
 
   /// Whether [other] has the same kind, the same scalar fields and
   /// equivalent children, in order; positions are ignored.
+  ///
+  /// It recurses over the tree, so it is bounded by the parser's
+  /// `maxDepth`.
   bool isEquivalentTo(Node other) {
     if (other.runtimeType != runtimeType ||
         !_sameScalars(scalars, other.scalars)) {

@@ -15,7 +15,9 @@ final class SourceExcerpt {
 
   static final RegExp _lineTerminator = RegExp('\r\n|[\n\r]');
 
-  /// [location] in [source], which must be a location of [source].
+  /// Shows [location] in [source].
+  ///
+  /// Throws a [RangeError] when [location] is not a location of [source].
   String of(Source source, SourceLocation location) {
     final SourceLocation(:line, :column) = location;
     final lines = source.body.split(_lineTerminator);

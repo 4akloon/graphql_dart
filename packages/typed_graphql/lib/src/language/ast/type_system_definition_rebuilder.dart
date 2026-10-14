@@ -1,6 +1,8 @@
 import 'child_reader.dart';
+import 'name.dart';
 import 'node.dart';
 import 'type_system_definition.dart';
+import 'value.dart';
 
 /// Rebuilds a [TypeSystemDefinition] for [Node.withChildren]; apart from
 /// the node classes so their library stays within the size limit.
@@ -19,16 +21,7 @@ final class const TypeSystemDefinitionRebuilder() {
           start: node.start,
           end: node.end,
         ),
-        DirectiveDefinition() => DirectiveDefinition(
-          description: read.optional(),
-          read.one(),
-          arguments: read.all(),
-          directives: read.all(),
-          isRepeatable: node.isRepeatable,
-          locations: read.all(),
-          start: node.start,
-          end: node.end,
-        ),
+        DirectiveDefinition() => _directive(node, read),
         ScalarTypeDefinition() => ScalarTypeDefinition(
           description: read.optional(),
           read.one(),
@@ -42,6 +35,29 @@ final class const TypeSystemDefinitionRebuilder() {
         EnumTypeDefinition() => _enum(node, read),
         InputObjectTypeDefinition() => _inputObject(node, read),
       };
+
+  DirectiveDefinition _directive(DirectiveDefinition node, ChildReader read) {
+    final description = read.optional<StringValue>();
+    final name = read.one<Name>();
+    // Without arguments or directives, a removed name leaves the first
+    // location where the name is read.
+    if (node.locations.any((location) => identical(location, name))) {
+      throw StateError(
+        'Removing a directive name is ambiguous: a location would become '
+        'the name. Rewrite the DirectiveDefinition instead.',
+      );
+    }
+    return DirectiveDefinition(
+      description: description,
+      name,
+      arguments: read.all(),
+      directives: read.all(),
+      isRepeatable: node.isRepeatable,
+      locations: read.all(),
+      start: node.start,
+      end: node.end,
+    );
+  }
 
   ObjectTypeDefinition _object(ObjectTypeDefinition node, ChildReader read) =>
       ObjectTypeDefinition(

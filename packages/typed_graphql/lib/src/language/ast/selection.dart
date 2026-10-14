@@ -54,6 +54,12 @@ final class Field(
     if (names.isEmpty || names.length > 2) {
       throw StateError('A field has one or two names, not ${names.length}.');
     }
+    if (names.length == 1 && alias != null && identical(names.single, alias)) {
+      throw StateError(
+        'Removing a field name is ambiguous: the alias would become the '
+        'name. Rewrite the Field instead.',
+      );
+    }
     return Field(
       names.length == 2 ? names.first : null,
       names.last,

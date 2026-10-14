@@ -30,6 +30,9 @@ import 'value_printer.dart';
 /// characters, for the wire and for persisted-query hashes.
 ///
 /// Parsing the output gives a tree equivalent to the input.
+///
+/// Printing recurses over the tree, so it is bounded by the parser's
+/// `maxDepth`; a tree built in code that is deeper can overflow the stack.
 final class Printer {
   /// Creates a printer; [isMinified] selects the minified form.
   const Printer({this.isMinified = false});

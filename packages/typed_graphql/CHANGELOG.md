@@ -53,6 +53,8 @@
   walked alone.
 - `AstTransformer`: rebuilds a syntax tree bottom-up; `rewrite` keeps,
   replaces or removes a node, and unchanged branches keep their instance.
+  Removing the name of a `Field` with an alias or of a
+  `DirectiveDefinition` is a `StateError`, not a silent rename.
 - Schema coordinate nodes: the `SchemaCoordinate` family
   (`TypeCoordinate`, `MemberCoordinate`, `ArgumentCoordinate`,
   `DirectiveCoordinate`, `DirectiveArgumentCoordinate`).

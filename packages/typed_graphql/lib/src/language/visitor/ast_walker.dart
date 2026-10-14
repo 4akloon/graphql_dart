@@ -6,7 +6,9 @@ import 'visit_action.dart';
 /// [AstVisitor] on the way down and on the way up.
 ///
 /// The walk keeps its own stack instead of recursing, so a tree built in
-/// code or parsed without `maxDepth` cannot overflow the call stack.
+/// code cannot overflow the call stack however deep it is. (A parser
+/// without `maxDepth` overflows first, and `Printer.print` and
+/// [Node.isEquivalentTo] recurse.)
 final class AstWalker {
   /// Creates a walker; it keeps no state between walks.
   const AstWalker();

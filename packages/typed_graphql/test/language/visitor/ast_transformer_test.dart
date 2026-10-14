@@ -55,6 +55,22 @@ void main() {
     expect(print(rewritten), '{a}');
   });
 
+  test('removing the name of an aliased field is a StateError', () {
+    final document = Parsed('{ b: a }').document;
+    final transformer = _Rewrite(
+      (node) => node is Name && node.value == 'a' ? null : node,
+    );
+    expect(() => transformer.transform(document), throwsStateError);
+  });
+
+  test('removing the name of a directive definition is a StateError', () {
+    final document = Parsed('directive @foo on FIELD | QUERY').document;
+    final transformer = _Rewrite(
+      (node) => node is Name && node.value == 'foo' ? null : node,
+    );
+    expect(() => transformer.transform(document), throwsStateError);
+  });
+
   test('removing a required child is a StateError', () {
     final document = Parsed('{ a(x: 1) }').document;
     final transformer = _Rewrite((node) => node is IntValue ? null : node);
