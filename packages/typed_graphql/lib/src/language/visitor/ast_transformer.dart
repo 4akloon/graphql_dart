@@ -11,6 +11,8 @@ import '../ast/node.dart';
 /// tells whether a transform changed anything.
 ///
 /// Like `AstWalker`, it keeps its own stack instead of recursing.
+///
+/// {@category language}
 abstract class AstTransformer {
   /// Creates a transformer.
   const AstTransformer();

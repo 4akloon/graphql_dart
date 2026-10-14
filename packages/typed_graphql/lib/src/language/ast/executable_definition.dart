@@ -10,6 +10,8 @@ import 'value.dart';
 import 'variable_definition.dart';
 
 /// A definition a server executes: an operation or a fragment (spec §2.2).
+///
+/// {@category language}
 sealed class const ExecutableDefinition({super.start, super.end})
     extends Definition {
   /// Creates an executable definition spanning `start` to `end`.
@@ -18,6 +20,8 @@ sealed class const ExecutableDefinition({super.start, super.end})
 
 /// An operation, `query Name($v: T) @d { ... }`, or the shorthand
 /// `{ ... }` (spec §2.3).
+///
+/// {@category language}
 final class OperationDefinition(
   /// Whether it is a query, a mutation or a subscription.
   final OperationType operation,
@@ -72,6 +76,8 @@ final class OperationDefinition(
 }
 
 /// A fragment, `fragment Name on Type @d { ... }` (spec §2.8).
+///
+/// {@category language}
 final class FragmentDefinition(
   /// The fragment name; never `on`.
   final Name name,

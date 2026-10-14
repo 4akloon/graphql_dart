@@ -4,6 +4,8 @@ import 'scalar_codec.dart';
 
 /// The built-in `Float`: a finite double (spec §3.5.2). Any JSON number
 /// decodes, as JSON has no NaN or infinity.
+///
+/// {@category scalars}
 final class const FloatCodec() implements ScalarCodec<double> {
   /// Creates the codec.
   this;

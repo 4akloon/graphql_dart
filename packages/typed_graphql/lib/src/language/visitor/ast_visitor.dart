@@ -6,6 +6,8 @@ import 'visit_action.dart';
 ///
 /// Both do nothing by default, so a visitor overrides only what it needs
 /// and tells node kinds apart with a `switch` over the sealed families.
+///
+/// {@category language}
 abstract class AstVisitor {
   /// Creates a visitor.
   const AstVisitor();

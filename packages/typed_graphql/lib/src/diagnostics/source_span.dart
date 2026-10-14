@@ -6,6 +6,8 @@ import 'source_location.dart';
 
 /// A range of a [Source]: from [start] up to, not including, [end], both
 /// offsets in UTF-16 code units. A diagnostic points at one.
+///
+/// {@category diagnostics}
 @immutable
 final class const SourceSpan(
   /// The source the offsets index.

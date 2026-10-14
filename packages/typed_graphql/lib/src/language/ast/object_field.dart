@@ -4,6 +4,8 @@ import 'node.dart';
 import 'value.dart';
 
 /// One field of an [ObjectValue], `name: value` (spec §2.9.8).
+///
+/// {@category language}
 final class const ObjectField(
   /// The field name.
   final Name name,

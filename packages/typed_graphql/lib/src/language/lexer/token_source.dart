@@ -5,6 +5,8 @@ import 'token_kind.dart';
 /// A stream of tokens the parser reads: `Lexer` for documents,
 /// `SchemaCoordinateLexer` for schema coordinates (graphql-js's
 /// `LexerInterface`).
+///
+/// {@category language}
 abstract interface class TokenSource {
   /// The document being read.
   Source get source;

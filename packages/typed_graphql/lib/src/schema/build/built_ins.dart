@@ -17,6 +17,8 @@ import 'type_reader.dart';
 /// They are read once from [BuiltInSdl] and have no spans. `Schema` finds
 /// the scalars and directives by name; the SDL printer prints them only
 /// when asked.
+///
+/// {@category schema}
 final class const BuiltIns() {
   /// Creates the accessor; the definitions are shared.
   this;

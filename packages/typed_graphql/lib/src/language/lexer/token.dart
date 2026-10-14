@@ -4,6 +4,8 @@ import 'token_kind.dart';
 
 /// One lexical token: its [kind], its offsets and, for names, numbers and
 /// strings, its [value].
+///
+/// {@category language}
 @immutable
 final class const Token(
   /// The kind of token.

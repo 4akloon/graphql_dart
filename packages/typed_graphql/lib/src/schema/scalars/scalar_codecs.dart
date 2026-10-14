@@ -9,6 +9,8 @@ import 'string_codec.dart';
 /// and those a server or a client adds for its custom scalars.
 ///
 /// A registry is immutable: [withCodec] gives a new one.
+///
+/// {@category scalars}
 final class ScalarCodecs {
   /// A registry of the five built-in codecs.
   const ScalarCodecs() : _codecs = _builtIns;

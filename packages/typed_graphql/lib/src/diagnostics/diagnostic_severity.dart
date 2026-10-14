@@ -1,4 +1,6 @@
 /// How serious a diagnostic is.
+///
+/// {@category diagnostics}
 enum DiagnosticSeverity {
   /// The input is invalid: a result that carries one is a failure.
   error,

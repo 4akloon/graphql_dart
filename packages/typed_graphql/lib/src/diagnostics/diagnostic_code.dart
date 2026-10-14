@@ -17,6 +17,8 @@
 /// renumbered, reused or removed. Stages add codes in minor versions, so do
 /// not switch over this enum exhaustively: match the codes you handle and
 /// add a wildcard case.
+///
+/// {@category diagnostics}
 enum DiagnosticCode(
   /// The stable id, such as `GQL000`, shown in messages and documentation.
   final String id,

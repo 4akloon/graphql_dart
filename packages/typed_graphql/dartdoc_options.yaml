@@ -1,0 +1,28 @@
+dartdoc:
+  categories:
+    getting-started:
+      markdown: doc/getting_started.md
+      displayName: Getting Started
+    diagnostics:
+      markdown: doc/diagnostics.md
+      displayName: Diagnostics
+    language:
+      markdown: doc/language.md
+      displayName: Language
+    protocol:
+      markdown: doc/protocol.md
+      displayName: Wire Protocol
+    schema:
+      markdown: doc/schema.md
+      displayName: Schema
+    scalars:
+      markdown: doc/scalars.md
+      displayName: Scalars & Codecs
+  categoryOrder:
+    - getting-started
+    - diagnostics
+    - language
+    - protocol
+    - schema
+    - scalars
+  showUndocumentedCategories: true

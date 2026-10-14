@@ -7,6 +7,8 @@ import 'source_span.dart';
 ///
 /// Two diagnostics are equal when their code, severity, message, span and
 /// related spans are, so tests compare lists of them directly.
+///
+/// {@category diagnostics}
 final class Diagnostic(
   /// The stable code; its [DiagnosticCode.id] appears in messages.
   final DiagnosticCode code,

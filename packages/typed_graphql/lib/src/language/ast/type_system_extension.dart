@@ -12,6 +12,8 @@ import 'type_system_extension_rebuilder.dart';
 
 /// An extension of a schema, a type or a directive (spec §3.3.2, §3.4.3;
 /// the directive extension is a working-draft option).
+///
+/// {@category language}
 sealed class TypeSystemExtension({
   List<Directive> directives = const [],
   super.start,
@@ -29,6 +31,8 @@ sealed class TypeSystemExtension({
 }
 
 /// `extend schema @d { query: Query }` (spec §3.3.2).
+///
+/// {@category language}
 final class SchemaExtension({
   super.directives,
   List<OperationTypeDefinition> operationTypes = const [],
@@ -49,6 +53,8 @@ final class SchemaExtension({
 
 /// `extend directive @name @d` (working draft, behind
 /// `ParserOptions.allowDirectiveExtensions`).
+///
+/// {@category language}
 final class DirectiveExtension(
   /// The directive name, without the `@`.
   final Name name, {
@@ -64,6 +70,8 @@ final class DirectiveExtension(
 }
 
 /// An extension of a named type (spec §3.4.3).
+///
+/// {@category language}
 sealed class TypeExtension(
   /// The name of the type it extends.
   final Name name, {
@@ -76,6 +84,8 @@ sealed class TypeExtension(
 }
 
 /// `extend scalar Name @d` (spec §3.5.1).
+///
+/// {@category language}
 final class ScalarTypeExtension(
   super.name, {
   super.directives,
@@ -90,6 +100,8 @@ final class ScalarTypeExtension(
 }
 
 /// `extend type Name implements I @d { fields }` (spec §3.6.3).
+///
+/// {@category language}
 final class ObjectTypeExtension(
   super.name, {
   List<NamedType> interfaces = const [],
@@ -112,6 +124,8 @@ final class ObjectTypeExtension(
 }
 
 /// `extend interface Name implements I @d { fields }` (spec §3.7.1).
+///
+/// {@category language}
 final class InterfaceTypeExtension(
   super.name, {
   List<NamedType> interfaces = const [],
@@ -134,6 +148,8 @@ final class InterfaceTypeExtension(
 }
 
 /// `extend union Name @d = A | B` (spec §3.8.1).
+///
+/// {@category language}
 final class UnionTypeExtension(
   super.name, {
   super.directives,
@@ -152,6 +168,8 @@ final class UnionTypeExtension(
 }
 
 /// `extend enum Name @d { VALUES }` (spec §3.9.1).
+///
+/// {@category language}
 final class EnumTypeExtension(
   super.name, {
   super.directives,
@@ -170,6 +188,8 @@ final class EnumTypeExtension(
 }
 
 /// `extend input Name @d { fields }` (spec §3.10.1).
+///
+/// {@category language}
 final class InputObjectTypeExtension(
   super.name, {
   super.directives,

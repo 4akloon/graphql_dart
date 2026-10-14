@@ -5,6 +5,8 @@ import 'scalar_codec.dart';
 /// The built-in `ID`: a unique identifier, serialized as a string (spec
 /// §3.5.5). A string or an integer decodes, the integer as its decimal
 /// text; integers past 2^53 - 1 do not, as the web cannot hold them.
+///
+/// {@category scalars}
 final class const IdCodec() implements ScalarCodec<String> {
   /// Creates the codec.
   this;

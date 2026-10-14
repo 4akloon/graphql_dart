@@ -8,6 +8,8 @@ import 'json_value.dart';
 /// Every field may be absent: an automatic persisted query sends only a
 /// hash in [extensions], and the server decides what a request needs.
 /// Two requests are equal when their JSON is equal.
+///
+/// {@category protocol}
 final class const GraphQLRequest({
   /// The document text.
   final String? query,

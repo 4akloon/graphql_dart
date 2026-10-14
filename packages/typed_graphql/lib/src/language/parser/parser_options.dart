@@ -2,6 +2,8 @@ import 'package:meta/meta.dart';
 
 /// What a [Parser] accepts and how much: limits against abuse (R1.6) and
 /// working-draft grammar (R0.1, R1.4).
+///
+/// {@category language}
 @immutable
 final class const ParserOptions({
   /// The most tokens a document may have; null for no limit.

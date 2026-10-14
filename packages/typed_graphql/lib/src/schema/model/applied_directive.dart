@@ -7,6 +7,8 @@ import '../../language/ast/value.dart';
 ///
 /// The arguments are constant language [Value] nodes; nothing checks them
 /// against the directive's definition here (that is schema validation).
+///
+/// {@category schema}
 final class AppliedDirective(
   /// The directive name, without the `@`.
   final String name, {

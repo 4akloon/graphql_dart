@@ -13,6 +13,8 @@ import 'model/schema_type.dart';
 /// and are found by [typeNamed] and [directiveNamed] without being listed.
 /// Building does not validate: a reference may name a type that does not
 /// exist, and a root may name a type of the wrong kind.
+///
+/// {@category schema}
 final class Schema({
   List<SchemaType> types = const [],
   List<SchemaDirective> directives = const [],

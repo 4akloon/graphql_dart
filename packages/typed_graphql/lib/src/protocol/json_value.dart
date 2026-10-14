@@ -7,6 +7,8 @@ import 'dart:convert';
 /// and values whatever their order. Every number is one [JsonNumber],
 /// because the web cannot tell `1` from `1.0`. Untrusted input becomes a
 /// [JsonValue] through `JsonReader`, never by a cast.
+///
+/// {@category protocol}
 sealed class const JsonValue() {
   /// Creates a value.
   this;
@@ -21,6 +23,8 @@ sealed class const JsonValue() {
 }
 
 /// The JSON `null`.
+///
+/// {@category protocol}
 final class const JsonNull() extends JsonValue {
   /// Creates the JSON `null`.
   this;
@@ -36,6 +40,8 @@ final class const JsonNull() extends JsonValue {
 }
 
 /// `true` or `false`.
+///
+/// {@category protocol}
 final class const JsonBool(
   /// The boolean.
   final bool value,
@@ -57,6 +63,8 @@ final class const JsonBool(
 ///
 /// `1` and `1.0` are equal, as they are on the web. [asInt] reads a whole
 /// number the same way on every platform.
+///
+/// {@category protocol}
 final class JsonNumber(
   /// The number; never NaN or infinite.
   final num value,
@@ -95,6 +103,8 @@ final class JsonNumber(
 }
 
 /// A string.
+///
+/// {@category protocol}
 final class const JsonString(
   /// The string.
   final String value,
@@ -113,6 +123,8 @@ final class const JsonString(
 }
 
 /// An array.
+///
+/// {@category protocol}
 final class JsonArray(List<JsonValue> items) extends JsonValue {
   /// Creates an array of a copy of [items].
   this;
@@ -141,6 +153,8 @@ final class JsonArray(List<JsonValue> items) extends JsonValue {
 }
 
 /// An object: string keys in their order of insertion, each with a value.
+///
+/// {@category protocol}
 final class JsonObject(Map<String, JsonValue> fields) extends JsonValue {
   /// Creates an object of a copy of [fields].
   this;

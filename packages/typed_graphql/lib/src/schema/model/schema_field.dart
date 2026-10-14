@@ -9,6 +9,8 @@ import 'input_value.dart';
 ///
 /// The language node with the spec's name is `FieldDefinition`; this is
 /// the schema's element.
+///
+/// {@category schema}
 final class SchemaField(
   /// The field name.
   final String name,

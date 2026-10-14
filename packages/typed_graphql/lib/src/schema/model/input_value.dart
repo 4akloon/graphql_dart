@@ -6,6 +6,8 @@ import 'applied_directives.dart';
 
 /// An argument of a field or a directive, or a field of an input object
 /// type: `"desc" name: Type = default @d` (spec §3.6.1, §3.10).
+///
+/// {@category schema}
 final class InputValue(
   /// The name.
   final String name,

@@ -33,6 +33,8 @@ import 'value_printer.dart';
 ///
 /// Printing recurses over the tree, so it is bounded by the parser's
 /// `maxDepth`; a tree built in code that is deeper can overflow the stack.
+///
+/// {@category language}
 final class Printer {
   /// Creates a printer; [isMinified] selects the minified form.
   const Printer({this.isMinified = false});

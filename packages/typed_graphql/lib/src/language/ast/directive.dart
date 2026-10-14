@@ -4,6 +4,8 @@ import 'name.dart';
 import 'node.dart';
 
 /// A directive applied to a node, `@name(arguments)` (spec §2.12).
+///
+/// {@category language}
 final class Directive(
   /// The directive name, without the `@`.
   final Name name, {

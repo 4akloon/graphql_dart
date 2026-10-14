@@ -6,6 +6,8 @@ import 'source_location.dart';
 /// does. [locationOf] turns an offset into a line and a column; the table of
 /// line starts it needs is built on the first call, so a document that
 /// reports no location is scanned only by the lexer.
+///
+/// {@category diagnostics}
 final class Source(
   /// The document text.
   final String body, {

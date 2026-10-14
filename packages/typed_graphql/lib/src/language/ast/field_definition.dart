@@ -8,6 +8,8 @@ import 'value.dart';
 
 /// A field of an object or interface type, `"desc" name(args): Type @d`
 /// (spec §3.6).
+///
+/// {@category language}
 final class FieldDefinition(
   /// The field name.
   final Name name,

@@ -3,6 +3,8 @@ import '../ast/node.dart';
 
 /// The result of parsing one value or type reference:
 /// [ParseElementSuccess] or [ParseElementFailure], with [diagnostics].
+///
+/// {@category language}
 sealed class ParseElementResult<T extends Node>(List<Diagnostic> diagnostics) {
   /// Creates a result.
   this;
@@ -12,6 +14,8 @@ sealed class ParseElementResult<T extends Node>(List<Diagnostic> diagnostics) {
 }
 
 /// An element without syntax errors.
+///
+/// {@category language}
 final class ParseElementSuccess<T extends Node>(
   /// The element.
   final T value,
@@ -22,6 +26,8 @@ final class ParseElementSuccess<T extends Node>(
 }
 
 /// An element with syntax errors; there is no partial element.
+///
+/// {@category language}
 final class ParseElementFailure<T extends Node>(super.diagnostics)
     extends ParseElementResult<T> {
   /// Creates a failure.
