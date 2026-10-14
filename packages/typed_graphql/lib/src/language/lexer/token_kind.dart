@@ -20,6 +20,9 @@ enum TokenKind(
   /// `)`.
   parenRight('")"'),
 
+  /// `.`, which only a schema coordinate has.
+  dot('"."'),
+
   /// `...`.
   spread('"..."'),
 

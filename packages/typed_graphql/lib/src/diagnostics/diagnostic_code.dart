@@ -27,7 +27,8 @@ enum DiagnosticCode(
   diagnosticLimitReached('GQL000'),
 
   /// `GQL001`: a character that starts no token, such as `~`, a single
-  /// quote or `..`.
+  /// quote or `..`. In a schema coordinate, any character but a name, `.`,
+  /// `(`, `)`, `:` and `@`, white space included.
   unexpectedCharacter('GQL001'),
 
   /// `GQL002`: a code unit that is not part of a Unicode scalar value: a

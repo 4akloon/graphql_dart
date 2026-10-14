@@ -3,7 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 void main() {
   group('TokenKind', () {
-    test('punctuators are the fourteen kinds from "!" to "}"', () {
+    test('punctuators are the fifteen kinds from "!" to "}"', () {
       final punctuators = [
         for (final kind in TokenKind.values)
           if (kind.isPunctuator) kind.description,
@@ -14,6 +14,7 @@ void main() {
         '"&"',
         '"("',
         '")"',
+        '"."',
         '"..."',
         '":"',
         '"="',

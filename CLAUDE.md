@@ -99,7 +99,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `error` token over the run and one diagnostic, with graphql-js's message
   minus "Syntax Error: ". `maxTokens` is counted here (R1.6). Scanners
   (`*_scanner.dart`) share a `SourceReader` (text, `describe`, `report`);
-  `CharacterClass` holds the character tests.
+  `CharacterClass` holds the character tests. `SchemaCoordinateLexer`
+  lexes a schema coordinate: names, `.`, `(`, `)`, `:`, `@` and no
+  ignored tokens; any other character is a `GQL001` (`GQL002` for a lone
+  surrogate) "Invalid character". `TokenKind.dot` exists for it only. Both
+  lexers implement `TokenSource`, which the parser reads.
 - `parser/`: `Parser(options:)` is const and stateless; each call builds a
   `TokenCursor` (current token, one lookahead, graphql-js's `expect*`,
   `many`, `any`, `delimitedMany`, `nested` for `maxDepth`) and grammar

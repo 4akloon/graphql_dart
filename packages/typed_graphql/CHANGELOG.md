@@ -56,3 +56,6 @@
 - Schema coordinate nodes: the `SchemaCoordinate` family
   (`TypeCoordinate`, `MemberCoordinate`, `ArgumentCoordinate`,
   `DirectiveCoordinate`, `DirectiveArgumentCoordinate`).
+- `SchemaCoordinateLexer` and `TokenKind.dot`: the tokens of a schema
+  coordinate, with `GQL001` for any character a coordinate cannot hold;
+  `Lexer` and `SchemaCoordinateLexer` implement `TokenSource`.

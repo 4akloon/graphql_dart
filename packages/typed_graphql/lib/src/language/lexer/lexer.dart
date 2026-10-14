@@ -8,6 +8,7 @@ import 'source_reader.dart';
 import 'string_scanner.dart';
 import 'token.dart';
 import 'token_kind.dart';
+import 'token_source.dart';
 
 /// Turns a [Source] into tokens, one per [advance] (spec §2.1).
 ///
@@ -19,7 +20,7 @@ import 'token_kind.dart';
 /// With [maxTokens], the token after the limit is replaced by one
 /// [DiagnosticCode.tokenLimitExceeded] error, [isLimitReached] becomes
 /// true and every later call returns [TokenKind.eof] (R1.6).
-final class Lexer {
+final class Lexer implements TokenSource {
   /// Creates a lexer of [source] that reports into [sink].
   Lexer(
     Source source,
@@ -56,7 +57,7 @@ final class Lexer {
   int _tokenCount = 0;
   bool _isLimitReached = false;
 
-  /// The document being read.
+  @override
   Source get source => _reader.source;
 
   /// The tokens scanned so far, comments and the end not counted; includes
@@ -65,6 +66,7 @@ final class Lexer {
 
   /// Whether [maxTokens] was exceeded, so the document was not read to
   /// its end.
+  @override
   bool get isLimitReached => _isLimitReached;
 
   static const CharacterClass _classes = CharacterClass();
@@ -85,8 +87,7 @@ final class Lexer {
     0x7d: .braceRight,
   };
 
-  /// The next token; [TokenKind.eof] at the end, and again on every later
-  /// call.
+  @override
   Token advance() {
     if (_isLimitReached) {
       return Token(.eof, _position, _position);
@@ -151,17 +152,9 @@ final class Lexer {
       0x22 when _reader.slice(at, at + 3) == '"""' => _blockStrings.scan(at),
       0x22 => _strings.scan(at),
       _ when _classes.isDigit(unit) || unit == 0x2d => _numbers.scan(at),
-      _ when _classes.isNameStart(unit) => _name(at),
+      _ when _classes.isNameStart(unit) => _reader.name(at),
       _ => _unexpected(at),
     };
-  }
-
-  Token _name(int start) {
-    var end = start + 1;
-    while (_classes.isNameContinue(_reader.unitAt(end))) {
-      end++;
-    }
-    return Token(.name, start, end, value: _reader.slice(start, end));
   }
 
   /// A comment runs to a line terminator or to a character that is not
