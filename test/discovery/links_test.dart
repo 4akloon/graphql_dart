@@ -17,7 +17,7 @@ void main() {
     for (final folder in Directory('packages').listSync())
       if (folder is Directory) '${folder.path.replaceAll(r'\', '/')}/README.md',
   ].where((path) => File(path).existsSync()).toList()..sort();
-  final pages = ['README.md', ...readmes];
+  final pages = ['README.md', 'docs/discovery.md', ...readmes];
 
   for (final path in pages) {
     final markdown = File(path).readAsStringSync();

@@ -34,6 +34,8 @@ dart pub get
 The packages are listed in the [root README](README.md#packages). Requirements,
 the roadmap, the architecture spec and the research are in [docs/](docs/);
 [CLAUDE.md](CLAUDE.md) is the full guide to the code and its rules.
+[docs/discovery.md](docs/discovery.md) says how agents and people find the
+packages, and what a README, a pubspec description and `llms.txt` may claim.
 
 ## Everyday commands
 
