@@ -58,8 +58,8 @@ void main() {
 ```
 
 > **Status: under construction.** Nothing is published to pub.dev yet, and
-> every API may change before 0.1.0. Stage M1 (foundations) is the current
-> one; the parser arrives in M2.
+> every API may change before 0.1.0. Stage M2 (language) is the current
+> one: the parser and the printer are in; visitors come next.
 
 ## Table of contents
 
@@ -100,13 +100,13 @@ This repository is a Dart **pub workspace**. Dart SDK: `^3.13.0`.
 
 | Package | Role | Status |
 |---|---|---|
-| [`typed_graphql`](packages/typed_graphql) | Core: language, type system, validation, wire protocol, diagnostics. Pure Dart, depends only on `meta`. | diagnostics and protocol types (M1) |
+| [`typed_graphql`](packages/typed_graphql) | Core: language, type system, validation, wire protocol, diagnostics. Pure Dart, depends only on `meta`. | diagnostics, protocol types, parser and printer (M1, M2a) |
 | [`typed_graphql_server`](packages/typed_graphql_server) | Typed schema builder, executor, subscriptions, DataLoader, HTTP / graphql-ws / graphql-sse handlers. | skeleton (M5) |
 | [`typed_graphql_shelf`](packages/typed_graphql_shelf) | `shelf` adapter with an optional GraphiQL page. | skeleton (M7) |
 | [`typed_graphql_client`](packages/typed_graphql_client) | Client runtime: links, transports, normalized cache, `MockLink`. | skeleton (M11) |
 | [`typed_graphql_codegen`](packages/typed_graphql_codegen) | Code generation engine and CLI, without `analyzer`. | skeleton (M8, M10) |
 | [`typed_graphql_builder`](packages/typed_graphql_builder) | `build_runner` builders and the annotation front end. | skeleton (M9) |
-| [`typed_graphql_conformance`](packages/typed_graphql_conformance) | Repository tool: ported graphql-js suites, fuzzers, benchmarks. Never published. | skeleton (M2) |
+| [`typed_graphql_conformance`](packages/typed_graphql_conformance) | Repository tool: ported graphql-js suites, fuzzers, benchmarks. Never published. | language suites (M2a) |
 
 ## Install
 
@@ -129,8 +129,9 @@ input:
   says where the input is wrong (`$.errors[0].message: expected a string`).
 - `GraphQLRequest.decode`, `GraphQLError.decode` and `ResponsePayload.decode`
   read the GraphQL wire format; `toJson()` writes it.
-- `Source`, `SourceSpan`, `Diagnostic` and `DiagnosticSink` are the
-  diagnostics model the parser and validator will report through.
+- `Parser().parse(Source(text))` gives a `Document`, or every syntax error
+  as a `Diagnostic` with a code and a place; `Printer().print(node)` prints
+  it back the way graphql-js does.
 
 ## Documentation
 

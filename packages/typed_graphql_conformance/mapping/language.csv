@@ -1,0 +1,183 @@
+graphql_js_file,group,test,status,dart_file,reason
+lexer-test.ts,Lexer,ignores BOM header,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,tracks line breaks,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,records line and column,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,"can be Object.toStringified, JSON.stringified, or jsutils.inspected",skipped,,Dart tokens have no JS inspect/JSON protocol.
+lexer-test.ts,Lexer,skips whitespace and comments,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,reports unexpected characters,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,errors respect whitespace,adapted,test/language/lexer_test.dart,The printLocation source excerpt arrives in M2b: only message and location 3:2 are checked.
+lexer-test.ts,Lexer,updates line numbers in error for file context,skipped,,Source has no locationOffset.
+lexer-test.ts,Lexer,updates column numbers in error for file context,skipped,,Source has no locationOffset.
+lexer-test.ts,Lexer,lexes strings,ported,test/language/lexer_strings_test.dart,
+lexer-test.ts,Lexer,lex reports useful string errors,ported,test/language/lexer_strings_test.dart,
+lexer-test.ts,Lexer,lexes block strings,ported,test/language/lexer_strings_test.dart,
+lexer-test.ts,Lexer,advance line after lexing multiline block string,ported,test/language/lexer_strings_test.dart,
+lexer-test.ts,Lexer,lex reports useful block string errors,ported,test/language/lexer_strings_test.dart,
+lexer-test.ts,Lexer,lexes numbers,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,lex reports useful number errors,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,lex does not allow name-start after a number,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,lexes punctuation,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,lex reports useful unknown character error,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,lex reports useful information for dashes in names,ported,test/language/lexer_test.dart,
+lexer-test.ts,Lexer,"produces double linked list of tokens, including comments",adapted,test/language/lexer_test.dart,"Tokens are not linked: token kinds checked with kindsWithComments, which has no <SOF>."
+lexer-test.ts,Lexer,lexes comments,adapted,test/language/lexer_test.dart,"Tokens are not linked: the comment comes from Lexer(keepComments: true), not from token.prev."
+lexer-test.ts,isPunctuatorTokenKind,returns true for punctuator tokens,ported,test/language/lexer_test.dart,
+lexer-test.ts,isPunctuatorTokenKind,returns false for non-punctuator tokens,ported,test/language/lexer_test.dart,
+blockString-test.ts,dedentBlockStringLines,handles empty string,ported,test/language/block_string_test.dart,
+blockString-test.ts,dedentBlockStringLines,does not dedent first line,ported,test/language/block_string_test.dart,
+blockString-test.ts,dedentBlockStringLines,removes minimal indentation length,ported,test/language/block_string_test.dart,
+blockString-test.ts,dedentBlockStringLines,dedent both tab and space as single character,ported,test/language/block_string_test.dart,
+blockString-test.ts,dedentBlockStringLines,dedent do not take empty lines into account,ported,test/language/block_string_test.dart,
+blockString-test.ts,dedentBlockStringLines,removes uniform indentation from a string,ported,test/language/block_string_test.dart,
+blockString-test.ts,dedentBlockStringLines,removes empty leading and trailing lines,ported,test/language/block_string_test.dart,
+blockString-test.ts,dedentBlockStringLines,removes blank leading and trailing lines,ported,test/language/block_string_test.dart,
+blockString-test.ts,dedentBlockStringLines,retains indentation from first line,ported,test/language/block_string_test.dart,
+blockString-test.ts,dedentBlockStringLines,does not alter trailing spaces,ported,test/language/block_string_test.dart,
+blockString-test.ts,isPrintableAsBlockString,accepts valid strings,ported,test/language/block_string_test.dart,
+blockString-test.ts,isPrintableAsBlockString,rejects strings with only whitespace,ported,test/language/block_string_test.dart,
+blockString-test.ts,isPrintableAsBlockString,rejects strings with non-printable characters,ported,test/language/block_string_test.dart,
+blockString-test.ts,isPrintableAsBlockString,rejects strings with only empty lines,ported,test/language/block_string_test.dart,
+blockString-test.ts,isPrintableAsBlockString,rejects strings with carriage return,ported,test/language/block_string_test.dart,
+blockString-test.ts,isPrintableAsBlockString,rejects strings with leading empty lines,ported,test/language/block_string_test.dart,
+blockString-test.ts,isPrintableAsBlockString,rejects strings with trailing empty lines,ported,test/language/block_string_test.dart,
+blockString-test.ts,printBlockString,does not escape characters,ported,test/language/block_string_test.dart,
+blockString-test.ts,printBlockString,by default print block strings as single line,ported,test/language/block_string_test.dart,
+blockString-test.ts,printBlockString,by default print block strings ending with triple quotation as multi-line,ported,test/language/block_string_test.dart,
+blockString-test.ts,printBlockString,correctly prints single-line with leading space,ported,test/language/block_string_test.dart,
+blockString-test.ts,printBlockString,correctly prints single-line with leading space and trailing quotation,ported,test/language/block_string_test.dart,
+blockString-test.ts,printBlockString,correctly prints single-line with trailing backslash,ported,test/language/block_string_test.dart,
+blockString-test.ts,printBlockString,correctly prints multi-line with internal indent,ported,test/language/block_string_test.dart,
+blockString-test.ts,printBlockString,correctly prints string with a first line indentation,ported,test/language/block_string_test.dart,
+parser-test.ts,Parser,parse provides useful errors,adapted,test/language/parser/parser_test.dart,"The printLocation excerpt of String(error) arrives in M2b: Dart checks message, position and location."
+parser-test.ts,Parser,parse provides useful error when using source,adapted,test/language/parser/parser_test.dart,"The printLocation excerpt arrives in M2b: Dart checks message, location and source name."
+parser-test.ts,Parser,limits by a maximum number of tokens,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,exposes the tokenCount,adapted,test/language/parser/parser_test.dart,The parser exposes no tokenCount: Lexer.tokenCount after reading the document is checked.
+parser-test.ts,Parser,parses variable inline values,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,parses constant default values,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,parses variable definition directives,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,"does not accept fragments named ""on""",ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,"does not accept fragments spread of ""on""",ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,"does not allow ""true"", ""false"", or ""null"" as enum value",ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,parses multi-byte characters,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,parses kitchen sink,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,allows non-keywords anywhere a Name is allowed,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,parses anonymous mutation operations,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,parses anonymous subscription operations,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,parses named mutation operations,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,parses named subscription operations,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,creates ast,ported,test/language/parser/parser_test.dart,
+parser-test.ts,Parser,creates ast from nameless query without variables,ported,test/language/parser/parser_ast_test.dart,
+parser-test.ts,Parser,creates ast from nameless query with description,ported,test/language/parser/parser_ast_test.dart,
+parser-test.ts,Parser,allows parsing without source location information,skipped,,Nodes always carry offsets; there is no noLocation option.
+parser-test.ts,Parser,allows parsing fragment defined variables,skipped,,Experimental fragment arguments are out of scope (R1.14).
+parser-test.ts,Parser,disallows parsing fragment defined variables without experimental flag,skipped,,Experimental fragment arguments are out of scope (R1.14).
+parser-test.ts,Parser,allows parsing fragment spread arguments,skipped,,Experimental fragment arguments are out of scope (R1.14).
+parser-test.ts,Parser,disallows parsing fragment spread arguments without experimental flag,skipped,,Experimental fragment arguments are out of scope (R1.14).
+parser-test.ts,Parser,"contains location that can be Object.toStringified, JSON.stringified, or jsutils.inspected",skipped,,"Nodes hold start and end offsets only, no Location object."
+parser-test.ts,Parser,contains references to source,skipped,,"Nodes hold start and end offsets only, no Location object."
+parser-test.ts,Parser,contains references to start and end tokens,skipped,,"Nodes hold start and end offsets only, no tokens."
+parser-test.ts,Parser > parseValue,parses null value,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseValue,parses list values,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseValue,parses block strings,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseValue,allows variables,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseValue,correct message for incomplete variable,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseValue,correct message for unexpected token,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseConstValue,parses values,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseConstValue,does not allow variables,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseConstValue,correct message for unexpected token,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseType,parses well known types,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseType,parses custom types,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseType,parses list types,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseType,parses non-null types,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseType,parses nested types,ported,test/language/parser/parser_values_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,parses Name,skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,parses Name . Name,skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,rejects Name . Name . Name,skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,parses Name . Name ( Name : ),skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,rejects Name . Name ( Name : Name ),skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,parses @ Name,skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,parses @ Name ( Name : ),skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,parses __Type,skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,parses Type.__metafield,skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,parses Type.__metafield(arg:),skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,rejects @ Name . Name,skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,accepts a Source object,skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > operation and variable definition descriptions,parses operation with description and variable descriptions,ported,test/language/parser/parser_descriptions_test.dart,
+parser-test.ts,Parser > operation and variable definition descriptions,descriptions on a short-hand query produce a sensible error,ported,test/language/parser/parser_descriptions_test.dart,
+parser-test.ts,Parser > operation and variable definition descriptions,"parses variable definition with description, default value, and directives",ported,test/language/parser/parser_descriptions_test.dart,
+parser-test.ts,Parser > operation and variable definition descriptions,parses fragment with variable description,skipped,,Experimental fragment arguments are out of scope (R1.14).
+schema-parser-test.ts,Schema Parser,Simple type,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,parses type with description string,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,parses type with description multi-line string,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,parses schema with description string,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Description followed by something other than type system definition throws,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Simple extension,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Object extension without fields,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Interface extension without fields,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Object extension without fields followed by extension,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Extension without anything throws,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Interface extension without fields followed by extension,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Object extension do not include descriptions,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Interface extension do not include descriptions,ported,test/language/parser/schema_parser_test.dart,
+schema-parser-test.ts,Schema Parser,Schema extension,ported,test/language/parser/schema_parser_extensions_test.dart,
+schema-parser-test.ts,Schema Parser,Schema extension with only directives,ported,test/language/parser/schema_parser_extensions_test.dart,
+schema-parser-test.ts,Schema Parser,Schema extension without anything throws,ported,test/language/parser/schema_parser_extensions_test.dart,
+schema-parser-test.ts,Schema Parser,Schema extension with invalid operation type throws,ported,test/language/parser/schema_parser_extensions_test.dart,
+schema-parser-test.ts,Schema Parser,Simple non-null type,ported,test/language/parser/schema_parser_types_test.dart,
+schema-parser-test.ts,Schema Parser,Simple interface inheriting interface,ported,test/language/parser/schema_parser_types_test.dart,
+schema-parser-test.ts,Schema Parser,Simple type inheriting interface,ported,test/language/parser/schema_parser_types_test.dart,
+schema-parser-test.ts,Schema Parser,Simple type inheriting multiple interfaces,ported,test/language/parser/schema_parser_types_test.dart,
+schema-parser-test.ts,Schema Parser,Simple interface inheriting multiple interfaces,ported,test/language/parser/schema_parser_types_test.dart,
+schema-parser-test.ts,Schema Parser,Simple type inheriting multiple interfaces with leading ampersand,ported,test/language/parser/schema_parser_types_test.dart,
+schema-parser-test.ts,Schema Parser,Simple interface inheriting multiple interfaces with leading ampersand,ported,test/language/parser/schema_parser_types_test.dart,
+schema-parser-test.ts,Schema Parser,Single value enum,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Double value enum,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Simple interface,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Simple field with arg,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Simple field with arg with default value,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Simple field with list arg,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Simple field with two args,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Simple union,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Union with two types,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Union with two types and leading pipe,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Union fails with no types,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Union fails with leading double pipe,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Union fails with double pipe,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Union fails with trailing pipe,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Scalar,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Simple input object,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Simple input object with args should fail,ported,test/language/parser/schema_parser_definitions_test.dart,
+schema-parser-test.ts,Schema Parser,Directive definition,ported,test/language/parser/schema_parser_directives_test.dart,
+schema-parser-test.ts,Schema Parser,Repeatable directive definition,ported,test/language/parser/schema_parser_directives_test.dart,
+schema-parser-test.ts,Schema Parser,Directive with incorrect locations,ported,test/language/parser/schema_parser_directives_test.dart,
+schema-parser-test.ts,Schema Parser,Directive extension,adapted,test/language/parser/schema_parser_directives_test.dart,Directive extensions are a working-draft feature: the parse sets ParserOptions.allowDirectiveExtensions.
+schema-parser-test.ts,Schema Parser,parses kitchen sink schema,adapted,test/language/parser/schema_parser_directives_test.dart,The kitchen sink uses working-draft directive extensions: the parse sets ParserOptions.allowDirectiveExtensions.
+printer-test.ts,Printer: Query document,prints minimal ast,ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,produces helpful error messages,adapted,test/language/printer/printer_test.dart,Dart's types admit no plain object: a node class the library does not define gives an ArgumentError.
+printer-test.ts,Printer: Query document,correctly prints non-query operations without name,ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,prints query with variable directives,ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,keeps arguments on one line if line is short (<= 80 chars),ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,puts arguments on multiple lines if line is long (> 80 chars),ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,puts large object values on multiple lines if line is long (> 80 chars),ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,puts large list values on multiple lines if line is long (> 80 chars),ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,prints fragment with argument definition directives,skipped,,experimental fragment arguments are out of scope (R1.14)
+printer-test.ts,Printer: Query document,correctly prints fragment defined arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
+printer-test.ts,Printer: Query document,prints fragment spread with arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
+printer-test.ts,Printer: Query document,prints fragment spread with multi-line arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
+printer-test.ts,Printer: Query document,prints fragment,ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,prints kitchen sink without altering ast,adapted,test/language/printer/printer_test.dart,Nodes are immutable so the AST cannot be altered; isEquivalentTo stands for the deep equality without locations.
+printer-test.ts,Printer: Query document,prints schema coordinates,skipped,,schema coordinates arrive in stage M2b
+printer-test.ts,Printer: Query document,throws syntax error for ignored tokens in schema coordinates,skipped,,schema coordinates arrive in stage M2b
+schema-printer-test.ts,Printer: SDL document,prints minimal ast,ported,test/language/printer/schema_printer_test.dart,
+schema-printer-test.ts,Printer: SDL document,produces helpful error messages,adapted,test/language/printer/schema_printer_test.dart,Dart's types admit no plain object: a node class the library does not define gives an ArgumentError.
+schema-printer-test.ts,Printer: SDL document,prints kitchen sink without altering ast,adapted,test/language/printer/schema_printer_test.dart,The kitchen sink needs ParserOptions.allowDirectiveExtensions; nodes are immutable and isEquivalentTo stands for the deep equality without locations.
+printString-test.ts,printString,prints a simple string,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes quotes,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,does not escape single quote,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes backslashes,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes well-known control chars,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes zero byte,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,does not escape space,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,does not escape non-ascii character,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,does not escape supplementary character,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes all control chars,ported,test/language/printer/print_string_test.dart,

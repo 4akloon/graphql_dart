@@ -64,7 +64,10 @@ void main() {
     });
 
     test('has no locations without spans', () {
-      expect(Diagnostic(.diagnosticLimitReached, .error, 'x').locations, []);
+      expect(
+        Diagnostic(.diagnosticLimitReached, .error, 'x').locations,
+        isEmpty,
+      );
     });
 
     test('copies the related spans', () {
@@ -81,6 +84,42 @@ void main() {
         () => diagnostic.related.add(SourceSpan(source, 0, 1)),
         throwsUnsupportedError,
       );
+    });
+
+    group('equality', () {
+      Diagnostic make({
+        String message = 'x',
+        int end = 5,
+        List<SourceSpan> related = const [],
+      }) => Diagnostic(
+        .diagnosticLimitReached,
+        .error,
+        message,
+        span: SourceSpan(source, 4, end),
+        related: related,
+      );
+
+      test('equal fields make equal diagnostics with equal hash codes', () {
+        final related = [SourceSpan(source, 8, 9)];
+        expect(make(related: related), make(related: [...related]));
+        expect(
+          make(related: related).hashCode,
+          make(related: [...related]).hashCode,
+        );
+      });
+
+      test('a different message, span or related list differs', () {
+        expect(make(message: 'y'), isNot(make()));
+        expect(make(end: 6), isNot(make()));
+        expect(make(related: [SourceSpan(source, 8, 9)]), isNot(make()));
+      });
+
+      test('a different severity differs', () {
+        expect(
+          Diagnostic(.diagnosticLimitReached, .warning, 'x'),
+          isNot(Diagnostic(.diagnosticLimitReached, .error, 'x')),
+        );
+      });
     });
   });
 }

@@ -21,8 +21,10 @@ server and the client. It is a Dart pub workspace of pure-Dart packages:
 Minimum SDK: Dart 3.13 (`sdk: ^3.13.0`) in every package and in generated
 code. No dependency on `package:gql` or its ecosystem.
 
-Status: under construction. M1 (foundations) delivers the workspace, the code
-rules, CI, the diagnostics model and the protocol data types.
+Status: under construction. M1 (foundations) delivered the workspace, the
+code rules, CI, the diagnostics model and the protocol data types. M2a
+(language core) delivers the syntax trees, the lexer, the parser, the
+printer and the ported graphql-js language suites.
 
 ## Documents
 
@@ -76,11 +78,55 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   renumber, reuse or remove one. Ranges: `GQL0xx` syntax, `GQL1xx` type
   system, `GQL2xx` operation validation, `GQL3xx` coercion and execution,
   `GQL4xx` transports, `GQL5xx` code generation; `GQL000` is the sink limit.
-- `Diagnostic(code, severity, message, span:, related:)`.
+- `Diagnostic(code, severity, message, span:, related:)`; equal when all
+  five are, so tests compare lists of diagnostics.
 - `DiagnosticSink` collects diagnostics in report order and stops after
   `maxErrors` errors (default 100) with one `GQL000`. Lexer, parser and rules
   take a sink through their constructor; the public API turns it into a
   sealed result.
+
+**Language** (`language/`; M2).
+- `ast/`: every node extends `Node` (`start`, `end`, `children` in
+  graphql-js key order, `withChildren`, `isEquivalentTo`). Leaves are
+  `const`; a node with a list copies it with `List.unmodifiable`. A node
+  overrides `rebuildFrom(ChildReader)` for `withChildren`; the two
+  type-system families delegate it to a `*_rebuilder.dart` (size limit).
+  `scalars` lists what `isEquivalentTo` compares besides children.
+- `lexer/`: `Token` (`kind`, `start`, `end`, `value`) and `TokenKind`, whose
+  `description` is how messages name it. `BlockString` holds the spec's
+  `BlockStringValue` and graphql-js's printing rules; lexer and printer share
+  it. `Lexer(source, sink).advance()` never throws: bad text becomes one
+  `error` token over the run and one diagnostic, with graphql-js's message
+  minus "Syntax Error: ". `maxTokens` is counted here (R1.6). Scanners
+  (`*_scanner.dart`) share a `SourceReader` (text, `describe`, `report`);
+  `CharacterClass` holds the character tests.
+- `parser/`: `Parser(options:)` is const and stateless; each call builds a
+  `TokenCursor` (current token, one lookahead, graphql-js's `expect*`,
+  `many`, `any`, `delimitedMany`, `nested` for `maxDepth`) and grammar
+  collaborators (`*_parser.dart`) over it. A syntax error is reported by
+  `TokenCursor.fail`, which throws the internal `SyntaxAbort`; it never
+  leaves `Parser`. The cursor is silent at error tokens (the lexer
+  reported them) and at an offset that already has a diagnostic.
+  `Recovery` resynchronises (R1.5): `Parser.parse` drops a failed
+  definition and skips to the next definition keyword or description, or to
+  a `{` that follows a `}` or starts the document; `SelectionParser` drops a failed selection and skips to a name, `...` or
+  `}`; both only at the bracket `balance` where the failed part started,
+  and always consume a token. A selection set left empty fails too.
+  Type-system definitions and extensions share `TypeMemberParser`.
+  `DefinitionGrammar` is the internal extension point for working-draft and
+  experimental productions (R1.4): `DefinitionParser` asks each registered
+  grammar before the base ones. `DirectiveExtensionGrammar` is always
+  registered; with `allowDirectiveExtensions` off, it and the directive
+  definition's draft parts report `GQL014` instead of a generic error.
+- `printer/`: `Printer` prints any node as graphql-js's `print` does, to
+  the character (80-column wrapping included), through collaborators:
+  `ValuePrinter` (values, types, arguments, directives), `ExecutablePrinter`,
+  `TypeMemberPrinter`, `TypeSystemPrinter`, `ExtensionPrinter`, over the
+  `PrintLayout` combinators (`join`, `wrap`, `indent`, `block`) and
+  `QuotedString`. An empty selection set prints as `{}`.
+  `Printer(isMinified: true)` passes the canonical text through `Minifier`
+  (graphql-js's `stripIgnoredCharacters`: a space only between two
+  non-punctuators or before `...`, block strings in their shortest form).
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,
@@ -105,7 +151,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 
 The rules follow typed_openapi's (R10.1). `analysis_options.yaml` is adapted
 from typed_openapi's: its comments are this repo's own, and it additionally
-enables `simple_directive_paths`, `no_dynamic_casts` and `no_raw_types`.
+enables `simple_directive_paths`, `no_dynamic_casts` and `no_raw_types`, and
+the analyzer's `strict-inference` and `strict-raw-types` (write `<Object?>[]`
+where a literal has no context type).
 The workspace suite in `test/quality/` (run `dart test` at the root) enforces
 what a lint cannot (R10.2).
 
@@ -154,6 +202,17 @@ M1:
   values with different static types differ.
 - In tests, `expect` arguments have no context type: write full names, not
   dot shorthands.
+
+Learned in M2a:
+- An empty `case` in a `switch` statement falls through to the next case;
+  to skip an item, test it with `if (...) continue;` before the `switch`.
+- `prefer_interpolation_to_compose_strings` rejects `+` on strings; use
+  interpolation, or adjacent literals for a long text.
+- A multi-line literal drops a line break right after its opening quotes;
+  write `'\n'` in front when the text must start with one.
+- An overriding method may widen a parameter type: a node class outside the
+  library overrides `rebuildFrom(Object? read)` without the internal
+  `ChildReader`.
 
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
@@ -210,4 +269,6 @@ fails when it finds none.
   and its scanners).
 - Core layer test: `packages/typed_graphql/test/quality/layers_test.dart`.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
+- Conformance mapping table: `packages/typed_graphql_conformance/mapping/language.csv`,
+  checked by `test/mapping_test.dart` there; port helpers in its `test/support/`.
 - CI: `.github/workflows/ci.yml`.

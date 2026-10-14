@@ -1,0 +1,2 @@
+# Test sources hold multi-line literals whose line ends are data.
+* text=auto eol=lf
