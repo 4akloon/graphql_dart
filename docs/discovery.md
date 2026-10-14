@@ -40,30 +40,33 @@ adds its row (or turns it to "yes") together with its README line and its
 ## Metadata
 
 pub.dev searches a package's name, description, README and doc comments
-([pub.dev search help](https://pub.dev/help/search)). The pubspec rules, from
-the [pubspec reference](https://dart.dev/tools/pub/pubspec):
+([pub.dev search help](https://pub.dev/help/search)). The pubspec rules below
+come from the [pubspec reference](https://dart.dev/tools/pub/pubspec) and
+pub.dev's rules as `test/discovery/pubspec_metadata_test.dart` checks them;
+where a rule is our convention or not confirmed, it says so:
 
-- `description`: plain text, no markdown or HTML, 60 to 180 characters. Start
-  with a verb and the platform.
+- `description`: plain text, no markdown or HTML, 60 to 180 characters. Our
+  convention, not a pub.dev rule: start with a verb and the platform.
 - `topics`: at most 5; each 2 to 32 characters of `a-z`, `0-9` and `-`,
   starting with a letter, ending with a letter or digit, no `--`.
-- `repository`: the package folder, so that pub.dev can rewrite the README's
-  relative links and images:
-  `https://github.com/4akloon/graphql_dart/tree/main/packages/<name>` (the
-  form the pub-dev maintainers give in
-  [dart-lang/pub-dev#5068](https://github.com/dart-lang/pub-dev/issues/5068)).
+- `repository`: the package folder, written as
+  `https://github.com/4akloon/graphql_dart/tree/main/packages/<name>`, so that
+  pub.dev can rewrite the README's relative links and images. Not verified by
+  the pages checked below (the issue
+  [dart-lang/pub-dev#5068](https://github.com/dart-lang/pub-dev/issues/5068)
+  was not opened); confirm at M16.
 - `issue_tracker`: `https://github.com/4akloon/graphql_dart/issues`.
 - Images and badges use absolute URLs; doc comments use no relative link,
   because the API reference does not rewrite them.
 
 ### Repository verification
 
-pub.dev rewrites relative links only for a verified repository. What it
-checks to verify one is an open question. Checked on 2026-10-15:
-[pub.dev help](https://pub.dev/help), its
-[publishing](https://pub.dev/help/publishing),
-[scoring](https://pub.dev/help/scoring) and
-[search](https://pub.dev/help/search) pages, and the
+Whether pub.dev rewrites relative links only for a verified repository, and
+what it checks to verify one, is not confirmed by the pages read: an open
+question. Read on 2026-10-14: [pub.dev help](https://pub.dev/help) and its
+[search](https://pub.dev/help/search) page. Read on 2026-10-15: the
+[publishing](https://pub.dev/help/publishing) and
+[scoring](https://pub.dev/help/scoring) pages and the
 [pubspec reference](https://dart.dev/tools/pub/pubspec), which says only that
 `repository` "should contain the URL for your package's source code
 repository". None of them describes the verification. Look again before the
