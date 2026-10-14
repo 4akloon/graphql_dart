@@ -172,3 +172,7 @@
   fields (`GQL145`); a `@oneOf` field that is non-null (`GQL146`) or has a
   default (`GQL147`); an input object that cannot be given a finite value
   (`GQL148`) and a default value that contains itself (`GQL149`).
+- `IntrospectionQuery`: graphql-js's `getIntrospectionQuery` as a const
+  value with `includes*` flags and `typeDepth` (0 to 100, else a
+  `RangeError`); `text` is the query. `IntrospectionQuery.full` reads
+  every field September2025 introspection has.

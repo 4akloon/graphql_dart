@@ -73,6 +73,7 @@ void main() {
         'type/__tests__/validation-test.ts',
         'utilities/__tests__/buildASTSchema-test.ts',
         'utilities/__tests__/extendSchema-test.ts',
+        'utilities/__tests__/getIntrospectionQuery-test.ts',
         'utilities/__tests__/printSchema-test.ts',
       ],
     ),

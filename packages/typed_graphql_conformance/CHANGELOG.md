@@ -34,3 +34,5 @@
 - The build and extend ports check `validateSchema` where graphql-js does
   (`SchemaPort.validate`, `validationErrors`); SDL validation is the
   validator's: an unknown directive is `GQL117`, an unknown type `GQL116`.
+- Ported graphql-js `getIntrospectionQuery-test.ts`; each query is parsed,
+  since operation validation arrives in M4.

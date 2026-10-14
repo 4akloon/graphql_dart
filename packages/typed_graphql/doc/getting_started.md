@@ -91,5 +91,7 @@ query root: Query
 - **Wire Protocol** — requests, responses and errors as typed values.
 - **Schema** — build a schema from SDL, extend it, print it.
 - **Scalars & Codecs** — the built-in scalar codecs and your own.
+- **Introspection** — the introspection query, a schema's answer, and a
+  schema built from an answer.
 
 The API reference lists every type under the same topics.

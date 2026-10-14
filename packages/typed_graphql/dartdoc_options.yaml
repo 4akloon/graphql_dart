@@ -18,6 +18,9 @@ dartdoc:
     scalars:
       markdown: doc/scalars.md
       displayName: Scalars & Codecs
+    introspection:
+      markdown: doc/introspection.md
+      displayName: Introspection
   categoryOrder:
     - getting-started
     - diagnostics
@@ -25,4 +28,5 @@ dartdoc:
     - protocol
     - schema
     - scalars
+    - introspection
   showUndocumentedCategories: true
