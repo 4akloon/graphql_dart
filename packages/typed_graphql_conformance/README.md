@@ -6,12 +6,31 @@
 
 **Repository tool of typed_graphql: ported graphql-js suites, fuzzers and benchmarks. Never published.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
-> **Status: skeleton.** The package exists so the workspace, CI and the
-> code rules cover it from the start. Its code arrives in stage M2 of the
-> [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md); nothing is exported yet.
+> **Status: under construction.** Stage M2 of the
+> [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)
+> ports the graphql-js language suites; nothing is exported.
 
-Planned: the graphql-js v17 suites, ported with a mapping table (from M2), round-trip fuzzing of the parser and printer, and benchmarks.
+## Ported suites
+
+Tests under `test/language/` are ported from graphql-js 17
+(`reference/graphql-js`, fetched by `tool/fetch_reference.sh`), one Dart test
+per graphql-js test, with the same group and test names.
+`mapping/language.csv` records each graphql-js test:
+
+| Column | Meaning |
+|---|---|
+| `graphql_js_file` | the file in `src/language/__tests__/`, such as `lexer-test.ts` |
+| `group` | the `describe` blocks around the test, joined by ` > ` |
+| `test` | the `it` name |
+| `status` | `ported` (same assertions), `adapted` (a deliberate design difference changes them) or `skipped` (behaviour this library does not have) |
+| `dart_file` | the Dart test file, relative to this package; empty when skipped |
+| `reason` | why, for `adapted` and `skipped` |
+
+`test/mapping_test.dart` checks the table; with `reference/` fetched it also
+checks that every test of a ported file has a row.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). The ported tests derive from graphql-js,
+MIT, Copyright (c) GraphQL Contributors — see
+[LICENSE-graphql-js](LICENSE-graphql-js).

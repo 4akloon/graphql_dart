@@ -3,3 +3,6 @@
 ## 0.0.1 - Unreleased
 
 - Package skeleton.
+- Depends on `typed_graphql` only.
+- `mapping/language.csv`, the conformance mapping table, and the test that
+  checks it.
