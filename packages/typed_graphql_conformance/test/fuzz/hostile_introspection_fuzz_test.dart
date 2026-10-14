@@ -134,6 +134,7 @@ void main() {
         }),
       }),
     );
-    expect(result, isA<BuildSuccess>());
+    // Deeper than any query can ask for (GQL155), reported at once.
+    expect(result.diagnostics.map((d) => d.code.id), ['GQL155']);
   });
 }

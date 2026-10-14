@@ -7,6 +7,13 @@ import 'implementation_rules.dart';
 import 'type_reference_rules.dart';
 import 'validation_report.dart';
 
+typedef _Context = ({
+  List<NamedTypeReference> interfaces,
+  Set<String> declared,
+  Set<String> implemented,
+  Map<String, SchemaField> fieldsByName,
+});
+
 /// The rules of the interfaces an object or interface type implements
 /// (spec §3.6, §3.7 "Type Validation"), as graphql-js's
 /// `validateInterfaces`: each is a known interface type, other than the
@@ -29,12 +36,13 @@ final class InterfaceRules(
     List<NamedTypeReference> interfaces,
     List<SchemaField> fields,
   ) {
-    final implemented = <String>{};
-    final declared = {for (final reference in interfaces) reference.name};
-    // The first of two fields with one name counts.
-    final fieldsByName = {
-      for (final field in fields.reversed) field.name: field,
-    };
+    final context = (
+      interfaces: interfaces,
+      declared: {for (final reference in interfaces) reference.name},
+      implemented: <String>{},
+      // The first of two fields with one name counts.
+      fieldsByName: {for (final field in fields.reversed) field.name: field},
+    );
     for (final reference in interfaces) {
       if (report.isFull) {
         return;
@@ -45,32 +53,40 @@ final class InterfaceRules(
       ).isKnown(reference.name, reference.span)) {
         continue;
       }
-      switch (schema.typeNamed(reference.name)) {
-        case final InterfaceType interface when interface.name == type.name:
-          report.error(
-            .circularImplementation,
-            'Type ${type.name} cannot implement itself because it would '
-            'create a circular reference.',
-            _spansOf(interfaces, interface.name),
-          );
-        case final InterfaceType interface
-            when !implemented.add(interface.name):
-          report.error(
-            .repeatedInterface,
-            'Type ${type.name} can only implement ${interface.name} once.',
-            _spansOf(interfaces, interface.name),
-          );
-        case final InterfaceType interface:
-          _ancestors(type, interfaces, declared, interface);
-          ImplementationRules(
-            report,
-            schema,
-          ).check(type, fieldsByName, interface);
-        case final other?:
-          _notInterface(type, interfaces, other);
-        case null:
-          break;
-      }
+      _reference(type, reference, context);
+    }
+  }
+
+  void _reference(
+    SchemaType type,
+    NamedTypeReference reference,
+    _Context context,
+  ) {
+    final (:interfaces, :declared, :implemented, :fieldsByName) = context;
+    switch (schema.typeNamed(reference.name)) {
+      case final InterfaceType interface when interface.name == type.name:
+        report.error(
+          .circularImplementation,
+          'Type ${type.name} cannot implement itself because it would '
+          'create a circular reference.',
+          _spansOf(interfaces, interface.name),
+        );
+      case final InterfaceType interface when !implemented.add(interface.name):
+        report.error(
+          .repeatedInterface,
+          'Type ${type.name} can only implement ${interface.name} once.',
+          _spansOf(interfaces, interface.name),
+        );
+      case final InterfaceType interface:
+        _ancestors(type, interfaces, declared, interface);
+        ImplementationRules(
+          report,
+          schema,
+        ).check(type, fieldsByName, interface);
+      case final other?:
+        _notInterface(type, interfaces, other);
+      case null:
+        break;
     }
   }
 

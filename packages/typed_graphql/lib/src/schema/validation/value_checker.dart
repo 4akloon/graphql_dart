@@ -74,19 +74,31 @@ final class ValueChecker(
     ],
     // A value that is not a list is a list of one (spec §3.11).
     (_, ListType(type: final inner)) => [_Check(value, inner, path)],
-    (_, NamedType(:final name)) => switch (schema.typeNamed(name.value)) {
-      final InputObjectType object => _object(
-        value,
-        shapes[object] ??= InputObjectShape(object),
-        object,
-        path,
-      ),
-      final type? => [
-        if (const LeafValueChecker().errorOf(value, type) case final m?)
-          _report(m, value, path),
-      ],
-      null => const [],
-    },
+    (_, NamedType(:final name)) => _named(
+      value,
+      schema.typeNamed(name.value),
+      path,
+      shapes,
+    ),
+  };
+
+  List<_Work> _named(
+    Value value,
+    SchemaType? type,
+    _Path? path,
+    Map<InputObjectType, InputObjectShape> shapes,
+  ) => switch (type) {
+    final InputObjectType object => _object(
+      value,
+      shapes[object] ??= InputObjectShape(object),
+      object,
+      path,
+    ),
+    final type? => [
+      if (const LeafValueChecker().errorOf(value, type) case final m?)
+        _report(m, value, path),
+    ],
+    null => const [],
   };
 
   List<_Work> _object(
