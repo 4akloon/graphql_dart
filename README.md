@@ -84,10 +84,13 @@ operation-based client code generation.
 
 - **Typed end to end.** Arbitrary JSON is `JsonValue`, a sealed family you
   can switch over; there is no `dynamic` in any public signature.
-- **Every problem at once.** Parsing and validation report every diagnostic
-  with a stable code (`GQL0xx`–`GQL5xx`) and a source location.
-- **Conformance is measured.** The graphql-js v17 suites are ported with a
-  mapping table, and every suite also runs AOT-compiled and in the browser.
+- **Every problem at once (from M2).** Parsing and validation will report
+  every diagnostic with a stable code (`GQL0xx`–`GQL5xx`) and a source
+  location.
+- **Conformance is measured (from M2).** The graphql-js v17 suites will be
+  ported with a mapping table, and every suite will also run AOT-compiled and
+  in the browser. M1 already runs its own tests on the VM, dart2js and
+  dart2wasm.
 - **Independent.** No dependency on `package:gql`; the core is pure Dart and
   depends only on `meta`.
 
