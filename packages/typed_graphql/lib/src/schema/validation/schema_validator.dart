@@ -1,6 +1,8 @@
 import '../schema.dart';
+import 'directive_definition_rules.dart';
 import 'root_type_rules.dart';
 import 'schema_validation_result.dart';
+import 'type_rules.dart';
 import 'validation_report.dart';
 
 /// Checks a schema against the type-system rules of the specification
@@ -20,6 +22,8 @@ final class const SchemaValidator() {
   SchemaValidationResult validate(Schema schema) {
     final report = ValidationReport();
     RootTypeRules(report, schema).check();
+    DirectiveDefinitionRules(report, schema).check();
+    TypeRules(report, schema).check();
     return report.hasErrors
         ? InvalidSchema(schema, report.diagnostics)
         : ValidSchema.assumeValid(schema);

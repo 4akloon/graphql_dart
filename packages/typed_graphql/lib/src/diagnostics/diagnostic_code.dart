@@ -78,7 +78,8 @@ enum DiagnosticCode(
   emptySelectionSet('GQL012'),
 
   /// `GQL013`: an enum value named `true`, `false` or `null` (spec
-  /// §3.9, `EnumValue`).
+  /// §3.9, `EnumValue`); schema validation reports one in a schema built
+  /// in code.
   reservedEnumValueName('GQL013'),
 
   /// `GQL014`: working-draft grammar that the parser's options leave off:
@@ -93,29 +94,35 @@ enum DiagnosticCode(
 
   /// `GQL101`: a second type definition with the name of a type already
   /// defined in the document or in the schema being extended; the second
-  /// is ignored.
+  /// is ignored. Schema validation reports a repeat in a schema built in
+  /// code.
   duplicateTypeName('GQL101'),
 
   /// `GQL102`: a second directive definition with the name of a directive
   /// already defined in the document or in the schema being extended; the
-  /// second is ignored.
+  /// second is ignored. Schema validation reports a repeat in a schema
+  /// built in code.
   duplicateDirectiveName('GQL102'),
 
   /// `GQL103`: a definition or an extension of a built-in: a built-in
   /// scalar, an introspection type or a built-in directive (R2.6); it is
-  /// ignored.
+  /// ignored. Schema validation reports a built-in name declared in a
+  /// schema built in code.
   builtInRedefinition('GQL103'),
 
   /// `GQL104`: a second field or input field with one name in a type, its
-  /// extensions included; the second is ignored.
+  /// extensions included; the second is ignored. Schema validation
+  /// reports a repeat in a schema built in code.
   duplicateFieldName('GQL104'),
 
   /// `GQL105`: a second argument with one name in a field or a directive
-  /// definition; the second is ignored.
+  /// definition; the second is ignored. Schema validation reports a
+  /// repeat in a schema built in code.
   duplicateArgumentName('GQL105'),
 
   /// `GQL106`: a second value with one name in an enum type, its
-  /// extensions included; the second is ignored.
+  /// extensions included; the second is ignored. Schema validation
+  /// reports a repeat in a schema built in code.
   duplicateEnumValueName('GQL106'),
 
   /// `GQL107`: a second schema definition, or one in a document that
@@ -145,5 +152,13 @@ enum DiagnosticCode(
 
   /// `GQL113`: one object type that is the root type of two operations
   /// (spec §3.3.1).
-  sharedRootType('GQL113');
+  sharedRootType('GQL113'),
+
+  /// `GQL114`: a name of a type, field, argument, enum value or directive
+  /// that begins with `__`, which introspection reserves (spec §3.4).
+  reservedName('GQL114'),
+
+  /// `GQL115`: a name that is empty or not of the name syntax
+  /// `[_A-Za-z][_0-9A-Za-z]*` (spec §2.1.9), in a schema built in code.
+  invalidName('GQL115');
 }

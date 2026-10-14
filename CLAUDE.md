@@ -257,6 +257,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   report order (elements may come from several sources, so no offset
   sort) and gives the first span of an error as its place and the others
   as related. Messages are graphql-js's `validateSchema` messages.
+  `TypeRules` walks the types and hands each to the family of its kind
+  (`FieldRules`, `EnumRules`, `InputObjectRules`, ...);
+  `DirectiveDefinitionRules` walks the directives; both share
+  `ArgumentRules`, `NameRules` (syntax, `__`, reserved enum values) and
+  `UniqueNames` (repeats, which only a schema built in code can hold).
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

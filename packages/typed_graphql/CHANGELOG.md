@@ -135,3 +135,9 @@
   `InvalidSchema(schema, diagnostics)`. The root-type rules: `GQL111` for
   a missing query root, `GQL112` for a root that is not an object type,
   `GQL113` for one type used as two roots.
+- Schema validation checks names: `GQL114` for a name that begins with
+  `__`, `GQL115` for a name of invalid syntax and `GQL013` for an enum
+  value named `true`, `false` or `null`; and, in a schema built in code,
+  repeated types, directives, fields, arguments and enum values
+  (`GQL101`–`GQL106`, the builder's messages) and redefined built-ins
+  (`GQL103`).
