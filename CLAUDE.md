@@ -131,6 +131,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `children` with its own stack (no recursion), calling
   `AstVisitor.enter` (returns `VisitAction.next`, `skip` or `stop`) and
   `leave`; a skipped node is not left, a stop leaves nothing.
+  `ParallelVisitor` keeps a skip or stop state per visitor, as graphql-js's
+  `visitInParallel`; it is stateful, so use one per walk.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

@@ -49,3 +49,5 @@
 - `NonNullType.withChildren` throws a `StateError` in release builds too.
 - `AstVisitor`, `VisitAction` and `AstWalker`: a depth-first walk of any
   syntax tree with `enter` and `leave`, which can skip a subtree or stop.
+- `ParallelVisitor`: several visitors in one walk, each called as if it
+  walked alone.

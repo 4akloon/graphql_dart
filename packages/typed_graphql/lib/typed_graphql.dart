@@ -44,6 +44,7 @@ export 'src/language/parser/parser_options.dart';
 export 'src/language/printer/printer.dart';
 export 'src/language/visitor/ast_visitor.dart';
 export 'src/language/visitor/ast_walker.dart';
+export 'src/language/visitor/parallel_visitor.dart';
 export 'src/language/visitor/visit_action.dart';
 export 'src/protocol/decode_result.dart';
 export 'src/protocol/graphql_error.dart';
