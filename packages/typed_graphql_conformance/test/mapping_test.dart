@@ -15,6 +15,9 @@ const Set<String> portedFiles = {
   'blockString-test.ts',
   'parser-test.ts',
   'schema-parser-test.ts',
+  'printer-test.ts',
+  'schema-printer-test.ts',
+  'printString-test.ts',
 };
 
 void main() {

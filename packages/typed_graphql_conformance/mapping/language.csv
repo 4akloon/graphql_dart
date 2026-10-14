@@ -152,3 +152,32 @@ schema-parser-test.ts,Schema Parser,Repeatable directive definition,ported,test/
 schema-parser-test.ts,Schema Parser,Directive with incorrect locations,ported,test/language/parser/schema_parser_directives_test.dart,
 schema-parser-test.ts,Schema Parser,Directive extension,adapted,test/language/parser/schema_parser_directives_test.dart,Directive extensions are a working-draft feature: the parse sets ParserOptions.allowDirectiveExtensions.
 schema-parser-test.ts,Schema Parser,parses kitchen sink schema,adapted,test/language/parser/schema_parser_directives_test.dart,The kitchen sink uses working-draft directive extensions: the parse sets ParserOptions.allowDirectiveExtensions.
+printer-test.ts,Printer: Query document,prints minimal ast,ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,produces helpful error messages,adapted,test/language/printer/printer_test.dart,Dart's types admit no plain object: a node class the library does not define gives an ArgumentError.
+printer-test.ts,Printer: Query document,correctly prints non-query operations without name,ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,prints query with variable directives,ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,keeps arguments on one line if line is short (<= 80 chars),ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,puts arguments on multiple lines if line is long (> 80 chars),ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,puts large object values on multiple lines if line is long (> 80 chars),ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,puts large list values on multiple lines if line is long (> 80 chars),ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,prints fragment with argument definition directives,skipped,,experimental fragment arguments are out of scope (R1.14)
+printer-test.ts,Printer: Query document,correctly prints fragment defined arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
+printer-test.ts,Printer: Query document,prints fragment spread with arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
+printer-test.ts,Printer: Query document,prints fragment spread with multi-line arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
+printer-test.ts,Printer: Query document,prints fragment,ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,prints kitchen sink without altering ast,adapted,test/language/printer/printer_test.dart,Nodes are immutable so the AST cannot be altered; isEquivalentTo stands for the deep equality without locations.
+printer-test.ts,Printer: Query document,prints schema coordinates,skipped,,schema coordinates arrive in stage M2b
+printer-test.ts,Printer: Query document,throws syntax error for ignored tokens in schema coordinates,skipped,,schema coordinates arrive in stage M2b
+schema-printer-test.ts,Printer: SDL document,prints minimal ast,ported,test/language/printer/schema_printer_test.dart,
+schema-printer-test.ts,Printer: SDL document,produces helpful error messages,adapted,test/language/printer/schema_printer_test.dart,Dart's types admit no plain object: a node class the library does not define gives an ArgumentError.
+schema-printer-test.ts,Printer: SDL document,prints kitchen sink without altering ast,adapted,test/language/printer/schema_printer_test.dart,The kitchen sink needs ParserOptions.allowDirectiveExtensions; nodes are immutable and isEquivalentTo stands for the deep equality without locations.
+printString-test.ts,printString,prints a simple string,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes quotes,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,does not escape single quote,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes backslashes,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes well-known control chars,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes zero byte,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,does not escape space,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,does not escape non-ascii character,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,does not escape supplementary character,ported,test/language/printer/print_string_test.dart,
+printString-test.ts,printString,escapes all control chars,ported,test/language/printer/print_string_test.dart,
