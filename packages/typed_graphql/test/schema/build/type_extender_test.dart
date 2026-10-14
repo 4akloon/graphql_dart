@@ -76,7 +76,10 @@ extend enum Color @key { GREEN }''').schema;
     final a = built.partial.typeNamed('A') as ObjectType;
     expect(namesOf(a.fields), ['a', 'c']);
     expect(built.result.diagnostics, hasLength(1));
-    expect(built.result.diagnostics.single.code, DiagnosticCode.extensionKindMismatch);
+    expect(
+      built.result.diagnostics.single.code,
+      DiagnosticCode.extensionKindMismatch,
+    );
   });
 
   test('extends an input object type', () {

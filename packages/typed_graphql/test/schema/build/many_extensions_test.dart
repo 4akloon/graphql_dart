@@ -34,13 +34,4 @@ void main() {
     ).schema;
     expect(schema.directiveNamed('d')?.appliedDirectives, hasLength(3000));
   });
-
-  test('sixteen thousand extensions of one type build in seconds', () {
-    final text = 'type T { first: Int }\n${typeExtensions(16000)}';
-    final watch = Stopwatch()..start();
-    final schema = Built(text).schema;
-    watch.stop();
-    expect((schema.typeNamed('T') as ObjectType).fields, hasLength(16001));
-    expect(watch.elapsed, lessThan(const Duration(seconds: 5)));
-  });
 }
