@@ -216,3 +216,6 @@
   the topics `graphql`, `parser`, `ast`, `sdl` and `schema`, and a
   `repository` URL that points at the package folder; pub.dev is expected to
   rewrite relative README links from it (to confirm at M16).
+- A value printed in a schema validation message about a scalar or enum
+  type is bounded as the other value messages are, so a deeply nested value
+  cannot overflow the printer.

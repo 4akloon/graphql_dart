@@ -1,3 +1,4 @@
+import '../../diagnostics/suggestions.dart';
 import '../../language/ast/node.dart';
 import '../../language/ast/object_field.dart';
 import '../../language/ast/type_ref.dart';
@@ -9,10 +10,16 @@ import 'bounded_value_printer.dart';
 import 'input_object_shape.dart';
 import 'leaf_value_checker.dart';
 import 'value_problem.dart';
+import 'value_problem_kind.dart';
 
 /// Whether a constant value, such as a default value or an applied
 /// directive's argument, is a value of an input type (spec §3.10 "Input
 /// Coercion", graphql-js's `validateInputLiteral` without variables).
+///
+/// With [allowsVariables], a variable anywhere in the value is accepted, as
+/// graphql-js's static `validateInputLiteral` accepts it for operation
+/// validation (spec §5.6.1); with [includesSuggestions], unknown input
+/// fields and enum values get graphql-js's "Did you mean" text.
 ///
 /// It walks the value with its own stack, so a deeply nested value cannot
 /// overflow the call stack, and reports the problems in graphql-js's
@@ -21,12 +28,21 @@ import 'value_problem.dart';
 /// checked.
 final class ValueChecker(
   /// The schema whose types are known.
-  final Schema schema,
-) {
+  final Schema schema, {
+
+  /// Whether a variable is a valid value; otherwise it is reported as not
+  /// constant.
+  final bool allowsVariables = false,
+
+  /// Whether messages suggest the names of known input fields and enum
+  /// values.
+  final bool includesSuggestions = false,
+}) {
   /// Creates the checker for [schema].
   this;
 
   static const Printer _printer = Printer();
+  static const BoundedValuePrinter _values = BoundedValuePrinter();
 
   /// The problems of [value] as a value of [type], in report order.
   ///
@@ -37,8 +53,8 @@ final class ValueChecker(
     final work = <_Work>[_Check(value, type, null)];
     while (work.isNotEmpty) {
       switch (work.removeLast()) {
-        case _Report(:final message, :final node, :final path):
-          yield ValueProblem(message(), node, _Path.keys(path));
+        case _Report(:final message, :final node, :final path, :final kind):
+          yield ValueProblem(message(), node, _Path.keys(path), kind: kind);
         case _Check(:final value, :final type, :final path):
           work.addAll(_step(value, type, path, shapes).reversed);
       }
@@ -51,9 +67,10 @@ final class ValueChecker(
     _Path? path,
     Map<InputObjectType, InputObjectShape> shapes,
   ) => switch ((value, type)) {
+    (Variable(), _) when allowsVariables => const [],
     (Variable(), _) => [
       _report(
-        'Expected a constant value, found: ${_printer.print(value)}.',
+        'Expected a constant value, found: ${_values.print(value)}.',
         value,
         path,
       ),
@@ -95,7 +112,12 @@ final class ValueChecker(
       path,
     ),
     final type? => [
-      if (const LeafValueChecker().errorOf(value, type) case final m?)
+      if (const LeafValueChecker().errorOf(
+            value,
+            type,
+            includesSuggestions: includesSuggestions,
+          )
+          case final m?)
         _report(m, value, path),
     ],
     null => const [],
@@ -111,7 +133,7 @@ final class ValueChecker(
       return [
         _report(
           'Expected value of type "${type.name}" to be an object, found: '
-          '${_printer.print(value)}.',
+          '${_values.print(value)}.',
           value,
           path,
         ),
@@ -124,11 +146,10 @@ final class ValueChecker(
       for (final node in value.fields)
         if (shape.indexOf(node.name.value) == null)
           _reportLater(
-            () =>
-                'Expected value of type "${type.name}" not to include '
-                'unknown field "${node.name.value}", found: ${text.value}.',
+            () => _unknownField(type, node.name.value, text),
             node,
             path,
+            .unknownField,
           ),
       if (type.isOneOf) ?_oneOf(value, shape, type, path),
     ];
@@ -167,6 +188,7 @@ final class ValueChecker(
                 'field "${shape.fields[index].name}", found: ${text.value}.',
             value,
             path,
+            .missingField,
           ),
     ];
   }
@@ -196,14 +218,27 @@ final class ValueChecker(
     };
   }
 
+  String _unknownField(InputObjectType type, String name, _ObjectText text) {
+    const suggestions = Suggestions();
+    final suggestion = includesSuggestions
+        ? suggestions.didYouMean(
+            suggestions.listFor(name, [for (final f in type.fields) f.name]),
+          )
+        : '';
+    return 'Expected value of type "${type.name}" not to include unknown '
+        'field "$name"${suggestion.isEmpty ? ', found' : '.$suggestion Found'}'
+        ': ${text.value}.';
+  }
+
   static _Report _report(String message, Node node, _Path? path) =>
-      _Report(() => message, node, path);
+      _Report(() => message, node, path, .invalid);
 
   static _Report _reportLater(
     String Function() message,
     Node node,
     _Path? path,
-  ) => _Report(message, node, path);
+    ValueProblemKind kind,
+  ) => _Report(message, node, path, kind);
 }
 
 sealed class _Work {}
@@ -236,6 +271,7 @@ final class _Report(
   final String Function() message,
   final Node node,
   final _Path? path,
+  final ValueProblemKind kind,
 ) extends _Work {
   this;
 }

@@ -1,4 +1,5 @@
 import '../../language/ast/node.dart';
+import 'value_problem_kind.dart';
 
 /// Why a constant value is not a value of its input type: a message, the
 /// node it is about and the path to that node inside the value.
@@ -8,8 +9,11 @@ final class ValueProblem(
 
   /// The node the problem is about: the value, an item, a field.
   final Node node,
-  List<Object> path,
-) {
+  List<Object> path, {
+
+  /// Which rule of spec §5.6 the problem breaks.
+  final ValueProblemKind kind = .invalid,
+}) {
   /// Creates a problem.
   this;
 
