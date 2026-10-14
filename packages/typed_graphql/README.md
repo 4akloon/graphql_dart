@@ -12,7 +12,7 @@ web (dart2js and dart2wasm). Part of
 
 > **Status: under construction.** This release has the diagnostics model, the
 > protocol data types, the language (syntax trees, lexer, parser, printer,
-> visitors, schema coordinates) and the schema (its model, building and
+> visitors, transformers, schema coordinates) and the schema (its model, building and
 > extending it from SDL, printing it, scalar codecs). Schema validation and
 > introspection arrive in M3b, and document validation in M4 (see the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)).

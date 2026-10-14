@@ -47,17 +47,17 @@ example and the dartdoc categories.
 ## Commands
 
 ```sh
-dart pub get                                                   # repo root, once and after pubspec edits
-dart format --output=none --set-exit-if-changed packages test  # must change 0 files
-dart analyze --fatal-infos                                     # repo root; must print "No issues found!"
-dart test                                                      # repo root: the code rules
-cd packages/typed_graphql && dart test                         # one package (every package has tests)
-cd packages/typed_graphql && dart test --compiler exe          # AOT (sealed switches, sdk#56010)
+dart pub get                                                  # repo root, once and after pubspec edits
+dart format --output=none --set-exit-if-changed packages test # must change 0 files
+dart analyze --fatal-infos                                    # repo root; must print "No issues found!"
+dart test                                                     # repo root: the code rules
+cd packages/typed_graphql && dart test                        # one package (every package has tests)
+cd packages/typed_graphql && dart test --compiler exe         # AOT (sealed switches, sdk#56010)
 cd packages/typed_graphql && dart test -p chrome --compiler dart2js
 cd packages/typed_graphql && dart test -p chrome --compiler dart2wasm
-cd packages/typed_graphql && dart test test/doc                 # snippets, links, category tags
-cd packages/typed_graphql && dart doc                       # must report "Found 0 warnings and 0 errors"
-cd packages/<package> && dart pub publish --dry-run            # never without --dry-run
+cd packages/typed_graphql && dart test test/doc               # snippets, links, category tags
+cd packages/typed_graphql && dart doc                         # must report "Found 0 warnings and 0 errors"
+cd packages/<package> && dart pub publish --dry-run           # never without --dry-run
 ```
 
 Git commands run from the repo root. Commits are Conventional Commits with the

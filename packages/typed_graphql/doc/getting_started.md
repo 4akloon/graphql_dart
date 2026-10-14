@@ -73,7 +73,7 @@ query root: Query
 
 - **Bad input never throws.** A syntax error, an invalid schema or a mistyped
   JSON body becomes a value you inspect: a diagnostic or a `DecodeFailure`.
-  Exceptions are for programmer errors only (`ArgumentError`, `StateError`).
+  Exceptions are for programmer errors only (`ArgumentError`, `RangeError`, `StateError`).
 - **Results are sealed.** `ParseSuccess` or `ParseFailure`, `BuildSuccess` or
   `BuildFailure`, `DecodeSuccess` or `DecodeFailure`: a `switch` over them is
   checked by the compiler, and a parse or build failure carries the partial

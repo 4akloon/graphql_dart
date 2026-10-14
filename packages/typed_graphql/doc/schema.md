@@ -294,7 +294,8 @@ document to a schema and returns a new one, or the same schema when the document
 has none. The original is not changed. An extension appends its members,
 interfaces, union members and directives after the type's own, in document
 order, and the type keeps the span of its definition. A member the schema
-already has is an error (`GQL104`).
+already has is an error: `GQL104` for a field, `GQL106` for an enum value. A
+type that the schema already has cannot be defined again (`GQL101`).
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';

@@ -12,7 +12,8 @@ transformer and schema coordinates.
 - `ParseSuccess(document)` when the text has no syntax error.
 - `ParseFailure(partial, diagnostics)` when it has. After an error the parser
   skips to the next definition or selection and goes on, so one pass reports
-  every error. `partial` holds the definitions that parsed completely; the tree
+  every error. `partial` holds what parsed: a failed definition is dropped, and
+  so is a failed selection inside a definition that is otherwise kept. The tree
   never contains an error node.
 
 Both carry `diagnostics`, in report order. `requireDocument()` gives the
