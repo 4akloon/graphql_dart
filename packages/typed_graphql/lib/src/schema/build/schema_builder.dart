@@ -49,6 +49,6 @@ final class const SchemaBuilder({
   }
 
   BuildResult _result(Schema schema, BuildReport report) => report.hasErrors
-      ? BuildFailure(schema, report.diagnostics)
+      ? BuildFailure(schema, report.diagnostics())
       : BuildSuccess(schema);
 }

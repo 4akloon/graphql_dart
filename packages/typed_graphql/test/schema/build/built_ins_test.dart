@@ -157,6 +157,25 @@ void main() {
     expect(builtIns.directives.first.arguments.single.span, isNull);
   });
 
+  test('tells the built-in directives, @defer and @stream by the flag', () {
+    expect(
+      builtIns.isBuiltInDirective('skip', includesDeferAndStream: false),
+      isTrue,
+    );
+    expect(
+      builtIns.isBuiltInDirective('defer', includesDeferAndStream: false),
+      isFalse,
+    );
+    expect(
+      builtIns.isBuiltInDirective('stream', includesDeferAndStream: true),
+      isTrue,
+    );
+    expect(
+      builtIns.isBuiltInDirective('key', includesDeferAndStream: true),
+      isFalse,
+    );
+  });
+
   test('gives the same instances on every call', () {
     expect(const BuiltIns().scalars.first, same(builtIns.scalars.first));
     expect(builtIns.defer, same(const BuiltIns().defer));

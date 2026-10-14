@@ -22,24 +22,24 @@ final class const SchemaPrinter({
   this;
 
   static const TypePrinter _types = TypePrinter();
+  static const BuiltIns _builtIns = BuiltIns();
 
   /// [schema] as SDL, without a trailing line break.
   String print(Schema schema) {
-    const builtIns = BuiltIns();
     return [
       ?_schemaDefinition(schema),
       if (includesBuiltIns)
         ...[
-          ...builtIns.directives,
+          ..._builtIns.directives,
           if (schema.includesDeferAndStream) ...[
-            builtIns.defer,
-            builtIns.stream,
+            _builtIns.defer,
+            _builtIns.stream,
           ],
         ].map(_types.directive),
       ...schema.directives.map(_types.directive),
-      if (includesBuiltIns) ...builtIns.scalars.map(_types.type),
+      if (includesBuiltIns) ..._builtIns.scalars.map(_types.type),
       ...schema.types.map(_types.type),
-      if (includesBuiltIns) ...builtIns.introspectionTypes.map(_types.type),
+      if (includesBuiltIns) ..._builtIns.introspectionTypes.map(_types.type),
     ].join('\n\n');
   }
 
@@ -63,7 +63,11 @@ final class const SchemaPrinter({
   }
 
   /// Whether each root is the type named after its operation, and each
-  /// type named after an operation is its root, as graphql-js checks.
+  /// type named after an operation is its root.
+  ///
+  /// Stricter than graphql-js's `isSchemaOfCommonNames`: a non-root type
+  /// named `Query`, `Mutation` or `Subscription` also forces the schema
+  /// definition, so building the printed SDL infers the same roots.
   static bool _hasDefaultRoots(Schema schema) => OperationType.values.every((
     operation,
   ) {

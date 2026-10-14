@@ -97,7 +97,7 @@ scalar A''');
         ..types(sdl.all())
         ..directives(sdl.all());
       return [
-        for (final diagnostic in report.diagnostics)
+        for (final diagnostic in report.diagnostics())
           '${diagnostic.code.id} ${diagnostic.message}',
       ];
     }

@@ -112,4 +112,13 @@ final class const BuiltIns() {
     }
     return null;
   }
+
+  /// Whether [name] is a built-in directive: one of [directives], or
+  /// `defer` or `stream` when [includesDeferAndStream].
+  bool isBuiltInDirective(
+    String name, {
+    required bool includesDeferAndStream,
+  }) =>
+      directiveNamed(name) != null ||
+      (includesDeferAndStream && (name == 'defer' || name == 'stream'));
 }

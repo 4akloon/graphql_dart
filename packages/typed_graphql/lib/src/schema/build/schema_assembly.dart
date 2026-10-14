@@ -80,7 +80,8 @@ final class SchemaAssembly(
     );
   }
 
-  ElementReader get _elements => ElementReader(report.spans);
+  final ElementReader _elements = ElementReader(report.spans);
+  final MemberFilter _filter = MemberFilter(report);
 
   void _reportExecutables(DocumentDefinitions definitions) {
     for (final executable in definitions.executables) {
@@ -95,7 +96,7 @@ final class SchemaAssembly(
   List<SchemaType> _types(Schema base, List<TypeDefinition> nodes) => [
     ...base.types,
     for (final node in nodes)
-      TypeReader(_elements).type(MemberFilter(report).definition(node)),
+      TypeReader(_elements).type(_filter.definition(node)),
   ];
 
   List<SchemaDirective> _directives(
@@ -103,8 +104,7 @@ final class SchemaAssembly(
     List<DirectiveDefinition> nodes,
   ) => [
     ...base.directives,
-    for (final node in nodes)
-      _elements.directive(MemberFilter(report).directive(node)),
+    for (final node in nodes) _elements.directive(_filter.directive(node)),
   ];
 
   Map<OperationType, String> _defaultRoots(List<SchemaType> types) => {

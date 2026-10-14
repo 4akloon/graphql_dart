@@ -13,19 +13,17 @@ final class const TypePrinter() {
 
   /// [type] as SDL, its description first.
   String type(SchemaType type) {
-    final head = '${type.name}${_members.directives(type.appliedDirectives)}';
+    final directives = _members.directives(type.appliedDirectives);
+    final head = '${type.name}$directives';
     final definition = switch (type) {
       ScalarType() => 'scalar $head',
       ObjectType(:final interfaces, :final fields) =>
-        'type ${type.name}${_interfaces(interfaces)}'
-            '${_members.directives(type.appliedDirectives)}'
+        'type ${type.name}${_interfaces(interfaces)}$directives'
             '${_members.fields(fields)}',
       InterfaceType(:final interfaces, :final fields) =>
-        'interface ${type.name}${_interfaces(interfaces)}'
-            '${_members.directives(type.appliedDirectives)}'
+        'interface ${type.name}${_interfaces(interfaces)}$directives'
             '${_members.fields(fields)}',
-      UnionType(:final memberTypes) =>
-        'union $head${memberTypes.isEmpty ? '' : ' = ${_names(memberTypes, ' | ')}'}',
+      UnionType(:final memberTypes) => 'union $head${_union(memberTypes)}',
       EnumType(:final values) => 'enum $head${_members.enumValues(values)}',
       InputObjectType(:final fields) =>
         'input $head${_members.inputFields(fields)}',
@@ -40,6 +38,9 @@ final class const TypePrinter() {
       '${_members.directives(directive.appliedDirectives)}'
       '${directive.isRepeatable ? ' repeatable' : ''}'
       ' on ${directive.locations.join(' | ')}';
+
+  static String _union(List<NamedType> memberTypes) =>
+      memberTypes.isEmpty ? '' : ' = ${_names(memberTypes, ' | ')}';
 
   static String _interfaces(List<NamedType> interfaces) =>
       interfaces.isEmpty ? '' : ' implements ${_names(interfaces, ' & ')}';

@@ -6,8 +6,8 @@ import 'input_value.dart';
 import 'schema_enum_value.dart';
 import 'schema_field.dart';
 
-/// A named type of a schema (spec §3.4): the sealed `NamedType` family of
-/// R2.1.
+/// A named type of a schema (spec §3.4): the sealed family of named
+/// types (R2.1).
 ///
 /// The language node `NamedType` is a reference to a type by name; this
 /// is the type itself. References between types are names, so a cyclic

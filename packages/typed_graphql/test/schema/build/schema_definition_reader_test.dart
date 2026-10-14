@@ -18,7 +18,7 @@ void main() {
       ElementReader(report.spans),
     ).read(base ?? Schema(), sdl.all<SchemaDefinition>(), sdl.all());
     errors?.addAll([
-      for (final diagnostic in report.diagnostics)
+      for (final diagnostic in report.diagnostics())
         '${diagnostic.span?.location} ${diagnostic.code.id} '
             '${diagnostic.message}',
     ]);
@@ -35,17 +35,20 @@ void main() {
     expect(schema.span?.start, 0);
   });
 
-  test('adds the roots and directives of extensions, in order', () {
-    final schema = read('''
+  test(
+    'applies the definition first, then the extensions in document order',
+    () {
+      final schema = read('''
 extend schema @b { mutation: M }
 schema @a { query: Q }''');
-    expect(schema.queryTypeName, 'Q');
-    expect(schema.mutationTypeName, 'M');
-    expect(schema.appliedDirectives.map((directive) => directive.name), [
-      'a',
-      'b',
-    ]);
-  });
+      expect(schema.queryTypeName, 'Q');
+      expect(schema.mutationTypeName, 'M');
+      expect(schema.appliedDirectives.map((directive) => directive.name), [
+        'a',
+        'b',
+      ]);
+    },
+  );
 
   test('keeps the first of two schema definitions', () {
     final errors = <String>[];

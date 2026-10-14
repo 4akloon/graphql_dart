@@ -92,7 +92,7 @@ final class const MemberPrinter() {
   /// An argument or input field: `name: Type = default @directives`.
   String inputValue(InputValue value) {
     final defaultValue = switch (value.defaultValue) {
-      final value? => ' = ${_printer.print(value)}',
+      final literal? => ' = ${_printer.print(literal)}',
       null => '',
     };
     return '${value.name}: ${_printer.print(value.type)}$defaultValue'

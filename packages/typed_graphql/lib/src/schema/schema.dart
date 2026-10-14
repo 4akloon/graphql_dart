@@ -59,6 +59,11 @@ final class Schema({
     for (final type in types.reversed) type.name: type,
   };
 
+  // Same rule as _typesByName: the first declared directive wins.
+  final Map<String, SchemaDirective> _directivesByName = {
+    for (final directive in directives.reversed) directive.name: directive,
+  };
+
   /// The declared type named [name], else the built-in scalar or
   /// introspection type; null when there is none.
   SchemaType? typeNamed(String name) {
@@ -71,10 +76,8 @@ final class Schema({
   /// The declared directive named [name], else the built-in one; null
   /// when there is none.
   SchemaDirective? directiveNamed(String name) {
-    for (final directive in directives) {
-      if (directive.name == name) {
-        return directive;
-      }
+    if (_directivesByName[name] case final directive?) {
+      return directive;
     }
     const builtIns = BuiltIns();
     return switch (name) {

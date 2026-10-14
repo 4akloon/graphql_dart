@@ -14,8 +14,9 @@ import 'scalar_codec.dart';
 /// wins (validation reports the repeat). A variable and a number too large
 /// to be finite are failures, with the path to them, and so is nesting deeper
 /// than [JsonReader.maxSupportedDepth] (the conversion recurses, and the web
-/// stack is shallow). An integer beyond 2^53 becomes a double on the web but
-/// stays exact on the VM; [JsonNumber.asInt] is the safe view.
+/// stack is shallow). An integer beyond 2^53 becomes a double on the web;
+/// on the VM it stays exact up to 2^63 and becomes a double beyond that.
+/// [JsonNumber.asInt] is the safe view.
 final class const LiteralConverter() {
   /// Creates a converter.
   this;

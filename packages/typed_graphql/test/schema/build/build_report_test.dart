@@ -12,7 +12,7 @@ void main() {
     final report = BuildReport(NodeSpans(source))
       ..error(DiagnosticCode.executableDefinitionInSchema, 'second', b)
       ..error(DiagnosticCode.executableDefinitionInSchema, 'first', a);
-    expect(report.diagnostics.map((diagnostic) => diagnostic.message), [
+    expect(report.diagnostics().map((diagnostic) => diagnostic.message), [
       'first',
       'second',
     ]);
@@ -22,7 +22,7 @@ void main() {
     final report = BuildReport(NodeSpans(source))
       ..error(DiagnosticCode.executableDefinitionInSchema, 'one', a)
       ..error(DiagnosticCode.executableDefinitionInSchema, 'two', a);
-    expect(report.diagnostics.map((diagnostic) => diagnostic.message), [
+    expect(report.diagnostics().map((diagnostic) => diagnostic.message), [
       'one',
       'two',
     ]);
@@ -37,7 +37,7 @@ void main() {
         b,
         related: related,
       );
-    final diagnostic = report.diagnostics.single;
+    final diagnostic = report.diagnostics().single;
     expect(diagnostic.span, SourceSpan(source, 16, 17));
     expect(diagnostic.related, [related]);
     expect(diagnostic.severity, DiagnosticSeverity.error);
@@ -48,8 +48,14 @@ void main() {
     for (var i = 0; i < DiagnosticSink.defaultMaxErrors + 5; i++) {
       report.error(DiagnosticCode.executableDefinitionInSchema, '$i', a);
     }
-    expect(report.diagnostics, hasLength(DiagnosticSink.defaultMaxErrors + 1));
-    expect(report.diagnostics.last.code, DiagnosticCode.diagnosticLimitReached);
+    expect(
+      report.diagnostics(),
+      hasLength(DiagnosticSink.defaultMaxErrors + 1),
+    );
+    expect(
+      report.diagnostics().last.code,
+      DiagnosticCode.diagnosticLimitReached,
+    );
   });
 
   test('has errors once one is reported', () {

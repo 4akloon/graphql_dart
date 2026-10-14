@@ -23,8 +23,9 @@ final class SchemaDefinitionReader(
   /// Creates a reader.
   this;
 
-  /// [base] with [definitions] and [extensions] applied, in document
-  /// order; its types and directives are left as they are.
+  /// [base] with [definitions] and [extensions] applied: the definition
+  /// first, then the extensions in document order; its types and
+  /// directives are left as they are.
   Schema read(
     Schema base,
     List<SchemaDefinition> definitions,

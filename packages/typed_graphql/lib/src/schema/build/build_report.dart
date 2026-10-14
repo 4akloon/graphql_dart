@@ -42,8 +42,8 @@ final class BuildReport(
   }
 
   /// The errors by offset, report order kept at one offset, cut at the
-  /// sink's limit.
-  List<Diagnostic> get diagnostics {
+  /// sink's limit; a method because it sorts on every call.
+  List<Diagnostic> diagnostics() {
     final ordered = [
       for (final (index, (offset, diagnostic)) in _errors.indexed)
         (offset, index, diagnostic),

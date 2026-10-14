@@ -57,7 +57,10 @@ final class UniqueDefinitions(
     final kept = <String, DirectiveDefinition>{};
     for (final node in nodes) {
       final name = node.name.value;
-      if (_isBuiltInDirective(name)) {
+      if (const BuiltIns().isBuiltInDirective(
+        name,
+        includesDeferAndStream: base.includesDeferAndStream,
+      )) {
         report.error(
           .builtInRedefinition,
           'The built-in directive "@$name" cannot be redefined.',
@@ -83,8 +86,4 @@ final class UniqueDefinitions(
     }
     return [...kept.values];
   }
-
-  bool _isBuiltInDirective(String name) =>
-      const BuiltIns().directiveNamed(name) != null ||
-      (base.includesDeferAndStream && (name == 'defer' || name == 'stream'));
 }

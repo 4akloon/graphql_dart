@@ -125,8 +125,9 @@ enum DiagnosticCode(
   /// is ignored.
   duplicateOperationType('GQL108'),
 
-  /// `GQL109`: an extension of a type that neither the document nor the
-  /// schema being extended defines; it is ignored.
+  /// `GQL109`: an extension of a type or a directive (`extend directive`)
+  /// that neither the document nor the schema being extended defines; it
+  /// is ignored.
   unknownExtensionTarget('GQL109'),
 
   /// `GQL110`: an extension of a type of another kind, such as
