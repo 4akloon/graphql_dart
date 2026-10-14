@@ -1,6 +1,6 @@
 # Handoff: where typed_graphql stands and how to continue
 
-Last updated: 2026-10-14 (M1 implemented, final review pending). Read this
+Last updated: 2026-10-14 (M1 merged into main, not pushed). Read this
 first on a new device or in a new Claude session. Session memory and scratch
 directories do not travel; this file and the repository hold everything
 needed.
@@ -10,7 +10,7 @@ needed.
 | Stage | Design | Plan | Code |
 |---|---|---|---|
 | Architecture | [spec](specs/2026-10-13-typed-graphql-design.md), [requirements](../requirements.md), [roadmap](../roadmap.md) | — | — |
-| M1 Foundations | the architecture spec (no stage spec) | [plan](plans/2026-10-13-m1-foundations.md) | implemented on branch `m1-foundations`; final review and merge pending |
+| M1 Foundations | the architecture spec (no stage spec) | [plan](plans/2026-10-13-m1-foundations.md) | done: merged into `main` locally (not pushed); next is M2 |
 | M2 Language | next: write `specs/…-m2-language-design.md` | — | — |
 
 **Decisions (2026-10-14):**
