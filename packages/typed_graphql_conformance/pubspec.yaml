@@ -1,0 +1,20 @@
+name: typed_graphql_conformance
+description: >-
+  Repository tool of typed_graphql: ported graphql-js suites, fuzzers and benchmarks. Never published.
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  typed_graphql: any
+  typed_graphql_builder: any
+  typed_graphql_client: any
+  typed_graphql_codegen: any
+  typed_graphql_server: any
+  typed_graphql_shelf: any
+
+dev_dependencies:
+  test: ^1.31.0
+
+resolution: workspace
