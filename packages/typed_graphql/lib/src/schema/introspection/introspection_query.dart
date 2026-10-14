@@ -59,12 +59,12 @@ final class const IntrospectionQuery({
       'Please set typeDepth to a reasonable value between 0 and 100; the '
       'default is 9.';
 
-  /// The query text: the operation `IntrospectionQuery` and the fragments
-  /// `FullType`, `InputValue` and `TypeRef`.
+  /// Throws a [RangeError] with graphql-js's message when [typeDepth] is
+  /// outside 0 to 100.
   ///
-  /// A [typeDepth] outside 0 to 100 is a [RangeError] with graphql-js's
-  /// message.
-  String get text {
+  /// [text] and the writer of an answer both call it, so a query that cannot
+  /// be asked cannot be answered.
+  void checkTypeDepth() {
     RangeError.checkValueInInterval(
       typeDepth,
       0,
@@ -72,6 +72,15 @@ final class const IntrospectionQuery({
       'typeDepth',
       _depthMessage,
     );
+  }
+
+  /// The query text: the operation `IntrospectionQuery` and the fragments
+  /// `FullType`, `InputValue` and `TypeRef`.
+  ///
+  /// A [typeDepth] outside 0 to 100 is a [RangeError] with graphql-js's
+  /// message.
+  String get text {
+    checkTypeDepth();
     return [
       ..._operation,
       '',

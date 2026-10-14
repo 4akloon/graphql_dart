@@ -100,6 +100,34 @@ void main() {
       });
     });
 
+    test('writes the schema description when the query reads it', () {
+      final schema = schemaOf('''
+        "The saga." schema { query: Query }
+        type Query { a: Int }
+      ''');
+      expect(schema['description'], 'The saga.');
+    });
+
+    test('rejects a type depth below zero', () {
+      expect(
+        () => schemaOf(
+          'type Query { a: Int }',
+          const IntrospectionQuery(typeDepth: -1),
+        ),
+        throwsA(isA<RangeError>()),
+      );
+    });
+
+    test('rejects a type depth above 100', () {
+      expect(
+        () => schemaOf(
+          'type Query { a: Int }',
+          const IntrospectionQuery(typeDepth: 101),
+        ),
+        throwsA(isA<RangeError>()),
+      );
+    });
+
     test('writes a deep reference without recursion', () {
       TypeRef type = const NamedType(Name('Int'));
       for (var i = 0; i < 10000; i++) {

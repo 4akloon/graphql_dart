@@ -32,8 +32,14 @@ final class IntrospectionWriter(
   /// `{"__schema": {...}}`.
   ///
   /// A reference to a type the schema lacks is an [ArgumentError]:
-  /// introspection describes a schema that validation accepts.
-  JsonObject write() => JsonObject({
+  /// introspection describes a schema that validation accepts. A
+  /// [IntrospectionQuery.typeDepth] outside 0 to 100 is a [RangeError].
+  JsonObject write() {
+    query.checkTypeDepth();
+    return _schemaObject();
+  }
+
+  JsonObject _schemaObject() => JsonObject({
     '__schema': JsonObject({
       if (query.includesSchemaDescription && query.includesDescriptions)
         'description': switch (schema.description) {
