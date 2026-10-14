@@ -259,3 +259,4 @@
 - `NoIntrospectionRule` (`GQL235`) and `MaxIntrospectionDepthRule` (`GQL236`), graphql-js's introspection rules; the depth rule is linear in the document with fragments expanded.
 - `DocumentValidator.recommendedRules`: the specified rules and `MaxIntrospectionDepthRule`.
 - `includesCostDirectives` on `SchemaBuilder` and `Schema`: the IBM draft's `@cost` and `@listSize` as opt-in built-in directives.
+- With `includesCostDirectives`, `SchemaValidator` checks the IBM draft's rules for `@cost` and `@listSize` (`GQL156`-`GQL161`).

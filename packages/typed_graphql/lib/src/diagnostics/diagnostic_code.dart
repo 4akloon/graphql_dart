@@ -325,6 +325,33 @@ enum DiagnosticCode(
   /// can read.
   introspectionTypeTooDeep('GQL155'),
 
+  /// `GQL156`: the `weight` of an applied `@cost` that is not a GraphQL
+  /// number (an integer or float literal written as text), reported when
+  /// the schema includes the cost directives (IBM cost draft).
+  invalidCostWeight('GQL156'),
+
+  /// `GQL157`: a `@cost` on a field of an interface or on one of its
+  /// arguments; the draft applies it to the fields of the implementing
+  /// types.
+  misplacedCost('GQL157'),
+
+  /// `GQL158`: a `@listSize` on a field whose type is not a list and that
+  /// names no `sizedFields`.
+  listSizeOnNonList('GQL158'),
+
+  /// `GQL159`: a name in the `slicingArguments` of a `@listSize` that is
+  /// not an argument of type `Int` or `Int!` of the field.
+  invalidSlicingArgument('GQL159'),
+
+  /// `GQL160`: a name in the `sizedFields` of a `@listSize` that is not a
+  /// list field of the field's object or interface return type.
+  invalidSizedField('GQL160'),
+
+  /// `GQL161`: a `@listSize` that gives `assumedSize` together with
+  /// slicing arguments, without `requireOneSlicingArgument: false` and
+  /// slicing arguments that have no default value.
+  conflictingAssumedSize('GQL161'),
+
   /// `GQL200`: a type system definition or extension in a document sent
   /// for execution (spec §5.1.1).
   executableDefinitions('GQL200'),
