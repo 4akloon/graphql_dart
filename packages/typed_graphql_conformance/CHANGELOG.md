@@ -38,3 +38,7 @@
   since operation validation arrives in M4.
 - Ported graphql-js `introspectionFromSchema-test.ts`; the schemas are
   written as SDL.
+- Ported graphql-js `buildClientSchema-test.ts` over `IntrospectionPort`
+  (`cycleIntrospection` and editable results): a structural problem is a
+  `GQL150`-`GQL155` diagnostic with its JSON path, and kind misuse is
+  checked with schema validation; the two execution tests wait for M5.

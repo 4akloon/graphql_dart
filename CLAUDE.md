@@ -462,7 +462,9 @@ that adds API adds its section to the guide of its layer in the same commit.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
 - Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`
   and `mapping/schema.csv`, checked by `test/mapping_test.dart` there; port
-  helpers in its `test/support/` (`SchemaPort` for the schema suites).
+  helpers in its `test/support/` (`SchemaPort` for the schema suites,
+  `ValidationPort` for `validateSchema`, `IntrospectionPort` for
+  `buildClientSchema`).
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
   round trip, hostile SDL); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
   `TYPED_GRAPHQL_FUZZ_SEED` tune them.
