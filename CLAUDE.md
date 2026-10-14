@@ -429,7 +429,9 @@ its layer in the same commit.
 
 A stage that adds a capability adds its query to `docs/discovery.md`, its
 line in the core's README and its `llms.txt` entry; a README, a pubspec
-description and `llms.txt` say only what works today. A link in a package
+description and `llms.txt` say only what works today (exception: a
+skeleton package's description names its planned role; its README banner and
+the "Not usable yet." line carry the status). A link in a package
 README that leaves the package folder is an absolute URL.
 
 **Self-review before saying "done".**

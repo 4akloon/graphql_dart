@@ -73,12 +73,10 @@ state the topic rules, so their source is not confirmed on that page.
 - `repository`: for a monorepo, the package folder, so that pub.dev can
   rewrite relative links and images:
   `https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql`
-  (the form the pub-dev maintainers give in
-  [dart-lang/pub-dev#5068](https://github.com/dart-lang/pub-dev/issues/5068)).
-  This works only with **repository verification** (pub.dev verifies the
-  repository; the steps are unconfirmed, see the open check below). The generated API reference does not
-  rewrite relative links, so doc comments keep using none (already a rule from
-  M3c).
+  (a convention, not verified: see docs/discovery.md, "Repository
+  verification"; confirm at M16). The generated API reference does not
+  rewrite relative links, so doc comments keep using none (already a rule
+  from M3c).
 - `issue_tracker` stays; images and badges use absolute URLs.
 - Pub points ask for an example and documented API: both exist since M3c.
 

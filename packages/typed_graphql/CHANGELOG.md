@@ -214,5 +214,6 @@
 - pub.dev metadata and README: a description and an opening sentence that say
   what the package does today, a "Should I use this?" section after Install,
   the topics `graphql`, `parser`, `ast`, `sdl` and `schema`, and a
-  `repository` URL that points at the package folder, so pub.dev resolves the
-  README's relative links.
+  `repository` URL that points at the package folder, so pub.dev can rewrite
+  the README's relative links once the repository is verified (to confirm at
+  M16).

@@ -14,6 +14,9 @@ a feature that does not exist is worse off than one that finds nothing. Name
 what is missing and the stage that brings it. Compare approaches, never
 packages: no third-party package is named, ranked or judged.
 
+One exception, decided by the owner: a skeleton package's description names its planned role; its README banner and the "Not usable yet." line carry the status. Revisit the skeleton
+descriptions before publishing (HANDOFF, "Open for publishing").
+
 ## Queries
 
 The searches typed_graphql answers, or will. A stage that makes a query true
@@ -81,7 +84,7 @@ linked.
   *Which package*. Every claim there is shown in a guide, and the item links
   the guide section.
 - A skeleton package says **Not usable yet.** right under its status banner
-  and makes no other claim.
+  and names only what is planned, as planned.
 - A link that leaves the package folder is an absolute URL: pub.dev publishes
   the folder alone.
 

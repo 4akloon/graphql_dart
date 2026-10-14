@@ -52,6 +52,10 @@ The superpowers skills: `brainstorming`, `writing-plans`,
   pub.dev can rewrite relative README links once the repository is verified.
   What pub.dev checks for verification is still open: confirm it before
   publishing ([discovery.md](../discovery.md), "Repository verification").
+- The five skeleton pubspec descriptions (server, shelf, client, codegen,
+  builder) name each package's planned role, an owner decision (spec §9
+  item 1) that breaks "say only what works today"; revisit them before
+  publishing.
 - After publishing, search pub.dev and the web for each query and record the
   results in the release PR ([discovery.md](../discovery.md), "After a
   release").

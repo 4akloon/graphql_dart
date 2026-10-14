@@ -79,4 +79,6 @@ builders; a lossless CST, formatter and LSP.
 - Discoverability ships with the stage too: a stage that adds a capability adds
   its search query to [discovery.md](discovery.md), its line in the core's
   README and its `llms.txt` entry, and every sentence says only what works
-  when the stage ends. The plan's self-review checks that task exists.
+  when the stage ends (exception: a skeleton package's description names its
+  planned role; its README banner and the "Not usable yet." line carry the
+  status). The plan's self-review checks that task exists.
