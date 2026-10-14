@@ -7,6 +7,8 @@ import 'document_validation_result.dart';
 import 'rules/executable_definitions_rule.dart';
 import 'rules/fields_on_correct_type_rule.dart';
 import 'rules/fragments_on_composite_types_rule.dart';
+import 'rules/input_object_field_names_rule.dart';
+import 'rules/input_object_required_fields_rule.dart';
 import 'rules/known_argument_names_rule.dart';
 import 'rules/known_fragment_names_rule.dart';
 import 'rules/known_operation_types_rule.dart';
@@ -20,7 +22,9 @@ import 'rules/scalar_leafs_rule.dart';
 import 'rules/single_field_subscriptions_rule.dart';
 import 'rules/unique_argument_names_rule.dart';
 import 'rules/unique_fragment_names_rule.dart';
+import 'rules/unique_input_field_names_rule.dart';
 import 'rules/unique_operation_names_rule.dart';
+import 'rules/values_of_correct_type_rule.dart';
 import 'rules/variables_are_input_types_rule.dart';
 import 'validation_context.dart';
 import 'validation_rule.dart';
@@ -78,7 +82,11 @@ final class const DocumentValidator({
     NoFragmentCyclesRule(),
     KnownArgumentNamesRule(),
     UniqueArgumentNamesRule(),
+    ValuesOfCorrectTypeRule(),
+    InputObjectFieldNamesRule(),
+    InputObjectRequiredFieldsRule(),
     ProvidedRequiredArgumentsRule(),
+    UniqueInputFieldNamesRule(),
   ];
 
   /// Validates [document] against [schema]; diagnostics point into

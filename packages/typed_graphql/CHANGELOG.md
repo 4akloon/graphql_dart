@@ -236,3 +236,6 @@
 - The fragment rules: `UniqueFragmentNamesRule`, `KnownFragmentNamesRule`,
   `NoUnusedFragmentsRule`, `NoFragmentCyclesRule` and
   `PossibleFragmentSpreadsRule` (`GQL211`, `GQL214`-`GQL217`).
+- The value rules: `ValuesOfCorrectTypeRule`, `InputObjectFieldNamesRule`,
+  `UniqueInputFieldNamesRule` and `InputObjectRequiredFieldsRule`
+  (`GQL218`-`GQL221`).

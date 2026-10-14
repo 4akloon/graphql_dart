@@ -393,6 +393,22 @@ enum DiagnosticCode(
   /// can never apply to the parent type (spec §5.5.2.3).
   possibleFragmentSpreads('GQL217'),
 
+  /// `GQL218`: a value literal that is not a value of the input type
+  /// expected at its position (spec §5.6.1).
+  valuesOfCorrectType('GQL218'),
+
+  /// `GQL219`: an input object literal that gives a field its type does
+  /// not define (spec §5.6.2).
+  inputObjectFieldNames('GQL219'),
+
+  /// `GQL220`: an input object literal that gives a field more than once
+  /// (spec §5.6.3).
+  uniqueInputFieldNames('GQL220'),
+
+  /// `GQL221`: an input object literal that omits a required field of its
+  /// type (spec §5.6.4).
+  inputObjectRequiredFields('GQL221'),
+
   /// `GQL226`: a variable whose type is not an input type (spec §5.8.2).
   variablesAreInputTypes('GQL226'),
 
