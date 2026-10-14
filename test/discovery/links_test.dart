@@ -13,11 +13,8 @@ import 'workspace_packages.dart';
 /// suite's, shared.
 void main() {
   const links = MarkdownLinks();
-  final readmes = [
-    for (final folder in Directory('packages').listSync())
-      if (folder is Directory) '${folder.path.replaceAll(r'\', '/')}/README.md',
-  ].where((path) => File(path).existsSync()).toList()..sort();
-  final pages = ['README.md', 'docs/discovery.md', ...readmes];
+  const workspace = WorkspacePackages();
+  final pages = ['README.md', 'docs/discovery.md', ...workspace.readmePaths()];
 
   for (final path in pages) {
     final markdown = File(path).readAsStringSync();
@@ -30,9 +27,13 @@ void main() {
 
   // pub.dev publishes the package folder alone: a link out of it works on
   // GitHub but not in the archive. Write such a link as an absolute URL.
-  for (final package in const WorkspacePackages().publishable()) {
+  for (final package in workspace.publishable()) {
     final folder = 'packages/${package.name}/';
     final path = '${folder}README.md';
+    test('$path exists', () {
+      expect(File(path).existsSync(), isTrue, reason: '$path is missing');
+    });
+    if (!File(path).existsSync()) continue;
     final markdown = File(path).readAsStringSync();
     for (final MarkdownLink(:line, :target) in links.relativeIn(markdown)) {
       test('$path:$line -> $target stays in the package', () {

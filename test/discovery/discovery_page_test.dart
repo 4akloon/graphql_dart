@@ -30,17 +30,49 @@ void main() {
       Uri.parse(path).resolve(link.target).path,
   ];
 
-  test('states the rule for every sentence', () {
+  test("has the rule 'Say only what works today'", () {
     expect(page.headings, contains('Say only what works today'));
   });
 
-  test('lists queries', () {
-    expect(rows, isNotEmpty);
+  test('has every required section', () {
+    expect(
+      page.headings,
+      containsAll(const [
+        'Queries',
+        'Metadata',
+        'README',
+        'llms.txt',
+        'Links',
+        'After a release',
+      ]),
+    );
+    expect(page.section('Metadata'), contains('### Repository verification'));
+  });
+
+  test('lists the queries that work today', () {
+    expect(
+      [
+        for (final row in rows)
+          if (row[3] == 'yes') row[1],
+      ],
+      containsAll(const [
+        'parse GraphQL query dart',
+        'print or format a GraphQL document dart',
+        'GraphQL syntax error line column dart',
+        'GraphQL AST visitor transform dart',
+        'build GraphQL schema from SDL dart',
+        'print GraphQL schema SDL dart',
+        'decode GraphQL response errors dart',
+        'GraphQL request response JSON types dart',
+        'validate a GraphQL schema dart',
+        'GraphQL introspection query schema dart',
+      ]),
+    );
   });
 
   for (final [_, query, stage, worksToday, _] in rows) {
     test('"$query" is unlocked by a stage of the roadmap', () {
-      expect(roadmap, contains('| $stage |'));
+      expect(roadmap, contains('| $stage | '));
     });
 
     test('"$query" says whether it works today', () {

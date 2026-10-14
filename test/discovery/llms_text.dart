@@ -51,5 +51,18 @@ final class LlmsText(String text) {
     ];
   }
 
+  /// The lines of the section [heading] that start with `- `, whether
+  /// or not they are well-formed links; a test compares it with
+  /// [entriesOf] so that a malformed line is not dropped silently.
+  int bulletCountOf(String heading) {
+    final start = _lines.indexOf('## $heading');
+    if (start < 0) return 0;
+    return _lines
+        .skip(start + 1)
+        .takeWhile(_isInSection)
+        .where((line) => line.startsWith('- '))
+        .length;
+  }
+
   bool _isInSection(String line) => !line.startsWith('## ');
 }

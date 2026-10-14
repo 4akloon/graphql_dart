@@ -68,17 +68,27 @@ void main() {
     });
   }
 
-  test('lists every guide of the core', () {
+  for (final section in llms.sections) {
+    test('every "- " line of $section is a link with a description', () {
+      expect(
+        llms.entriesOf(section),
+        hasLength(llms.bulletCountOf(section)),
+      );
+    });
+  }
+
+  test('lists exactly the guides of the core', () {
     final guides = [
       for (final file in Directory('packages/typed_graphql/doc').listSync())
         if (file.uri.pathSegments.last case final name
             when name.endsWith('.md'))
           '${prefix}packages/typed_graphql/doc/$name',
     ];
-    expect(
-      llms.entriesOf('Guides').map((entry) => entry.url),
-      containsAll(guides),
-    );
+    final listed = llms
+        .entriesOf('Guides')
+        .map((entry) => entry.url)
+        .where((url) => url.endsWith('.md'));
+    expect(listed, unorderedEquals(guides));
   });
 
   test('lists the example program of the core', () {

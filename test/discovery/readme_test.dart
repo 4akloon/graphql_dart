@@ -50,19 +50,25 @@ void main() {
 
   // The spec forbids naming, ranking or judging a third-party package in
   // the repository's own texts.
-  test('the root README names no third-party GraphQL package', () {
-    final text = File('README.md').readAsStringSync().toLowerCase();
-    // A name inside `typed_graphql_codegen` is ours, so it must start a word.
-    for (final name in const [
-      'package:gql',
-      'graphql_flutter',
-      'ferry',
-      'artemis',
-      'graphql_codegen',
-    ]) {
-      expect(text, isNot(contains(RegExp('(?<![a-z_])$name'))), reason: name);
-    }
-  });
+  for (final path in [
+    'README.md',
+    for (final package in const WorkspacePackages().publishable())
+      'packages/${package.name}/README.md',
+  ]) {
+    test('$path names no third-party GraphQL package', () {
+      final text = File(path).readAsStringSync().toLowerCase();
+      // A name inside `typed_graphql_codegen` is ours, so it must start a word.
+      for (final name in const [
+        'package:gql',
+        'graphql_flutter',
+        'ferry',
+        'artemis',
+        'graphql_codegen',
+      ]) {
+        expect(text, isNot(contains(RegExp('(?<![a-z_])$name'))), reason: name);
+      }
+    });
+  }
 
   // A skeleton exports nothing: an agent that lands on it must not try it.
   for (final package in const WorkspacePackages().publishable()) {
