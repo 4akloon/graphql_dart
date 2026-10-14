@@ -51,8 +51,9 @@ Found by the M3a reviews; none blocks the merge of M3a.
   validation arrives in M3b (23 rows) must gain the `validateSchema`
   assertion: `ValidSchema` normally, `InvalidSchema` for "allows extension of
   interface with missing Object fields" and "allows extension of union by
-  adding itself". Both "Allows to disable SDL validation" rows become adapted
-  tests with `ValidSchema.assumeValid`. "Throws on unknown types" (x2) and
+  adding itself". Both "Allows to disable SDL validation" rows are adapted tests
+  already (an unknown directive builds); M3b adds the `ValidSchema.assumeValid`
+  link. "Throws on unknown types" (x2) and
   "Rejects invalid SDL" (x2) assert real `GQL1xx` codes.
 - **Spec section 7** must list "applied directive must be defined" and
   "referenced type must exist" explicitly.

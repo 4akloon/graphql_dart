@@ -192,5 +192,16 @@ void main() {
       );
       expect(testDirective?.arguments.first.span?.text, 'arg: Int');
     });
+
+    test('a member an extension adds has a span inside the extension', () {
+      final schema = port.build('type Query { a: Int }');
+      const extension = 'extend type Query { b: Int }';
+      final extended = port.extend(schema, extension);
+      final field = port
+          .assertType<ObjectType>(extended, 'Query')
+          .fieldNamed('b');
+      expect(field?.span?.text, 'b: Int');
+      expect(field?.span?.source.body, extension);
+    });
   });
 }

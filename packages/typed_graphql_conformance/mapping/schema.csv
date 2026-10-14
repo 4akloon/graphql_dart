@@ -91,7 +91,7 @@ utilities/__tests__/buildASTSchema-test.ts,Schema Builder,can build invalid sche
 utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Do not override standard types,adapted,test/schema/build_schema_elements_test.dart,redefining a built-in type is GQL103 instead of being ignored
 utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Allows to reference introspection types,ported,test/schema/build_schema_elements_test.dart,
 utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Rejects invalid SDL,skipped,,SDL validation (unknown directives) arrives with schema validation in M3b
-utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Allows to disable SDL validation,skipped,,"the builder never validates, so there is nothing to disable"
+utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Allows to disable SDL validation,adapted,test/schema/build_schema_elements_test.dart,"the builder never validates, so an unknown directive builds; M3b adds the assumeValid link"
 utilities/__tests__/buildASTSchema-test.ts,Schema Builder,buildSchema parses directives on directive definitions,ported,test/schema/build_schema_elements_test.dart,
 utilities/__tests__/buildASTSchema-test.ts,Schema Builder,Throws on unknown types,adapted,test/schema/build_schema_elements_test.dart,"references are names, so the build succeeds; schema validation reports the unknown type from M3b"
 utilities/__tests__/buildASTSchema-test.ts,Schema Builder,correctly processes viral schema,ported,test/schema/build_schema_elements_test.dart,
@@ -126,7 +126,7 @@ utilities/__tests__/extendSchema-test.ts,extendSchema,extends interfaces multipl
 utilities/__tests__/extendSchema-test.ts,extendSchema,may extend mutations and subscriptions,ported,test/schema/extend_schema_interfaces_test.dart,
 utilities/__tests__/extendSchema-test.ts,extendSchema,may extend directives with new directive,adapted,test/schema/extend_schema_interfaces_test.dart,schema validation arrives in M3b; the test checks what the builder keeps
 utilities/__tests__/extendSchema-test.ts,extendSchema,Rejects invalid SDL,skipped,,SDL validation (unknown directives) arrives with schema validation in M3b
-utilities/__tests__/extendSchema-test.ts,extendSchema,Allows to disable SDL validation,skipped,,"the builder never validates, so there is nothing to disable"
+utilities/__tests__/extendSchema-test.ts,extendSchema,Allows to disable SDL validation,adapted,test/schema/extend_schema_roots_test.dart,"the builder never validates, so an unknown directive extends; M3b adds the assumeValid link"
 utilities/__tests__/extendSchema-test.ts,extendSchema,Throws on unknown types,adapted,test/schema/extend_schema_roots_test.dart,"references are names, so the build succeeds; schema validation reports the unknown type from M3b"
 utilities/__tests__/extendSchema-test.ts,extendSchema,does not allow replacing a default directive,adapted,test/schema/extend_schema_roots_test.dart,redefining a built-in directive is GQL103 with its own message
 utilities/__tests__/extendSchema-test.ts,extendSchema,does not allow replacing an existing enum value,ported,test/schema/extend_schema_roots_test.dart,

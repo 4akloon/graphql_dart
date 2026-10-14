@@ -25,6 +25,16 @@ void main() {
         }
       ''');
       expect(port.codes(result), ['GQL100']);
+      expect(
+        result.diagnostics.single.span?.text,
+        startsWith('fragment SomeFragment on Query'),
+      );
+      // The types around the fragment still build.
+      final partial = switch (result) {
+        BuildFailure(:final partial) => partial,
+        BuildSuccess() => fail('A fragment in SDL must fail.'),
+      };
+      expect(partial.typeNamed('Query'), isA<ObjectType>());
     });
 
     test('Match order of default types and directives', () {
@@ -161,6 +171,20 @@ void main() {
         directive @oneOf on OBJECT
       ''');
       expect(port.codes(result), List.filled(5, 'GQL103'));
+      expect(
+        [for (final diagnostic in result.diagnostics) diagnostic.span?.text],
+        ['skip', 'include', 'deprecated', 'specifiedBy', 'oneOf'],
+      );
+      // The built-ins stay, and none of the redefinitions is kept.
+      final partial = switch (result) {
+        BuildFailure(:final partial) => partial,
+        BuildSuccess() => fail('Redefined built-ins must fail.'),
+      };
+      expect(partial.directives, isEmpty);
+      expect(
+        partial.directiveNamed('skip'),
+        same(builtIns.directiveNamed('skip')),
+      );
     });
 
     test(

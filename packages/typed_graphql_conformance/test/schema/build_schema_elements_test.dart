@@ -223,6 +223,10 @@ void main() {
         scalar __Schema
       ''');
       expect(port.codes(result), ['GQL103', 'GQL103']);
+      expect(
+        [for (final diagnostic in result.diagnostics) diagnostic.span?.text],
+        ['ID', '__Schema'],
+      );
       final partial = switch (result) {
         BuildFailure(:final partial) => partial,
         BuildSuccess() => fail('Redefined built-ins must fail.'),
@@ -253,6 +257,19 @@ void main() {
         schema.typeNamed('__EnumValue'),
         same(builtIns.typeNamed('__EnumValue')),
       );
+    });
+
+    test('Allows to disable SDL validation', () {
+      // Adapted: the builder never validates, so an unknown directive
+      // builds without an option; schema validation (M3b) is what
+      // `assumeValid` turns off.
+      final schema = port.build('''
+        type Query {
+          foo: String @unknown
+        }
+      ''');
+      final field = (schema.typeNamed('Query')! as ObjectType).fields.single;
+      expect(field.appliedDirectives.single.name, 'unknown');
     });
 
     test('buildSchema parses directives on directive definitions', () {

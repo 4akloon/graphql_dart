@@ -18,6 +18,8 @@ void main() {
   const port = SchemaPort();
 
   group('Type System Printer', () {
+    // Adapted: prints the built-ins as declared types of one schema; the
+    // text is the September2025 introspection, see the header.
     test('Print Introspection Schema', () {
       const builtIns = BuiltIns();
       final schema = Schema(

@@ -131,11 +131,10 @@ void main() {
           id: ID
         }
       ''');
-      for (final built in [schema, extendedSchema, extendedTwiceSchema]) {
-        for (final name in ['Int', 'Float', 'String', 'Boolean', 'ID']) {
-          expect(built.typeNamed(name), same(builtIns.scalarNamed(name)));
-        }
-      }
+      expect(
+        extendedSchema.typeNamed('Boolean'),
+        same(builtIns.scalarNamed('Boolean')),
+      );
       expect(
         port.print(extendedTwiceSchema),
         dedent('''

@@ -36,6 +36,15 @@ void main() {
       expect(result.diagnostics.single.span?.text, 'include');
     });
 
+    test('Allows to disable SDL validation', () {
+      // Adapted: the builder never validates, so an unknown directive
+      // extends without an option; schema validation (M3b) is what
+      // `assumeValid` turns off.
+      final schema = port.build('type Query { foo: String }');
+      final extended = port.extend(schema, 'extend schema @unknown');
+      expect(extended.appliedDirectives.single.name, 'unknown');
+    });
+
     test('does not allow replacing an existing enum value', () {
       final schema = port.build('''
         enum SomeEnum {
@@ -279,6 +288,9 @@ void main() {
           result.diagnostics.map((diagnostic) => diagnostic.message),
           ['Unexpected <EOF>.'],
         );
+        expect(result.diagnostics.single.code.id, 'GQL008');
+        expect(result.diagnostics.single.span?.text, '');
+        expect(result.diagnostics.single.span?.start, 30);
       });
     });
   });
