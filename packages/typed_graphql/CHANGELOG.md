@@ -53,3 +53,6 @@
   walked alone.
 - `AstTransformer`: rebuilds a syntax tree bottom-up; `rewrite` keeps,
   replaces or removes a node, and unchanged branches keep their instance.
+- Schema coordinate nodes: the `SchemaCoordinate` family
+  (`TypeCoordinate`, `MemberCoordinate`, `ArgumentCoordinate`,
+  `DirectiveCoordinate`, `DirectiveArgumentCoordinate`).

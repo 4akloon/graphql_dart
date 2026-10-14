@@ -25,6 +25,7 @@ export 'src/language/ast/node.dart';
 export 'src/language/ast/object_field.dart';
 export 'src/language/ast/operation_type.dart';
 export 'src/language/ast/operation_type_definition.dart';
+export 'src/language/ast/schema_coordinate.dart';
 export 'src/language/ast/selection.dart';
 export 'src/language/ast/selection_set.dart';
 export 'src/language/ast/type_ref.dart';
