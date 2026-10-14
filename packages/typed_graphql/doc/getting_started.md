@@ -12,7 +12,7 @@ The package is built in layers. A layer imports only the layers before it:
 | diagnostics | **Diagnostics** | `Source`, `SourceSpan`, `Diagnostic`, `DiagnosticCode`, `DiagnosticSink` |
 | language | **Language** | `Parser`, `Printer`, the syntax tree, `AstWalker`, `AstTransformer`, schema coordinates |
 | protocol | **Wire Protocol** | `JsonValue`, `JsonReader`, `GraphQLRequest`, `ResponsePayload`, `GraphQLError` |
-| schema | **Schema**, **Scalars & Codecs** | `Schema`, `SchemaBuilder`, `SchemaPrinter`, `ScalarCodec` |
+| schema | **Schema**, **Scalars & Codecs**, **Introspection** | `Schema`, `SchemaBuilder`, `SchemaValidator`, `SchemaPrinter`, `ScalarCodec`, `IntrospectionQuery` |
 
 Everything is exported from one library, `package:typed_graphql/typed_graphql.dart`.
 
@@ -89,7 +89,8 @@ query root: Query
 - **Language** — parse, print, walk and rewrite documents; schema coordinates.
 - **Diagnostics** — sources, spans, codes, and how to report your own.
 - **Wire Protocol** — requests, responses and errors as typed values.
-- **Schema** — build a schema from SDL, extend it, print it.
+- **Schema** — build a schema from SDL, validate it, extend it, print it;
+  resolve schema coordinates.
 - **Scalars & Codecs** — the built-in scalar codecs and your own.
 - **Introspection** — the introspection query, a schema's answer, and a
   schema built from an answer.

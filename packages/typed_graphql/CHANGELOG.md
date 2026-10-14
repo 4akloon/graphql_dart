@@ -196,3 +196,6 @@
   `DirectiveTarget`, `DirectiveArgumentTarget`), or null: also when a
   containing element is missing or of the wrong kind, and for meta-fields
   and introspection types, which are not schema elements.
+- The Schema guide covers validating a schema and resolving a schema
+  coordinate, and the new Introspection guide covers the introspection query
+  and results; the new types carry their dartdoc category.

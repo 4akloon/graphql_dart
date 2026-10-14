@@ -13,8 +13,9 @@ web (dart2js and dart2wasm). Part of
 > **Status: under construction.** This release has the diagnostics model, the
 > protocol data types, the language (syntax trees, lexer, parser, printer,
 > visitors, transformers, schema coordinates) and the schema (its model, building and
-> extending it from SDL, printing it, scalar codecs). Schema validation and
-> introspection arrive in M3b, and document validation in M4 (see the
+> extending it from SDL, printing it, scalar codecs, validating it,
+> introspection both ways, resolving schema coordinates). Document validation
+> arrives in M4 (see the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)).
 
 ## Contents
@@ -99,7 +100,7 @@ is run by the test suite, so what they print is what the package does.
 | [Language](doc/language.md) | Parse, print, visit and rewrite documents; schema coordinates; tokens |
 | [Diagnostics](doc/diagnostics.md) | Sources, spans, codes, the sink |
 | [Wire protocol](doc/protocol.md) | `JsonValue`, requests, responses, errors |
-| [Schema](doc/schema.md) | Build a schema from SDL, read it, extend it, print it |
+| [Schema](doc/schema.md) | Build a schema from SDL, read it, validate it, extend it, print it; resolve coordinates |
 | [Scalars and codecs](doc/scalars.md) | The built-in codecs and your own |
 | [Introspection](doc/introspection.md) | Write the introspection query, answer it from a schema, build a schema from an answer |
 

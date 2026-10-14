@@ -29,7 +29,12 @@ graphql-js language suite and the language fuzzers. M3a (schema core)
 delivers the schema model, SDL building and extension, the SDL printer,
 scalar codecs, the graphql-js schema builder, extension and printer suites
 and the SDL fuzzers. M3c (core documentation) delivers the guides, the
-example and the dartdoc categories.
+example and the dartdoc categories. M3b (schema validation) delivers the type
+relations, the schema validator, the introspection query, introspection
+results in both directions, coordinate resolution, the graphql-js
+`validateSchema`, `buildClientSchema`, `introspectionFromSchema` and
+`resolveSchemaCoordinate` suites, the introspection and coordinate fuzzers,
+and the Introspection guide.
 
 ## Documents
 
