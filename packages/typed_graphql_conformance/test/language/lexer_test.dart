@@ -369,6 +369,15 @@ void main() {
   '''),
         ['{', 'Comment', 'Name', '}', '<EOF>'],
       );
+      expect(
+        port.kinds('''
+    {
+      #comment
+      field
+    }
+  '''),
+        ['{', 'Name', '}', '<EOF>'],
+      );
     });
 
     // Adapted: tokens are not linked, so the comment comes from Lexer(keepComments: true) instead of token.prev.

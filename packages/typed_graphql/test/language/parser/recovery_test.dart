@@ -26,6 +26,20 @@ void main() {
       expect(fieldNames(parsed.partial), ['a']);
     });
 
+    test('a directive named like a keyword is not a definition start', () {
+      final parsed = Parsed('extend directive @d @query type X {a: Int}');
+      expect(parsed.errors, hasLength(1));
+      expect(parsed.errors.single, contains('GQL014'));
+      expect(parsed.partial.definitions.whereType<ObjectTypeDefinition>(), [
+        isA<ObjectTypeDefinition>().having((t) => t.name.value, 'name', 'X'),
+      ]);
+    });
+
+    test('a directive definition with a keyword-named directive has no '
+        'second error', () {
+      expect(Parsed('directive @d @query on FIELD').errors, hasLength(1));
+    });
+
     test('an unterminated definition gives one error', () {
       expect(Parsed(r'query Q($a: Int').errors, [
         r'1:16 GQL007 Expected "$", found <EOF>.',

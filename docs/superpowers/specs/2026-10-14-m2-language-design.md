@@ -122,7 +122,7 @@ limit exceeded, working-draft feature disabled, empty selection set.
 ## 5. AST
 
 Every node extends the abstract class `Node`: `start`, `end` (UTF-16 offsets,
-R1.7), `children` (an unmodifiable list in grammar order), `withChildren(list)`
+R1.7), `children` (a read-only list in grammar order: never modify it), `withChildren(list)`
 (a copy with replaced children, the same instance when nothing changed) and
 `isEquivalentTo(other)`. Nodes are immutable `final` classes with primary
 constructors and are `const` where possible; they do not override `==`.
@@ -235,3 +235,5 @@ clean after every task; no allowlist grows.
    traversal tools do not repeat a switch over every kind.
 5. Fragment arguments (R1.14) stay out; graphql-js's
    `experimentalFragmentArguments` tests are `skipped` in the mapping table.
+6. `Node.children` is documented as read-only rather than wrapped in an
+   unmodifiable list, to avoid an allocation per call.

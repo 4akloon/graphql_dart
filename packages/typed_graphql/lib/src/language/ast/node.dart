@@ -18,8 +18,9 @@ abstract class const Node({
   this;
 
   /// The child nodes in grammar order, the order of graphql-js's
-  /// `QueryDocumentKeys`; an absent optional child is left out. The list
-  /// cannot be modified.
+  /// `QueryDocumentKeys`; an absent optional child is left out. A read-only
+  /// view: never modify it (some nodes return a fresh list, others a
+  /// covariant list on which `add` throws).
   List<Node> get children;
 
   /// The scalar fields [isEquivalentTo] compares, such as a name's value or

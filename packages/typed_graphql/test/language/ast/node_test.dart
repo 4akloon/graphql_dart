@@ -46,6 +46,16 @@ void main() {
     });
   });
 
+  group('NonNullType', () {
+    test('withChildren throws a StateError for a non-null child', () {
+      const type = NonNullType(NamedType(a));
+      expect(
+        () => type.withChildren(const [NonNullType(NamedType(b))]),
+        throwsStateError,
+      );
+    });
+  });
+
   group('isEquivalentTo', () {
     test('ignores positions', () {
       expect(

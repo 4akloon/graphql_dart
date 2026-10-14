@@ -59,6 +59,11 @@ final class const NonNullType(
   List<Node> get children => [type];
 
   @override
-  NonNullType rebuildFrom(ChildReader read) =>
-      NonNullType(read.one(), start: start, end: end);
+  NonNullType rebuildFrom(ChildReader read) {
+    final wrapped = read.one<TypeRef>();
+    if (wrapped is NonNullType) {
+      throw StateError('a non-null type is not wrapped twice');
+    }
+    return NonNullType(wrapped, start: start, end: end);
+  }
 }

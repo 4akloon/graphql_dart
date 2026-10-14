@@ -108,7 +108,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   leaves `Parser`. The cursor is silent at error tokens (the lexer
   reported them) and at an offset that already has a diagnostic.
   `Recovery` resynchronises (R1.5): `Parser.parse` drops a failed
-  definition and skips to the next definition keyword, `{` or description;
+  definition and skips to the next definition keyword or description, or to a `{` that
+  follows a `}` or starts the document;
   `SelectionParser` drops a failed selection and skips to a name, `...` or
   `}`; both only at the bracket `balance` where the failed part started,
   and always consume a token. A selection set left empty fails too.

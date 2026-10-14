@@ -59,7 +59,8 @@ final class Lexer {
   /// The document being read.
   Source get source => _reader.source;
 
-  /// The tokens returned so far, comments and the end not counted.
+  /// The tokens scanned so far, comments and the end not counted; includes
+  /// the token that exceeded [maxTokens], which is not returned.
   int get tokenCount => _tokenCount;
 
   /// Whether [maxTokens] was exceeded, so the document was not read to

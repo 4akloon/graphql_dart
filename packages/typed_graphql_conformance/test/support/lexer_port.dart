@@ -20,8 +20,16 @@ final class LexerPort {
 
   /// Every token of [text] up to the end, comments included, as graphql-js
   /// kinds (`<EOF>` last).
-  List<String> kindsWithComments(String text) {
-    final lexer = Lexer(Source(text), DiagnosticSink(), keepComments: true);
+  List<String> kindsWithComments(String text) =>
+      kinds(text, keepComments: true);
+
+  /// Like [kindsWithComments], with comments kept only when [keepComments].
+  List<String> kinds(String text, {bool keepComments = false}) {
+    final lexer = Lexer(
+      Source(text),
+      DiagnosticSink(),
+      keepComments: keepComments,
+    );
     final kinds = <String>[];
     for (var token = lexer.advance(); ; token = lexer.advance()) {
       kinds.add(kindOf(token.kind));

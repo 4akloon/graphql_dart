@@ -26,6 +26,8 @@ void main() {
     });
 
     test('the sink stops after maxErrors errors with GQL000', () {
+      // `query` follows `!` because recovery treats `{` as a definition start
+      // only after `}` or at the document start.
       final parsed = Parsed('{ a } ! query { a } ' * 300);
       final codes = parsed.result.diagnostics.map(
         (diagnostic) => diagnostic.code,

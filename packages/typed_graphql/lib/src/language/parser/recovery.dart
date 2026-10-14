@@ -1,6 +1,7 @@
 import '../lexer/token.dart';
 import '../lexer/token_kind.dart';
 import 'token_cursor.dart';
+import 'type_system_parser.dart';
 
 /// Where the parser resumes after a syntax error (R1.5): it skips tokens
 /// to the next place where a definition or a selection can start, at the
@@ -13,18 +14,11 @@ final class Recovery {
   final TokenCursor cursor;
 
   static const Set<String> _definitionKeywords = {
+    ...TypeSystemParser.keywords,
     'query',
     'mutation',
     'subscription',
     'fragment',
-    'schema',
-    'scalar',
-    'type',
-    'interface',
-    'union',
-    'enum',
-    'input',
-    'directive',
     'extend',
   };
 
@@ -58,7 +52,9 @@ final class Recovery {
   bool _startsDefinition(Token token) => switch (token.kind) {
     .braceLeft => cursor.lastKind == null || cursor.lastKind == .braceRight,
     .string || .blockString => true,
-    .name => _definitionKeywords.contains(token.value),
+    // After `@` a keyword is a directive's name, not a definition.
+    .name =>
+      cursor.lastKind != .at && _definitionKeywords.contains(token.value),
     _ => false,
   };
 
