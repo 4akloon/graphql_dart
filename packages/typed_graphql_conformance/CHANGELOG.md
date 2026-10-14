@@ -23,3 +23,5 @@
   by the same mapping test; `SchemaPort`, the port helpers. Ported
   graphql-js schema suites: `printSchema-test.ts`, `buildASTSchema-test.ts`,
   `extendSchema-test.ts`.
+- SDL round-trip fuzzer (R10.4): random schemas printed as SDL build back
+  to the same elements and print the same text.
