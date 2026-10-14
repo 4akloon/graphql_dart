@@ -157,3 +157,11 @@
   deprecated required argument or input field (`GQL128`), a directive
   without locations (`GQL129`) and a directive that references itself,
   directly or through types and directives (`GQL130`).
+- Schema validation checks implemented interfaces, with graphql-js's
+  messages: a non-interface (`GQL131`), a circular implementation
+  (`GQL132`), a repeat (`GQL133`), a missing inherited interface
+  (`GQL134`), and, for each interface field, a missing field (`GQL135`),
+  a field type that is not a subtype (`GQL136`), a missing argument
+  (`GQL137`), an argument of another type (`GQL138`), an added required
+  argument (`GQL139`) and a deprecated implementation of a live field
+  (`GQL140`).

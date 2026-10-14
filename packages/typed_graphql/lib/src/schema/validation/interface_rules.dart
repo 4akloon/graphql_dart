@@ -1,10 +1,17 @@
+import '../../diagnostics/source_span.dart';
 import '../model/named_type_reference.dart';
+import '../model/schema_field.dart';
+import '../model/schema_type.dart';
 import '../schema.dart';
+import 'implementation_rules.dart';
 import 'type_reference_rules.dart';
 import 'validation_report.dart';
 
 /// The rules of the interfaces an object or interface type implements
-/// (spec §3.6, §3.7): each names a known type.
+/// (spec §3.6, §3.7 "Type Validation"), as graphql-js's
+/// `validateInterfaces`: each is a known interface type, other than the
+/// type itself, named once; the type also implements the interfaces it
+/// inherits, and implements each interface's fields.
 final class InterfaceRules(
   /// Receives the errors.
   final ValidationReport report,
@@ -15,13 +22,97 @@ final class InterfaceRules(
   /// Creates the rules for [schema].
   this;
 
-  /// Reports the problems of [interfaces], the interfaces of one type.
-  void check(List<NamedTypeReference> interfaces) {
+  /// Reports the problems of the [interfaces] of [type], whose fields are
+  /// [fields].
+  void check(
+    SchemaType type,
+    List<NamedTypeReference> interfaces,
+    List<SchemaField> fields,
+  ) {
+    final implemented = <String>{};
     for (final reference in interfaces) {
-      TypeReferenceRules(
+      if (!TypeReferenceRules(
         report,
         schema,
-      ).isKnown(reference.name, reference.span);
+      ).isKnown(reference.name, reference.span)) {
+        continue;
+      }
+      switch (schema.typeNamed(reference.name)) {
+        case final InterfaceType interface when interface.name == type.name:
+          report.error(
+            .circularImplementation,
+            'Type ${type.name} cannot implement itself because it would '
+            'create a circular reference.',
+            _spansOf(interfaces, interface.name),
+          );
+        case final InterfaceType interface
+            when !implemented.add(interface.name):
+          report.error(
+            .repeatedInterface,
+            'Type ${type.name} can only implement ${interface.name} once.',
+            _spansOf(interfaces, interface.name),
+          );
+        case final InterfaceType interface:
+          _ancestors(type, interfaces, interface);
+          ImplementationRules(report, schema).check(type, fields, interface);
+        case final other?:
+          _notInterface(type, interfaces, other);
+        case null:
+          break;
+      }
     }
   }
+
+  void _notInterface(
+    SchemaType type,
+    List<NamedTypeReference> interfaces,
+    SchemaType other,
+  ) => report.error(
+    .implementsNonInterface,
+    'Type ${type.name} must only implement Interface types, it cannot '
+    'implement ${other.name}.',
+    _spansOf(interfaces, other.name),
+  );
+
+  // graphql-js's validateTypeImplementsAncestors (spec §3.7, "the
+  // implementing type must also implement the interfaces it inherits").
+  void _ancestors(
+    SchemaType type,
+    List<NamedTypeReference> interfaces,
+    InterfaceType interface,
+  ) {
+    for (final transitive in interface.interfaces) {
+      if (schema.typeNamed(transitive.name) == null ||
+          interfaces.any((reference) => reference.name == transitive.name)) {
+        continue;
+      }
+      final spans = [
+        ..._spansOf(interface.interfaces, transitive.name),
+        ..._spansOf(interfaces, interface.name),
+      ];
+      if (transitive.name == type.name) {
+        report.error(
+          .circularImplementation,
+          'Type ${type.name} cannot implement ${interface.name} because it '
+          'would create a circular reference.',
+          spans,
+        );
+      } else {
+        report.error(
+          .missingTransitiveInterface,
+          'Type ${type.name} must implement ${transitive.name} because it is '
+          'implemented by ${interface.name}.',
+          spans,
+        );
+      }
+    }
+  }
+
+  static List<SourceSpan?> _spansOf(
+    List<NamedTypeReference> references,
+    String name,
+  ) => [
+    for (final reference in references)
+      if (reference.name == name) reference.span,
+  ];
 }

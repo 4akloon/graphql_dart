@@ -220,5 +220,46 @@ enum DiagnosticCode(
 
   /// `GQL130`: a directive definition that references itself, directly
   /// or through the types and directives it references (spec §3.13).
-  directiveSelfReference('GQL130');
+  directiveSelfReference('GQL130'),
+
+  /// `GQL131`: an object or interface type that implements a type
+  /// that is not an interface type (spec §3.6, §3.7).
+  implementsNonInterface('GQL131'),
+
+  /// `GQL132`: an interface type that implements itself, directly or
+  /// through the interfaces it inherits (spec §3.7).
+  circularImplementation('GQL132'),
+
+  /// `GQL133`: an object or interface type that names one interface twice
+  /// among the interfaces it implements (spec §3.6, §3.7).
+  repeatedInterface('GQL133'),
+
+  /// `GQL134`: a type that implements an interface but not the
+  /// interfaces that interface implements (spec §3.7).
+  missingTransitiveInterface('GQL134'),
+
+  /// `GQL135`: a type without a field of an interface it implements
+  /// (spec §3.6.3 `IsValidImplementation`).
+  missingInterfaceField('GQL135'),
+
+  /// `GQL136`: a field whose type is not a subtype of the type of
+  /// the interface field it implements (spec §3.6.3
+  /// `IsValidImplementationFieldType`).
+  invalidImplementationFieldType('GQL136'),
+
+  /// `GQL137`: a field without an argument of the interface field it
+  /// implements (spec §3.6.3).
+  missingInterfaceArgument('GQL137'),
+
+  /// `GQL138`: an argument whose type is not the type of the same
+  /// argument of the interface field (spec §3.6.3).
+  invalidImplementationArgumentType('GQL138'),
+
+  /// `GQL139`: a required argument of a field that the interface field
+  /// it implements does not have (spec §3.6.3).
+  requiredExtraArgument('GQL139'),
+
+  /// `GQL140`: a deprecated field that implements an interface
+  /// field that is not deprecated (spec §3.6.3).
+  deprecatedImplementationField('GQL140');
 }

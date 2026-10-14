@@ -275,7 +275,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   turn the problems into `GQL123` and `GQL124`. `DeprecationRules` holds
   the required-and-deprecated rule of arguments and input fields;
   `DirectiveReferenceRules` walks `@name` and type-name keys with a stack
-  and a visited set.
+  and a visited set. `InterfaceRules` checks the references of an object or
+  interface type and hands each interface to `ImplementationRules`
+  (spec §3.6.3 `IsValidImplementation`).
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

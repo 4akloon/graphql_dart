@@ -43,7 +43,7 @@ final class TypeRules(
       case ObjectType(:final fields, :final interfaces) ||
           InterfaceType(:final fields, :final interfaces):
         FieldRules(report, schema).check(type, fields);
-        InterfaceRules(report, schema).check(interfaces);
+        InterfaceRules(report, schema).check(type, interfaces, fields);
       case UnionType():
         UnionRules(report, schema).check(type);
       case EnumType():
