@@ -15,6 +15,7 @@ Decisions: [research/README.md](research/README.md).
 | M1 | Foundations | Pub workspace with all package skeletons (`sdk: ^3.13.0`); the old `lib/`, `example/`, `test/` deleted; `analysis_options.yaml` adapted from typed_openapi's; size-limit and layer-direction ratchet tests; CI (minimum SDK + stable, AOT, dart2js/dart2wasm, publish dry-run); `Source` with a lazy line table and spans; the `DiagnosticCode` catalog, `Diagnostic`, `DiagnosticSink`; `protocol/` data types (`GraphQLError`, request, response, `JsonValue`); `CLAUDE.md`, `CONTRIBUTING.md`, `docs/superpowers/HANDOFF.md` | R0.5, R0.6, R1.7 (Source), R1.12, R10.1, R10.2, R10.5, R11.4 | — |
 | M2 | Language | Lexer, error-resilient parser of the September2025 grammar with working-draft options and limits, sealed AST, `isEquivalentTo`, visitors, `ParallelVisitor`, transformer, printer, schema coordinates; graphql-js lexer, parser, printer and visitor suites ported; round-trip fuzzing; the conformance package starts here; carried over from M1: give `Diagnostic` value equality (`==` / `hashCode`), because the ported suites compare lists of diagnostics, and enable the analyzer's strict-inference and strict-raw-types (staged in `analysis_options.yaml`) | R0.1, R0.7, R1.1–R1.11, R10.3, R10.4 | M1 |
 | M3 | Type system | `Schema` model, SDL → `Schema` with extensions, schema validation → `ValidSchema`, `Schema` → SDL, built-ins, coordinates resolution, introspection query and introspection JSON → `Schema`, `ScalarCodec`; graphql-js `buildASTSchema` / `extendSchema` / type-validation suites ported | R2.1–R2.9 | M2 |
+| M3c | Core documentation catch-up | `packages/typed_graphql/doc/` guides for what M2 and M3a shipped (`getting_started`, `language`, `diagnostics`, `schema`, `protocol`, `scalars`), `dartdoc_options.yaml` with categories, `example/example.dart`, the root README's Documentation section linking the guides; every public member documented (checked) | R11.1–R11.3 | M3b |
 | M4 | Operation validation | `TypeInfo`, the 30 rules, one-walk validation, `ValidDocument`, opt-in limit rules, the `MaxCost` analysis rule with the opt-in `@cost` / `@listSize` built-in directives (IBM draft), custom rule API; graphql-js validation suites ported per rule | R3.1–R3.6, R3.8 | M3 |
 
 ### Server branch
@@ -71,3 +72,7 @@ builders; a lossless CST, formatter and LSP.
 - New diagnostic codes go into the `DiagnosticCode` catalog with a doc comment.
 - A ported graphql-js test is recorded in the conformance mapping table in the same
   commit.
+- Documentation ships with the stage (R11.1–R11.3), not in M16: the plan has a
+  task for the stage's `packages/<pkg>/doc/*.md` guide, its category entry in
+  `dartdoc_options.yaml`, a compiling snippet under `example/`, and the README and
+  `CHANGELOG.md` changes. The plan's self-review checks that task exists.
