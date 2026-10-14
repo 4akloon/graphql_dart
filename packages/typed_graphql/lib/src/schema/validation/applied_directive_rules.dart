@@ -1,17 +1,20 @@
 import '../../language/ast/directive_location.dart';
 import '../../language/ast/type_ref.dart';
+import '../../language/ast/value.dart';
 import '../../language/printer/printer.dart';
 import '../model/applied_directive.dart';
+import '../model/input_value.dart';
 import '../model/schema_directive.dart';
 import '../schema.dart';
 import 'node_span.dart';
 import 'unique_names.dart';
 import 'validation_report.dart';
+import 'value_checker.dart';
 
 /// The rules of the directives applied to a schema element (spec §3.13,
 /// §5.7): the directive is defined, allowed at the element's location and
-/// used once unless repeatable; its arguments are defined, unique and
-/// every required one is given.
+/// used once unless repeatable; its arguments are defined, unique, of
+/// valid values, and every required one is given.
 ///
 /// graphql-js checks these on SDL before building (`KnownDirectivesRule`,
 /// `UniqueDirectivesPerLocationRule`, `KnownArgumentNamesOnDirectivesRule`,
@@ -76,13 +79,16 @@ final class AppliedDirectiveRules(
       (name) => 'There can be only one argument named "$name".',
     );
     for (final argument in applied.arguments) {
-      if (definition.argumentNamed(argument.name.value) == null) {
-        report.error(
-          .unknownDirectiveArgument,
-          'Unknown argument "${argument.name.value}" on directive '
-          '"@${definition.name}".',
-          [const NodeSpan().within(applied.span, argument)],
-        );
+      switch (definition.argumentNamed(argument.name.value)) {
+        case final parameter?:
+          _value(applied, parameter, argument.value);
+        case null:
+          report.error(
+            .unknownDirectiveArgument,
+            'Unknown argument "${argument.name.value}" on directive '
+            '"@${definition.name}".',
+            [const NodeSpan().within(applied.span, argument)],
+          );
       }
     }
     for (final parameter in definition.arguments) {
@@ -97,6 +103,17 @@ final class AppliedDirectiveRules(
           [applied.span],
         );
       }
+    }
+  }
+
+  void _value(AppliedDirective applied, InputValue parameter, Value value) {
+    for (final problem in ValueChecker(schema).check(value, parameter.type)) {
+      report.error(
+        .invalidDirectiveArgumentValue,
+        'Argument "@${applied.name}(${parameter.name}:)" has invalid '
+        'value${problem.pathText}: ${problem.message}',
+        [const NodeSpan().within(applied.span, problem.node)],
+      );
     }
   }
 }

@@ -1,14 +1,15 @@
 import '../model/input_value.dart';
 import '../schema.dart';
 import 'applied_directive_rules.dart';
+import 'default_value_rules.dart';
 import 'name_rules.dart';
 import 'type_reference_rules.dart';
 import 'unique_names.dart';
 import 'validation_report.dart';
 
 /// The rules of the arguments of one field or directive definition (spec
-/// §3.6.1, §3.13): unique and valid names, valid applied directives and
-/// known types.
+/// §3.6.1, §3.13): unique and valid names, valid applied directives,
+/// known types and valid default values.
 final class ArgumentRules(
   /// Receives the errors.
   final ValidationReport report,
@@ -37,6 +38,10 @@ final class ArgumentRules(
         report,
         schema,
       ).isKnownType(argument.type, argument.span);
+      DefaultValueRules(
+        report,
+        schema,
+      ).check('$owner(${argument.name}:)', argument);
     }
   }
 }

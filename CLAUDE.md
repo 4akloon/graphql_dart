@@ -267,6 +267,12 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   about a node an element holds (its type, a default value, an applied
   directive's argument) points at the node through `NodeSpan.within`: the
   element's source with the node's offsets, as graphql-js points.
+  `ValueChecker` checks a constant `Value` against a `TypeRef` with its own
+  stack (paths share their parents, so a deep value costs linear time) and
+  returns `ValueProblem`s (message, node, path); `LeafValueChecker` holds
+  the literal rules of the built-in scalars and enums, and a custom scalar
+  accepts any literal. `DefaultValueRules` and `AppliedDirectiveRules`
+  turn the problems into `GQL123` and `GQL124`.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

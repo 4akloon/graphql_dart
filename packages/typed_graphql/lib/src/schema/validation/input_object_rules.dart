@@ -1,13 +1,15 @@
 import '../model/schema_type.dart';
 import '../schema.dart';
 import 'applied_directive_rules.dart';
+import 'default_value_rules.dart';
 import 'name_rules.dart';
 import 'type_reference_rules.dart';
 import 'unique_names.dart';
 import 'validation_report.dart';
 
 /// The rules of an input object type (spec §3.10): unique and valid
-/// field names, valid applied directives and known field types.
+/// field names, valid applied directives, known field types and valid
+/// default values.
 final class InputObjectRules(
   /// Receives the errors.
   final ValidationReport report,
@@ -32,6 +34,10 @@ final class InputObjectRules(
         schema,
       ).check(field.appliedDirectives, .inputFieldDefinition);
       TypeReferenceRules(report, schema).isKnownType(field.type, field.span);
+      DefaultValueRules(
+        report,
+        schema,
+      ).check('${type.name}.${field.name}', field);
     }
   }
 }

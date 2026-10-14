@@ -147,3 +147,7 @@
   (`GQL119`), with a repeated (`GQL120`), unknown (`GQL121`) or missing
   required (`GQL122`) argument, with graphql-js's SDL-rule messages.
   `TypeComparator.namedType` gives the named type node inside wrappers.
+- Schema validation checks constant values against their input types,
+  with graphql-js's `validateInputLiteral` messages and paths: default
+  values of arguments and input fields (`GQL123`) and the arguments of
+  applied directives (`GQL124`), `@oneOf` input objects included.

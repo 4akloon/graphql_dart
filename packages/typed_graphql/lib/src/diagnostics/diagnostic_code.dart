@@ -189,5 +189,13 @@ enum DiagnosticCode(
 
   /// `GQL122`: an applied directive without a required argument: one of
   /// non-null type and without a default value (spec §5.4.2.1).
-  missingDirectiveArgument('GQL122');
+  missingDirectiveArgument('GQL122'),
+
+  /// `GQL123`: a default value of an argument or an input field that is
+  /// not a value of its type (spec §3.6.1, §3.10).
+  invalidDefaultValue('GQL123'),
+
+  /// `GQL124`: an argument of an applied directive whose value is not a
+  /// value of the argument's type (spec §5.6.1).
+  invalidDirectiveArgumentValue('GQL124');
 }
