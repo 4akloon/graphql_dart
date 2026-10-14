@@ -87,5 +87,20 @@ enum DiagnosticCode(
 
   /// `GQL100`: an operation or a fragment in a document built into a
   /// schema; it is ignored.
-  executableDefinitionInSchema('GQL100');
+  executableDefinitionInSchema('GQL100'),
+
+  /// `GQL101`: a second type definition with the name of a type already
+  /// defined in the document or in the schema being extended; the second
+  /// is ignored.
+  duplicateTypeName('GQL101'),
+
+  /// `GQL102`: a second directive definition with the name of a directive
+  /// already defined in the document or in the schema being extended; the
+  /// second is ignored.
+  duplicateDirectiveName('GQL102'),
+
+  /// `GQL103`: a definition or an extension of a built-in: a built-in
+  /// scalar, an introspection type or a built-in directive (R2.6); it is
+  /// ignored.
+  builtInRedefinition('GQL103');
 }

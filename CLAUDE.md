@@ -193,6 +193,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   (`DocumentDefinitions`), assembles them (`SchemaAssembly`) and reports into
   a `BuildReport`, which orders the errors by node offset before a
   `DiagnosticSink` limits them. Without `source` every span is null.
+- Construction problems use graphql-js's SDL-rule messages; a repeat points
+  at its name and relates to the span of the definition it repeats; the
+  first definition wins (`UniqueDefinitions`).
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:

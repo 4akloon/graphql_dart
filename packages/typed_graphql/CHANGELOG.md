@@ -83,3 +83,6 @@
   schema); root types from the schema definition or the types named
   `Query`, `Mutation` and `Subscription`; `GQL100` for an operation or a
   fragment in the document; `includesDeferAndStream` opt-in.
+- The builder keeps the first type or directive of each name: `GQL101`
+  and `GQL102` for a repeat, `GQL103` for a redefined built-in scalar,
+  introspection type or directive.

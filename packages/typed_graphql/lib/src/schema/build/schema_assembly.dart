@@ -6,6 +6,7 @@ import 'build_report.dart';
 import 'document_definitions.dart';
 import 'element_reader.dart';
 import 'type_reader.dart';
+import 'unique_definitions.dart';
 
 /// Builds one schema from the sorted definitions of one document,
 /// reporting every construction problem into [report].
@@ -30,15 +31,23 @@ final class SchemaAssembly(
         executable,
       );
     }
+    final unique = UniqueDefinitions(
+      report,
+      Schema(includesDeferAndStream: includesDeferAndStream),
+    );
     final elements = ElementReader(report.spans);
     final types = [
-      for (final type in definitions.types) TypeReader(elements).type(type),
+      for (final type in unique.types(definitions.types))
+        TypeReader(elements).type(type),
     ];
     final schema = definitions.schemas.firstOrNull;
     final roots = schema == null ? _defaultRoots(types) : _roots(schema);
     return Schema(
       types: types,
-      directives: definitions.directives.map(elements.directive).toList(),
+      directives: [
+        for (final directive in unique.directives(definitions.directives))
+          elements.directive(directive),
+      ],
       queryTypeName: roots[OperationType.query],
       mutationTypeName: roots[OperationType.mutation],
       subscriptionTypeName: roots[OperationType.subscription],
