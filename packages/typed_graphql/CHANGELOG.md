@@ -255,3 +255,4 @@
 - pub.dev metadata, README and `llms.txt` say that the package validates
   operations; the discovery query "validate a GraphQL operation dart"
   works today.
+- `MaxDepthRule`, `MaxAliasesRule` and `MaxDirectivesRule` limit an operation's depth, aliases and directives, fragments expanded (`GQL232`-`GQL234`).

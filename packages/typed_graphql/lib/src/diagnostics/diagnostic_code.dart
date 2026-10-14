@@ -453,4 +453,16 @@ enum DiagnosticCode(
   /// `GQL231`: a problem a custom validation rule reports (R3.6); its
   /// message says what the rule checks.
   customRuleViolation('GQL231'),
+
+  /// `GQL232`: an operation whose deepest field, fragments expanded, is
+  /// deeper than the maximum `MaxDepthRule` allows.
+  maxDepthExceeded('GQL232'),
+
+  /// `GQL233`: an operation with more aliased fields, fragments expanded,
+  /// than the maximum `MaxAliasesRule` allows.
+  maxAliasesExceeded('GQL233'),
+
+  /// `GQL234`: an operation with more directives, fragments expanded, than
+  /// the maximum `MaxDirectivesRule` allows.
+  maxDirectivesExceeded('GQL234'),
 }
