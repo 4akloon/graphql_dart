@@ -59,3 +59,6 @@
 - `SchemaCoordinateLexer` and `TokenKind.dot`: the tokens of a schema
   coordinate, with `GQL001` for any character a coordinate cannot hold;
   `Lexer` and `SchemaCoordinateLexer` implement `TokenSource`.
+- `Parser.parseSchemaCoordinate`: a schema coordinate such as
+  `Query.hero(episode:)` as a `ParseElementResult<SchemaCoordinate>`.
+- `Printer` prints schema coordinates, the same in both forms.

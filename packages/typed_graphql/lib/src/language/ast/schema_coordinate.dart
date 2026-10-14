@@ -6,7 +6,7 @@ import 'node.dart';
 /// as `Query.hero(episode:)` (September2025 §2 "Schema Coordinates").
 ///
 /// The field names follow graphql-js's nodes. A coordinate is parsed with
-/// `Parser.parseSchemaCoordinate`; resolving it against a schema is not the
+/// [Parser.parseSchemaCoordinate]; resolving it against a schema is not the
 /// parser's work.
 sealed class const SchemaCoordinate(
   /// The type or, after `@`, the directive the coordinate starts from.
@@ -14,7 +14,7 @@ sealed class const SchemaCoordinate(
   super.start,
   super.end,
 }) extends Node {
-  /// Creates a coordinate spanning `start` to `end`.
+  /// Creates a coordinate spanning [start] to [end].
   this;
 }
 

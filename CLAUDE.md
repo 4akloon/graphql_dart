@@ -122,6 +122,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   grammar before the base ones. `DirectiveExtensionGrammar` is always
   registered; with `allowDirectiveExtensions` off, it and the directive
   definition's draft parts report `GQL014` instead of a generic error.
+  `Parser.parseSchemaCoordinate` runs `SchemaCoordinateParser` over a
+  cursor on a `SchemaCoordinateLexer` (the cursor reads any
+  `TokenSource`); `ParserOptions` do not apply to it.
 - `printer/`: `Printer` prints any node as graphql-js's `print` does, to
   the character (80-column wrapping included), through collaborators:
   `ValuePrinter` (values, types, arguments, directives), `ExecutablePrinter`,
@@ -131,6 +134,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `Printer(isMinified: true)` passes the canonical text through `Minifier`
   (graphql-js's `stripIgnoredCharacters`: a space only between two
   non-punctuators or before `...`, block strings in their shortest form).
+  A `SchemaCoordinate` prints the same in both forms and never goes
+  through `Minifier`, whose document lexer would reject its `.`.
 - `visitor/`: `AstWalker().walk(root, visitor)` walks depth-first through
   `children` with its own stack (no recursion), calling
   `AstVisitor.enter` (returns `VisitAction.next`, `skip` or `stop`) and

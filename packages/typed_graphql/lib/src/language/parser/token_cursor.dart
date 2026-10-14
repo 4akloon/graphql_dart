@@ -3,9 +3,9 @@ import '../../diagnostics/diagnostic_code.dart';
 import '../../diagnostics/diagnostic_sink.dart';
 import '../../diagnostics/source_span.dart';
 import '../ast/name.dart';
-import '../lexer/lexer.dart';
 import '../lexer/token.dart';
 import '../lexer/token_kind.dart';
+import '../lexer/token_source.dart';
 import 'syntax_abort.dart';
 
 /// The parser's view of the token stream: the current token, one token of
@@ -20,8 +20,8 @@ final class TokenCursor {
   TokenCursor(this.lexer, this.sink, {this.maxDepth})
     : _token = lexer.advance();
 
-  /// The token source.
-  final Lexer lexer;
+  /// The token source: a document's or a schema coordinate's lexer.
+  final TokenSource lexer;
 
   /// Where syntax errors go.
   final DiagnosticSink sink;
