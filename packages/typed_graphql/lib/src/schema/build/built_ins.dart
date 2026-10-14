@@ -45,9 +45,20 @@ final class const BuiltIns() {
     _types.whereType<ScalarType>(),
   );
 
+  static final SchemaDirective _defer = _directiveNamed('defer');
+
+  static final SchemaDirective _stream = _directiveNamed('stream');
+
+  // The five specified directives are all but the two opt-in ones, so the
+  // SDL order of `@defer` and `@stream` cannot swap them.
   static final List<SchemaDirective> _directives = List.unmodifiable(
-    _allDirectives.take(5),
+    _allDirectives.where(
+      (directive) => directive != _defer && directive != _stream,
+    ),
   );
+
+  static SchemaDirective _directiveNamed(String name) =>
+      _allDirectives.singleWhere((directive) => directive.name == name);
 
   static final List<SchemaType> _introspectionTypes = List.unmodifiable(
     _types.where((type) => type is! ScalarType),
@@ -61,10 +72,10 @@ final class const BuiltIns() {
   List<SchemaDirective> get directives => _directives;
 
   /// `@defer`, added to a schema only by an opt-in.
-  SchemaDirective get defer => _allDirectives[5];
+  SchemaDirective get defer => _defer;
 
   /// `@stream`, added to a schema only by an opt-in.
-  SchemaDirective get stream => _allDirectives[6];
+  SchemaDirective get stream => _stream;
 
   /// `__Schema`, `__Type`, `__TypeKind`, `__Field`, `__InputValue`,
   /// `__EnumValue`, `__Directive` and `__DirectiveLocation`, in that order.

@@ -76,11 +76,73 @@ void main() {
     final locations = builtIns.introspectionTypes[7] as EnumType;
     expect(locations.values, hasLength(19));
     expect(locations.valueNamed('DIRECTIVE_DEFINITION'), isNull);
+  });
+
+  test('declares includeDeprecated as Boolean! = false everywhere', () {
     final type = builtIns.introspectionTypes[1] as ObjectType;
-    final argument = type
-        .fieldNamed('fields')!
-        .argumentNamed('includeDeprecated');
-    expect(const Printer().print(argument!.type), 'Boolean');
+    final field = builtIns.introspectionTypes[3] as ObjectType;
+    final directive = builtIns.introspectionTypes[6] as ObjectType;
+    final arguments = [
+      type.fieldNamed('fields')!.argumentNamed('includeDeprecated'),
+      type.fieldNamed('enumValues')!.argumentNamed('includeDeprecated'),
+      type.fieldNamed('inputFields')!.argumentNamed('includeDeprecated'),
+      field.fieldNamed('args')!.argumentNamed('includeDeprecated'),
+      directive.fieldNamed('args')!.argumentNamed('includeDeprecated'),
+    ];
+    for (final argument in arguments) {
+      expect(const Printer().print(argument!.type), 'Boolean!');
+      expect(const Printer().print(argument.defaultValue!), 'false');
+    }
+  });
+
+  test('gives the specified directives their locations', () {
+    const common = ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGMENT'];
+    expect(builtIns.directiveNamed('include')!.locations, common);
+    expect(builtIns.directiveNamed('skip')!.locations, common);
+    expect(builtIns.directiveNamed('specifiedBy')!.locations, ['SCALAR']);
+    expect(builtIns.directiveNamed('oneOf')!.locations, ['INPUT_OBJECT']);
+  });
+
+  test('types introspection fields with their nullability', () {
+    final schema = builtIns.introspectionTypes[0] as ObjectType;
+    final type = builtIns.introspectionTypes[1] as ObjectType;
+    expect(const Printer().print(type.fieldNamed('kind')!.type), '__TypeKind!');
+    expect(const Printer().print(type.fieldNamed('name')!.type), 'String');
+    expect(
+      const Printer().print(schema.fieldNamed('types')!.type),
+      '[__Type!]!',
+    );
+    expect(
+      const Printer().print(schema.fieldNamed('mutationType')!.type),
+      '__Type',
+    );
+  });
+
+  test('lists the values of __TypeKind', () {
+    final kinds = builtIns.introspectionTypes[2] as EnumType;
+    expect(kinds.values.map((value) => value.name), [
+      'SCALAR',
+      'OBJECT',
+      'INTERFACE',
+      'UNION',
+      'ENUM',
+      'INPUT_OBJECT',
+      'LIST',
+      'NON_NULL',
+    ]);
+  });
+
+  test('gives @defer and @stream their argument defaults', () {
+    String? defaultOf(SchemaDirective directive, String name) {
+      final value = directive.argumentNamed(name)!.defaultValue;
+      return value == null ? null : const Printer().print(value);
+    }
+
+    expect(defaultOf(builtIns.defer, 'if'), 'true');
+    expect(defaultOf(builtIns.defer, 'label'), isNull);
+    expect(defaultOf(builtIns.stream, 'initialCount'), '0');
+    expect(defaultOf(builtIns.stream, 'if'), 'true');
+    expect(builtIns.defer.locations, ['FRAGMENT_SPREAD', 'INLINE_FRAGMENT']);
   });
 
   test('finds a scalar or an introspection type by name', () {

@@ -3,9 +3,10 @@
 /// `@stream` as graphql-js defines them.
 ///
 /// graphql-js 17 also has working-draft additions (deprecated directives,
-/// fragment variables, `includeDeprecated` on `__Schema.directives` and a
-/// non-null `includeDeprecated`); this text follows the September2025
-/// edition (R0.1).
+/// fragment variables, `includeDeprecated` on `__Schema.directives`,
+/// `isDeprecated` and `deprecationReason` on `__Directive` and the
+/// `DIRECTIVE_DEFINITION` location); this text follows the September2025
+/// edition (R0.1) and omits them.
 final class const BuiltInSdl() {
   /// Creates the text holder.
   this;
@@ -109,11 +110,11 @@ type __Type {
   name: String
   description: String
   specifiedByURL: String
-  fields(includeDeprecated: Boolean = false): [__Field!]
+  fields(includeDeprecated: Boolean! = false): [__Field!]
   interfaces: [__Type!]
   possibleTypes: [__Type!]
-  enumValues(includeDeprecated: Boolean = false): [__EnumValue!]
-  inputFields(includeDeprecated: Boolean = false): [__InputValue!]
+  enumValues(includeDeprecated: Boolean! = false): [__EnumValue!]
+  inputFields(includeDeprecated: Boolean! = false): [__InputValue!]
   ofType: __Type
   isOneOf: Boolean
 }
@@ -157,7 +158,7 @@ Object and Interface types are described by a list of Fields, each of which has 
 type __Field {
   name: String!
   description: String
-  args(includeDeprecated: Boolean = false): [__InputValue!]!
+  args(includeDeprecated: Boolean! = false): [__InputValue!]!
   type: __Type!
   isDeprecated: Boolean!
   deprecationReason: String
@@ -199,7 +200,7 @@ type __Directive {
   description: String
   isRepeatable: Boolean!
   locations: [__DirectiveLocation!]!
-  args(includeDeprecated: Boolean = false): [__InputValue!]!
+  args(includeDeprecated: Boolean! = false): [__InputValue!]!
 }
 
 """
