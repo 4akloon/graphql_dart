@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'doc_snippet.dart';
 
@@ -12,8 +13,11 @@ final class SnippetRun(
   final String output,
 
   /// Standard error: the compile errors, or the uncaught exception.
-  final String errors,
-) {
+  final String errors, {
+
+  /// Whether the program was killed for running past the time limit.
+  final bool hasTimedOut = false,
+}) {
   /// Creates a result.
   this;
 }
@@ -51,32 +55,27 @@ final class SnippetRunner(
   /// by itself instead of taking the machine's memory.
   static const int heapLimit = 512;
 
+  /// The bytes a program may print to each of its streams before it is
+  /// killed, so an endless loop of `print` cannot fill the memory.
+  static const int outputLimit = 1024 * 1024;
+
   /// Writes [snippet] to `<name>.dart` and runs it, alone, within
-  /// [timeLimit] and [heapLimit]. A program that runs too long is killed
-  /// and gives exit code -1.
+  /// [timeLimit], [heapLimit] and [outputLimit]. A program that runs too
+  /// long is killed and has [SnippetRun.hasTimedOut]; one that prints too
+  /// much is killed and reports it in [SnippetRun.errors].
   Future<SnippetRun> run(DocSnippet snippet, String name) async {
     final program = File('${directory.path}/$name.dart')
       ..writeAsStringSync('${snippet.code}\n');
-    final process = await Process.start(Platform.resolvedExecutable, [
+    final result = await _start([
       '--old-gen-heap-size=$heapLimit',
       '--packages=$packageConfig',
       program.path,
     ]);
-    final output = utf8.decodeStream(process.stdout);
-    final errors = utf8.decodeStream(process.stderr);
-    final exitCode = await process.exitCode.timeout(
-      timeLimit,
-      onTimeout: () {
-        process.kill(ProcessSignal.sigkill);
-        return -1;
-      },
-    );
     return SnippetRun(
-      exitCode,
-      _normalized(await output),
-      _normalized(
-        exitCode == -1 ? 'timed out after $timeLimit' : await errors,
-      ),
+      result.exitCode,
+      _normalized(result.output),
+      _normalized(result.errors),
+      hasTimedOut: result.hasTimedOut,
     );
   }
 
@@ -85,25 +84,85 @@ final class SnippetRunner(
   Future<List<String>> unformattedPlaces(List<DocSnippet> snippets) async {
     final folder = Directory('${directory.path}/format')..createSync();
     for (final (index, snippet) in snippets.indexed) {
-      File('${folder.path}/s$index.dart')
-          .writeAsStringSync('${snippet.code}\n');
+      File(
+        '${folder.path}/s$index.dart',
+      ).writeAsStringSync('${snippet.code}\n');
     }
-    final result = await Process.run(Platform.resolvedExecutable, [
-      'format',
-      '--output=none',
-      folder.path,
-    ]).timeout(timeLimit);
+    final result = await _start(['format', '--output=none', folder.path]);
+    if (result.hasTimedOut) {
+      throw StateError('dart format timed out after $timeLimit');
+    }
     return [
       for (final match in RegExp(
         r'^Changed .*s(\d+)\.dart$',
         multiLine: true,
-      ).allMatches('${result.stdout}'.replaceAll('\r\n', '\n')))
+      ).allMatches(result.output.replaceAll('\r\n', '\n')))
         snippets[int.parse(match[1]!)].place,
     ];
+  }
+
+  /// Starts `dart` with [arguments] and waits for it, killing it when it
+  /// runs past [timeLimit] or prints past [outputLimit].
+  Future<_Finished> _start(List<String> arguments) async {
+    final process = await Process.start(Platform.resolvedExecutable, arguments);
+    var hasTimedOut = false;
+    final output = _capped(process, process.stdout);
+    final errors = _capped(process, process.stderr);
+    final exitCode = await process.exitCode.timeout(
+      timeLimit,
+      onTimeout: () {
+        hasTimedOut = true;
+        process.kill(ProcessSignal.sigkill);
+        return process.exitCode;
+      },
+    );
+    final (outputText, isOutputCut) = await output;
+    final (errorText, isErrorCut) = await errors;
+    return _Finished(
+      exitCode,
+      outputText,
+      hasTimedOut
+          ? 'timed out after $timeLimit'
+          : isOutputCut || isErrorCut
+          ? 'output exceeded $outputLimit bytes'
+          : errorText,
+      hasTimedOut: hasTimedOut,
+    );
+  }
+
+  /// Reads [stream] as text and whether it was cut: past [outputLimit]
+  /// bytes this kills [process] and stops reading.
+  Future<(String, bool)> _capped(
+    Process process,
+    Stream<List<int>> stream,
+  ) async {
+    final bytes = BytesBuilder(copy: false);
+    var isCut = false;
+    await for (final chunk in stream) {
+      bytes.add(chunk);
+      if (bytes.length > outputLimit) {
+        isCut = true;
+        process.kill(ProcessSignal.sigkill);
+        break;
+      }
+    }
+    final kept = bytes.takeBytes();
+    final end = kept.length < outputLimit ? kept.length : outputLimit;
+    return (utf8.decode(kept.sublist(0, end), allowMalformed: true), isCut);
   }
 
   /// [text] with `\n` line ends and without trailing white space, so the
   /// comparison does not depend on the platform.
   static String _normalized(String text) =>
       text.replaceAll('\r\n', '\n').trimRight();
+}
+
+/// What a finished `dart` process left, before the text is normalized.
+final class _Finished(
+  final int exitCode,
+  final String output,
+  final String errors, {
+  final bool hasTimedOut = false,
+}) {
+  this;
 }

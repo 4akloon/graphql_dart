@@ -62,8 +62,21 @@ void main() {
       program('void main() { while (true) {} }'),
       'forever',
     );
-    expect(run.exitCode, -1);
+    expect(run.hasTimedOut, isTrue);
     expect(run.errors, contains('timed out'));
+  }, skip: skip);
+
+  test('kills a program that prints without end', () async {
+    final stopwatch = Stopwatch()..start();
+    final run = await runner.run(
+      program("void main() { while (true) { print('x' * 1000); } }"),
+      'endless',
+    );
+    expect(run.exitCode, isNot(0));
+    expect(run.hasTimedOut, isFalse);
+    expect(run.errors, contains('output exceeded'));
+    expect(run.output.length, lessThanOrEqualTo(SnippetRunner.outputLimit));
+    expect(stopwatch.elapsed, lessThan(const Duration(seconds: 30)));
   }, skip: skip);
 
   test('names the programs dart format would change', () async {
