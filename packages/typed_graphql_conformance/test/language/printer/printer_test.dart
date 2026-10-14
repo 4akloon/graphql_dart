@@ -293,6 +293,42 @@ void main() {
         '''),
       );
     });
+
+    test('prints schema coordinates', () {
+      String printCoordinate(String text) =>
+          switch (const Parser().parseSchemaCoordinate(Source(text))) {
+            ParseElementSuccess(:final value) => printer.print(value),
+            ParseElementFailure(:final diagnostics) => fail('$diagnostics'),
+          };
+      expect(printCoordinate('Name'), 'Name');
+      expect(printCoordinate('Name.field'), 'Name.field');
+      expect(printCoordinate('Name.field(arg:)'), 'Name.field(arg:)');
+      expect(printCoordinate('@name'), '@name');
+      expect(printCoordinate('@name(arg:)'), '@name(arg:)');
+      expect(printCoordinate('__Type'), '__Type');
+      expect(printCoordinate('Type.__metafield'), 'Type.__metafield');
+      expect(
+        printCoordinate('Type.__metafield(arg:)'),
+        'Type.__metafield(arg:)',
+      );
+    });
+
+    // Adapted: parsing reports the error as a diagnostic instead of
+    // throwing, so there is nothing to print; the messages are the same.
+    test('throws syntax error for ignored tokens in schema coordinates', () {
+      expect(
+        port.coordinateSyntaxError('# foo\nName')['message'],
+        startsWith('Syntax Error: Invalid character: "#"'),
+      );
+      expect(
+        port.coordinateSyntaxError('\nName')['message'],
+        'Syntax Error: Invalid character: U+000A.',
+      );
+      expect(
+        port.coordinateSyntaxError('Name .field')['message'],
+        startsWith('Syntax Error: Invalid character: " "'),
+      );
+    });
   });
 }
 

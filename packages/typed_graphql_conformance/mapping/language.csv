@@ -90,18 +90,18 @@ parser-test.ts,Parser > parseType,parses custom types,ported,test/language/parse
 parser-test.ts,Parser > parseType,parses list types,ported,test/language/parser/parser_values_test.dart,
 parser-test.ts,Parser > parseType,parses non-null types,ported,test/language/parser/parser_values_test.dart,
 parser-test.ts,Parser > parseType,parses nested types,ported,test/language/parser/parser_values_test.dart,
-parser-test.ts,Parser > parseSchemaCoordinate,parses Name,skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,parses Name . Name,skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,rejects Name . Name . Name,skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,parses Name . Name ( Name : ),skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,rejects Name . Name ( Name : Name ),skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,parses @ Name,skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,parses @ Name ( Name : ),skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,parses __Type,skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,parses Type.__metafield,skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,parses Type.__metafield(arg:),skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,rejects @ Name . Name,skipped,,Schema coordinates arrive in stage M2b.
-parser-test.ts,Parser > parseSchemaCoordinate,accepts a Source object,skipped,,Schema coordinates arrive in stage M2b.
+parser-test.ts,Parser > parseSchemaCoordinate,parses Name,ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,parses Name . Name,ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,rejects Name . Name . Name,ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,parses Name . Name ( Name : ),ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,rejects Name . Name ( Name : Name ),ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,parses @ Name,ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,parses @ Name ( Name : ),ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,parses __Type,ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,parses Type.__metafield,ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,parses Type.__metafield(arg:),ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,rejects @ Name . Name,ported,test/language/parser/parser_schema_coordinate_test.dart,
+parser-test.ts,Parser > parseSchemaCoordinate,accepts a Source object,skipped,,Dart entry points take a Source only: there is no string form to compare with.
 parser-test.ts,Parser > operation and variable definition descriptions,parses operation with description and variable descriptions,ported,test/language/parser/parser_descriptions_test.dart,
 parser-test.ts,Parser > operation and variable definition descriptions,descriptions on a short-hand query produce a sensible error,ported,test/language/parser/parser_descriptions_test.dart,
 parser-test.ts,Parser > operation and variable definition descriptions,"parses variable definition with description, default value, and directives",ported,test/language/parser/parser_descriptions_test.dart,
@@ -166,8 +166,8 @@ printer-test.ts,Printer: Query document,prints fragment spread with arguments,sk
 printer-test.ts,Printer: Query document,prints fragment spread with multi-line arguments,skipped,,experimental fragment arguments are out of scope (R1.14)
 printer-test.ts,Printer: Query document,prints fragment,ported,test/language/printer/printer_test.dart,
 printer-test.ts,Printer: Query document,prints kitchen sink without altering ast,adapted,test/language/printer/printer_test.dart,Nodes are immutable so the AST cannot be altered; isEquivalentTo stands for the deep equality without locations.
-printer-test.ts,Printer: Query document,prints schema coordinates,skipped,,schema coordinates arrive in stage M2b
-printer-test.ts,Printer: Query document,throws syntax error for ignored tokens in schema coordinates,skipped,,schema coordinates arrive in stage M2b
+printer-test.ts,Printer: Query document,prints schema coordinates,ported,test/language/printer/printer_test.dart,
+printer-test.ts,Printer: Query document,throws syntax error for ignored tokens in schema coordinates,adapted,test/language/printer/printer_test.dart,Parsing reports the error as a diagnostic instead of throwing; the messages are the same.
 schema-printer-test.ts,Printer: SDL document,prints minimal ast,ported,test/language/printer/schema_printer_test.dart,
 schema-printer-test.ts,Printer: SDL document,produces helpful error messages,adapted,test/language/printer/schema_printer_test.dart,Dart's types admit no plain object: a node class the library does not define gives an ArgumentError.
 schema-printer-test.ts,Printer: SDL document,prints kitchen sink without altering ast,adapted,test/language/printer/schema_printer_test.dart,The kitchen sink needs ParserOptions.allowDirectiveExtensions; nodes are immutable and isEquivalentTo stands for the deep equality without locations.
@@ -195,8 +195,8 @@ visitor-test.ts,Visitor,allows early exit while visiting,ported,test/language/vi
 visitor-test.ts,Visitor,allows early exit while leaving,skipped,,AstVisitor.leave returns nothing (spec §6): a walk stops only from enter.
 visitor-test.ts,Visitor,allows a named functions visitor API,adapted,test/language/visitor/visitor_test.dart,A switch on the node in enter and leave replaces graphql-js's per-kind functions.
 visitor-test.ts,Visitor,visits only the specified `Kind` in visitorKeyMap,skipped,,Node.children is fixed: there is no visitor key map.
-visitor-test.ts,Visitor,visits arguments defined on fragments,skipped,,Fragment arguments (R1.14) are not implemented.
-visitor-test.ts,Visitor,visits arguments on fragment spreads,skipped,,Fragment arguments (R1.14) are not implemented.
+visitor-test.ts,Visitor,visits arguments defined on fragments,skipped,,Experimental fragment arguments are out of scope (R1.14).
+visitor-test.ts,Visitor,visits arguments on fragment spreads,skipped,,Experimental fragment arguments are out of scope (R1.14).
 visitor-test.ts,Visitor,properly visits the kitchen sink query,adapted,test/language/visitor/visitor_kitchen_sink_test.dart,"Checks event and kind in order; enter and leave take no key or parent, so those columns are dropped."
 visitor-test.ts,Visitor > visitInParallel,allows skipping a sub-tree,ported,test/language/visitor/visitor_test.dart,
 visitor-test.ts,Visitor > visitInParallel,allows skipping different sub-trees,ported,test/language/visitor/visitor_test.dart,
@@ -206,3 +206,7 @@ visitor-test.ts,Visitor > visitInParallel,allows early exit while leaving,skippe
 visitor-test.ts,Visitor > visitInParallel,allows early exit from leaving different points,skipped,,AstVisitor.leave returns nothing (spec §6): a walk stops only from enter.
 visitor-test.ts,Visitor > visitInParallel,allows for editing on enter,skipped,,ParallelVisitor only reads; AstTransformer does the editing.
 visitor-test.ts,Visitor > visitInParallel,allows for editing on leave,skipped,,ParallelVisitor only reads; AstTransformer does the editing.
+schemaCoordinateLexer-test.ts,SchemaCoordinateLexer,can be stringified,skipped,,Symbol.toStringTag is JavaScript only.
+schemaCoordinateLexer-test.ts,SchemaCoordinateLexer,tracks a schema coordinate,ported,test/language/schema_coordinate_lexer_test.dart,
+schemaCoordinateLexer-test.ts,SchemaCoordinateLexer,forbids ignored tokens,ported,test/language/schema_coordinate_lexer_test.dart,
+schemaCoordinateLexer-test.ts,SchemaCoordinateLexer,lex reports a useful syntax errors,ported,test/language/schema_coordinate_lexer_test.dart,

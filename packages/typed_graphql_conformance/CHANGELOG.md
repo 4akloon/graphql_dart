@@ -8,4 +8,5 @@
   checks it.
 - Ported graphql-js suites: `lexer-test.ts`, `blockString-test.ts`,
   `parser-test.ts`, `schema-parser-test.ts`, `printer-test.ts`,
-  `schema-printer-test.ts`, `printString-test.ts`, `visitor-test.ts`.
+  `schema-printer-test.ts`, `printString-test.ts`, `visitor-test.ts`,
+  `schemaCoordinateLexer-test.ts`.

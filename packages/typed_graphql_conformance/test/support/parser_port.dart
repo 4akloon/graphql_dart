@@ -41,6 +41,15 @@ final class ParserPort {
   Object? parseType(String text) =>
       const AstJson().of(_element(_parser.parseTypeRef(Source(text))));
 
+  /// `toJSONDeep(parseSchemaCoordinate(text))`.
+  Object? parseSchemaCoordinate(String text) => const AstJson().of(
+    _element(_parser.parseSchemaCoordinate(Source(text))),
+  );
+
+  /// The first diagnostic of `parseSchemaCoordinate(text)`.
+  Map<String, Object?> coordinateSyntaxError(String text) =>
+      _firstError(_parser.parseSchemaCoordinate(Source(text)).diagnostics);
+
   /// The first diagnostic of `parseValue(text)`.
   Map<String, Object?> valueSyntaxError(String text) =>
       _firstError(_parser.parseValue(Source(text)).diagnostics);
