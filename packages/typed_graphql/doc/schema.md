@@ -1,7 +1,8 @@
 # Schema
 
-The schema layer turns SDL into an immutable `Schema`, extends it, and prints it
-back. A schema is plain data: named types, directive definitions and the names
+The schema layer turns SDL into an immutable `Schema`, extends it, prints it
+back, validates it, resolves schema coordinates in it and exchanges it with
+introspection results (see the Introspection topic). A schema is plain data: named types, directive definitions and the names
 of the root types. It has no behaviour; the codecs of its scalars are held
 apart (see the Scalars & Codecs topic).
 
@@ -527,8 +528,8 @@ rule of the specification and returns a sealed `SchemaValidationResult`:
 - `InvalidSchema(schema, diagnostics)` with every problem: a `GQL1xx` code,
   graphql-js's message and the place of the element (or the node inside it,
   such as a default value) the problem is about. The problems come in
-  graphql-js's order: the roots, the directive definitions, then the types in
-  declaration order.
+  graphql-js's order: the roots, the directives applied to the schema, the
+  directive definitions, then the types in declaration order.
 
 Validation never throws, and a schema built in code is validated the same way
 as one built from SDL.

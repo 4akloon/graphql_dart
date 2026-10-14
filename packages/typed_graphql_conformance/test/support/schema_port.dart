@@ -16,10 +16,6 @@ final class SchemaPort {
   /// [text] as a type reference, such as `[String!]`.
   TypeRef type(String text) => _element(_parser.parseTypeRef(Source(text)));
 
-  /// A reference to the type named [name], as an interface or a union
-  /// member.
-  NamedType named(String name) => NamedType(Name(name));
-
   /// A reference to the type [name], for interfaces and union members.
   NamedTypeReference reference(String name) => NamedTypeReference(name);
 

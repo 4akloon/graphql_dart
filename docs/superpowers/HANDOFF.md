@@ -51,7 +51,7 @@ The superpowers skills: `brainstorming`, `writing-plans`,
 
 ## Open items
 
-Found by the M3a reviews and not in M3b's scope; M3b resolved the CSV conversion, spec section 7, the spans of references, `fromIntrospection` and the typed locations.
+M3b is complete and merged into `main` locally (not pushed). Left open by the M3a reviews, M3b's scope or the M3b reviews; M3b resolved the CSV conversion, spec section 7, the spans of references, `fromIntrospection` and the typed locations.
 
 - **`ScalarCodec<Object>`** covariance: a wrongly typed `encode` is a
   `TypeError`, not an `ArgumentError` (M5).
@@ -64,6 +64,16 @@ Found by the M3a reviews and not in M3b's scope; M3b resolved the CSV conversion
 - **Conformance in Chrome.** `typed_graphql_conformance/test/support_test.dart`
   uses `dart:io` without `@TestOn('vm')`; the package is not web-targeted and CI
   runs only the core in Chrome. Annotate it or keep the package VM-only.
+- **Hostile-input tests measure time, not memory.** They use `Stopwatch`
+  limits (synchronous code cannot be interrupted by a `Timeout`); a memory
+  regression shows only as a slow run. Measure RSS in a VM-only test if one
+  appears.
+- **Introspection reader limits.** An `ofType` chain deeper than 100 wrappers
+  is `GQL155` (the most `IntrospectionQuery(typeDepth: 100)` can ask); directive
+  deprecation in a result is ignored (working-draft, see the Introspection
+  guide); a result that redefines a built-in directive has it dropped.
+- **Directive reference cycles with repeated names.** A cycle is judged per
+  directive name (the first definition is the node).
 
 ## Rules the user set
 

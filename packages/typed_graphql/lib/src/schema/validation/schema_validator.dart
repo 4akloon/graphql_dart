@@ -8,7 +8,8 @@ import 'validation_report.dart';
 
 /// Checks a schema against the type-system rules of the specification
 /// (spec §7; R2.3, R2.4) in one pass, in graphql-js's order: roots,
-/// directive definitions, then types in declaration order.
+/// the directives applied to the schema, directive definitions, then types
+/// in declaration order.
 ///
 /// Each rule family is a class in `schema/validation/`. A schema with no
 /// error is a [ValidSchema]; otherwise the result is an [InvalidSchema]

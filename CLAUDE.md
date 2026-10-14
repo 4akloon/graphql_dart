@@ -252,7 +252,6 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `LiteralConverter` turns a constant `Value` into the `JsonValue` a codec
   decodes (an enum value becomes its name), so codecs have no
   `parseLiteral`.
-
 - `introspection/IntrospectionQuery` (const): graphql-js's
   `getIntrospectionQuery` options as `includes*` flags and `typeDepth`;
   `text` writes the operation and its three fragments line by line (the
@@ -419,8 +418,8 @@ in `It prints:` and a `text` fence with its exact output; a fragment or a
 signature is a `text` fence. A guide has no relative link (dartdoc breaks
 it) and names another guide by its topic. Every exported public type has
 `/// {@category <folder>}` in its doc comment (`schema/scalars/` is
-`scalars`, `schema/introspection/` is `introspection`); a new exported folder needs its category in
-`dartdoc_options.yaml` and its guide. `dart doc` reports 0 warnings. A stage
+`scalars`, `schema/introspection/` is `introspection`); a new exported folder
+needs its category in `dartdoc_options.yaml` and its guide. `dart doc` reports 0 warnings. A stage
 that adds API adds its section to the guide of its layer in the same commit.
 
 **Self-review before saying "done".**
