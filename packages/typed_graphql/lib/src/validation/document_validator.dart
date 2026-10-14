@@ -20,6 +20,7 @@ import 'rules/no_fragment_cycles_rule.dart';
 import 'rules/no_undefined_variables_rule.dart';
 import 'rules/no_unused_fragments_rule.dart';
 import 'rules/no_unused_variables_rule.dart';
+import 'rules/overlapping_fields_can_be_merged_rule.dart';
 import 'rules/possible_fragment_spreads_rule.dart';
 import 'rules/provided_required_arguments_rule.dart';
 import 'rules/scalar_leafs_rule.dart';
@@ -100,6 +101,7 @@ final class const DocumentValidator({
     InputObjectRequiredFieldsRule(),
     ProvidedRequiredArgumentsRule(),
     VariablesInAllowedPositionRule(),
+    OverlappingFieldsCanBeMergedRule(),
     UniqueInputFieldNamesRule(),
   ];
 

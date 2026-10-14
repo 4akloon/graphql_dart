@@ -97,6 +97,7 @@ void main() {
         'validation/__tests__/NoUndefinedVariablesRule-test.ts',
         'validation/__tests__/NoUnusedFragmentsRule-test.ts',
         'validation/__tests__/NoUnusedVariablesRule-test.ts',
+        'validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts',
         'validation/__tests__/PossibleFragmentSpreadsRule-test.ts',
         'validation/__tests__/ProvidedRequiredArgumentsRule-test.ts',
         'validation/__tests__/ScalarLeafsRule-test.ts',

@@ -349,6 +349,11 @@ enum DiagnosticCode(
   /// meta-field (spec §5.3.1).
   fieldsOnCorrectType('GQL205'),
 
+  /// `GQL206`: two fields with one response name that cannot be merged:
+  /// different fields or arguments under one parent, or different
+  /// response shapes (spec §5.3.2).
+  overlappingFieldsCanBeMerged('GQL206'),
+
   /// `GQL207`: a leaf field with a selection, or a composite field without
   /// one (spec §5.3.3).
   scalarLeafs('GQL207'),

@@ -245,3 +245,7 @@
 - The variable rules: `UniqueVariableNamesRule`, `NoUndefinedVariablesRule`,
   `NoUnusedVariablesRule` and `VariablesInAllowedPositionRule`
   (`GQL225`, `GQL227`-`GQL229`).
+- `OverlappingFieldsCanBeMergedRule` (`GQL206`): field selection merging
+  in linear time (R3.3); with three or more conflicting fields of one
+  response name it reports fewer conflicts than graphql-js.
+- `ValidationContext.maxErrors`.

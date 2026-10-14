@@ -105,6 +105,7 @@ export 'src/validation/rules/no_fragment_cycles_rule.dart';
 export 'src/validation/rules/no_undefined_variables_rule.dart';
 export 'src/validation/rules/no_unused_fragments_rule.dart';
 export 'src/validation/rules/no_unused_variables_rule.dart';
+export 'src/validation/rules/overlapping_fields_can_be_merged_rule.dart';
 export 'src/validation/rules/possible_fragment_spreads_rule.dart';
 export 'src/validation/rules/provided_required_arguments_rule.dart';
 export 'src/validation/rules/scalar_leafs_rule.dart';

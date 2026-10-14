@@ -67,6 +67,10 @@ final class ValidationContext {
   int _steps = 0;
   bool _isOverBudget = false;
 
+  /// The most errors the run keeps; a rule that gathers its reports
+  /// before it flushes them stops gathering there.
+  int get maxErrors => _sink.maxErrors;
+
   /// Whether the run stops: the error limit or the step budget was
   /// reached. Reports are then ignored.
   bool get isAborted => _sink.isFull || _isOverBudget;
