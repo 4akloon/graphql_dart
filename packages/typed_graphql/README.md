@@ -227,7 +227,10 @@ extend enum Episode { ROGUE_ONE @deprecated(reason: "Not a saga film.") }
   }
 
   // Every problem is a diagnostic with a code and a place.
-  final extension = Source('extend type Droid { id: ID }', name: 'more.graphql');
+  final extension = Source(
+    'extend type Droid { id: ID }',
+    name: 'more.graphql',
+  );
   final result = builder.extend(
     schema,
     parser.parse(extension).requireDocument(),
