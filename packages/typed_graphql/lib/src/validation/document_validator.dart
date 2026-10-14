@@ -4,6 +4,11 @@ import '../language/ast/document.dart';
 import '../language/visitor/ast_walker.dart';
 import '../schema/validation/schema_validation_result.dart';
 import 'document_validation_result.dart';
+import 'rules/executable_definitions_rule.dart';
+import 'rules/known_operation_types_rule.dart';
+import 'rules/lone_anonymous_operation_rule.dart';
+import 'rules/single_field_subscriptions_rule.dart';
+import 'rules/unique_operation_names_rule.dart';
 import 'validation_context.dart';
 import 'validation_rule.dart';
 
@@ -42,7 +47,13 @@ final class const DocumentValidator({
   this;
 
   /// The rules of spec §5, in graphql-js's order.
-  static const List<ValidationRule> specifiedRules = [];
+  static const List<ValidationRule> specifiedRules = [
+    ExecutableDefinitionsRule(),
+    KnownOperationTypesRule(),
+    UniqueOperationNamesRule(),
+    LoneAnonymousOperationRule(),
+    SingleFieldSubscriptionsRule(),
+  ];
 
   /// Validates [document] against [schema]; diagnostics point into
   /// [source] when it is given, the text [document] was parsed from.

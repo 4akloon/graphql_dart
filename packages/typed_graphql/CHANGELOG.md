@@ -224,3 +224,6 @@
   `InvalidDocument`; `ValidationContext` gives rules the schema, `TypeInfo`,
   fragments, variable usages and a step budget (`GQL230`); custom rules
   report `GQL231`. The Operation Validation guide.
+- The operation rules: `ExecutableDefinitionsRule`, `KnownOperationTypesRule`,
+  `UniqueOperationNamesRule`, `LoneAnonymousOperationRule` and
+  `SingleFieldSubscriptionsRule` (`GQL200`-`GQL204`).

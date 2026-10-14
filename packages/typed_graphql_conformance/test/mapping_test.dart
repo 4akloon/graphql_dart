@@ -80,6 +80,17 @@ void main() {
         'utilities/__tests__/resolveSchemaCoordinate-test.ts',
       ],
     ),
+    (
+      path: 'mapping/validation.csv',
+      prefix: '',
+      covered: const [
+        'validation/__tests__/ExecutableDefinitionsRule-test.ts',
+        'validation/__tests__/KnownOperationTypesRules-test.ts',
+        'validation/__tests__/LoneAnonymousOperationRule-test.ts',
+        'validation/__tests__/SingleFieldSubscriptionsRule-test.ts',
+        'validation/__tests__/UniqueOperationNamesRule-test.ts',
+      ],
+    ),
   ];
   for (final (:path, :prefix, :covered) in tables) {
     group(path, () {

@@ -325,6 +325,26 @@ enum DiagnosticCode(
   /// can read.
   introspectionTypeTooDeep('GQL155'),
 
+  /// `GQL200`: a type system definition or extension in a document sent
+  /// for execution (spec §5.1.1).
+  executableDefinitions('GQL200'),
+
+  /// `GQL201`: an operation whose type has no root type in the schema,
+  /// such as a mutation against a schema without one (spec §5.2.1.1).
+  knownOperationTypes('GQL201'),
+
+  /// `GQL202`: two operations with the same name (spec §5.2.2.1).
+  uniqueOperationNames('GQL202'),
+
+  /// `GQL203`: an anonymous operation beside another operation
+  /// (spec §5.2.3.1).
+  loneAnonymousOperation('GQL203'),
+
+  /// `GQL204`: a subscription that selects more than one top-level field,
+  /// an introspection field at the top level, or uses `@skip` or
+  /// `@include` there (spec §5.2.4.1).
+  singleFieldSubscriptions('GQL204'),
+
   /// `GQL230`: validating a document needed more work than the
   /// validator's step budget allows, such as fragments that expand to
   /// more fields than the budget, or many operations each spreading a
