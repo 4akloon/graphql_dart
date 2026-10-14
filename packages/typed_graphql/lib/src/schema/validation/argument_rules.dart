@@ -25,8 +25,13 @@ final class ArgumentRules(
   this;
 
   /// Reports the problems of [arguments], which belong to [owner]: the
-  /// coordinate of a field (`Type.field`) or a directive (`@name`).
-  void check(String owner, List<InputValue> arguments) {
+  /// coordinate of a field (`Type.field`) or a directive (`@name`);
+  /// [isOfDirective] says which.
+  void check(
+    String owner,
+    List<InputValue> arguments, {
+    required bool isOfDirective,
+  }) {
     UniqueNames(report).check(
       [for (final argument in arguments) (argument.name, argument.span)],
       .duplicateArgumentName,
@@ -39,7 +44,7 @@ final class ArgumentRules(
         report,
         schema,
       ).check(argument.appliedDirectives, .argumentDefinition);
-      _type(coordinate, argument, isOfDirective: owner.startsWith('@'));
+      _type(coordinate, argument, isOfDirective: isOfDirective);
       DeprecationRules(
         report,
       ).checkRequired('Required argument $coordinate', argument);

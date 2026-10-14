@@ -14,6 +14,10 @@ final class const NodeSpan() {
 
   /// The span of [node] in the source of [element]; null when the
   /// element has no span (it was built in code).
+  ///
+  /// A node built in code has `start` and `end` 0, so its span is empty at
+  /// the start of the source; only nodes read from [element]'s source have
+  /// a meaningful place.
   SourceSpan? within(SourceSpan? element, Node node) => switch (element) {
     final element? => SourceSpan(element.source, node.start, node.end),
     null => null,

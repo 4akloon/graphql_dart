@@ -40,7 +40,11 @@ final class DirectiveDefinitionRules(
       ArgumentRules(
         report,
         schema,
-      ).check('@${directive.name}', directive.arguments);
+      ).check(
+        '@${directive.name}',
+        directive.arguments,
+        isOfDirective: true,
+      );
       references.check(directive);
     }
   }

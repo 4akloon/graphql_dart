@@ -48,7 +48,11 @@ final class FieldRules(
       ArgumentRules(
         report,
         schema,
-      ).check('${type.name}.${field.name}', field.arguments);
+      ).check(
+        '${type.name}.${field.name}',
+        field.arguments,
+        isOfDirective: false,
+      );
     }
   }
 

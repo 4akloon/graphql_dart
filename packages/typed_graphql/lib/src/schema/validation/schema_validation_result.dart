@@ -46,7 +46,7 @@ final class InvalidSchema(
   List<Diagnostic> diagnostics,
 ) extends SchemaValidationResult {
   /// Creates the result of validating [schema].
-  this;
+  this : assert(diagnostics.isNotEmpty, 'an invalid schema has a problem');
 
   @override
   final List<Diagnostic> diagnostics = List.unmodifiable(diagnostics);
