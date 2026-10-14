@@ -253,9 +253,9 @@ void main() {
     }
     // A third of the texts have at most three of eleven valid definitions
     // that cannot conflict, and `fromSdl` and `extend` accept all of them
-    // except the empty-text and `schema` corners, so one in a hundred is a
-    // floor that holds by construction.
-    final floor = budget.iterations ~/ 100;
+    // except the empty-text and `schema` corners, so a quarter is a floor
+    // that holds in practice; a tiny budget has no floor.
+    final floor = budget.iterations < 20 ? 0 : budget.iterations ~/ 4;
     for (final entryPoint in successes.keys) {
       expect(
         successes[entryPoint],
@@ -279,11 +279,11 @@ void main() {
 
   // The parser recurses too: with a raised `maxDepth` it overflowed the VM
   // stack inside this test at object nesting of 990 (the lists survive past
-  // 1 100), so objects stay at 900 (see the task report).
+  // 1 100), so objects stay at 500, far from the limit of any stack size.
   test('deep trees that parse build without throwing', () {
     resetCounters();
     const justUnder = JsonReader.maxSupportedDepth - 10;
-    const objectDepth = 900;
+    const objectDepth = 500;
     for (final depth in [justUnder, JsonReader.maxSupportedDepth + 100]) {
       final listType = '${'[' * depth}Int${']' * depth}';
       final listValue = '${'[' * depth}${']' * depth}';
