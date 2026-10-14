@@ -22,3 +22,5 @@
 - Type system nodes: the `TypeSystemDefinition` and `TypeSystemExtension`
   families (with `TypeDefinition` and `TypeExtension`), field, input value,
   enum value and root operation type definitions.
+- `Token`, `TokenKind` and `BlockString` (block string values and
+  printing).

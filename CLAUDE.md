@@ -90,6 +90,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   overrides `rebuildFrom(ChildReader)` for `withChildren`; the two
   type-system families delegate it to a `*_rebuilder.dart` (size limit).
   `scalars` lists what `isEquivalentTo` compares besides children.
+- `lexer/`: `Token` (`kind`, `start`, `end`, `value`) and `TokenKind`, whose
+  `description` is how messages name it. `BlockString` holds the spec's
+  `BlockStringValue` and graphql-js's printing rules; lexer and printer share
+  it.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,
