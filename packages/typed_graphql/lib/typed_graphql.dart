@@ -87,6 +87,8 @@ export 'src/schema/scalars/string_codec.dart';
 export 'src/schema/schema.dart';
 export 'src/schema/validation/schema_validation_result.dart';
 export 'src/schema/validation/schema_validator.dart';
+export 'src/validation/cost/cost_analysis.dart';
+export 'src/validation/cost/operation_cost.dart';
 export 'src/validation/document_validation_result.dart';
 export 'src/validation/document_validator.dart';
 export 'src/validation/limits/max_aliases_rule.dart';

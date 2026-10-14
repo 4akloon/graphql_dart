@@ -260,3 +260,4 @@
 - `DocumentValidator.recommendedRules`: the specified rules and `MaxIntrospectionDepthRule`.
 - `includesCostDirectives` on `SchemaBuilder` and `Schema`: the IBM draft's `@cost` and `@listSize` as opt-in built-in directives.
 - With `includesCostDirectives`, `SchemaValidator` checks the IBM draft's rules for `@cost` and `@listSize` (`GQL156`-`GQL161`).
+- `CostAnalysis` computes an operation's field cost and type cost by the IBM cost directives draft, fragments expanded, in linear time.
