@@ -219,4 +219,12 @@ fragment B on Query { friend { ...A name @skip(if: $b) } }
     );
     expect(strings, ['d']);
   });
+
+  test('the specified rules are the 30 rules of spec §5, each once', () {
+    final kinds = {
+      for (final rule in DocumentValidator.specifiedRules) rule.runtimeType,
+    };
+    expect(kinds, hasLength(30));
+    expect(DocumentValidator.specifiedRules, hasLength(30));
+  });
 }

@@ -60,6 +60,11 @@ void main() {
 
   // A row names its graphql-js file relative to `prefix`, under `src/`;
   // `covered` lists the files whose every test must have a row.
+  // The suites of the limit rules, which M4b ports.
+  const waitingForM4b = {
+    'MaxIntrospectionDepthRule-test.ts',
+    'NoSchemaIntrospectionCustomRule-test.ts',
+  };
   final tables = [
     (
       path: 'mapping/language.csv',
@@ -83,34 +88,9 @@ void main() {
     (
       path: 'mapping/validation.csv',
       prefix: '',
-      covered: const [
-        'validation/__tests__/ExecutableDefinitionsRule-test.ts',
-        'validation/__tests__/FieldsOnCorrectTypeRule-test.ts',
-        'validation/__tests__/FragmentsOnCompositeTypesRule-test.ts',
-        'validation/__tests__/KnownArgumentNamesRule-test.ts',
-        'validation/__tests__/KnownDirectivesRule-test.ts',
-        'validation/__tests__/KnownFragmentNamesRule-test.ts',
-        'validation/__tests__/KnownOperationTypesRules-test.ts',
-        'validation/__tests__/KnownTypeNamesRule-test.ts',
-        'validation/__tests__/LoneAnonymousOperationRule-test.ts',
-        'validation/__tests__/NoFragmentCyclesRule-test.ts',
-        'validation/__tests__/NoUndefinedVariablesRule-test.ts',
-        'validation/__tests__/NoUnusedFragmentsRule-test.ts',
-        'validation/__tests__/NoUnusedVariablesRule-test.ts',
-        'validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts',
-        'validation/__tests__/PossibleFragmentSpreadsRule-test.ts',
-        'validation/__tests__/ProvidedRequiredArgumentsRule-test.ts',
-        'validation/__tests__/ScalarLeafsRule-test.ts',
-        'validation/__tests__/SingleFieldSubscriptionsRule-test.ts',
-        'validation/__tests__/UniqueArgumentNamesRule-test.ts',
-        'validation/__tests__/UniqueDirectivesPerLocationRule-test.ts',
-        'validation/__tests__/UniqueFragmentNamesRule-test.ts',
-        'validation/__tests__/UniqueInputFieldNamesRule-test.ts',
-        'validation/__tests__/UniqueOperationNamesRule-test.ts',
-        'validation/__tests__/UniqueVariableNamesRule-test.ts',
-        'validation/__tests__/ValuesOfCorrectTypeRule-test.ts',
-        'validation/__tests__/VariablesAreInputTypesRule-test.ts',
-        'validation/__tests__/VariablesInAllowedPositionRule-test.ts',
+      covered: [
+        for (final file in GraphqlJsSuite.filesIn('validation/__tests__'))
+          if (!waitingForM4b.contains(file)) 'validation/__tests__/$file',
       ],
     ),
   ];
