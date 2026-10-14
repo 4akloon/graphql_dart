@@ -25,6 +25,9 @@ final class DefaultValueRules(
     if (value == null) {
       return;
     }
+    if (report.isFull) {
+      return;
+    }
     for (final problem in ValueChecker(schema).check(value, input.type)) {
       // The problems are found as they are read: stop at the limit.
       if (report.isFull) {

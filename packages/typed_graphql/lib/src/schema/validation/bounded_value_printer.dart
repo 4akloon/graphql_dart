@@ -10,7 +10,7 @@ import '../../language/printer/printer.dart';
 /// of nesting, would then cost the size of the value times the number of
 /// messages, so a value larger than [maxSize] prints as its brackets
 /// with `...` inside. This is a deviation from graphql-js, recorded in the
-/// M3 design (§7).
+/// M3 design (§13, deviation 14).
 final class const BoundedValuePrinter() {
   /// Creates the printer; it keeps no state.
   this;

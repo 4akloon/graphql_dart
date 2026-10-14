@@ -38,7 +38,9 @@ final class UnionRules(
       if (report.isFull) {
         return;
       }
-      _member(type, member, included, places[member.name]!);
+      if (places[member.name] case final spans?) {
+        _member(type, member, included, spans);
+      }
     }
   }
 
