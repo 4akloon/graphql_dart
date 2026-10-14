@@ -1,18 +1,78 @@
+import '../../language/ast/operation_type.dart';
+import '../build/built_ins.dart';
 import '../schema.dart';
+import 'member_printer.dart';
 import 'type_printer.dart';
 
 /// Prints a schema as SDL, as graphql-js's `printSchema` does (spec §5;
-/// R2.5): definitions separated by a blank line, in declaration order,
-/// descriptions as block strings where they can be.
+/// R2.5): the schema definition when it says more than the default root
+/// names, then the directive definitions and the types, in declaration
+/// order, separated by a blank line.
 ///
 /// Unlike graphql-js, every applied directive is printed as written, so
-/// SDL to schema to SDL loses nothing.
-final class const SchemaPrinter() {
+/// SDL to schema to SDL loses nothing but a schema description or
+/// directives without root types, which SDL cannot hold.
+final class const SchemaPrinter({
+  /// Whether the built-in directives, scalars and introspection types
+  /// are printed too, around the declared ones; `@defer` and `@stream`
+  /// only when the schema includes them.
+  final bool includesBuiltIns = false,
+}) {
   /// Creates a printer.
   this;
 
   static const TypePrinter _types = TypePrinter();
 
   /// [schema] as SDL, without a trailing line break.
-  String print(Schema schema) => schema.types.map(_types.type).join('\n\n');
+  String print(Schema schema) {
+    const builtIns = BuiltIns();
+    return [
+      ?_schemaDefinition(schema),
+      if (includesBuiltIns)
+        ...[
+          ...builtIns.directives,
+          if (schema.includesDeferAndStream) ...[
+            builtIns.defer,
+            builtIns.stream,
+          ],
+        ].map(_types.directive),
+      ...schema.directives.map(_types.directive),
+      if (includesBuiltIns) ...builtIns.scalars.map(_types.type),
+      ...schema.types.map(_types.type),
+      if (includesBuiltIns) ...builtIns.introspectionTypes.map(_types.type),
+    ].join('\n\n');
+  }
+
+  String? _schemaDefinition(Schema schema) {
+    final roots = [
+      for (final operation in OperationType.values)
+        if (schema.rootTypeName(operation) case final name?)
+          '  ${operation.name}: $name\n',
+    ];
+    final isPlain =
+        schema.description == null &&
+        schema.appliedDirectives.isEmpty &&
+        _hasDefaultRoots(schema);
+    if (roots.isEmpty || isPlain) {
+      return null;
+    }
+    const members = MemberPrinter();
+    return '${members.description(schema.description)}'
+        'schema${members.directives(schema.appliedDirectives)} '
+        '{\n${roots.join()}}';
+  }
+
+  /// Whether each root is the type named after its operation, and each
+  /// type named after an operation is its root, as graphql-js checks.
+  static bool _hasDefaultRoots(Schema schema) => OperationType.values.every((
+    operation,
+  ) {
+    final defaultName = switch (operation) {
+      .query => 'Query',
+      .mutation => 'Mutation',
+      .subscription => 'Subscription',
+    };
+    final named = schema.typeNamed(defaultName) == null ? null : defaultName;
+    return schema.rootTypeName(operation) == named;
+  });
 }

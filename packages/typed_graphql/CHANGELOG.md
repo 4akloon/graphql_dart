@@ -100,3 +100,6 @@
   are applied too.
 - `SchemaPrinter`: a schema's types as SDL, laid out as graphql-js's
   `printSchema`, with every applied directive printed as written.
+- `SchemaPrinter` prints the schema definition when it says more than the
+  default root names, and the directive definitions; `includesBuiltIns`
+  adds the built-in directives, scalars and introspection types.

@@ -210,7 +210,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `TypePrinter` (a type or directive definition) and `MemberPrinter`
   (descriptions, member blocks, arguments, applied directives); values and
   types go through the language `Printer`. Unlike graphql-js it prints
-  every applied directive as written.
+  every applied directive as written. The schema definition is printed when
+  it has roots and a description, directives or other than the default root
+  names; `includesBuiltIns` prints schema definition, built-in directives,
+  own directives, built-in scalars, own types, introspection types.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
