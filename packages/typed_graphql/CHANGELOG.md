@@ -47,3 +47,5 @@
 - Parser recovery no longer mistakes a directive named like a keyword
   (`@query`) for the start of a definition.
 - `NonNullType.withChildren` throws a `StateError` in release builds too.
+- `AstVisitor`, `VisitAction` and `AstWalker`: a depth-first walk of any
+  syntax tree with `enter` and `leave`, which can skip a subtree or stop.

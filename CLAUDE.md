@@ -127,6 +127,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `Printer(isMinified: true)` passes the canonical text through `Minifier`
   (graphql-js's `stripIgnoredCharacters`: a space only between two
   non-punctuators or before `...`, block strings in their shortest form).
+- `visitor/`: `AstWalker().walk(root, visitor)` walks depth-first through
+  `children` with its own stack (no recursion), calling
+  `AstVisitor.enter` (returns `VisitAction.next`, `skip` or `stop`) and
+  `leave`; a skipped node is not left, a stop leaves nothing.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,
