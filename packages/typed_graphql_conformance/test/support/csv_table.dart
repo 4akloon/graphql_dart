@@ -1,13 +1,22 @@
 /// A CSV text with a header row, read as RFC 4180: a quoted field may
 /// hold commas, line breaks and doubled quotes; `\r\n` ends a record too.
 final class CsvTable {
-  /// Reads [text]; the first record is the header.
+  /// Reads [text]; the first record is the header, and no record has more
+  /// fields than it (an unquoted comma would add one).
   factory CsvTable.parse(String text) {
     final records = _records(text);
     if (records.isEmpty) {
       throw const FormatException('A CSV table needs a header row.');
     }
     final [header, ...body] = records;
+    for (final (index, record) in body.indexed) {
+      if (record.length > header.length) {
+        throw FormatException(
+          'Record ${index + 2} has ${record.length} fields; '
+          'the header has ${header.length}.',
+        );
+      }
+    }
     return CsvTable._(header, [
       for (final record in body)
         {

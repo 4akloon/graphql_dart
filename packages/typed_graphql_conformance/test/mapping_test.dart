@@ -18,6 +18,7 @@ const Set<String> portedFiles = {
   'printer-test.ts',
   'schema-printer-test.ts',
   'printString-test.ts',
+  'visitor-test.ts',
 };
 
 void main() {

@@ -181,3 +181,28 @@ printString-test.ts,printString,does not escape space,ported,test/language/print
 printString-test.ts,printString,does not escape non-ascii character,ported,test/language/printer/print_string_test.dart,
 printString-test.ts,printString,does not escape supplementary character,ported,test/language/printer/print_string_test.dart,
 printString-test.ts,printString,escapes all control chars,ported,test/language/printer/print_string_test.dart,
+visitor-test.ts,Visitor,handles empty visitor,ported,test/language/visitor/visitor_test.dart,
+visitor-test.ts,Visitor,validates path argument,skipped,,"AstVisitor.enter and leave take the node only: no key, parent or path."
+visitor-test.ts,Visitor,validates ancestors argument,skipped,,AstVisitor.enter and leave take the node only: no ancestors.
+visitor-test.ts,Visitor,allows editing a node both on enter and on leave,skipped,,A visitor only reads; AstTransformer edits bottom-up and has no enter-side edit.
+visitor-test.ts,Visitor,allows editing the root node on enter and on leave,skipped,,A visitor only reads; AstTransformer edits bottom-up and has no enter-side edit.
+visitor-test.ts,Visitor,allows for editing on enter,adapted,test/language/visitor/visitor_test.dart,AstTransformer removes the node bottom-up; the edited tree is the same.
+visitor-test.ts,Visitor,allows for editing on leave,adapted,test/language/visitor/visitor_test.dart,AstTransformer removes the node bottom-up; the edited tree is the same.
+visitor-test.ts,Visitor,ignores false returned on leave,skipped,,AstVisitor.leave returns nothing (spec §6).
+visitor-test.ts,Visitor,visits edited node,skipped,,A visitor only reads; AstTransformer has no enter-side edit to visit.
+visitor-test.ts,Visitor,allows skipping a sub-tree,ported,test/language/visitor/visitor_test.dart,
+visitor-test.ts,Visitor,allows early exit while visiting,ported,test/language/visitor/visitor_test.dart,
+visitor-test.ts,Visitor,allows early exit while leaving,skipped,,AstVisitor.leave returns nothing (spec §6): a walk stops only from enter.
+visitor-test.ts,Visitor,allows a named functions visitor API,adapted,test/language/visitor/visitor_test.dart,A switch on the node in enter and leave replaces graphql-js's per-kind functions.
+visitor-test.ts,Visitor,visits only the specified `Kind` in visitorKeyMap,skipped,,Node.children is fixed: there is no visitor key map.
+visitor-test.ts,Visitor,visits arguments defined on fragments,skipped,,Fragment arguments (R1.14) are not implemented.
+visitor-test.ts,Visitor,visits arguments on fragment spreads,skipped,,Fragment arguments (R1.14) are not implemented.
+visitor-test.ts,Visitor,properly visits the kitchen sink query,adapted,test/language/visitor/visitor_kitchen_sink_test.dart,"Checks event and kind in order; enter and leave take no key or parent, so those columns are dropped."
+visitor-test.ts,Visitor > visitInParallel,allows skipping a sub-tree,ported,test/language/visitor/visitor_test.dart,
+visitor-test.ts,Visitor > visitInParallel,allows skipping different sub-trees,ported,test/language/visitor/visitor_test.dart,
+visitor-test.ts,Visitor > visitInParallel,allows early exit while visiting,ported,test/language/visitor/visitor_test.dart,
+visitor-test.ts,Visitor > visitInParallel,allows early exit from different points,ported,test/language/visitor/visitor_test.dart,
+visitor-test.ts,Visitor > visitInParallel,allows early exit while leaving,skipped,,AstVisitor.leave returns nothing (spec §6): a walk stops only from enter.
+visitor-test.ts,Visitor > visitInParallel,allows early exit from leaving different points,skipped,,AstVisitor.leave returns nothing (spec §6): a walk stops only from enter.
+visitor-test.ts,Visitor > visitInParallel,allows for editing on enter,skipped,,ParallelVisitor only reads; AstTransformer does the editing.
+visitor-test.ts,Visitor > visitInParallel,allows for editing on leave,skipped,,ParallelVisitor only reads; AstTransformer does the editing.
