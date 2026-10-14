@@ -36,6 +36,28 @@ sealed class SchemaType(
     appliedDirectives,
   );
 
+  /// Whether it can be the type of an argument, an input field or a
+  /// variable: a scalar, an enum or an input object (spec §3.4.2).
+  bool get isInputType => switch (this) {
+    ScalarType() || EnumType() || InputObjectType() => true,
+    ObjectType() || InterfaceType() || UnionType() => false,
+  };
+
+  /// Whether it can be the type of a field: anything but an input object
+  /// (spec §3.4.2).
+  bool get isOutputType => this is! InputObjectType;
+
+  /// Whether a value of it has no fields: a scalar or an enum.
+  bool get isLeafType => this is ScalarType || this is EnumType;
+
+  /// Whether a selection set selects from it: an object, an interface or
+  /// a union.
+  bool get isCompositeType => !isLeafType && this is! InputObjectType;
+
+  /// Whether its runtime type is one of several object types: an
+  /// interface or a union.
+  bool get isAbstractType => this is InterfaceType || this is UnionType;
+
   /// The field of [fields] named [name], for object and interface types.
   static SchemaField? _fieldIn(List<SchemaField> fields, String name) {
     for (final field in fields) {

@@ -201,7 +201,12 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `includesDeferAndStream`). Roots are names (`queryTypeName`, ...,
   `rootTypeName(OperationType)`); `rootTypeSpan(OperationType)` is the
   span of the name in the schema definition or extension, null for a
-  default root.
+  default root. The type relations M4 needs live on `Schema`
+  (`namedTypeOf`, `implementations`, `possibleTypes`, `isSubType`,
+  `isTypeSubTypeOf`, `typesOverlap`) over the internal `relations/`
+  (`ImplementationIndex`, built on first use; `TypeComparator`, which walks
+  wrappers without recursion); the kind predicates (`isInputType`, ...)
+  are getters of `SchemaType`.
 - `build/SchemaBuilder` (const, `includesDeferAndStream`): `fromSdl(document,
   source:)` returns the sealed `BuildResult` (`BuildSuccess(schema)` |
   `BuildFailure(partial, diagnostics)`). A run sorts the definitions

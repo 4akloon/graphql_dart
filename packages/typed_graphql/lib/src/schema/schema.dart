@@ -1,9 +1,12 @@
 import '../diagnostics/source_span.dart';
 import '../language/ast/operation_type.dart';
+import '../language/ast/type_ref.dart';
 import 'build/built_ins.dart';
 import 'model/applied_directive.dart';
 import 'model/schema_directive.dart';
 import 'model/schema_type.dart';
+import 'relations/implementation_index.dart';
+import 'relations/type_comparator.dart';
 
 /// A GraphQL schema (spec §3.3; R2.1): its named types, its directive
 /// definitions and its root operation types, immutable.
@@ -73,6 +76,12 @@ final class Schema({
     for (final directive in directives.reversed) directive.name: directive,
   };
 
+  // Late: built on the first question about implementations, from the
+  // final list of types, which never changes after construction.
+  late final ImplementationIndex _implementations = ImplementationIndex(
+    types,
+  );
+
   /// The declared type named [name], else the built-in scalar or
   /// introspection type; null when there is none.
   SchemaType? typeNamed(String name) {
@@ -107,4 +116,68 @@ final class Schema({
     .mutation => mutationTypeName,
     .subscription => subscriptionTypeName,
   };
+
+  /// The named type inside [type]'s wrappers; null when no type has its
+  /// name.
+  SchemaType? namedTypeOf(TypeRef type) =>
+      typeNamed(const TypeComparator().namedTypeName(type));
+
+  /// Whether [type] names an input type (spec §3.4.2); false when its
+  /// named type does not exist.
+  bool isInputType(TypeRef type) => namedTypeOf(type)?.isInputType ?? false;
+
+  /// Whether [type] names an output type (spec §3.4.2); false when its
+  /// named type does not exist.
+  bool isOutputType(TypeRef type) => namedTypeOf(type)?.isOutputType ?? false;
+
+  /// The object and interface types that declare [interfaceType] in their
+  /// `implements` list, in declaration order.
+  List<SchemaType> implementations(InterfaceType interfaceType) =>
+      _implementations.of(interfaceType.name);
+
+  /// The object types a value of [type] can be at run time, in
+  /// declaration order: the object itself, the members of a union that
+  /// are objects, or the objects that implement an interface.
+  List<ObjectType> possibleTypes(SchemaType type) => switch (type) {
+    ObjectType() => [type],
+    InterfaceType() => implementations(type).whereType<ObjectType>().toList(),
+    UnionType(:final memberTypes) => [
+      for (final member in memberTypes)
+        if (typeNamed(member.name) case final ObjectType object) object,
+    ],
+    ScalarType() || EnumType() || InputObjectType() => const [],
+  };
+
+  /// Whether [maybeSubType] is a member of the union [abstractType] or
+  /// declares the interface [abstractType] (graphql-js's `isSubType`).
+  bool isSubType(SchemaType abstractType, SchemaType maybeSubType) =>
+      switch (abstractType) {
+        UnionType(:final memberTypes) => memberTypes.any(
+          (member) => member.name == maybeSubType.name,
+        ),
+        InterfaceType() => implementations(abstractType).contains(maybeSubType),
+        _ => false,
+      };
+
+  /// Whether a value of type [subType] is always a value of [superType]
+  /// (graphql-js's `isTypeSubTypeOf`): the same type, or narrower by
+  /// non-null, or an implementation or member of an abstract type.
+  bool isTypeSubTypeOf(TypeRef subType, TypeRef superType) =>
+      const TypeComparator().isSubType(subType, superType, (sub, sup) {
+        final (subNamed, superNamed) = (typeNamed(sub), typeNamed(sup));
+        return subNamed != null &&
+            superNamed != null &&
+            (subNamed is ObjectType || subNamed is InterfaceType) &&
+            isSubType(superNamed, subNamed);
+      });
+
+  /// Whether some object type is possible for both [a] and [b]
+  /// (graphql-js's `doTypesOverlap`).
+  bool typesOverlap(SchemaType a, SchemaType b) {
+    if (identical(a, b)) {
+      return true;
+    }
+    final possible = possibleTypes(b);
+    return possibleTypes(a).any(possible.contains);
+  }
 }

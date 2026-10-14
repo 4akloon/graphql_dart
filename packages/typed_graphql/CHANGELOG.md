@@ -125,3 +125,8 @@
   instead of `NamedType` nodes, so a reference added by `extend` from
   another source points into that source. `Schema.rootTypeSpan` gives
   where a root type was named (`rootTypeSpans` in the constructor).
+- `SchemaType.isInputType`, `isOutputType`, `isLeafType`,
+  `isCompositeType` and `isAbstractType`; `Schema.namedTypeOf`,
+  `isInputType`, `isOutputType` (for a `TypeRef`), `implementations`,
+  `possibleTypes`, `isSubType`, `isTypeSubTypeOf` and `typesOverlap`, as
+  graphql-js names them, for validation and execution.
