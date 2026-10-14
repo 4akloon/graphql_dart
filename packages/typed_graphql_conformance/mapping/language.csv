@@ -215,3 +215,19 @@ printLocation-test.ts,printSourceLocation,prints single digit line number with n
 printLocation-test.ts,printSourceLocation,prints line numbers with correct padding,adapted,test/language/print_location_test.dart,"Source has no locationOffset: eight line breaks put the error on line 9, so the excerpt also shows line 8."
 source-test.ts,Source,can be Object.toStringified,skipped,,Symbol.toStringTag is JavaScript only.
 source-test.ts,Source,rejects invalid locationOffset,skipped,,Source has no locationOffset.
+predicates-test.ts,AST node predicates,isDefinitionNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+predicates-test.ts,AST node predicates,isExecutableDefinitionNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+predicates-test.ts,AST node predicates,isSelectionNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+predicates-test.ts,AST node predicates,isValueNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+predicates-test.ts,AST node predicates,isConstValueNode,adapted,test/language/predicates_test.dart,There is no isConstValueNode: a const value is one parseValue accepts with isConst.
+predicates-test.ts,AST node predicates,isTypeNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+predicates-test.ts,AST node predicates,isTypeSystemDefinitionNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+predicates-test.ts,AST node predicates,isTypeDefinitionNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+predicates-test.ts,AST node predicates,isTypeSystemExtensionNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+predicates-test.ts,AST node predicates,isTypeExtensionNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+predicates-test.ts,AST node predicates,isSchemaCoordinateNode,adapted,test/language/predicates_test.dart,Dart tests the sealed families with `is` on one parsed node of each kind; graphql-js calls a predicate on `{ kind }`.
+kind-test.ts,Kind,is a term level namespace with term level enum members,skipped,,A TypeScript typing test: Dart has no Kind namespace; node classes are the kinds.
+kind-test.ts,Kind,is a type level namespace with type level enum members,skipped,,A TypeScript typing test: Dart has no Kind namespace; node classes are the kinds.
+diagnostics-test.ts,parse diagnostics channel,emits start and end around a successful parse,skipped,,Node.js diagnostics_channel tracing has no Dart counterpart.
+diagnostics-test.ts,parse diagnostics channel,"emits start, error, and end when the parser throws",skipped,,Node.js diagnostics_channel tracing has no Dart counterpart.
+diagnostics-test.ts,parse diagnostics channel,does not call tracing methods when no subscribers are attached,skipped,,Node.js diagnostics_channel tracing has no Dart counterpart.

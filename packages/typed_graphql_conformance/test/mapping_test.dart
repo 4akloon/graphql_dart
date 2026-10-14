@@ -22,6 +22,9 @@ const Set<String> portedFiles = {
   'schemaCoordinateLexer-test.ts',
   'printLocation-test.ts',
   'source-test.ts',
+  'predicates-test.ts',
+  'kind-test.ts',
+  'diagnostics-test.ts',
 };
 
 void main() {
