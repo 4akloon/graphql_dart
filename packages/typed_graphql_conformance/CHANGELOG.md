@@ -25,3 +25,6 @@
   `extendSchema-test.ts`.
 - SDL round-trip fuzzer (R10.4): random schemas printed as SDL build back
   to the same elements and print the same text.
+- Hostile-SDL fuzzer (R10.4): random and mutated type-system text, built
+  and used to extend a schema, stays within the sink limit, reaches every
+  build diagnostic and never throws.

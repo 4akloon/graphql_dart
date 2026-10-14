@@ -47,7 +47,10 @@ parses them back; `hostile_text_fuzz_test.dart` feeds random and mutated
 text to every parser entry point and checks that it reports, within the
 sink limit, and never throws. `schema_round_trip_fuzz_test.dart` prints
 random schemas as SDL and builds them back: the rebuilt schema holds the
-same elements (`SchemaDump`) and prints the same text.
+same elements (`SchemaDump`) and prints the same text;
+`hostile_sdl_fuzz_test.dart` builds random and mutated type-system text,
+and extends a schema with it, and checks that the builder reports every
+kind of problem, within the sink limit, and never throws.
 
 ## License
 
