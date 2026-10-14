@@ -91,7 +91,7 @@ Bring these to the user with the plan.
 
 1. **Model names.** Spec §3 names the family `NamedType` and the members `FieldDefinition`, `EnumValueDefinition` and `DirectiveDefinition`. Those are the names of language nodes already exported by the barrel (M2a), so the schema elements are `SchemaType`, `SchemaField`, `SchemaEnumValue` and `SchemaDirective`; `InputValue` and the six kinds keep the spec's names. The spec should be updated to match (Open question 1).
 2. **Built-ins are not listed** in `Schema.types` or `Schema.directives` (decision 2). graphql-js lists them in its type map; three `buildASTSchema` tests are adapted to compare lookups instead.
-3. **The introspection types follow September2025.** graphql-js 17 prints the working-draft introspection (`includeDeprecated: Boolean!`, `__Schema.directives(includeDeprecated:)`, `__Directive.isDeprecated`, the `FRAGMENT_VARIABLE_DEFINITION` and `DIRECTIVE_DEFINITION` locations). `Print Introspection Schema` is adapted with the September2025 text, checked against the specification.
+3. **The introspection types follow September2025.** graphql-js 17 prints the working-draft introspection (`__Schema.directives(includeDeprecated:)`, `__Directive.isDeprecated` and `deprecationReason`, the `FRAGMENT_VARIABLE_DEFINITION` and `DIRECTIVE_DEFINITION` locations). `Print Introspection Schema` is adapted with the September2025 text, checked against the specification.
 4. **No extension nodes** (decision 3): 16 graphql-js tests check `extensionASTNodes`; the check is dropped and each test checks what the extension added instead.
 5. **Validation is M3b's.** 25 adapted rows say "schema validation arrives in M3b": the test checks what the builder keeps instead of the validation error. Two rows are skipped for the same reason (`Rejects invalid SDL`) and two because there is nothing to disable. The M3b plan should revisit every row whose reason names M3b.
 6. **What the SDL round trip cannot carry,** found by the fuzzer: an empty schema prints `''`, which is not a document; a schema description or schema directives need root types to be printed; a type named `Query` that is not a root comes back as the root. graphql-js has the same limits; the generator avoids them and `CLAUDE.md` records the empty document.
@@ -1690,11 +1690,73 @@ void main() {
     final locations = builtIns.introspectionTypes[7] as EnumType;
     expect(locations.values, hasLength(19));
     expect(locations.valueNamed('DIRECTIVE_DEFINITION'), isNull);
+  });
+
+  test('declares includeDeprecated as Boolean! = false everywhere', () {
     final type = builtIns.introspectionTypes[1] as ObjectType;
-    final argument = type
-        .fieldNamed('fields')!
-        .argumentNamed('includeDeprecated');
-    expect(const Printer().print(argument!.type), 'Boolean');
+    final field = builtIns.introspectionTypes[3] as ObjectType;
+    final directive = builtIns.introspectionTypes[6] as ObjectType;
+    final arguments = [
+      type.fieldNamed('fields')!.argumentNamed('includeDeprecated'),
+      type.fieldNamed('enumValues')!.argumentNamed('includeDeprecated'),
+      type.fieldNamed('inputFields')!.argumentNamed('includeDeprecated'),
+      field.fieldNamed('args')!.argumentNamed('includeDeprecated'),
+      directive.fieldNamed('args')!.argumentNamed('includeDeprecated'),
+    ];
+    for (final argument in arguments) {
+      expect(const Printer().print(argument!.type), 'Boolean!');
+      expect(const Printer().print(argument.defaultValue!), 'false');
+    }
+  });
+
+  test('gives the specified directives their locations', () {
+    const common = ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGMENT'];
+    expect(builtIns.directiveNamed('include')!.locations, common);
+    expect(builtIns.directiveNamed('skip')!.locations, common);
+    expect(builtIns.directiveNamed('specifiedBy')!.locations, ['SCALAR']);
+    expect(builtIns.directiveNamed('oneOf')!.locations, ['INPUT_OBJECT']);
+  });
+
+  test('types introspection fields with their nullability', () {
+    final schema = builtIns.introspectionTypes[0] as ObjectType;
+    final type = builtIns.introspectionTypes[1] as ObjectType;
+    expect(const Printer().print(type.fieldNamed('kind')!.type), '__TypeKind!');
+    expect(const Printer().print(type.fieldNamed('name')!.type), 'String');
+    expect(
+      const Printer().print(schema.fieldNamed('types')!.type),
+      '[__Type!]!',
+    );
+    expect(
+      const Printer().print(schema.fieldNamed('mutationType')!.type),
+      '__Type',
+    );
+  });
+
+  test('lists the values of __TypeKind', () {
+    final kinds = builtIns.introspectionTypes[2] as EnumType;
+    expect(kinds.values.map((value) => value.name), [
+      'SCALAR',
+      'OBJECT',
+      'INTERFACE',
+      'UNION',
+      'ENUM',
+      'INPUT_OBJECT',
+      'LIST',
+      'NON_NULL',
+    ]);
+  });
+
+  test('gives @defer and @stream their argument defaults', () {
+    String? defaultOf(SchemaDirective directive, String name) {
+      final value = directive.argumentNamed(name)!.defaultValue;
+      return value == null ? null : const Printer().print(value);
+    }
+
+    expect(defaultOf(builtIns.defer, 'if'), 'true');
+    expect(defaultOf(builtIns.defer, 'label'), isNull);
+    expect(defaultOf(builtIns.stream, 'initialCount'), '0');
+    expect(defaultOf(builtIns.stream, 'if'), 'true');
+    expect(builtIns.defer.locations, ['FRAGMENT_SPREAD', 'INLINE_FRAGMENT']);
   });
 
   test('finds a scalar or an introspection type by name', () {
@@ -1728,7 +1790,7 @@ Expected: FAIL. `Error: Method not found: 'BuiltIns'.` and `Error: Couldn't find
 
 - [ ] **Step 3: Write the built-in SDL**
 
-The built-ins are written once, as SDL, and read with Task 3's readers, so they cannot drift from what the builder reads. The text is the September2025 edition: five scalars, `@include`, `@skip`, `@deprecated`, `@specifiedBy`, `@oneOf`, then `@defer` and `@stream` as graphql-js defines them, and the eight introspection types without the working-draft additions. The file has 292 lines, most of them the SDL text.
+The built-ins are written once, as SDL, and read with Task 3's readers, so they cannot drift from what the builder reads. The text is the September2025 edition: five scalars, `@include`, `@skip`, `@deprecated`, `@specifiedBy`, `@oneOf`, then `@defer` and `@stream` as graphql-js defines them, and the eight introspection types without the working-draft additions. The file has 293 lines, most of them the SDL text.
 
 Create `packages/typed_graphql/lib/src/schema/build/built_in_sdl.dart`:
 
@@ -1738,9 +1800,10 @@ Create `packages/typed_graphql/lib/src/schema/build/built_in_sdl.dart`:
 /// `@stream` as graphql-js defines them.
 ///
 /// graphql-js 17 also has working-draft additions (deprecated directives,
-/// fragment variables, `includeDeprecated` on `__Schema.directives` and a
-/// non-null `includeDeprecated`); this text follows the September2025
-/// edition (R0.1).
+/// fragment variables, `includeDeprecated` on `__Schema.directives`,
+/// `isDeprecated` and `deprecationReason` on `__Directive` and the
+/// `DIRECTIVE_DEFINITION` location); this text follows the September2025
+/// edition (R0.1) and omits them.
 final class const BuiltInSdl() {
   /// Creates the text holder.
   this;
@@ -1844,11 +1907,11 @@ type __Type {
   name: String
   description: String
   specifiedByURL: String
-  fields(includeDeprecated: Boolean = false): [__Field!]
+  fields(includeDeprecated: Boolean! = false): [__Field!]
   interfaces: [__Type!]
   possibleTypes: [__Type!]
-  enumValues(includeDeprecated: Boolean = false): [__EnumValue!]
-  inputFields(includeDeprecated: Boolean = false): [__InputValue!]
+  enumValues(includeDeprecated: Boolean! = false): [__EnumValue!]
+  inputFields(includeDeprecated: Boolean! = false): [__InputValue!]
   ofType: __Type
   isOneOf: Boolean
 }
@@ -1892,7 +1955,7 @@ Object and Interface types are described by a list of Fields, each of which has 
 type __Field {
   name: String!
   description: String
-  args(includeDeprecated: Boolean = false): [__InputValue!]!
+  args(includeDeprecated: Boolean! = false): [__InputValue!]!
   type: __Type!
   isDeprecated: Boolean!
   deprecationReason: String
@@ -1934,7 +1997,7 @@ type __Directive {
   description: String
   isRepeatable: Boolean!
   locations: [__DirectiveLocation!]!
-  args(includeDeprecated: Boolean = false): [__InputValue!]!
+  args(includeDeprecated: Boolean! = false): [__InputValue!]!
 }
 
 """
@@ -2081,9 +2144,20 @@ final class const BuiltIns() {
     _types.whereType<ScalarType>(),
   );
 
+  static final SchemaDirective _defer = _directiveNamed('defer');
+
+  static final SchemaDirective _stream = _directiveNamed('stream');
+
+  // The five specified directives are all but the two opt-in ones, so the
+  // SDL order of `@defer` and `@stream` cannot swap them.
   static final List<SchemaDirective> _directives = List.unmodifiable(
-    _allDirectives.take(5),
+    _allDirectives.where(
+      (directive) => directive != _defer && directive != _stream,
+    ),
   );
+
+  static SchemaDirective _directiveNamed(String name) =>
+      _allDirectives.singleWhere((directive) => directive.name == name);
 
   static final List<SchemaType> _introspectionTypes = List.unmodifiable(
     _types.where((type) => type is! ScalarType),
@@ -2097,10 +2171,10 @@ final class const BuiltIns() {
   List<SchemaDirective> get directives => _directives;
 
   /// `@defer`, added to a schema only by an opt-in.
-  SchemaDirective get defer => _allDirectives[5];
+  SchemaDirective get defer => _defer;
 
   /// `@stream`, added to a schema only by an opt-in.
-  SchemaDirective get stream => _allDirectives[6];
+  SchemaDirective get stream => _stream;
 
   /// `__Schema`, `__Type`, `__TypeKind`, `__Field`, `__InputValue`,
   /// `__EnumValue`, `__Directive` and `__DirectiveLocation`, in that order.
@@ -2161,7 +2235,7 @@ Run:
 (cd packages/typed_graphql && dart test test/schema/build/built_ins_test.dart)
 ```
 
-Expected: `+9: All tests passed!`
+Expected: `+14: All tests passed!`
 
 - [ ] **Step 6: Update the documents**
 
@@ -7316,7 +7390,7 @@ Expected: `+7: All tests passed!`
 
 - [ ] **Step 5: Write the ported tests**
 
-`printSchema-test.ts` has 39 tests and goes into four files by subject. graphql-js 17 prints the working-draft introspection types (`includeDeprecated: Boolean!`, `__Directive.isDeprecated`, two more locations); this library follows September2025, so `Print Introspection Schema` is adapted with the text this library prints, and that text was checked line by line against the specification.
+`printSchema-test.ts` has 39 tests and goes into four files by subject. graphql-js 17 prints the working-draft introspection types (`__Schema.directives(includeDeprecated:)`, `__Directive.isDeprecated`, two more locations); this library follows September2025, so `Print Introspection Schema` is adapted with the text this library prints, and that text was checked line by line against the specification.
 
 Create `packages/typed_graphql_conformance/test/schema/print_schema_test.dart`:
 
@@ -8260,7 +8334,7 @@ import '../support/schema_port.dart';
 // prints the built-in scalars, so the test prints a schema declaring the
 // built-in directives and introspection types alone. graphql-js 17 prints
 // the working draft's introspection; the text below is the September2025
-// edition's: `includeDeprecated: Boolean = false`, no argument on
+// edition's: `includeDeprecated: Boolean! = false`, no argument on
 // `__Schema.directives`, no deprecation of directives, and no
 // `FRAGMENT_VARIABLE_DEFINITION` or `DIRECTIVE_DEFINITION` location.
 void main() {
@@ -8348,11 +8422,11 @@ void main() {
             name: String
             description: String
             specifiedByURL: String
-            fields(includeDeprecated: Boolean = false): [__Field!]
+            fields(includeDeprecated: Boolean! = false): [__Field!]
             interfaces: [__Type!]
             possibleTypes: [__Type!]
-            enumValues(includeDeprecated: Boolean = false): [__EnumValue!]
-            inputFields(includeDeprecated: Boolean = false): [__InputValue!]
+            enumValues(includeDeprecated: Boolean! = false): [__EnumValue!]
+            inputFields(includeDeprecated: Boolean! = false): [__InputValue!]
             ofType: __Type
             isOneOf: Boolean
           }
@@ -8396,7 +8470,7 @@ void main() {
           type __Field {
             name: String!
             description: String
-            args(includeDeprecated: Boolean = false): [__InputValue!]!
+            args(includeDeprecated: Boolean! = false): [__InputValue!]!
             type: __Type!
             isDeprecated: Boolean!
             deprecationReason: String
@@ -8438,7 +8512,7 @@ void main() {
             description: String
             isRepeatable: Boolean!
             locations: [__DirectiveLocation!]!
-            args(includeDeprecated: Boolean = false): [__InputValue!]!
+            args(includeDeprecated: Boolean! = false): [__InputValue!]!
           }
 
           """
