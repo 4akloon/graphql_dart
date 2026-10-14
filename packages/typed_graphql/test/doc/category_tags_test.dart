@@ -69,9 +69,13 @@ void main() {
         final source = File('lib/$path').readAsStringSync();
         final untagged = [
           for (final type in const PublicTypes().declaredIn(source))
-            if (!type.documentation.contains(tag)) type.name,
+            if (type.countOf(tag) != 1) type.name,
         ];
-        expect(untagged, isEmpty, reason: 'add $tag to their doc comments');
+        expect(
+          untagged,
+          isEmpty,
+          reason: 'give each exactly one $tag in its doc comment',
+        );
       });
     }
   });

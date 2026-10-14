@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'markdown_fence.dart';
+
 /// A link to a place in the repository, as a Markdown file writes it.
 final class MarkdownLink(
   /// The 1-based line of the link in its file.
@@ -28,6 +32,17 @@ final class MarkdownLinks {
         if (!_web.hasMatch(match[1]!)) MarkdownLink(index + 1, match[1]!),
   ];
 
+  /// The text of the file at [path], the target of a link with an anchor. A
+  /// path that is not a file is a [FormatException] saying so, as a
+  /// directory has no headings to point at.
+  String readTarget(String path) {
+    final file = File(path);
+    if (!file.existsSync()) {
+      throw FormatException('"$path" is not a file, so it has no anchors');
+    }
+    return file.readAsStringSync();
+  }
+
   /// The anchors GitHub gives the headings of [markdown]: the text in
   /// lower case without punctuation, spaces as hyphens, `-1`, `-2` for a
   /// repeated heading.
@@ -48,19 +63,6 @@ final class MarkdownLinks {
     return anchors;
   }
 
-  /// The lines of [markdown], with those inside a fence blanked so that
-  /// line numbers stay.
-  List<String> _prose(String markdown) {
-    var isFenced = false;
-    final lines = <String>[];
-    for (final line in markdown.replaceAll('\r\n', '\n').split('\n')) {
-      if (line.startsWith('```')) {
-        isFenced = !isFenced;
-        lines.add('');
-      } else {
-        lines.add(isFenced ? '' : line);
-      }
-    }
-    return lines;
-  }
+  List<String> _prose(String markdown) =>
+      const MarkdownFences().proseLines(markdown);
 }

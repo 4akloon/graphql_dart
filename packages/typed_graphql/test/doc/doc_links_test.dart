@@ -31,7 +31,7 @@ void main() {
             isNot(FileSystemEntityType.notFound),
           );
           if (uri.fragment.isNotEmpty) {
-            final anchors = links.anchorsIn(File(uri.path).readAsStringSync());
+            final anchors = links.anchorsIn(links.readTarget(uri.path));
             expect(anchors, contains(uri.fragment));
           }
         });

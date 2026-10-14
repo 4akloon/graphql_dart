@@ -11,6 +11,9 @@ final class PublicType(
 ) {
   /// Creates a description.
   this;
+
+  /// How many lines of the doc comment are exactly [tag].
+  int countOf(String tag) => documentation.where((line) => line == tag).length;
 }
 
 /// Finds the public classes, enums, mixins and typedefs of Dart source.

@@ -39,4 +39,12 @@ extension type G(int value) {}
     final found = types.declaredIn('/// Doc.\nclass A {}\nclass B {}\n');
     expect(found.last.documentation, isEmpty);
   });
+
+  test('counts a repeated tag twice, so a duplicate can be refused', () {
+    final type = types
+        .declaredIn('/// {@category a}\n/// {@category a}\nclass X {}\n')
+        .single;
+    expect(type.countOf('{@category a}'), 2);
+    expect(type.countOf('{@category b}'), 0);
+  });
 }

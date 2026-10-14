@@ -24,8 +24,17 @@ void main() {
     expect(fences.of('```\nx\n```').single.info, '');
   });
 
-  test('ignores lines that only look like fences when indented', () {
-    expect(fences.of('  ```dart\n  x\n  ```'), isEmpty);
+  test('ignores a line indented four spaces, which is code', () {
+    expect(fences.of('    ```dart\n    x\n    ```'), isEmpty);
+  });
+
+  test('reads a tilde fence and an indented one', () {
+    expect(fences.of('~~~dart\nx\n~~~').single.info, 'dart');
+    expect(fences.of('  ```dart\n  x\n  ```').single.body, '  x');
+  });
+
+  test('a longer opening is closed only by an equal or longer line', () {
+    expect(fences.of('````md\n```\ny\n````').single.body, '```\ny');
   });
 
   test('an unclosed fence is a FormatException', () {
