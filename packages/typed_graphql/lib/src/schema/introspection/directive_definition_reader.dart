@@ -1,7 +1,6 @@
 import '../../language/ast/directive_location.dart';
 import '../../protocol/path_segment.dart';
 import '../model/schema_directive.dart';
-import 'introspection_annotations.dart';
 import 'introspection_object.dart';
 import 'member_reader.dart';
 
@@ -29,9 +28,6 @@ final class DirectiveDefinitionReader(
       arguments: members.inputValues(arguments),
       isRepeatable: directive.flag('isRepeatable'),
       locations: locations,
-      appliedDirectives: const IntrospectionAnnotations().deprecated(
-        directive,
-      ),
     );
   }
 

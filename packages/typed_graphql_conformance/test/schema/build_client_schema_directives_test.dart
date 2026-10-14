@@ -25,8 +25,9 @@ void main() {
       expect(port.cycle(sdl), sdl);
     });
 
-    // Directive deprecation is working-draft: the SDL applies @deprecated
-    // to the definition and the query asks for it.
+    // Directive deprecation is working-draft and the built-in @deprecated
+    // has no DIRECTIVE_DEFINITION location, so the reader ignores it: the
+    // schema builds and validates, and the directive is not deprecated.
     test('builds a schema with deprecated directives', () {
       final introspection = port.introspectionOf(
         '''
@@ -44,7 +45,27 @@ directive @someDirective @deprecated(reason: "Use another directive") on QUERY
             'someDirective',
           );
       expect(directive?.name, 'someDirective');
-      expect(directive?.deprecationReason, 'Use another directive');
+      expect(directive?.deprecationReason, isNull);
+      expect(directive?.appliedDirectives, isEmpty);
+      expect(schemas.validationErrors(port.client(introspection)), isEmpty);
+    });
+
+    test('reads isDeprecated on a directive without a reason', () {
+      final introspection = port.introspectionOf('''
+type Query {
+  string: String
+}
+
+directive @someDirective on QUERY
+''', const IntrospectionQuery(includesDirectiveDeprecation: true));
+      final directives =
+          port.schemaIn(introspection)['directives']! as List<Object?>;
+      for (final directive in directives.cast<Map<String, Object?>>()) {
+        directive['isDeprecated'] = true;
+      }
+      final client = port.client(introspection);
+      expect(client.directiveNamed('someDirective')?.deprecationReason, isNull);
+      expect(schemas.validationErrors(client), isEmpty);
     });
 
     // Built-ins are not listed in `Schema.directives`: the port checks the
@@ -61,6 +82,8 @@ directive @someDirective @deprecated(reason: "Use another directive") on QUERY
       schema.remove('directives');
       final client = port.client(introspection);
       expect(client.directives, isEmpty);
+      expect(client.includesDeferAndStream, isFalse);
+      expect(client.directiveNamed('include'), isNotNull);
       expect(schemas.print(client), sdl);
     });
 
