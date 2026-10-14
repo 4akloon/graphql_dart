@@ -17,7 +17,8 @@ import 'type_ref_reader.dart';
 ///
 /// The built-in scalars and introspection types the result lists are the
 /// schema's built-ins, not declared types; so are the built-in directives,
-/// and `@defer` or `@stream` turn on `includesDeferAndStream`. A result
+/// and `@defer` or `@stream` turn on `includesDeferAndStream`, `@cost` or
+/// `@listSize` on `includesCostDirectives`. A result
 /// without `directives` has none declared, as graphql-js reads it.
 final class IntrospectionReader(
   /// Where problems are reported.
@@ -61,6 +62,7 @@ final class IntrospectionReader(
       subscriptionTypeName: subscription,
       description: root.optionalString('description'),
       includesDeferAndStream: directives.any(_isDeferOrStream),
+      includesCostDirectives: directives.any(_isCostDirective),
     );
   }
 
@@ -108,8 +110,12 @@ final class IntrospectionReader(
 
   bool _isBuiltInDirective(SchemaDirective directive) =>
       const BuiltIns().directiveNamed(directive.name) != null ||
-      _isDeferOrStream(directive);
+      _isDeferOrStream(directive) ||
+      _isCostDirective(directive);
 
   bool _isDeferOrStream(SchemaDirective directive) =>
       directive.name == 'defer' || directive.name == 'stream';
+
+  bool _isCostDirective(SchemaDirective directive) =>
+      directive.name == 'cost' || directive.name == 'listSize';
 }

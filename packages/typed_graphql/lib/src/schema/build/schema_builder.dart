@@ -21,6 +21,11 @@ final class const SchemaBuilder({
   /// Whether built schemas have `@defer` and `@stream`, which graphql-js
   /// defines and the specification does not yet (R2.6).
   final bool includesDeferAndStream = false,
+
+  /// Whether built schemas have `@cost` and `@listSize` of the IBM GraphQL
+  /// Cost Directives draft, which the specification does not define; an
+  /// opt-in, so that schemas stay portable.
+  final bool includesCostDirectives = false,
 }) {
   /// Creates a builder.
   this;
@@ -34,6 +39,7 @@ final class const SchemaBuilder({
     final schema = SchemaAssembly(report).fromSdl(
       DocumentDefinitions.of(document),
       includesDeferAndStream: includesDeferAndStream,
+      includesCostDirectives: includesCostDirectives,
     );
     return _result(schema, report);
   }
@@ -62,8 +68,9 @@ final class const SchemaBuilder({
   /// message led by the JSON path of the problem; the elements they are
   /// about are left out of the partial schema. Like [fromSdl], it does not
   /// validate: a field of an input type builds, and schema validation
-  /// reports it. Elements have no span; [includesDeferAndStream] does not
-  /// apply, as the result says whether `@defer` and `@stream` exist.
+  /// reports it. Elements have no span; [includesDeferAndStream] and
+  /// [includesCostDirectives] do not apply, as the result says whether those
+  /// directives exist.
   BuildResult fromIntrospection(JsonValue result) {
     final sink = DiagnosticSink();
     final schema = IntrospectionReader(sink).read(result);

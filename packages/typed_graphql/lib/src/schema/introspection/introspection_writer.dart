@@ -119,6 +119,8 @@ final class IntrospectionWriter(
         ...builtIns.directives,
         builtIns.defer,
         builtIns.stream,
+        builtIns.cost,
+        builtIns.listSize,
       ])
         if (identical(schema.directiveNamed(directive.name), directive))
           directive,

@@ -56,6 +56,7 @@ final class DirectiveDefinitionRules(
       if (const BuiltIns().isBuiltInDirective(
         directive.name,
         includesDeferAndStream: schema.includesDeferAndStream,
+        includesCostDirectives: schema.includesCostDirectives,
       )) {
         report.error(
           .builtInRedefinition,

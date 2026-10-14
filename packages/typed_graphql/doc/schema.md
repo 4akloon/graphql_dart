@@ -97,6 +97,8 @@ Query: object with 2 fields
 
 `SchemaBuilder(includesDeferAndStream: true)` adds `@defer` and `@stream`, which
 graphql-js defines and the specification does not yet.
+`SchemaBuilder(includesCostDirectives: true)` adds `@cost` and `@listSize` of
+the IBM GraphQL Cost Directives draft, an opt-in so that schemas stay portable.
 
 ## Reading a schema
 
