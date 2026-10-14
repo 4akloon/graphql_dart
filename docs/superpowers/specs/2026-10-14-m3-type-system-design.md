@@ -221,3 +221,12 @@ stay green after every task, no allowlist grows.
 11. `extend scalar String` (any built-in) is `GQL103`.
 12. `GQL109` has no "Did you mean" suggestion; it also covers an unknown
     `extend directive` target.
+13. A value in a validation message prints in full only when it is small
+    (up to 1000 nodes and characters); a larger object prints as `{ ... }`.
+    graphql-js prints the whole value in every message about it, which costs
+    the size of the value for each missing field at each level of nesting
+    (hostile input; R0.5). The same bound, with the error limit, stops
+    `ValueChecker` once the report is full.
+14. An introspection result whose `ofType` chain has more than 100 wrappers,
+    the most `IntrospectionQuery` can read, is `GQL155`; graphql-js reads any
+    depth.

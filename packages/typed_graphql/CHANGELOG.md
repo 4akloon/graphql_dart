@@ -199,3 +199,9 @@
 - The Schema guide covers validating a schema and resolving a schema
   coordinate, and the new Introspection guide covers the introspection query
   and results; the new types carry their dartdoc category.
+- Hardening of schema validation against hostile input: constant-time
+  sub type and overlap queries, linear-time union, implementation and
+  directive-reference rules, rules that stop at the error limit, and
+  `Int` literals checked before they are parsed. A value in a validation
+  message prints in full only when small (a deviation from graphql-js);
+  an introspection result with more than 100 `ofType` wrappers is `GQL155`.
