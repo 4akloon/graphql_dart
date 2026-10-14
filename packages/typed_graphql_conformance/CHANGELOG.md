@@ -19,3 +19,6 @@
 - Hostile-text fuzzer (R1.6, R10.4): random and mutated text through every
   parser entry point stays within the sink limit, and every diagnostic has
   a source excerpt.
+- `mapping/schema.csv`, the conformance table of the schema suites, checked
+  by the same mapping test; `SchemaPort`, the port helpers. Ported
+  graphql-js schema suites: `printSchema-test.ts`.

@@ -13,22 +13,23 @@
 
 ## Ported suites
 
-Tests under `test/language/` are ported from graphql-js 17
-(`reference/graphql-js`, fetched by `tool/fetch_reference.sh`), one Dart test
-per graphql-js test, with the same group and test names.
-`mapping/language.csv` records each graphql-js test:
+Tests under `test/language/` and `test/schema/` are ported from graphql-js
+17 (`reference/graphql-js`, fetched by `tool/fetch_reference.sh`), one Dart
+test per graphql-js test, with the same group and test names.
+`mapping/language.csv` and `mapping/schema.csv` record each graphql-js test:
 
 | Column | Meaning |
 |---|---|
-| `graphql_js_file` | the file in `src/language/__tests__/`, such as `lexer-test.ts` |
+| `graphql_js_file` | the file: in `src/language/__tests__/` for `language.csv`, such as `lexer-test.ts`; in `src/` for `schema.csv`, such as `utilities/__tests__/printSchema-test.ts` |
 | `group` | the `describe` blocks around the test, joined by ` > ` |
 | `test` | the `it` name |
 | `status` | `ported` (same assertions), `adapted` (a deliberate design difference changes them) or `skipped` (behaviour this library does not have) |
 | `dart_file` | the Dart test file, relative to this package; empty when skipped |
 | `reason` | why, for `adapted` and `skipped` |
 
-`test/mapping_test.dart` checks the table; with `reference/` fetched it also
-checks that every test of every graphql-js language test file has a row.
+`test/mapping_test.dart` checks the tables; with `reference/` fetched it also
+checks that every test of every graphql-js language test file, and of each
+graphql-js schema test file the stage ports, has a row.
 
 ## Fuzzing
 

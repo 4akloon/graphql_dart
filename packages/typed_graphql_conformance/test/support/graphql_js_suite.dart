@@ -4,9 +4,10 @@ import 'dart:io';
 /// `tool/fetch_reference.sh`, absent in CI): each `it` with the path of
 /// the `describe` blocks around it, joined by ` > `.
 final class GraphqlJsSuite {
-  /// Reads `src/language/__tests__/[file]` of the fetched graphql-js.
-  factory GraphqlJsSuite.read(String file) =>
-      GraphqlJsSuite.parse(File('$directory/$file').readAsStringSync());
+  /// Reads `src/[path]` of the fetched graphql-js, such as
+  /// `utilities/__tests__/printSchema-test.ts`.
+  factory GraphqlJsSuite.read(String path) =>
+      GraphqlJsSuite.parse(File('$sourceDirectory/$path').readAsStringSync());
 
   /// Finds the tests in [source], a graphql-js test file formatted by
   /// Prettier: a block's indentation says which `describe` holds it.
@@ -33,21 +34,21 @@ final class GraphqlJsSuite {
 
   GraphqlJsSuite._(this.tests);
 
-  /// The language tests of graphql-js, relative to a package directory.
-  static const String directory =
-      '../../reference/graphql-js/src/language/__tests__';
+  /// The sources of graphql-js, relative to a package directory.
+  static const String sourceDirectory = '../../reference/graphql-js/src';
 
   /// Whether graphql-js was fetched into `reference/`.
-  static bool get isAvailable => Directory(directory).existsSync();
+  static bool get isAvailable => Directory(sourceDirectory).existsSync();
 
-  /// The names of the test files in [directory], sorted; empty when
-  /// graphql-js was not fetched.
-  static List<String> get files {
-    if (!isAvailable) {
+  /// The names of the test files in `src/[directory]`, such as
+  /// `language/__tests__`, sorted; empty when graphql-js was not fetched.
+  static List<String> filesIn(String directory) {
+    final folder = Directory('$sourceDirectory/$directory');
+    if (!folder.existsSync()) {
       return const [];
     }
     return [
-      for (final entity in Directory(directory).listSync())
+      for (final entity in folder.listSync())
         if (entity is File && entity.path.endsWith('.ts'))
           entity.uri.pathSegments.last,
     ]..sort();

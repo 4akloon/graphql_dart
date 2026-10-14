@@ -358,8 +358,9 @@ fails when it finds none.
   and its scanners).
 - Core layer test: `packages/typed_graphql/test/quality/layers_test.dart`.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
-- Conformance mapping table: `packages/typed_graphql_conformance/mapping/language.csv`,
-  checked by `test/mapping_test.dart` there; port helpers in its `test/support/`.
+- Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`
+  and `mapping/schema.csv`, checked by `test/mapping_test.dart` there; port
+  helpers in its `test/support/` (`SchemaPort` for the schema suites).
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/`;
   `TYPED_GRAPHQL_FUZZ_ITERATIONS` and `TYPED_GRAPHQL_FUZZ_SEED` tune them.
 - CI: `.github/workflows/ci.yml`.
