@@ -40,7 +40,7 @@ input T { f0: Int! f1: Int! }''');
   });
 
   test('a union of repeated members stops at the error limit', () {
-    final members = List.filled(20000, 'A').join(' | ');
+    final members = List.filled(40000, 'A').join(' | ');
     final (elapsed, errors) = timed('''
 type A { a: Int }
 type Query { a: A }
@@ -49,8 +49,8 @@ union U = $members''');
     expect(errors, hasLength(101));
   });
 
-  test('a union of 20000 different members is valid in seconds', () {
-    final names = [for (var i = 0; i < 20000; i++) 'T$i'];
+  test('a union of 120000 different members is valid in seconds', () {
+    final names = [for (var i = 0; i < 120000; i++) 'T$i'];
     final (elapsed, errors) = timed('''
 type Query { u: U }
 ${[for (final name in names) 'type $name { a: Int }'].join('\n')}
@@ -81,26 +81,26 @@ union U = ${names.join(' | ')}''');
     expect(errors.length, lessThanOrEqualTo(101));
   });
 
-  test('a chain of 8000 directives that apply each other is valid', () {
-    const count = 8000;
+  test('a chain of 16000 directives that apply each other is valid', () {
+    const count = 16000;
     final directives = [
       for (var i = 0; i < count - 1; i++)
         'directive @d$i(a: Int @d${i + 1}) on ARGUMENT_DEFINITION',
       'directive @d${count - 1} on ARGUMENT_DEFINITION',
     ].join('\n');
     final (elapsed, errors) = timed('type Query { a: Int }\n$directives');
-    expect(elapsed, lessThan(const Duration(seconds: 2)));
+    expect(elapsed, lessThan(limit));
     expect(errors, isEmpty);
   });
 
-  test('a ring of 8000 directives reports each, up to the limit', () {
-    const count = 8000;
+  test('a ring of 16000 directives reports each, up to the limit', () {
+    const count = 16000;
     final directives = [
       for (var i = 0; i < count; i++)
         'directive @d$i(a: Int @d${(i + 1) % count}) on ARGUMENT_DEFINITION',
     ].join('\n');
     final (elapsed, errors) = timed('type Query { a: Int }\n$directives');
-    expect(elapsed, lessThan(const Duration(seconds: 2)));
+    expect(elapsed, lessThan(limit));
     expect(errors, hasLength(101));
     expect(errors.first, contains('GQL130 Directive "@d0"'));
   });
@@ -111,7 +111,7 @@ union U = ${names.join(' | ')}''');
     final problem = ValueChecker(
       schema,
     ).check(IntValue('9' * 4000000), const NamedType(Name('Int'))).single;
-    expect(watch.elapsed, lessThan(const Duration(seconds: 3)));
+    expect(watch.elapsed, lessThan(limit));
     expect(problem.message, startsWith('Int cannot represent non 32-bit'));
   });
 
