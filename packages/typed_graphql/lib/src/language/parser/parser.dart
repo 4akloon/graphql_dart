@@ -16,6 +16,8 @@ import 'recovery.dart';
 import 'selection_parser.dart';
 import 'syntax_abort.dart';
 import 'token_cursor.dart';
+import 'type_member_parser.dart';
+import 'type_system_parser.dart';
 import 'value_parser.dart';
 
 /// Parses GraphQL documents and single elements; it never throws on bad
@@ -77,9 +79,11 @@ final class Parser {
       directives,
       allowsEmpty: options.allowEmptySelectionSets,
     );
+    final members = TypeMemberParser(cursor, values, directives);
     return DefinitionParser(
       cursor,
       ExecutableParser(cursor, values, directives, selections),
+      TypeSystemParser(cursor, values, directives, members),
     );
   }
 

@@ -72,5 +72,9 @@ enum DiagnosticCode(
 
   /// `GQL012`: an empty selection set, `{ }`, which only the working
   /// draft allows (`ParserOptions.allowEmptySelectionSets`).
-  emptySelectionSet('GQL012');
+  emptySelectionSet('GQL012'),
+
+  /// `GQL013`: an enum value named `true`, `false` or `null` (spec
+  /// §3.9, `EnumValue`).
+  reservedEnumValueName('GQL013');
 }

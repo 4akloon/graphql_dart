@@ -34,3 +34,5 @@
   descriptions, with `ParseSuccess` / `ParseFailure(partial)`,
   `requireDocument` and `GraphQLSyntaxException`; error recovery at
   definitions and selections; diagnostics `GQL011`–`GQL012`.
+- `Parser.parse` reads schema, type and directive definitions;
+  diagnostic `GQL013`.

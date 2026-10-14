@@ -111,6 +111,7 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `SelectionParser` drops a failed selection and skips to a name, `...` or
   `}`; both only at the bracket `balance` where the failed part started,
   and always consume a token. A selection set left empty fails too.
+  Type-system definitions and extensions share `TypeMemberParser`.
 
 **Protocol** (`protocol/`).
 - `JsonValue` is a sealed family (`JsonNull`, `JsonBool`, `JsonNumber`,

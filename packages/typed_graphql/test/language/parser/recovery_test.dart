@@ -103,7 +103,7 @@ void main() {
         fieldNames(Parsed(r'query Q($a: Int = ) { b } { c }').partial),
         ['c'],
       );
-      expect(fieldNames(Parsed('type Foo { a: Int }').partial), isEmpty);
+      expect(fieldNames(Parsed('typo Foo { a: Int }').partial), isEmpty);
     });
 
     test('a stray closer at the top level is skipped', () {
