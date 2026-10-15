@@ -143,7 +143,7 @@ It prints:
 - [Subscriptions](doc/subscriptions.md): source streams, one event at a time,
   rejected and failed subscriptions.
 - [DataLoader](doc/dataloader.md): batching and caching loads per request with
-  `BatchLoader`, missing keys, `maxBatchSize`.
+  `BatchLoader` and `GroupedLoader`, missing keys, `maxBatchSize`.
 - [Look-ahead](doc/lookahead.md): the fields a request selected under a field,
   `fingerprint` as a DataLoader key, `ColumnAllowlist`.
 - [Authorization](doc/authorization.md): rules on fields and types, the

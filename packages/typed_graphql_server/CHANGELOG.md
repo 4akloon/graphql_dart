@@ -143,3 +143,6 @@
   after the microtask queue drains, `maxBatchSize`, `prime`, `clear`);
   `MissingValueException` for a key the batch function left out. The DataLoader
   guide and its dartdoc category `dataloader`.
+- `GroupedLoader` loads the list of children of a key (posts by author id) in
+  one batch, with the cache and failure behaviour of `BatchLoader`; a missing
+  key is an empty list and the lists it hands out are unmodifiable.

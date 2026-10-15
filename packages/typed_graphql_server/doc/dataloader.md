@@ -183,6 +183,46 @@ It prints:
 MissingValueException: the batch function returned no value for key 2
 ```
 
+## One-to-many: GroupedLoader
+
+A `BatchLoader` maps a key to one value. When a parent has many children, such
+as the posts of an author, use a `GroupedLoader<K, V>`: its function gets the
+keys of the batch and returns a map from each key to a list, so the posts of
+every author on a level are one query (`WHERE author_id IN (...)`). Batching,
+the cache, `prime`, `clear`, `maxBatchSize` and failures work as in
+`BatchLoader`. A key the function leaves out has an empty list. The lists the
+loader hands out are unmodifiable copies, so a resolver cannot change a cached
+value that another field reads.
+
+```dart
+import 'package:typed_graphql_server/typed_graphql_server.dart';
+
+Future<void> main() async {
+  final posts = GroupedLoader<int, String>((authorIds) {
+    print('fetching posts of $authorIds');
+    return {
+      1: ['Hello', 'Again'],
+      2: ['Hi'],
+    };
+  });
+
+  print(await Future.wait([posts.load(1), posts.load(2), posts.load(3)]));
+  try {
+    (await posts.load(1)).add('Nope');
+  } on UnsupportedError {
+    print('the list is unmodifiable');
+  }
+}
+```
+
+It prints:
+
+```text
+fetching posts of [1, 2, 3]
+[[Hello, Again], [Hi], []]
+the list is unmodifiable
+```
+
 ## maxBatchSize
 
 `maxBatchSize` caps the keys of one call. A batch with more keys is split in
