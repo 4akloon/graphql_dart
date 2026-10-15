@@ -56,3 +56,8 @@
   fragment on an abstract type at its root is a `GQL504`.
 - `persisted_operations` writes the persisted-operations manifest (ids, names,
   types and minified bodies, sorted by name) as the last generated file.
+- The guide documents the generated operations and fragments: a program that
+  generates a document's library, the class names, data masking, sealed
+  classes for abstract types, `@include` and `@skip`, variables, the
+  document text and the persisted-operations manifest, decoding, and the
+  `GQL504` subscription case and `GQL507` for members and files.
