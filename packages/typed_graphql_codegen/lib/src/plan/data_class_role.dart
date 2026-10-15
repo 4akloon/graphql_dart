@@ -8,4 +8,10 @@ enum DataClassRole {
 
   /// The selection of a composite field.
   nested,
+
+  /// The class of one concrete type of a polymorphic selection.
+  variant,
+
+  /// The class of every other type of a polymorphic selection.
+  unknownVariant,
 }

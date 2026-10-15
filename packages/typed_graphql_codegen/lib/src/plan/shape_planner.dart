@@ -1,14 +1,21 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../emit/dart_names.dart';
+import 'applicability.dart';
 import 'class_names.dart';
+import 'collected_selection.dart';
 import 'data_class_role.dart';
 import 'field_collector.dart';
 import 'field_group.dart';
+import 'fragment_use.dart';
+import 'plan_work.dart';
 import 'planned_class.dart';
 import 'planned_field.dart';
 import 'planned_fragment.dart';
 import 'selection_source.dart';
+import 'variant_context.dart';
+import 'variant_reference.dart';
+import 'variant_sharing.dart';
 
 /// Plans the classes of an operation or a fragment definition, in emission
 /// order, with one work stack and no recursion (spec §6).
@@ -38,7 +45,7 @@ final class ShapePlanner {
       return const [];
     }
     return _plan(
-      _ClassWork(
+      ClassWork(
         _classNames.operationData(operation.name?.value ?? ''),
         root,
         [SelectionSource(operation.selectionSet)],
@@ -55,7 +62,7 @@ final class ShapePlanner {
       return const [];
     }
     return _plan(
-      _ClassWork(
+      ClassWork(
         _classNames.fragment(fragment.name.value),
         parent,
         [SelectionSource(fragment.selectionSet)],
@@ -64,28 +71,160 @@ final class ShapePlanner {
     );
   }
 
-  List<PlannedClass> _plan(_ClassWork first) {
+  List<PlannedClass> _plan(ClassWork first) {
     final planned = <PlannedClass>[];
-    final stack = <_Work>[first];
+    final stack = <PlanWork>[first];
     while (stack.isNotEmpty) {
       switch (stack.removeLast()) {
-        case _Ready(:final plan):
+        case ReadyWork(:final plan):
           planned.add(plan);
-        case final _ClassWork work:
-          final children = <_Work>[];
-          planned.add(_dataClass(work, children));
+        case final ClassWork work:
+          final children = <PlanWork>[];
+          final collected =
+              work.variant?.collected ??
+              _collector.collect(work.parent, work.sources);
+          final reached = work.variant == null
+              ? _reached(work.parent, collected)
+              : const <ObjectType>[];
+          planned.add(
+            reached.isEmpty
+                ? _dataClass(work, collected, children)
+                : _polymorphic(work, collected, reached, children),
+          );
           stack.addAll(children.reversed);
       }
     }
     return planned;
   }
 
+  /// The object types the narrowings of an abstract [parent] reach, in
+  /// possible-types order.
+  List<ObjectType> _reached(SchemaType parent, CollectedSelection collected) {
+    if (parent is! InterfaceType && parent is! UnionType) {
+      return const [];
+    }
+    final reached = <ObjectType>{
+      for (final narrowing in collected.narrowings)
+        ...Applicability(schema).reach(narrowing.typeCondition, parent),
+    };
+    return [
+      for (final type in schema.possibleTypes(parent))
+        if (reached.contains(type)) type,
+    ];
+  }
+
+  /// Plans the sealed base of [work] and queues its variants, in the order
+  /// they are emitted: shared field classes, the shared holder, each
+  /// variant, then the unknown one.
+  PolymorphicBasePlan _polymorphic(
+    ClassWork work,
+    CollectedSelection collected,
+    List<ObjectType> reached,
+    List<PlanWork> children,
+  ) {
+    final collections = [
+      for (final type in reached) _collector.collect(type, work.sources),
+    ];
+    final sharing = VariantSharing(collected, collections);
+    final shared = <String, PlannedField>{
+      for (final group in collected.fields)
+        if (sharing.sharedFields.contains(group.responseName))
+          group.responseName: _field(work.name, group, children),
+    };
+    final holderName = sharing.hasSharedHolder
+        ? _ownHolder(work.name, collected.fragments, children)
+        : null;
+    final contexts = [
+      for (final selection in [...collections, collected])
+        VariantContext(work.name, selection, shared, holderName),
+    ];
+    final variants = _queueVariants(work, reached, contexts, children);
+    final unknownName = _classNames.unknownVariant(work.name);
+    children.add(
+      _variantWork(work, unknownName, work.parent, contexts.last),
+    );
+    return PolymorphicBasePlan(
+      name: work.name,
+      role: work.role,
+      typeName: work.parent.name,
+      sharedFields: shared.values.toList(),
+      variants: variants,
+      unknownName: unknownName,
+      holderName: holderName,
+      ownerName: work.ownerName,
+      ownerMember: work.ownerMember,
+    );
+  }
+
+  /// Queues a class per reached type, each with its context in [contexts].
+  List<VariantReference> _queueVariants(
+    ClassWork base,
+    List<ObjectType> reached,
+    List<VariantContext> contexts,
+    List<PlanWork> children,
+  ) {
+    final variants = <VariantReference>[];
+    for (final (index, type) in reached.indexed) {
+      final name = _classNames.variant(base.name, type.name);
+      variants.add(VariantReference(type.name, name));
+      children.add(_variantWork(base, name, type, contexts[index]));
+    }
+    return variants;
+  }
+
+  /// The work for a variant of [base]: the unknown one when [parent] is the
+  /// base's own abstract type.
+  ClassWork _variantWork(
+    ClassWork base,
+    String name,
+    SchemaType parent,
+    VariantContext context,
+  ) => ClassWork(
+    name,
+    parent,
+    base.sources,
+    identical(parent, base.parent)
+        ? DataClassRole.unknownVariant
+        : DataClassRole.variant,
+    variant: context,
+  );
+
+  FragmentHolderPlan _holder(
+    String name,
+    String ownerName,
+    List<FragmentUse> uses,
+  ) => FragmentHolderPlan(
+    name: name,
+    ownerName: ownerName,
+    fragments: [for (final use in uses) PlannedFragment(use)],
+  );
+
+  /// Queues a holder class named after [owner] and returns its name; null
+  /// when [uses] is empty.
+  String? _ownHolder(
+    String owner,
+    List<FragmentUse> uses,
+    List<PlanWork> children,
+  ) {
+    if (uses.isEmpty) {
+      return null;
+    }
+    final name = _classNames.holder(owner);
+    children.add(ReadyWork(_holder(name, owner, uses)));
+    return name;
+  }
+
   /// Plans [work] and adds the work under it to [children], in the order
   /// it is emitted: field classes, then the holder.
-  DataClassPlan _dataClass(_ClassWork work, List<_Work> children) {
-    final collected = _collector.collect(work.parent, work.sources);
+  DataClassPlan _dataClass(
+    ClassWork work,
+    CollectedSelection collected,
+    List<PlanWork> children,
+  ) {
+    final variant = work.variant;
     final fields = <PlannedField>[
-      if (collected.selectsTypename)
+      // A polymorphic class has `typename` whether or not it was selected.
+      if (collected.selectsTypename && variant == null)
         const PlannedField(
           responseName: '__typename',
           memberName: 'typename',
@@ -94,23 +233,12 @@ final class ShapePlanner {
         ),
     ];
     for (final group in collected.fields) {
-      fields.add(_field(work, group, children));
+      final base = variant?.sharedFields[group.responseName];
+      fields.add(base?.overriding() ?? _field(work.name, group, children));
     }
-    String? holderName;
-    if (collected.fragments.isNotEmpty) {
-      holderName = _classNames.holder(work.name);
-      children.add(
-        _Ready(
-          FragmentHolderPlan(
-            name: holderName,
-            ownerName: work.name,
-            fragments: [
-              for (final use in collected.fragments) PlannedFragment(use),
-            ],
-          ),
-        ),
-      );
-    }
+    final sharedHolder = variant?.sharedHolderName;
+    final holderName =
+        sharedHolder ?? _ownHolder(work.name, collected.fragments, children);
     return DataClassPlan(
       name: work.name,
       role: work.role,
@@ -119,10 +247,15 @@ final class ShapePlanner {
       holderName: holderName,
       ownerName: work.ownerName,
       ownerMember: work.ownerMember,
+      baseName: variant?.baseName,
+      variantTypeName: work.role == DataClassRole.variant
+          ? work.parent.name
+          : null,
+      holderOverridesBase: sharedHolder != null,
     );
   }
 
-  PlannedField _field(_ClassWork work, FieldGroup group, List<_Work> children) {
+  PlannedField _field(String owner, FieldGroup group, List<PlanWork> children) {
     final memberName = _dartNames.memberName(
       group.responseName,
       reservedMembers: PlannedField.reservedMembers,
@@ -133,9 +266,9 @@ final class ShapePlanner {
         named is ObjectType || named is InterfaceType || named is UnionType;
     String? className;
     if (named != null && isComposite) {
-      className = _classNames.nested(work.name, memberName);
+      className = _classNames.nested(owner, memberName);
       children.add(
-        _ClassWork(
+        ClassWork(
           className,
           named,
           [
@@ -143,7 +276,7 @@ final class ShapePlanner {
               if (node.selectionSet case final set?) SelectionSource(set),
           ],
           DataClassRole.nested,
-          ownerName: work.name,
+          ownerName: owner,
           ownerMember: memberName,
         ),
       );
@@ -157,32 +290,4 @@ final class ShapePlanner {
       className: className,
     );
   }
-}
-
-sealed class _Work {
-  const _Work();
-}
-
-final class _Ready extends _Work {
-  const _Ready(this.plan);
-
-  final PlannedClass plan;
-}
-
-final class _ClassWork extends _Work {
-  const _ClassWork(
-    this.name,
-    this.parent,
-    this.sources,
-    this.role, {
-    this.ownerName,
-    this.ownerMember,
-  });
-
-  final String name;
-  final SchemaType parent;
-  final List<SelectionSource> sources;
-  final DataClassRole role;
-  final String? ownerName;
-  final String? ownerMember;
 }

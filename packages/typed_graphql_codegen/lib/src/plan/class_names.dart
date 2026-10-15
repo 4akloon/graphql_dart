@@ -20,4 +20,13 @@ final class ClassNames {
 
   /// The class that holds the fragments spread on the class [owner].
   String holder(String owner) => '${owner}Fragments';
+
+  /// The class of the concrete type [typeName] in the polymorphic class
+  /// [base].
+  String variant(String base, String typeName) =>
+      '$base${_names.typeName(typeName)}';
+
+  /// The class for every type the polymorphic class [base] does not tell
+  /// apart.
+  String unknownVariant(String base) => '${base}Unknown';
 }

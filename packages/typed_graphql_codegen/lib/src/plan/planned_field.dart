@@ -12,6 +12,7 @@ final class PlannedField {
     required this.isConditional,
     this.definition,
     this.className,
+    this.overridesBase = false,
   });
 
   /// Members a data class cannot use for a field: the members of every
@@ -38,4 +39,19 @@ final class PlannedField {
 
   /// The generated class of a composite field, null for a leaf.
   final String? className;
+
+  /// Whether the field is a shared field of the sealed base, which the
+  /// class overrides.
+  final bool overridesBase;
+
+  /// This field as a variant's override of the base's declaration.
+  PlannedField overriding() => PlannedField(
+    responseName: responseName,
+    memberName: memberName,
+    type: type,
+    isConditional: isConditional,
+    definition: definition,
+    className: className,
+    overridesBase: true,
+  );
 }
