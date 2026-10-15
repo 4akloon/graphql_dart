@@ -1,6 +1,7 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
 import 'field_def.dart';
+import 'interface_type_def.dart';
 import 'named_type_def.dart';
 import 'nullable_output_ref.dart';
 import 'object_options.dart';
@@ -20,8 +21,10 @@ final class ObjectTypeDef<P> extends NamedTypeDef implements OutputRef<P> {
     super.name,
     List<FieldDef<P, Object?>> Function() fieldsThunk, {
     super.description,
+    List<InterfaceTypeDef<Object?>> interfaces = const [],
     this.options = const ObjectOptions(),
   }) : _fieldsThunk = fieldsThunk,
+       interfaces = List.unmodifiable(interfaces),
        typeRef = NonNullType(NamedType(Name(name)));
 
   final List<FieldDef<P, Object?>> Function() _fieldsThunk;
@@ -32,6 +35,9 @@ final class ObjectTypeDef<P> extends NamedTypeDef implements OutputRef<P> {
   late final List<FieldDef<P, Object?>> fields = List.unmodifiable(
     _fieldsThunk(),
   );
+
+  /// The interfaces the type implements, as listed (not transitive).
+  final List<InterfaceTypeDef<Object?>> interfaces;
 
   /// The rarer settings.
   final ObjectOptions options;

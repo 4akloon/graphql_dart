@@ -11,12 +11,14 @@ import 'fields_builder.dart';
 import 'input_list_ref.dart';
 import 'input_object_def.dart';
 import 'input_ref.dart';
+import 'interface_type_def.dart';
 import 'named_type_def.dart';
 import 'object_options.dart';
 import 'object_type_def.dart';
 import 'output_list_ref.dart';
 import 'output_ref.dart';
 import 'scalar_type_def.dart';
+import 'union_type_def.dart';
 
 /// Declares the types of a schema in typed Dart code; `C` is the context
 /// type every resolver receives (R4.1).
@@ -76,6 +78,7 @@ final class ExecutableSchemaBuilder<C>() with BuiltInScalarDefinitions {
   ObjectTypeDef<P> object<P>(
     String name, {
     required List<FieldDef<P, C>> Function(FieldsBuilder<P, C> t) fields,
+    List<InterfaceTypeDef<Object?>> interfaces = const [],
     String? description,
     ObjectOptions options = const ObjectOptions(),
   }) => _registry.add(
@@ -83,7 +86,47 @@ final class ExecutableSchemaBuilder<C>() with BuiltInScalarDefinitions {
       name,
       () => fields(FieldsBuilder<P, C>()),
       description: description,
+      interfaces: interfaces,
       options: options,
+    ),
+  );
+
+  /// Declares the interface [name] whose values are [P].
+  ///
+  /// An object type that lists it inherits the fields it does not declare.
+  /// [resolveType] picks the object type of a value; without it the first
+  /// possible type that accepts the value is used.
+  InterfaceTypeDef<P> interface<P>(
+    String name, {
+    required List<FieldDef<P, C>> Function(FieldsBuilder<P, C> t) fields,
+    List<InterfaceTypeDef<Object?>> interfaces = const [],
+    String? description,
+    ObjectTypeDef<Object?> Function(P value)? resolveType,
+  }) => _registry.add(
+    InterfaceTypeDef(
+      name,
+      () => fields(FieldsBuilder<P, C>()),
+      interfaces: interfaces,
+      description: description,
+      resolveType: resolveType,
+    ),
+  );
+
+  /// Declares the union [name] of the object types [members].
+  ///
+  /// Covariance checks the members at compile time: an `ObjectTypeDef<Cat>`
+  /// is an `ObjectTypeDef<Pet>`.
+  UnionTypeDef<P> union<P>(
+    String name, {
+    required List<ObjectTypeDef<P>> members,
+    ObjectTypeDef<Object?> Function(P value)? resolveType,
+    String? description,
+  }) => _registry.add(
+    UnionTypeDef(
+      name,
+      members,
+      resolveType: resolveType,
+      description: description,
     ),
   );
 
