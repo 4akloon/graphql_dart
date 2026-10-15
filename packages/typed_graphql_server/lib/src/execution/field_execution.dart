@@ -234,13 +234,16 @@ final class FieldExecution {
       _run.context,
       _infoOf(where.$1, where.$2),
     ),
-    // `execute` on a subscription runs it once: the root value is the event.
-    SubscribeLane(:final resolve) => resolve(
-      parent,
-      arguments,
-      _run.context,
-      _infoOf(where.$1, where.$2),
-    ),
+    // `execute` on a subscription runs it once: the root value is the event,
+    // and no source ran the guard. An event of a started subscription skips
+    // the guard (spec 18.45).
+    SubscribeLane(:final resolve, :final executeResolve) =>
+      (_run.isEvent ? resolve : executeResolve)(
+        parent,
+        arguments,
+        _run.context,
+        _infoOf(where.$1, where.$2),
+      ),
     DeclaredOnlyLane() => throw StateError(
       'Field "${where.$2.fieldLabel}" is declared without a resolver.',
     ),

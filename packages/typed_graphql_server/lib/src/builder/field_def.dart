@@ -66,6 +66,7 @@ final class FieldDef<P, C> {
   /// The same field with [lane] and no middleware of its own: the build
   /// stores the composed chain this way. [authorization] replaces the rule
   /// when given.
+  @internal
   FieldDef<P, C> withLane(FieldLane lane, [Authorization? authorization]) =>
       FieldDef(
         name: name,

@@ -78,10 +78,12 @@ final class AuthorizationApplier<C> {
         }),
       ),
       ResolverLane(:final resolve) => ResolverLane(guard.guard(resolve)),
-      // Once per request, as for a query (spec 18.45).
+      // Once per request, as for a query (spec 18.45): at the source; the
+      // `execute` path never opens it, so it runs the guard itself.
       SubscribeLane(:final source, :final resolve) => SubscribeLane(
         guard.guard(source),
         resolve,
+        guard.guard(resolve),
       ),
       final DeclaredOnlyLane lane => lane,
     }, rule);

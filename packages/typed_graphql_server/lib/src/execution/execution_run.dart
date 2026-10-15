@@ -32,6 +32,7 @@ final class ExecutionRun {
     required this.rawVariables,
     required this.options,
     this.cancellation,
+    this.isEvent = false,
   }) : reporter = ErrorReporter(options);
 
   /// The operation to run.
@@ -57,6 +58,10 @@ final class ExecutionRun {
 
   /// The signal and timer of the call, null when it has neither.
   final RunCancellation? cancellation;
+
+  /// Whether this run executes one event of a started subscription, whose
+  /// field was authorized when the source opened (spec 18.45).
+  final bool isEvent;
 
   /// Whether the call was cancelled or timed out.
   bool get isCancelled => cancellation?.isCancelled ?? false;
@@ -105,6 +110,7 @@ final class ExecutionRun {
     rawVariables: rawVariables,
     options: options,
     cancellation: cancellation,
+    isEvent: true,
   );
 
   /// Executes the operation's root selection on [rootValue] and builds the

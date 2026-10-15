@@ -40,7 +40,19 @@ final class ResolverLane extends FieldLane {
 final class SubscribeLane extends FieldLane {
   /// Creates a lane that opens events with [source] and answers each with
   /// [resolve].
-  const SubscribeLane(this.source, this.resolve);
+  ///
+  /// [executeResolve] is what `execute` calls; it defaults to [resolve].
+  const SubscribeLane(
+    this.source,
+    this.resolve, [
+    FutureOr<Object?> Function(
+      Object? parent,
+      Arguments arguments,
+      Object? context,
+      FieldInfo info,
+    )?
+    executeResolve,
+  ]) : executeResolve = executeResolve ?? resolve;
 
   /// Opens the stream of source events (September2025 6.2.3.1), once per
   /// subscription; it may wait before it answers.
@@ -52,15 +64,27 @@ final class SubscribeLane extends FieldLane {
   )
   source;
 
-  /// Turns one source event into the field's value (6.2.3.2). It is also
-  /// what `execute` calls, with the root value as the event.
+  /// Turns one source event into the field's value (6.2.3.2), run for each
+  /// event of a started subscription, which is authorized once
+  /// at [source] (spec 18.45).
   final FutureOr<Object?> Function(
-    Object? event,
+    Object? parent,
     Arguments arguments,
     Object? context,
     FieldInfo info,
   )
   resolve;
+
+  /// What `execute` calls, with the root value as the event: [resolve],
+  /// behind the authorization guard when the field has one, because
+  /// `execute` never runs [source].
+  final FutureOr<Object?> Function(
+    Object? parent,
+    Arguments arguments,
+    Object? context,
+    FieldInfo info,
+  )
+  executeResolve;
 }
 
 /// An interface field without a resolver: implementations declare it.

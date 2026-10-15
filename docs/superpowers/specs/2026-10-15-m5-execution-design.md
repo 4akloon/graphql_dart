@@ -752,7 +752,8 @@ depends on the other). These constraints keep that possible:
     a per-request decision, as for a query; a per-event check would cost one
     call per event and turn a revoked permission into a stream of GQL352
     events. A server that must re-check per event does so in the event
-    resolver.
+    resolver. `execute` on a subscription never opens the source, so it
+    authorizes the field itself: the guarded lane runs the guard.
 46. Coerced arguments are frozen: the argument map, the map of each coerced
     input object and each coerced list are unmodifiable. A plan caches the
     arguments of a field without variables across requests, so a resolver
