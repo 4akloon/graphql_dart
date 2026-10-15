@@ -77,23 +77,34 @@
 | `packages/typed_graphql_codegen/lib/src/cli/secret_redactor.dart` | Keeps secrets and terminal control characters out of what the command line prints | 8 |
 | `packages/typed_graphql_codegen/test/cli/output_writer_test.dart` | Tests | 8 |
 | `packages/typed_graphql_codegen/test/cli/project_reading_test.dart` | Tests | 8 |
-| `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart` | Modified | 1, 6 |
+| `packages/typed_graphql_codegen/test/goldens/operations/` | Golden case (2 new files) | 10 |
+| `packages/typed_graphql_codegen/lib/src/emit/doc_comment_escaper.dart` | Makes schema text safe inside a `///` comment | 11 |
+| `packages/typed_graphql_codegen/test/emit/doc_comment_escaper_test.dart` | Tests | 11 |
+| `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart` | Modified | 1, 6, 12 |
 | `packages/typed_graphql_codegen/CHANGELOG.md` | Modified | 2, 4, 5, 9 |
-| `packages/typed_graphql_codegen/lib/typed_graphql_codegen.dart` | Modified | 2, 3 |
+| `packages/typed_graphql_codegen/lib/typed_graphql_codegen.dart` | Modified | 2, 3, 15 |
 | `packages/typed_graphql_codegen/pubspec.yaml` | Modified | 2 |
 | `packages/typed_graphql_codegen/test/quality/engine_imports_test.dart` | Modified | 3 |
 | `packages/typed_graphql_codegen/lib/src/schema/introspection_file_reader.dart` | Modified | 4 |
-| `CLAUDE.md` | Modified | 5 |
+| `CLAUDE.md` | Modified | 5, 15 |
 | `docs/discovery.md` | Modified | 5 |
-| `docs/superpowers/HANDOFF.md` | Modified | 5 |
+| `docs/superpowers/HANDOFF.md` | Modified | 5, 16 |
 | `llms.txt` | Modified | 5 |
 | `packages/typed_graphql_codegen/README.md` | Modified | 5, 9 |
-| `packages/typed_graphql_codegen/doc/client_codegen.md` | Modified | 5, 9 |
+| `packages/typed_graphql_codegen/doc/client_codegen.md` | Modified | 5, 9, 12, 13 |
 | `pubspec.yaml` | Modified | 5 |
 | `packages/typed_graphql_client/CHANGELOG.md` | Modified | 7 |
 | `packages/typed_graphql_client/lib/src/operation/json_merger.dart` | Modified | 7 |
 | `packages/typed_graphql_client/test/operation/json_merger_test.dart` | Modified | 7 |
 | `packages/typed_graphql_codegen/test/goldens/fragments/support/bin/round_trip.dart.txt` | Modified | 8 |
+| `packages/typed_graphql_codegen/lib/src/emit/dart_names.dart` | Modified | 10 |
+| `packages/typed_graphql_codegen/test/emit/dart_names_test.dart` | Modified | 10 |
+| `packages/typed_graphql_codegen/test/goldens/operations/input/schema.graphql` | Modified | 10, 11 |
+| `packages/typed_graphql_codegen/test/goldens/operations/output/build/persisted_operations.json.golden` | Modified | 10 |
+| `packages/typed_graphql_codegen/test/goldens/operations/output/lib/schema.graphql.dart.golden` | Modified | 10 |
+| `packages/typed_graphql_codegen/lib/src/emit/dart_writer.dart` | Modified | 11 |
+| `packages/typed_graphql_codegen/test/emit/dart_writer_test.dart` | Modified | 11 |
+| `README.md` | Modified | 15 |
 
 ## The green check
 
@@ -110,15 +121,13 @@ for p in packages/*/; do (cd "$p" && timeout 900 dart test) || exit 1; done
 
 Run a new test file alone first under the same limits. The core, client and codegen suites include the documentation tests, which run each guide program as a `dart` process; the codegen suite also runs the analysis test (tag `analysis`), which creates a temporary package per golden case. If a run is killed (exit 137) or times out (exit 124), find the cause before going on.
 
-After the last task, also run the M10 packages on every compiler (Chrome only for the core and the client; the codegen package is VM-only):
+After the last task, also run the M10 packages on every compiler (Chrome only for the core; the client's Chrome runs are deferred to M11 and the codegen package is VM-only):
 
 ```sh
 (cd packages/typed_graphql && ulimit -v 8000000 && timeout 900 dart test --compiler exe test/protocol test/diagnostics)
 (cd packages/typed_graphql_client && ulimit -v 8000000 && timeout 900 dart test --compiler exe)
 (cd packages/typed_graphql && systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0 timeout 900 dart test -p chrome --compiler dart2js test/protocol)
 (cd packages/typed_graphql && systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0 timeout 900 dart test -p chrome --compiler dart2wasm test/protocol)
-(cd packages/typed_graphql_client && systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0 timeout 900 dart test -p chrome --compiler dart2js)
-(cd packages/typed_graphql_client && systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0 timeout 900 dart test -p chrome --compiler dart2wasm)
 (cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 900 dart test --compiler exe)
 ```
 
@@ -4664,6 +4673,1439 @@ Expected: format changes 0 files, analyze prints `No issues found!`, and every s
 ```sh
 git add packages/typed_graphql_codegen/CHANGELOG.md packages/typed_graphql_codegen/README.md packages/typed_graphql_codegen/doc/client_codegen.md packages/typed_graphql_codegen/example/README.md
 git commit -q -m "docs(typed_graphql_codegen): document the CLI's limits and merge the changelog entries" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 10: Suffix field names that shadow a type or annotation
+
+Final review, Important 1: a field, variable, input field or enum value named `int`, `bool`, `double`, `num` or `override` shadowed the type or the annotation the generated members use, so the class did not compile. `DartNames` reserves them (`objectMembers`, `enumMembers`), so they get the `$` suffix; the operations golden gains a `Stats` type with such fields, a leading-underscore field, an enum whose values need `$`, a nested list and non-Boolean variable defaults.
+
+Commit on the branch: `ff12ca7`.
+
+**Files:**
+- Modify: `packages/typed_graphql_codegen/lib/src/emit/dart_names.dart`
+- Test: `packages/typed_graphql_codegen/test/cli/codegen_command_test.dart`, `packages/typed_graphql_codegen/test/cli/project_reading_test.dart`, `packages/typed_graphql_codegen/test/cli/schema_fetcher_test.dart`, `packages/typed_graphql_codegen/test/emit/dart_names_test.dart`, `packages/typed_graphql_codegen/test/goldens/operations/input/lib/stats.graphql`, `packages/typed_graphql_codegen/test/goldens/operations/input/schema.graphql`, `packages/typed_graphql_codegen/test/goldens/operations/output/build/persisted_operations.json.golden`, `packages/typed_graphql_codegen/test/goldens/operations/output/lib/schema.graphql.dart.golden`, `packages/typed_graphql_codegen/test/goldens/operations/output/lib/stats.graphql.dart.golden`
+
+**Interfaces:**
+- Consumes: Task 8 and M10b/M10c `DartNames`.
+- Produces:
+- Nothing for later tasks.
+
+- [ ] **Step 1: Write the tests**
+
+In `packages/typed_graphql_codegen/test/cli/codegen_command_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -20,7 +20,7 @@ void main() {
+ 
+   test('generate writes the files of the goldens', () async {
+     expect(await project.run(['generate']), 0);
+-    expect(project.out.toString(), 'Wrote 5 files.\n');
++    expect(project.out.toString(), 'Wrote 6 files.\n');
+     for (final golden in Directory(
+       'test/goldens/operations/output',
+     ).listSync(recursive: true).whereType<File>()) {
+@@ -93,7 +93,12 @@ void main() {
+   });
+ 
+   test('a warning alone exits 0', () async {
+-    for (final path in ['user', 'user_mutations', 'user_subscriptions']) {
++    for (final path in [
++      'user',
++      'stats',
++      'user_mutations',
++      'user_subscriptions',
++    ]) {
+       project.file('lib/$path.graphql').deleteSync();
+     }
+     expect(await project.run(['generate']), 0);
+```
+
+In `packages/typed_graphql_codegen/test/cli/project_reading_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -48,7 +48,12 @@ void main() {
+   });
+ 
+   test('check with only a warning exits 0 and prints it', () async {
+-    for (final path in ['user', 'user_mutations', 'user_subscriptions']) {
++    for (final path in [
++      'user',
++      'stats',
++      'user_mutations',
++      'user_subscriptions',
++    ]) {
+       project.file('lib/$path.graphql').deleteSync();
+     }
+     await project.run(['generate']);
+```
+
+In `packages/typed_graphql_codegen/test/cli/schema_fetcher_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -65,7 +65,7 @@ void main() {
+ 
+   test('generate from a URL writes the files of the SDL project', () async {
+     expect(await project.run(['generate'], environment: environment), 0);
+-    expect(project.out.toString(), 'Wrote 5 files.\n');
++    expect(project.out.toString(), 'Wrote 6 files.\n');
+     expect(project.file('lib/user.graphql.dart').existsSync(), isTrue);
+   });
+ 
+```
+
+In `packages/typed_graphql_codegen/test/emit/dart_names_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -55,6 +55,23 @@ void main() {
+     );
+   });
+ 
++  test('memberName escapes names that shadow a type or annotation', () {
++    expect(
++      [
++        for (final name in ['int', 'bool', 'double', 'num', 'override'])
++          names.memberName(name, reservedMembers: DartNames.objectMembers),
++      ],
++      [r'int$', r'bool$', r'double$', r'num$', r'override$'],
++    );
++  });
++
++  test('enum values that shadow a type or annotation are escaped', () {
++    expect(
++      names.memberName('bool', reservedMembers: DartNames.enumMembers),
++      r'bool$',
++    );
++  });
++
+   test('memberName leaves a member the caller did not reserve', () {
+     expect(names.memberName('toJson'), 'toJson');
+   });
+```
+
+Create `packages/typed_graphql_codegen/test/goldens/operations/input/lib/stats.graphql`:
+
+```graphql
+query GetStats($role: Role = ADMIN, $flag: Flag = name) {
+  stats(role: $role, flag: $flag) {
+    int
+    bool
+    override
+    _hidden
+    flag
+    matrix {
+      id
+    }
+    summary
+  }
+}
+```
+
+In `packages/typed_graphql_codegen/test/goldens/operations/input/schema.graphql`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -34,6 +34,8 @@ input Paging {
+   other: String!
+   after: Cursor
+   client: Int
++  int: Int
++  override: String
+ }
+ 
+ input Unreached {
+@@ -60,7 +62,24 @@ type Bot implements Node {
+ 
+ union SearchResult = User | Bot
+ 
++enum Flag {
++  name
++  index
++  values
++}
++
++type Stats {
++  int: Int
++  bool: Boolean
++  override: String
++  _hidden: Int
++  flag: Flag
++  matrix: [[User!]]
++  summary: String
++}
++
+ type Query {
++  stats(role: Role, flag: Flag): Stats
+   user(id: ID!): User
+   node(id: ID!): Node
+   search(by: SearchBy!, filter: UserFilter, paging: Paging): [SearchResult!]!
+```
+
+In `packages/typed_graphql_codegen/test/goldens/operations/output/build/persisted_operations.json.golden`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -14,6 +14,12 @@
+       "type": "query",
+       "body": "query FindNode($id:ID!){node(id:$id){id ...on User{name ...UserCard}...on Bot{model}__typename}}fragment UserCard on User{id name}"
+     },
++    {
++      "id": "130d1b0f2357cd5e194b7ea4e431a802b93cf8ca9b1eccf000514436908f72ba",
++      "name": "GetStats",
++      "type": "query",
++      "body": "query GetStats($role:Role=ADMIN$flag:Flag=name){stats(role:$role flag:$flag){int bool override _hidden flag matrix{id __typename}summary __typename}}"
++    },
+     {
+       "id": "198ab8e735cf86b04b66c1094135e3e63cfae5a89e4b793ae58982ff95891f8e",
+       "name": "GetUser",
+```
+
+In `packages/typed_graphql_codegen/test/goldens/operations/output/lib/schema.graphql.dart.golden`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -6,6 +6,57 @@ import 'package:scalar_codecs/scalar_codecs.dart' as scalar_0;
+ import 'package:typed_graphql/typed_graphql.dart' as graphql;
+ import 'package:typed_graphql_client/typed_graphql_client.dart' as client;
+ 
++/// The enum `Flag`.
++sealed class Flag implements client.DataEnum {
++  /// The value named [raw]: a [FlagKnown], or a [FlagUnknown] for a name
++  /// this code does not know.
++  factory Flag.parse(String raw) {
++    for (final value in FlagKnown.values) {
++      if (value.raw == raw) return value;
++    }
++    return FlagUnknown(raw);
++  }
++
++  /// Reads and writes the values of `Flag`.
++  static const client.DataCodec<Flag> codec = client.EnumDataCodec(Flag.parse);
++}
++
++/// The values of [Flag] this code knows.
++enum FlagKnown implements Flag {
++  /// `name`.
++  name$('name'),
++
++  /// `index`.
++  index$('index'),
++
++  /// `values`.
++  values$('values');
++
++  const FlagKnown(this.raw);
++
++  @override
++  final String raw;
++}
++
++/// A value of [Flag] this code does not know, such as one added to the
++/// schema after the code was generated.
++final class FlagUnknown implements Flag {
++  /// Creates the value named [raw].
++  const FlagUnknown(this.raw);
++
++  @override
++  final String raw;
++
++  @override
++  bool operator ==(Object other) => other is FlagUnknown && other.raw == raw;
++
++  @override
++  int get hashCode => raw.hashCode;
++
++  @override
++  String toString() => 'FlagUnknown($raw)';
++}
++
+ /// A user role.
+ sealed class Role implements client.DataEnum {
+   /// The value named [raw]: a [RoleKnown], or a [RoleUnknown] for a name
+```
+
+Create `packages/typed_graphql_codegen/test/goldens/operations/output/lib/stats.graphql.dart.golden`:
+
+```dart
+// GENERATED CODE - DO NOT MODIFY BY HAND.
+// Generated by typed_graphql_codegen from lib/stats.graphql.
+// dart format off
+
+import 'package:typed_graphql/typed_graphql.dart' as graphql;
+import 'package:typed_graphql_client/typed_graphql_client.dart' as client;
+
+import 'schema.graphql.dart';
+
+/// The query `GetStats`.
+final class GetStatsQuery extends client.GraphQLQuery<GetStatsData> {
+  /// Creates the query with its [variables].
+  const GetStatsQuery(this.variables);
+
+  /// The document of `GetStats` as it is sent.
+  static const client.OperationDocument operationDocument =
+      client.OperationDocument(
+        name: 'GetStats',
+        type: graphql.OperationType.query,
+        text: r'query GetStats($role:Role=ADMIN$flag:Flag=name){stats(role:$role flag:$flag){int bool override _hidden flag matrix{id __typename}summary __typename}}',
+        sha256:
+          '130d1b0f2357cd5e194b7ea4e431a802b93cf8ca9b1eccf000514436908f72ba',
+      );
+
+  /// The variables the query is sent with.
+  final GetStatsVariables variables;
+
+  @override
+  client.OperationDocument get document => operationDocument;
+
+  @override
+  graphql.JsonObject get variablesJson => variables.toJson();
+
+  @override
+  graphql.DecodeResult<GetStatsData> decodeData(graphql.JsonObject data) =>
+      GetStatsData.decode(data, variables: variablesJson);
+}
+
+/// The variables of the query `GetStats`.
+final class GetStatsVariables implements client.DataObject {
+  /// Creates the variables.
+  const GetStatsVariables({
+    this.role = const graphql.Optional.absent(),
+    this.flag = const graphql.Optional.absent(),
+  });
+
+  static const client.DataCodec<Role?> _roleCodec =
+      client.NullableDataCodec(Role.codec);
+
+  static const client.DataCodec<Flag?> _flagCodec =
+      client.NullableDataCodec(Flag.codec);
+
+  /// The variable `$role`; its default is `ADMIN`.
+  final graphql.Optional<Role?> role;
+
+  /// The variable `$flag`; its default is `name`.
+  final graphql.Optional<Flag?> flag;
+
+  @override
+  graphql.JsonObject toJson() => graphql.JsonObject({
+    if (role case graphql.Present(:final value))
+      'role': _roleCodec.write(value),
+    if (flag case graphql.Present(:final value))
+      'flag': _flagCodec.write(value),
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      other is GetStatsVariables &&
+      other.role == role &&
+      other.flag == flag;
+
+  @override
+  int get hashCode => Object.hashAll([role.hashCode, flag.hashCode]);
+
+  @override
+  String toString() => 'GetStatsVariables(role: $role, flag: $flag)';
+}
+
+/// The data of the query `GetStats`.
+final class GetStatsData implements client.DataObject {
+  /// Creates the data.
+  const GetStatsData({this.stats});
+
+  factory GetStatsData._read(
+    graphql.JsonObject json,
+    client.DataContext context,
+  ) => GetStatsData(stats: _statsCodec.field(json, 'stats', context));
+
+  /// Reads and writes the data.
+  static const client.DataCodec<GetStatsData> codec =
+      client.ObjectDataCodec(GetStatsData._read);
+
+  static const client.DataCodec<GetStatsDataStats?> _statsCodec =
+      client.NullableDataCodec(GetStatsDataStats.codec);
+
+  /// The field `stats`.
+  final GetStatsDataStats? stats;
+
+  /// Reads [json], the `data` of a response to the query sent with
+  /// [variables].
+  static graphql.DecodeResult<GetStatsData> decode(
+    graphql.JsonObject json, {
+    graphql.JsonObject? variables,
+  }) => codec.decode(json, client.DataContext(variables));
+
+  @override
+  graphql.JsonObject toJson() =>
+      graphql.JsonObject({'stats': _statsCodec.write(stats)});
+
+  @override
+  bool operator ==(Object other) =>
+      other is GetStatsData && other.stats == stats;
+
+  @override
+  int get hashCode => stats.hashCode;
+
+  @override
+  String toString() => 'GetStatsData(stats: $stats)';
+}
+
+/// The field `stats` of [GetStatsData].
+final class GetStatsDataStats implements client.DataObject {
+  /// Creates the value.
+  const GetStatsDataStats({
+    this.int$,
+    this.bool$,
+    this.override$,
+    this.$hidden,
+    this.flag,
+    this.matrix,
+    this.summary,
+  });
+
+  factory GetStatsDataStats._read(
+    graphql.JsonObject json,
+    client.DataContext context,
+  ) => GetStatsDataStats(
+    int$: _int$Codec.field(json, 'int', context),
+    bool$: _bool$Codec.field(json, 'bool', context),
+    override$: _override$Codec.field(json, 'override', context),
+    $hidden: _$hiddenCodec.field(json, '_hidden', context),
+    flag: _flagCodec.field(json, 'flag', context),
+    matrix: _matrixCodec.field(json, 'matrix', context),
+    summary: _summaryCodec.field(json, 'summary', context),
+  );
+
+  /// Reads and writes the value.
+  static const client.DataCodec<GetStatsDataStats> codec =
+      client.ObjectDataCodec(GetStatsDataStats._read);
+
+  static const client.DataCodec<int?> _int$Codec =
+      client.NullableDataCodec(client.ScalarDataCodec(graphql.IntCodec()));
+
+  static const client.DataCodec<bool?> _bool$Codec =
+      client.NullableDataCodec(client.ScalarDataCodec(graphql.BooleanCodec()));
+
+  static const client.DataCodec<String?> _override$Codec =
+      client.NullableDataCodec(client.ScalarDataCodec(graphql.StringCodec()));
+
+  static const client.DataCodec<int?> _$hiddenCodec =
+      client.NullableDataCodec(client.ScalarDataCodec(graphql.IntCodec()));
+
+  static const client.DataCodec<Flag?> _flagCodec =
+      client.NullableDataCodec(Flag.codec);
+
+  static const client.DataCodec<List<List<GetStatsDataStatsMatrix>?>?> _matrixCodec =
+      client.NullableDataCodec(
+        client.ListDataCodec(
+          client.NullableDataCodec(
+            client.ListDataCodec(GetStatsDataStatsMatrix.codec),
+          ),
+        ),
+      );
+
+  static const client.DataCodec<String?> _summaryCodec =
+      client.NullableDataCodec(client.ScalarDataCodec(graphql.StringCodec()));
+
+  /// The field `int`.
+  final int? int$;
+
+  /// The field `bool`.
+  final bool? bool$;
+
+  /// The field `override`.
+  final String? override$;
+
+  /// The field `_hidden`.
+  final int? $hidden;
+
+  /// The field `flag`.
+  final Flag? flag;
+
+  /// The field `matrix`.
+  final List<List<GetStatsDataStatsMatrix>?>? matrix;
+
+  /// The field `summary`.
+  final String? summary;
+
+  @override
+  graphql.JsonObject toJson() => graphql.JsonObject({
+    'int': _int$Codec.write(int$),
+    'bool': _bool$Codec.write(bool$),
+    'override': _override$Codec.write(override$),
+    '_hidden': _$hiddenCodec.write($hidden),
+    'flag': _flagCodec.write(flag),
+    'matrix': _matrixCodec.write(matrix),
+    'summary': _summaryCodec.write(summary),
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      other is GetStatsDataStats &&
+      other.int$ == int$ &&
+      other.bool$ == bool$ &&
+      other.override$ == override$ &&
+      other.$hidden == $hidden &&
+      other.flag == flag &&
+      const client.DataEquality().equals(other.matrix, matrix) &&
+      other.summary == summary;
+
+  @override
+  int get hashCode => Object.hashAll([
+    int$,
+    bool$,
+    override$,
+    $hidden,
+    flag,
+    const client.DataEquality().hash(matrix),
+    summary,
+  ]);
+
+  @override
+  String toString() =>
+      'GetStatsDataStats(int\$: ${int$}, bool\$: ${bool$}, override\$: ${override$}, \$hidden: ${$hidden}, flag: $flag, matrix: $matrix, summary: $summary)';
+}
+
+/// The items of the field `matrix` of [GetStatsDataStats].
+final class GetStatsDataStatsMatrix implements client.DataObject {
+  /// Creates the value.
+  const GetStatsDataStatsMatrix({required this.id});
+
+  factory GetStatsDataStatsMatrix._read(
+    graphql.JsonObject json,
+    client.DataContext context,
+  ) => GetStatsDataStatsMatrix(id: _idCodec.field(json, 'id', context));
+
+  /// Reads and writes the value.
+  static const client.DataCodec<GetStatsDataStatsMatrix> codec =
+      client.ObjectDataCodec(GetStatsDataStatsMatrix._read);
+
+  static const client.DataCodec<String> _idCodec =
+      client.ScalarDataCodec(graphql.IdCodec());
+
+  /// The field `id`.
+  final String id;
+
+  @override
+  graphql.JsonObject toJson() => graphql.JsonObject({'id': _idCodec.write(id)});
+
+  @override
+  bool operator ==(Object other) =>
+      other is GetStatsDataStatsMatrix && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  String toString() => 'GetStatsDataStatsMatrix(id: $id)';
+}
+```
+
+- [ ] **Step 2: Run the tests and see them fail**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/cli/codegen_command_test.dart test/cli/project_reading_test.dart test/cli/schema_fetcher_test.dart test/emit/dart_names_test.dart)
+```
+
+Expected: FAIL. The new and changed tests fail on the behaviour this task fixes (assertion failures; a test that uses a name the next step adds does not compile).
+
+- [ ] **Step 3: Write the implementation**
+
+In `packages/typed_graphql_codegen/lib/src/emit/dart_names.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -8,8 +8,19 @@ final class DartNames {
+   /// Creates the name converter.
+   const DartNames();
+ 
++  // Bare identifiers the generated members use as types or annotations: a
++  // member of the same name would shadow them inside the class.
++  static const Set<String> _shadowable = <String>{
++    'int',
++    'bool',
++    'double',
++    'num',
++    'override',
++  };
++
+   /// Members every generated data or input class has.
+   static const Set<String> objectMembers = <String>{
++    ..._shadowable,
+     'hashCode',
+     'runtimeType',
+     'toString',
+@@ -25,6 +36,7 @@ final class DartNames {
+ 
+   /// Members every generated enum has, including those of `Enum`.
+   static const Set<String> enumMembers = <String>{
++    ..._shadowable,
+     'hashCode',
+     'runtimeType',
+     'toString',
+```
+
+- [ ] **Step 4: Run the tests and see them pass**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/cli/codegen_command_test.dart test/cli/project_reading_test.dart test/cli/schema_fetcher_test.dart test/emit/dart_names_test.dart)
+```
+
+Expected: `All tests passed!`.
+
+- [ ] **Step 5: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 6: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 7: Commit**
+
+```sh
+git add packages/typed_graphql_codegen/lib/src/emit/dart_names.dart packages/typed_graphql_codegen/test/cli/codegen_command_test.dart packages/typed_graphql_codegen/test/cli/project_reading_test.dart packages/typed_graphql_codegen/test/cli/schema_fetcher_test.dart packages/typed_graphql_codegen/test/emit/dart_names_test.dart packages/typed_graphql_codegen/test/goldens/operations/input/lib/stats.graphql packages/typed_graphql_codegen/test/goldens/operations/input/schema.graphql packages/typed_graphql_codegen/test/goldens/operations/output/build/persisted_operations.json.golden packages/typed_graphql_codegen/test/goldens/operations/output/lib/schema.graphql.dart.golden packages/typed_graphql_codegen/test/goldens/operations/output/lib/stats.graphql.dart.golden
+git commit -q -m "fix(typed_graphql_codegen): suffix field names that shadow a type or annotation" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 11: Backtick angle brackets in generated doc comments
+
+Final review, Important 2: a schema description such as `Returns a List<User>` tripped `unintended_html_in_doc_comment` in the user's analysis of the generated code. `DocCommentEscaper` wraps each angle bracket pair outside a code span or fence in backticks, and `DartWriter.doc` uses it; the golden description holds angle brackets, brackets, a dollar sign, quotes, a backslash and a comment end.
+
+Commit on the branch: `3ec5710`.
+
+**Files:**
+- Create: `packages/typed_graphql_codegen/lib/src/emit/doc_comment_escaper.dart`
+- Modify: `packages/typed_graphql_codegen/lib/src/emit/dart_writer.dart`
+- Test: `packages/typed_graphql_codegen/test/emit/dart_writer_test.dart`, `packages/typed_graphql_codegen/test/emit/doc_comment_escaper_test.dart`, `packages/typed_graphql_codegen/test/goldens/operations/input/schema.graphql`, `packages/typed_graphql_codegen/test/goldens/operations/output/lib/stats.graphql.dart.golden`
+
+**Interfaces:**
+- Consumes: M10b `DartWriter`.
+- Produces:
+- Declarations (signatures as committed; the code is in the steps):
+
+```dart
+// emit/doc_comment_escaper.dart
+final class DocCommentEscaper
+  const DocCommentEscaper()
+  String escape(String line)
+```
+
+- [ ] **Step 1: Write the tests**
+
+In `packages/typed_graphql_codegen/test/emit/dart_writer_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+````diff
+@@ -36,6 +36,15 @@ void main() {
+     );
+   });
+ 
++  test('doc backticks angle brackets outside a fence only', () {
++    final DartWriter writer = DartWriter();
++    writer.doc('A List<User>.\n```graphql\nList<User>\n```');
++    expect(
++      writer.text,
++      '/// A List`<User>`.\n/// ```graphql\n/// List<User>\n/// ```\n',
++    );
++  });
++
+   test('doc keeps a fence that already has a language', () {
+     final DartWriter writer = DartWriter();
+     writer.doc('```dart\nx\n```');
+````
+
+Create `packages/typed_graphql_codegen/test/emit/doc_comment_escaper_test.dart`:
+
+```dart
+import 'package:test/test.dart';
+import 'package:typed_graphql_codegen/src/emit/doc_comment_escaper.dart';
+
+void main() {
+  const escaper = DocCommentEscaper();
+
+  const cases = <String, String>{
+    'Returns a List<User>.': 'Returns a List`<User>`.',
+    'Map<String, List<User>> nested': 'Map`<String, List<User>>` nested',
+    '<b>bold</b>': '`<b>`bold`</b>`',
+    'Already `List<User>` quoted': 'Already `List<User>` quoted',
+    'a < b and c': 'a < b and c',
+    r'Plain [x] with $5 and */': r'Plain [x] with $5 and */',
+    'Unclosed <User': 'Unclosed <User',
+  };
+
+  for (final MapEntry(key: input, value: expected) in cases.entries) {
+    test('escape of $input', () => expect(escaper.escape(input), expected));
+  }
+}
+```
+
+In `packages/typed_graphql_codegen/test/goldens/operations/input/schema.graphql`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -75,6 +75,7 @@ type Stats {
+   _hidden: Int
+   flag: Flag
+   matrix: [[User!]]
++  "Returns a List<User> of [x] costing $5, 'quoted', \\ and */ closed."
+   summary: String
+ }
+ 
+```
+
+In `packages/typed_graphql_codegen/test/goldens/operations/output/lib/stats.graphql.dart.golden`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -194,7 +194,7 @@ final class GetStatsDataStats implements client.DataObject {
+   /// The field `matrix`.
+   final List<List<GetStatsDataStatsMatrix>?>? matrix;
+ 
+-  /// The field `summary`.
++  /// Returns a List`<User>` of [x] costing $5, 'quoted', \ and */ closed.
+   final String? summary;
+ 
+   @override
+```
+
+- [ ] **Step 2: Run the tests and see them fail**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/emit/dart_writer_test.dart test/emit/doc_comment_escaper_test.dart)
+```
+
+Expected: FAIL. The test files do not compile: they use the names that the next step adds (`Error: ... isn't defined` or `Member not found`).
+
+- [ ] **Step 3: Write the implementation**
+
+In `packages/typed_graphql_codegen/lib/src/emit/dart_writer.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+````diff
+@@ -1,3 +1,5 @@
++import 'doc_comment_escaper.dart';
++
+ /// A text builder for generated Dart code.
+ ///
+ /// {@category codegen}
+@@ -54,6 +56,10 @@ final class DartWriter {
+ 
+   String _docLine(String content) {
+     final String trimmed = content.trim();
++    if (!_isInFence && !trimmed.startsWith('```')) {
++      // Descriptions come from the schema; see [DocCommentEscaper].
++      return _docText(const DocCommentEscaper().escape(content));
++    }
+     if (trimmed.startsWith('```')) {
+       if (_isInFence) {
+         _isInFence = false;
+@@ -64,9 +70,11 @@ final class DartWriter {
+         }
+       }
+     }
+-    return content.isEmpty ? '///' : '/// $content';
++    return _docText(content);
+   }
+ 
++  String _docText(String content) => content.isEmpty ? '///' : '/// $content';
++
+   /// Writes `open + items.join(', ') + close` on one line when it fits in 80
+   /// columns, otherwise one item per line, each ending with `,`.
+   void items(String open, List<String> items, String close) {
+````
+
+Create `packages/typed_graphql_codegen/lib/src/emit/doc_comment_escaper.dart`:
+
+```dart
+/// Makes schema text safe inside a `///` comment.
+///
+/// `unintended_html_in_doc_comment` (in `package:lints`) reports an angle
+/// bracket pair such as `List<User>` outside code, so the generated code would
+/// fail its user's analysis. This wraps each such pair in backticks.
+///
+/// {@category codegen}
+final class DocCommentEscaper {
+  /// Creates the escaper.
+  const DocCommentEscaper();
+
+  /// [line] with every `<...>` outside a code span wrapped in backticks.
+  String escape(String line) {
+    if (!line.contains('<')) {
+      return line;
+    }
+    final StringBuffer out = StringBuffer();
+    bool isInCode = false;
+    int index = 0;
+    while (index < line.length) {
+      final String character = line[index];
+      if (character == '`') {
+        isInCode = !isInCode;
+      }
+      final int end = isInCode || character != '<'
+          ? -1
+          : _closingBracket(line, index);
+      if (end < 0) {
+        out.write(character);
+        index++;
+      } else {
+        out.write('`${line.substring(index, end + 1)}`');
+        index = end + 1;
+      }
+    }
+    return out.toString();
+  }
+
+  /// The index of the `>` that closes the `<` at [start], or -1 when the
+  /// bracket opens no pair or holds a backtick (which would end the span).
+  int _closingBracket(String line, int start) {
+    int depth = 0;
+    for (int index = start; index < line.length; index++) {
+      final String character = line[index];
+      if (character == '`') {
+        return -1;
+      }
+      if (character == '<') {
+        depth++;
+      } else if (character == '>') {
+        depth--;
+        if (depth == 0) {
+          return index;
+        }
+      }
+    }
+    return -1;
+  }
+}
+```
+
+- [ ] **Step 4: Run the tests and see them pass**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/emit/dart_writer_test.dart test/emit/doc_comment_escaper_test.dart)
+```
+
+Expected: `All tests passed!`.
+
+- [ ] **Step 5: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 6: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 7: Commit**
+
+```sh
+git add packages/typed_graphql_codegen/lib/src/emit/dart_writer.dart packages/typed_graphql_codegen/lib/src/emit/doc_comment_escaper.dart packages/typed_graphql_codegen/test/emit/dart_writer_test.dart packages/typed_graphql_codegen/test/emit/doc_comment_escaper_test.dart packages/typed_graphql_codegen/test/goldens/operations/input/schema.graphql packages/typed_graphql_codegen/test/goldens/operations/output/lib/stats.graphql.dart.golden
+git commit -q -m "fix(typed_graphql_codegen): backtick angle brackets in generated doc comments" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 12: Say everything GQL501, GQL504 and GQL510 report
+
+Final review, Important 3: the catalog comments and the guide rows of `GQL501` (globs and schema URL headers), `GQL504` (fragment spreads through other fragments) and `GQL510` (listing the documents glob and writing a generated file) say what the code reports.
+
+Commit on the branch: `1d6be79`.
+
+**Files:**
+- Modify: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`, `packages/typed_graphql_codegen/doc/client_codegen.md`
+
+**Interfaces:**
+- Consumes: Tasks 1-8.
+- Produces:
+- Nothing for later tasks.
+
+- [ ] **Step 1: Write the implementation**
+
+In `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -515,8 +515,10 @@ enum DiagnosticCode(
+   /// the YAML parser's.
+   configSyntax('GQL500'),
+ 
+-  /// `GQL501`: a missing, unknown or mistyped key, or a malformed path or Dart
+-  /// reference, in the code generator's configuration.
++  /// `GQL501`: a missing, unknown or mistyped key, or a malformed path, glob
++  /// or Dart reference, in the code generator's configuration; also a schema
++  /// URL header whose `${NAME}` variable is not set or is empty, or whose
++  /// expanded value is not ASCII.
+   invalidConfig('GQL501'),
+ 
+   /// `GQL502`: a schema file the code generator cannot read as a schema: not
+@@ -529,9 +531,10 @@ enum DiagnosticCode(
+ 
+   /// `GQL504`: a construct the code generator does not support yet: `@defer`,
+   /// `@stream`, an introspection field (`__schema`, `__type`), or a
+-  /// subscription root that spreads (directly or inside an inline fragment) a
+-  /// fragment which plans as a sealed base class; it would need `__typename`,
+-  /// which a subscription cannot select. A plain inline fragment is fine.
++  /// subscription root that spreads a fragment which plans as a sealed base
++  /// class, directly, inside an inline fragment or through other fragment
++  /// spreads; it would need `__typename`, which a subscription cannot select.
++  /// A plain inline fragment is fine.
+   unsupportedInDocument('GQL504'),
+ 
+   /// `GQL505`: the configuration maps a scalar the schema does not have as a
+@@ -557,9 +560,11 @@ enum DiagnosticCode(
+   /// what `generate` would write; reported without a span.
+   outputOutdated('GQL509'),
+ 
+-  /// `GQL510`: a file the command line must read, such as the configuration,
+-  /// the schema or a document, or the schema URL, cannot be read; reported
+-  /// without a span.
++  /// `GQL510`: the command line cannot read a file it needs (the
++  /// configuration, the schema or a document), list the documents glob, fetch
++  /// the schema URL (a network failure, a timeout, a redirect, a body over
++  /// 64 MiB, a non-success status or an unreadable body), or write a generated
++  /// file; reported without a span.
+   inputUnreadable('GQL510'),
+ 
+   /// `GQL511`: an operation or fragment whose selections would make the code
+```
+
+- [ ] **Step 2: Update the documents**
+
+In `packages/typed_graphql_codegen/doc/client_codegen.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -898,7 +898,7 @@ and are never reused.
+ | Code | Severity | Reported when |
+ |---|---|---|
+ | `GQL500` | error | `typed_graphql.yaml` is not valid YAML. |
+-| `GQL501` | error | A configuration key is missing, unknown or mistyped, or a path or Dart reference is malformed. |
++| `GQL501` | error | A configuration key is missing, unknown or mistyped, or a path, glob or Dart reference is malformed; or a schema URL header uses a `${NAME}` variable that is not set or is empty, or expands to a value that is not ASCII. |
+ | `GQL502` | error | The schema file is not JSON, or is JSON that is not an object, when it should be an introspection result. |
+ | `GQL503` | error | An operation has no name; the generated classes are named after the operation. |
+ | `GQL504` | error | A document uses `@defer` or `@stream`, or selects an introspection field (`__schema`, `__type`), which the generator does not support yet; or a subscription spreads, at its root, a fragment that becomes a sealed class (directly or through other fragments or inline fragments): the sealed class would need `__typename` there, and a subscription cannot select it. |
+@@ -907,7 +907,7 @@ and are never reused.
+ | `GQL507` | error | The generator would declare one Dart name twice, such as an enum `Role` and an input object `RoleKnown` (the enum also declares `RoleKnown` and `RoleUnknown`), a class of an operation and a fragment, two members of one class (such as the fields `user_name` and `userName`, or two fragments `UserCard` and `userCard`), or two files at one path. |
+ | `GQL508` | error | A name the generator would declare hides a Dart type the generated code uses, such as `List`, or a `dart:core` type a scalar is mapped to. |
+ | `GQL509` | error | `check` found a generated file that is missing or differs from what `generate` would write. |
+-| `GQL510` | error | The command line cannot read the configuration, the schema file, a document or the schema URL (a network failure, a timeout, a redirect, a body over 64 MiB, a non-success status or an unreadable body). |
++| `GQL510` | error | The command line cannot read the configuration, the schema file or a document, cannot list the documents glob, cannot fetch the schema URL (a network failure, a timeout, a redirect, a body over 64 MiB, a non-success status or an unreadable body), or cannot write a generated file. |
+ | `GQL511` | error | An operation or fragment would generate more than 10000 classes, for instance a selection on an interface that reaches many types, repeated under many aliases. |
+ 
+ The problems of the schema and of the documents keep the codes of the core:
+```
+
+- [ ] **Step 3: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 4: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 5: Commit**
+
+```sh
+git add packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart packages/typed_graphql_codegen/doc/client_codegen.md
+git commit -q -m "docs(typed_graphql): say in the catalog and the guide everything GQL501, GQL504 and GQL510 report" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 13: Keep user files from the command line's side effects
+
+Final review minors 8, 11 and 12: the temporary file of a write lives in its own folder, so a user file named like the target plus `.tmp` is not overwritten; a documents glob whose brace alternative reaches outside the project is `GQL501`; a single written file prints `Wrote 1 file.`.
+
+Commit on the branch: `56caa10`.
+
+**Files:**
+- Modify: `packages/typed_graphql_codegen/doc/client_codegen.md`, `packages/typed_graphql_codegen/lib/src/cli/codegen_command.dart`, `packages/typed_graphql_codegen/lib/src/cli/output_writer.dart`, `packages/typed_graphql_codegen/lib/src/cli/project_reader.dart`
+- Test: `packages/typed_graphql_codegen/test/cli/codegen_command_test.dart`, `packages/typed_graphql_codegen/test/cli/output_writer_test.dart`, `packages/typed_graphql_codegen/test/cli/project_reading_test.dart`
+
+**Interfaces:**
+- Consumes: Task 8 `OutputWriter` and `ProjectReader`.
+- Produces:
+- Nothing for later tasks.
+
+- [ ] **Step 1: Write the tests**
+
+In `packages/typed_graphql_codegen/test/cli/codegen_command_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -32,6 +32,13 @@ void main() {
+     }
+   });
+ 
++  test('a generate that writes one file says so in the singular', () async {
++    await project.run(['generate']);
++    project.file(generated).writeAsStringSync('// edited\n');
++    expect(await project.run(['generate']), 0);
++    expect(project.out.toString(), 'Wrote 1 file.\n');
++  });
++
+   test('a second generate writes nothing', () async {
+     await project.run(['generate']);
+     expect(await project.run(['generate']), 0);
+```
+
+In `packages/typed_graphql_codegen/test/cli/output_writer_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -36,7 +36,21 @@ void main() {
+     expect(result.problems.map((d) => d.toString()), [
+       startsWith("error GQL510: Cannot write 'lib/a.dart': "),
+     ]);
+-    expect(File('${directory.path}/lib/a.dart.tmp').existsSync(), isFalse);
++    expect(
++      [
++        for (final entity in Directory('${directory.path}/lib').listSync())
++          entity.path,
++      ]..sort(),
++      ['${directory.path}/lib/a.dart', '${directory.path}/lib/b.dart'],
++    );
++  });
++
++  test('write keeps a user file named like a fixed temporary name', () {
++    File('${directory.path}/lib/a.dart.tmp')
++      ..createSync(recursive: true)
++      ..writeAsStringSync('mine');
++    writer.write([file]);
++    expect(File('${directory.path}/lib/a.dart.tmp').readAsStringSync(), 'mine');
+   });
+ 
+   test('an output that is not UTF-8 is replaced by write', () {
+```
+
+In `packages/typed_graphql_codegen/test/cli/project_reading_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -30,6 +30,21 @@ void main() {
+     );
+   });
+ 
++  test('a brace alternative that leaves the project is GQL501', () async {
++    final outside = File('${project.directory.parent.path}/m10_outside.graphql')
++      ..writeAsStringSync('query Outside { __typename }');
++    addTearDown(outside.deleteSync);
++    documents('"{..,lib}/m10_outside.graphql"');
++    expect(await project.run(['generate']), 1);
++    expect(
++      project.err.toString(),
++      startsWith(
++        "error GQL501: The documents pattern '{..,lib}/m10_outside.graphql' "
++        'matches a file outside the project.',
++      ),
++    );
++  });
++
+   test('a symbolic link to a document is not followed', () async {
+     final outside = File('${project.directory.path}/outside.txt')
+       ..writeAsStringSync('query Outside { __typename }');
+```
+
+- [ ] **Step 2: Run the tests and see them fail**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/cli/codegen_command_test.dart test/cli/output_writer_test.dart test/cli/project_reading_test.dart)
+```
+
+Expected: FAIL. The new and changed tests fail on the behaviour this task fixes (assertion failures; a test that uses a name the next step adds does not compile).
+
+- [ ] **Step 3: Write the implementation**
+
+In `packages/typed_graphql_codegen/lib/src/cli/codegen_command.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -99,9 +99,11 @@ final class CodegenCommand {
+     }
+     final (:written, :problems) = writer.write(result.files);
+     final code = _report([...result.diagnostics, ...problems], secrets);
+-    out.writeln(
+-      written.isEmpty ? 'Nothing to write.' : 'Wrote ${written.length} files.',
+-    );
++    out.writeln(switch (written.length) {
++      0 => 'Nothing to write.',
++      1 => 'Wrote 1 file.',
++      final count => 'Wrote $count files.',
++    });
+     return code;
+   }
+ 
+```
+
+In `packages/typed_graphql_codegen/lib/src/cli/output_writer.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -76,13 +76,15 @@ final class const OutputWriter(
+   void _replace(GeneratedFile generated) {
+     final file = File(p.join(directory, generated.path));
+     file.parent.createSync(recursive: true);
+-    final temporary = File('${file.path}.tmp');
++    // A folder of its own: a fixed name next to the target could overwrite
++    // a file of the user's.
++    final folder = file.parent.createTempSync('.typed_graphql_');
+     try {
++      final temporary = File(p.join(folder.path, 'output'));
+       temporary.writeAsStringSync(generated.text);
+       temporary.renameSync(file.path);
+-    } on FileSystemException {
+-      if (temporary.existsSync()) temporary.deleteSync();
+-      rethrow;
++    } finally {
++      folder.deleteSync(recursive: true);
+     }
+   }
+ 
+```
+
+In `packages/typed_graphql_codegen/lib/src/cli/project_reader.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -124,9 +124,14 @@ final class ProjectReader {
+         );
+         for (final entity in entities) {
+           if (entity is! File || !entity.path.endsWith('.graphql')) continue;
+-          final relative = p.posix.joinAll(
+-            p.split(p.relative(entity.path, from: directory)),
+-          );
++          final parts = p.split(p.relative(entity.path, from: directory));
++          if (parts.first == '..') {
++            // A brace alternative such as `{..,lib}` passes the path rule,
++            // which only checks whole segments.
++            problems.add(_leavesProject(pattern));
++            break;
++          }
++          final relative = p.posix.joinAll(parts);
+           if (relative != schemaPath) paths.add(relative);
+         }
+       } on FormatException catch (error) {
+@@ -149,6 +154,12 @@ final class ProjectReader {
+     return (paths: paths.toList()..sort(), problems: problems);
+   }
+ 
++  Diagnostic _leavesProject(String pattern) => Diagnostic(
++    .invalidConfig,
++    .error,
++    "The documents pattern '$pattern' matches a file outside the project.",
++  );
++
+   _FileOutcome _readText(String path) {
+     try {
+       return _FileText(File(p.join(directory, path)).readAsStringSync());
+```
+
+- [ ] **Step 4: Run the tests and see them pass**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/cli/codegen_command_test.dart test/cli/output_writer_test.dart test/cli/project_reading_test.dart)
+```
+
+Expected: `All tests passed!`.
+
+- [ ] **Step 5: Update the documents**
+
+In `packages/typed_graphql_codegen/doc/client_codegen.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -181,7 +181,7 @@ relative to the file's folder. `--help` prints the usage.
+ `generate` reads the configuration, the schema and the documents, runs the
+ checks and, when there is no error, writes each generated file whose text
+ differs from what is on disk (creating folders as needed). It prints
+-`Wrote N files.` or `Nothing to write.` and never deletes a file: a library
++`Wrote N files.` (`Wrote 1 file.` for one) or `Nothing to write.` and never deletes a file: a library
+ whose document you removed stays until you delete it, and neither `generate`
+ nor `check` looks at it, so `check` can be clean while a stale library is
+ still compiled. A file is written through a temporary file and a rename; a
+```
+
+- [ ] **Step 6: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 7: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 8: Commit**
+
+```sh
+git add packages/typed_graphql_codegen/doc/client_codegen.md packages/typed_graphql_codegen/lib/src/cli/codegen_command.dart packages/typed_graphql_codegen/lib/src/cli/output_writer.dart packages/typed_graphql_codegen/lib/src/cli/project_reader.dart packages/typed_graphql_codegen/test/cli/codegen_command_test.dart packages/typed_graphql_codegen/test/cli/output_writer_test.dart packages/typed_graphql_codegen/test/cli/project_reading_test.dart
+git commit -q -m "fix(typed_graphql_codegen): keep user files from the command line's side effects" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 14: Split the documents listing into named steps
+
+A refactoring of Task 13's `ProjectReader._documentPaths` that moves the collection of the matched documents into `_collect`, so the method and its nesting stay within the code rules. No behaviour changes.
+
+Commit on the branch: `13a7df1`.
+
+**Files:**
+- Modify: `packages/typed_graphql_codegen/lib/src/cli/project_reader.dart`
+
+**Interfaces:**
+- Consumes: Task 13.
+- Produces:
+- Nothing for later tasks.
+
+- [ ] **Step 1: Write the implementation**
+
+In `packages/typed_graphql_codegen/lib/src/cli/project_reader.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -122,17 +122,8 @@ final class ProjectReader {
+           root: directory,
+           followLinks: false,
+         );
+-        for (final entity in entities) {
+-          if (entity is! File || !entity.path.endsWith('.graphql')) continue;
+-          final parts = p.split(p.relative(entity.path, from: directory));
+-          if (parts.first == '..') {
+-            // A brace alternative such as `{..,lib}` passes the path rule,
+-            // which only checks whole segments.
+-            problems.add(_leavesProject(pattern));
+-            break;
+-          }
+-          final relative = p.posix.joinAll(parts);
+-          if (relative != schemaPath) paths.add(relative);
++        if (!_collect(entities, schemaPath, paths)) {
++          problems.add(_leavesProject(pattern));
+         }
+       } on FormatException catch (error) {
+         problems.add(
+@@ -154,6 +145,25 @@ final class ProjectReader {
+     return (paths: paths.toList()..sort(), problems: problems);
+   }
+ 
++  /// Adds the documents among [entities] to [paths]; false when one lies
++  /// outside the project.
++  bool _collect(
++    List<FileSystemEntity> entities,
++    String schemaPath,
++    Set<String> paths,
++  ) {
++    for (final entity in entities) {
++      if (entity is! File || !entity.path.endsWith('.graphql')) continue;
++      final parts = p.split(p.relative(entity.path, from: directory));
++      // A brace alternative such as `{..,lib}` passes the path rule, which
++      // only checks whole segments.
++      if (parts.first == '..') return false;
++      final relative = p.posix.joinAll(parts);
++      if (relative != schemaPath) paths.add(relative);
++    }
++    return true;
++  }
++
+   Diagnostic _leavesProject(String pattern) => Diagnostic(
+     .invalidConfig,
+     .error,
+```
+
+- [ ] **Step 2: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 3: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 4: Commit**
+
+```sh
+git add packages/typed_graphql_codegen/lib/src/cli/project_reader.dart
+git commit -q -m "refactor(typed_graphql_codegen): split the documents listing into named steps" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 15: Describe the generated-code contract and update the M10 texts
+
+Final review minors 4, 5 and 6: the codegen library doc names operations, fragments and the manifest, the root README no longer calls the client a skeleton, `CLAUDE.md` says that `GQL506` comes from `ClientProjectLoader` and gains a paragraph on the generated-code contract of `typed_graphql_client`.
+
+Commit on the branch: `a5948ea`.
+
+**Files:**
+- Modify: `CLAUDE.md`, `README.md`, `packages/typed_graphql_codegen/lib/typed_graphql_codegen.dart`
+
+**Interfaces:**
+- Consumes: Tasks 1-13.
+- Produces:
+- Nothing for later tasks.
+
+- [ ] **Step 1: Write the implementation**
+
+In `packages/typed_graphql_codegen/lib/typed_graphql_codegen.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -1,9 +1,11 @@
+ /// The typed_graphql code generator and its CLI: Dart client code from .graphql
+ /// operations and SDL-first server code, without the analyzer.
+ ///
+-/// Under construction: so far the package reads `typed_graphql.yaml`
+-/// ([CodegenConfig]) and [ClientGenerator] writes the Dart enums and input
+-/// objects of the schema; see the package README.
++/// Under construction: the package reads `typed_graphql.yaml`
++/// ([CodegenConfig]) and [ClientGenerator] writes the Dart for a schema's
++/// enums and input objects, for operations and fragments, and the persisted
++/// operations manifest. The command line is `bin/typed_graphql_codegen.dart`;
++/// see the package README.
+ library;
+ 
+ export 'src/config/codegen_config.dart';
+```
+
+- [ ] **Step 2: Update the documents**
+
+In `CLAUDE.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -413,9 +413,10 @@ and `GeneratedFile`s.
+ - `generator/`: `ClientGenerator(config)` has `rules` (the specified rules
+   minus the unused-fragment and lone-anonymous ones, plus `GQL503` named
+   operations, `GQL504` unsupported `@defer`/`@stream`/`__schema`/`__type` and
+-  a subscription whose root fragment becomes a sealed class, and `GQL506` no
+-  document as a warning), `check` and `generate` (`GenerationResult`: diagnostics
+-  and files; an error means no files). It also checks the scalar mappings
++  a subscription whose root fragment becomes a sealed class), `check` and
++  `generate` (`GenerationResult`: diagnostics and files; an error means no
++  files). `GQL506` (no document, a warning) comes from `ClientProjectLoader`,
++  not from a rule. It also checks the scalar mappings
+   (`GQL505`), the names (`GQL507` a Dart name declared twice, also members
+   and paths; `GQL508` a name that hides a Dart type the code uses) and the
+   size (`GQL511`, 10000 classes per operation or fragment).
+@@ -448,6 +449,17 @@ and `GeneratedFile`s.
+   byte. `example/` is a workspace member with its own `pubspec.yaml`
+   (`publish_to: none`) because the generated code imports the client.
+ 
++**Client contract** (`typed_graphql_client/lib/src/operation/`; M10). What
++generated code imports. `GraphQLOperation` (query, mutation, subscription)
++carries an `OperationDocument` (text, sha256) and `decodeData`. A data class
++reads itself through a `DataCodec<T>` constant composed of `ObjectDataCodec`,
++`ListDataCodec`, `NullableDataCodec`, `ScalarDataCodec`, `EnumDataCodec`
++(a `DataEnum` is a known or unknown value) and `JsonDataCodec` (an unmapped
++scalar); `read` throws `DataFormatException`, `decode` turns it into a
++`DecodeFailure`. `DataContext.flag` answers `@include`/`@skip` variables,
++`DataEquality` compares lists and `Optional`s by value, and `JsonMerger`
++merges what a class and its fragments write for one object.
++
+ **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
+ `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
+ `ArgumentError`, `RangeError`, `StateError`.
+```
+
+In `README.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -112,7 +112,7 @@ This repository is a Dart **pub workspace**. Dart SDK: `^3.13.0`.
+ | [`typed_graphql`](packages/typed_graphql) | Core: language, type system, validation, wire protocol, diagnostics. Pure Dart, depends only on `meta`. | diagnostics, protocol types, the language, the schema model, SDL, scalar codecs, schema validation, introspection, operation validation, limits and cost analysis (M1, M2, M3, M4) |
+ | [`typed_graphql_server`](packages/typed_graphql_server) | Typed schema builder, executor, subscriptions, DataLoader, HTTP / graphql-ws / graphql-sse handlers. | skeleton (M5) |
+ | [`typed_graphql_shelf`](packages/typed_graphql_shelf) | `shelf` adapter with an optional GraphiQL page. | skeleton (M7) |
+-| [`typed_graphql_client`](packages/typed_graphql_client) | Client runtime: links, transports, normalized cache, `MockLink`. | skeleton (M11) |
++| [`typed_graphql_client`](packages/typed_graphql_client) | Client runtime: links, transports, normalized cache, `MockLink`. | under construction (the generated-code contract, M10; the rest M11) |
+ | [`typed_graphql_codegen`](packages/typed_graphql_codegen) | Code generation engine and CLI, without `analyzer`. | under construction (M10) |
+ | [`typed_graphql_builder`](packages/typed_graphql_builder) | `build_runner` builders and the annotation front end. | skeleton (M9) |
+ | [`typed_graphql_conformance`](packages/typed_graphql_conformance) | Repository tool: ported graphql-js suites, fuzzers, benchmarks. Never published. | language, schema and introspection suites, fuzzers (M2, M3) |
+```
+
+- [ ] **Step 3: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 4: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 5: Commit**
+
+```sh
+git add CLAUDE.md README.md packages/typed_graphql_codegen/lib/typed_graphql_codegen.dart
+git commit -q -m "docs: describe the generated-code contract and bring the M10 texts up to date" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 16: Record that M10 is complete and awaits merge
+
+The handoff says M10 is complete on branch `m10-final` with the final opus review done, awaiting merge, and that the client's Chrome runs are deferred to M11.
+
+Commit on the branch: `21c31fd`.
+
+**Files:**
+- Modify: `docs/superpowers/HANDOFF.md`
+
+**Interfaces:**
+- Consumes: Tasks 1-14.
+- Produces:
+- Nothing for later tasks.
+
+- [ ] **Step 1: Update the documents**
+
+In `docs/superpowers/HANDOFF.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -1,6 +1,6 @@
+ # Handoff: where typed_graphql stands and how to continue
+ 
+-Last updated: 2026-10-15 (M3a, M3c and M3b merged into `main` locally, not pushed; M4a and M4b merged too; M10 on branch `m10-final` pending the final whole-branch review; local `main` is ahead of `origin/main`, push needs the owner's yes). Read this
++Last updated: 2026-10-15 (M3a, M3c and M3b merged into `main` locally, not pushed; M4a and M4b merged too; M10 complete on branch `m10-final`, awaiting merge (not merged); local `main` is ahead of `origin/main`, push needs the owner's yes). Read this
+ first on a new device or in a new Claude session. Session memory and scratch
+ directories do not travel; this file and the repository hold everything
+ needed.
+@@ -16,7 +16,7 @@ needed.
+ | M3c Core docs | [plan](plans/2026-10-14-m3c-core-docs.md) | — | merged into `main` locally (not pushed): six guides in `packages/typed_graphql/doc/`, `example/`, dartdoc categories, doc test suite (`test/doc/`), CI `dart doc` step. M3b added "Validating a schema" and "Resolving a coordinate" to `doc/schema.md`, and the `introspection` category with its guide `doc/introspection.md` |
+ | Agent discoverability | [spec](specs/2026-10-14-agent-discoverability-design.md) | [plan](plans/2026-10-14-agent-discoverability.md) | merged locally into main (3df6740, not pushed): pub.dev metadata, the core README's "Should I use this?", `llms.txt`, `docs/discovery.md`, the `test/discovery/` suite |
+ | M4 Operation validation | [spec](specs/2026-10-14-m4-operation-validation-design.md) | M4a: [plan](plans/2026-10-14-m4a-operation-validation.md); M4b: [plan](plans/2026-10-14-m4b-limits-and-cost.md) | M4a and M4b are complete and merged into `main` locally (not pushed); the final opus review and two fix rounds are done. M4a: the rule framework, the 30 rules of spec §5 (`GQL200`-`GQL229`), field selection merging (near-linear; a fan-out through parts that repeat a response name can still reach the step budget, spec §14 item 15), the step budget (`GQL230`), custom rules (`GQL231`), every graphql-js validation suite in `mapping/validation.csv`, the hostile-document tests and `doc/validation.md`. M4b: the opt-in limit rules `MaxDepthRule`, `MaxAliasesRule`, `MaxDirectivesRule`, `NoIntrospectionRule`, `MaxIntrospectionDepthRule` (`GQL232`-`GQL236`) and `DocumentValidator.recommendedRules`; `includesCostDirectives` with `@cost` and `@listSize` and their schema checks (`GQL156`-`GQL161`); `CostAnalysis` / `OperationCost`, `SlicingArgumentsRule` (`GQL237`), `MaxCostRule` (`GQL238`); three operation fuzzers; the guide sections "Limits" and "Cost"; next is M5 (execution) |
+-| M10 Client code generation | [spec](specs/2026-10-15-m10-client-codegen-design.md) | M10a: [plan](plans/2026-10-15-m10a-codegen-front-end.md); M10b: [plan](plans/2026-10-15-m10b-runtime-and-schema-types.md); M10c: [plan](plans/2026-10-15-m10c-operations-and-fragments.md); M10d: [plan](plans/2026-10-15-m10d-command-line.md) | M10 is implemented on branch `m10-final`, pending the final whole-branch review; not merged and not pushed (the plans are generated from the commits; the review's fix commits are appended to the M10d plan when it is regenerated). `typed_graphql_codegen` reads `typed_graphql.yaml` (`GQL500`, `GQL501`), loads the schema from SDL, an introspection result or a URL (`GQL502`, `GQL510`), checks the documents as one fragment graph (`GQL503`-`GQL506`, `GQL511`), plans the classes and generates the schema-types library, a library per document and the persisted-operations manifest (`GQL507`, `GQL508`); the CLI `generate` / `check` (`GQL509`) lives in `lib/src/cli/`; the core gained `Optional` and the client the generated-code contract (`JsonMerger` included); goldens, an analysis test and the checked-in `example/` project; the guide `client_codegen.md` |
++| M10 Client code generation | [spec](specs/2026-10-15-m10-client-codegen-design.md) | M10a: [plan](plans/2026-10-15-m10a-codegen-front-end.md); M10b: [plan](plans/2026-10-15-m10b-runtime-and-schema-types.md); M10c: [plan](plans/2026-10-15-m10c-operations-and-fragments.md); M10d: [plan](plans/2026-10-15-m10d-command-line.md) | M10 is complete on branch `m10-final`: the final opus whole-branch review is done and its fix round is committed; awaiting merge, not merged and not pushed (the plans are generated from the commits; the fix round's commits are in the M10d plan). The client's Chrome test runs are deferred to M11. `typed_graphql_codegen` reads `typed_graphql.yaml` (`GQL500`, `GQL501`), loads the schema from SDL, an introspection result or a URL (`GQL502`, `GQL510`), checks the documents as one fragment graph (`GQL503`-`GQL506`, `GQL511`), plans the classes and generates the schema-types library, a library per document and the persisted-operations manifest (`GQL507`, `GQL508`); the CLI `generate` / `check` (`GQL509`) lives in `lib/src/cli/`; the core gained `Optional` and the client the generated-code contract (`JsonMerger` included); goldens, an analysis test and the checked-in `example/` project; the guide `client_codegen.md` |
+ 
+ **Decisions (2026-10-14):**
+ - Layer order is diagnostics < language < protocol < schema < validation; the
+```
+
+- [ ] **Step 2: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 3: Commit**
+
+```sh
+git add docs/superpowers/HANDOFF.md
+git commit -q -m "docs: record that M10 is complete and awaits merge" \
   -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 

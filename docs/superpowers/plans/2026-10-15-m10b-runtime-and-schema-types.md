@@ -139,15 +139,13 @@ for p in packages/*/; do (cd "$p" && timeout 900 dart test) || exit 1; done
 
 Run a new test file alone first under the same limits. The core, client and codegen suites include the documentation tests, which run each guide program as a `dart` process; the codegen suite also runs the analysis test (tag `analysis`), which creates a temporary package per golden case. If a run is killed (exit 137) or times out (exit 124), find the cause before going on.
 
-After the last task, also run the M10 packages on every compiler (Chrome only for the core and the client; the codegen package is VM-only):
+After the last task, also run the M10 packages on every compiler (Chrome only for the core; the client's Chrome runs are deferred to M11 and the codegen package is VM-only):
 
 ```sh
 (cd packages/typed_graphql && ulimit -v 8000000 && timeout 900 dart test --compiler exe test/protocol test/diagnostics)
 (cd packages/typed_graphql_client && ulimit -v 8000000 && timeout 900 dart test --compiler exe)
 (cd packages/typed_graphql && systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0 timeout 900 dart test -p chrome --compiler dart2js test/protocol)
 (cd packages/typed_graphql && systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0 timeout 900 dart test -p chrome --compiler dart2wasm test/protocol)
-(cd packages/typed_graphql_client && systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0 timeout 900 dart test -p chrome --compiler dart2js)
-(cd packages/typed_graphql_client && systemd-run --user --scope -p MemoryMax=8G -p MemorySwapMax=0 timeout 900 dart test -p chrome --compiler dart2wasm)
 (cd packages/typed_graphql_codegen && ulimit -v 8000000 && timeout 900 dart test --compiler exe)
 ```
 
