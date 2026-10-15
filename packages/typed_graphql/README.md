@@ -7,8 +7,9 @@
 **Parse, print and transform GraphQL queries and SDL in Dart, build and
 validate a schema from SDL, validate operations against it, and decode
 GraphQL responses into sealed `ResponsePayload` values, with every syntax
-error reported in one pass with its line and column.** Pure Dart, depends only on `meta`, runs on the VM, AOT
-and the web (dart2js and dart2wasm). Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
+error reported in one pass with its line and column.** Pure Dart, depends
+only on `meta`, runs on the VM, AOT and the web (dart2js and dart2wasm). Part
+of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
 > **Status: under construction.** This release has the diagnostics model, the
 > protocol data types, the language (syntax trees, lexer, parser, printer,

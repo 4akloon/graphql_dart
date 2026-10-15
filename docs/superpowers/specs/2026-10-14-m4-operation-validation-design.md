@@ -465,8 +465,10 @@ list and Documentation section, the package CHANGELOG, `CLAUDE.md` (a
 
 ## 14. Deviations from the architecture spec
 
-1. The 30 rules include three splits of graphql-js rules (§5.6.2, §5.6.4,
-   §5.7.2) so that each spec rule is one class and one code (section 5).
+1. The 30 rules include two graphql-js rules split into five classes
+   (`ValuesOfCorrectTypeRule` into §5.6.1, §5.6.2 and §5.6.4;
+   `KnownDirectivesRule` into §5.7.1 and §5.7.2) so that each spec rule is
+   one class and one code (section 5).
 2. The limit and cost rules are `ValidationRule`s too, configured by their
    constructor; the architecture spec named them only.
 3. Rules that need an operation's fragment closure report at

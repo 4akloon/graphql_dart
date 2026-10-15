@@ -62,8 +62,9 @@ the schema's names.
 
 The rules are public classes, so a list can drop, reorder or extend them:
 `DocumentValidator(rules: [...DocumentValidator.recommendedRules, MyRule()])`.
-Three graphql-js rules are split so that each class checks one rule of the
-specification and reports one code.
+Two graphql-js rules are split into five classes, so that each class checks one
+rule of the specification and reports one code: `ValuesOfCorrectTypeRule` into
+three and `KnownDirectivesRule` into two.
 
 | Code | Rule | Specification |
 |---|---|---|
@@ -106,7 +107,8 @@ validated (§2.2).
 
 Two fields with one response name must select the same thing. graphql-js
 compares every pair of such fields, which is quadratic: a document with a
-few thousand copies of one field keeps it busy for seconds.
+few thousand copies of one field takes time that grows with the square of
+their number.
 `OverlappingFieldsCanBeMergedRule` merges the fields level by level instead
 and compares each field with the first field of every other kind, so its
 work grows with the size of the document. It reports graphql-js's messages

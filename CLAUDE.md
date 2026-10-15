@@ -332,9 +332,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 - `DocumentValidator` (const: `rules`, `maxErrors`, `includesSuggestions`,
   `maxSteps`) validates a `Document` against a `ValidSchema` and returns the
   sealed `DocumentValidationResult` (`ValidDocument` | `InvalidDocument`).
-  `specifiedRules` are the 30 rules of spec §5 in graphql-js's order, three
-  graphql-js rules split so that one class reports one code; the default of
-  `rules` is `recommendedRules` (`specifiedRules` and
+  `specifiedRules` are the 30 rules of spec §5 in graphql-js's order, two
+  graphql-js rules split into five classes so that one class reports one
+  code; the default of `rules` is `recommendedRules` (`specifiedRules` and
   `MaxIntrospectionDepthRule`).
 - A `ValidationRule` is const configuration; `createVisitor(context)` gives
   a fresh `AstVisitor` per run. `ValidationWalk` walks the document once
