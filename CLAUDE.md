@@ -61,7 +61,10 @@ guides. M5d (look-ahead, authorization, cancellation) delivers
 `GQL352`), `CancelSignal` with `ExecutionOptions.cancelSignal` and `timeout`
 (`GQL350`, `GQL351`), the graphql-js cancellation suite, the executor
 benchmark and the Look-ahead, Authorization and Cancellation guides; with it
-stage M5 (execution) is complete. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+stage M5 (execution) is complete. M6a (DataLoader) delivers `BatchLoader` and
+`GroupedLoader` (per-request batching after the microtask queue drains,
+de-duplication, a per-loader cache, `MissingValueException`) and the DataLoader
+guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
 file or a URL, the project's documents as one fragment graph, the planner and
 emitters that generate the schema-types library and a library per document
 (operations, variables, data, fragments, sealed polymorphic classes, the
@@ -499,6 +502,14 @@ request error, and disposes the timer and the listener when the run ends.
 subscription starts the timer and the listener at `subscribe`, and the run's
 own signal releases both when it fires, so an unlistened stream is freed by a
 cancel or a timeout (one with neither keeps its listener on the caller's signal).
+`dataloader/` (M6a): `BatchLoader` and `GroupedLoader` are thin faces over the
+internal `LoaderQueue`, which dispatches a batch with a zero-duration timer
+after the microtask queue drains, splits it into chunks of `maxBatchSize`,
+keeps the cache (a failed key is evicted by identity, so a later `clear` or
+`prime` of the same key survives), completes every key exactly once and puts a
+listener on every future it creates, so an unread load never reports an
+unhandled error. Loaders are request-scoped because the context factory
+creates them for each request.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine

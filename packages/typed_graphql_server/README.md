@@ -14,8 +14,10 @@
 > masking and field middleware, answer introspection queries, run a
 > subscription over a stream of events, read which fields a request selected
 > under a field, guard fields with an authorizer and stop a request with a
-> cancel signal or a timeout. DataLoader and the request pipeline come in M6,
-> the HTTP, graphql-ws and graphql-sse handlers in M7. See the
+> cancel signal or a timeout. DataLoader (M6a) works too: `BatchLoader` and
+> `GroupedLoader` batch and cache the loads of one request. The request
+> pipeline comes later in M6, the HTTP, graphql-ws and graphql-sse handlers
+> in M7. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
 ## Contents
@@ -49,7 +51,7 @@ dependencies:
 - **You do not need it when** you only call a GraphQL server: that is the
   client package, not usable yet. Today it also has no HTTP or
   WebSocket handler: you call `ExecutableSchema.execute` or `subscribe`
-  yourself with a parsed and validated document (the handlers are M6 and M7).
+  yourself with a parsed and validated document (the request pipeline is M6, the handlers M7).
 - **What it replaces**: resolvers written against `Map<String, dynamic>`, where
   a wrong result type or a misspelled argument name fails at run time in the
   middle of a request. Here the wrong type does not compile, and every error

@@ -4,7 +4,8 @@
 ///
 /// Under construction: stage M5 is complete (the typed schema builder,
 /// execution, introspection, subscriptions, look-ahead, authorization and
-/// cancellation); transports follow. See the package README.
+/// cancellation) and DataLoader (`BatchLoader`, `GroupedLoader`) work; the
+/// request pipeline and the transports follow. See the package README.
 library;
 
 export 'src/authorization/authorization.dart';

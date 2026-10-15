@@ -45,6 +45,7 @@ adds its row (or turns it to "yes") together with its README line and its
 | GraphQL look-ahead requested fields dart | M5 | yes |
 | authorize GraphQL fields dart | M5 | yes |
 | cancel or time out a GraphQL request dart | M5 | yes |
+| dataloader dart graphql | M6 | yes |
 | GraphQL server dart | M7 | no |
 | generate a typed GraphQL client dart | M10 | yes |
 
