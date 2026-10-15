@@ -55,7 +55,13 @@ example. M5c (introspection and subscriptions) delivers the `__schema` and
 `__type` resolvers, `IntrospectionPolicy` (`GQL338`), `subscribe` with its
 source streams and rejected requests (`GQL324`, `GQL340`), the graphql-js
 introspection and subscribe suites, and the Introspection and Subscriptions
-guides. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+guides. M5d (look-ahead, authorization, cancellation) delivers
+`FieldInfo.selection` (`FieldSelection`, `SelectedField`, `ColumnWhitelist`),
+`Authorization`, `Authorizer` and `AuthorizationCoverage` (`GQL304`,
+`GQL352`), `CancelSignal` with `ExecutionOptions.cancelSignal` and `timeout`
+(`GQL350`, `GQL351`), the graphql-js cancellation suite, the executor
+benchmark and the Look-ahead, Authorization and Cancellation guides; with it
+stage M5 (execution) is complete. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
 file or a URL, the project's documents as one fragment graph, the planner and
 emitters that generate the schema-types library and a library per document
 (operations, variables, data, fragments, sealed polymorphic classes, the
@@ -412,8 +418,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 only through its barrel. One folder per concern, with no import order
 (`builder/` and `execution/` import each other): `builder/` (M5a),
 `coercion/`, `plan/` and `execution/` (M5b), `introspection/` and
-`subscription/` (M5c), then `lookahead/`, `authorization/` and `cancellation/`
-in later sub-stages. The package is
+`subscription/` (M5c), `lookahead/`, `authorization/` and `cancellation/`
+(M5d). The package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
 or web framework, only `dart:async`, `dart:collection`, `dart:core`,
 `dart:math`, `meta` and the core (`test/quality/imports_test.dart`), and the
@@ -456,6 +462,31 @@ latter); `execution/SubscriptionExecution` prepares the operation once
 order, pausing the source meanwhile; a source that fails after listening is the
 last result (`GQL340`), one that fails at start is a `SubscriptionRejected`.
 `subscription/` holds only the public `SubscriptionResult` family.
+`lookahead/` (M5d): `FieldInfo.selection` is a `FieldSelection` built on first
+read from the field's `FieldPlan`s and the run's variables
+(`FieldInfo.selectionReader` is `@internal`); `SelectionNodes` flattens
+fragments and applies `@skip`/`@include`, `forType` narrows an abstract type,
+every name starting with `__` is hidden. A `SelectedField` reads its
+`arguments` on first use (a failing argument reads absent; the executor
+reports it) and has its own `selection`. `SelectionFingerprint` (field names
+sorted, arguments as `CanonicalJson` with sorted keys, explicit stacks) is the
+DataLoader key; `ColumnWhitelist` maps field names to sorted columns.
+`authorization/` (M5d): `Authorization` is sealed (`public`, `requires`); a
+rule is set by `FieldStub.withAuthorization` or `ObjectOptions.authorization`
+(the field's own wins) and applied after middleware composition by
+`builder/AuthorizationApplier` and `FieldGuard`, which wrap the composed lane
+so the `Authorizer<C>` (in `BuildOptions.authorizer`) runs before middleware
+on every lane, a pure field included. A deny is `GQL352`, a missing authorizer
+one `GQL304` listing the coordinates; introspection fields are never guarded;
+a redeclared interface field does not inherit the interface's rule.
+`AuthorizationCoverage` lists unguarded fields for a test.
+`cancellation/` (M5d): `CancelSignal` is the caller's plain class (no
+platform import); `execution/RunCancellation` links it with the timeout into
+the run's signal (`FieldInfo.cancelSignal`) when `OperationPreparation` has no
+request error, and disposes the timer and the listener when the run ends.
+`ExecutionRun.executeRoot` races the pending result against it once and
+`FieldExecution` starts no field after it fires (`GQL350`, `GQL351`); a
+subscription keeps the timer from `subscribe` and the listener from `listen`.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine
@@ -634,6 +665,24 @@ Learned in M4b:
   twice is exponential; a fragment on the stack is a cycle and counts 0.
 - graphql-js test names may be double-quoted in the source; the suite
   reader handles both quotes.
+
+Learned in M5:
+- A field typed with a class parameter in a function position (`P` in a
+  `resolveType` or lane that takes `Object?`) is contravariant: reading it
+  through `Foo<Object?>` throws a `TypeError`. Take `Object?` in lanes and cast
+  inside the definition, or expose `hasX`/`untypedX`.
+- A synchronous broadcast source can deliver inside `listen`, so state a
+  listener reads must be set before `listen`, and a paused subscription
+  buffers without bound.
+- Tests that spawn `dart` through `Platform.resolvedExecutable` break under
+  `--compiler exe` (it is the test binary): skip them there.
+- A pending future must be raced against cancellation, or `execute` waits for
+  the slowest resolver; check the signal before each field too.
+- A change to the core goes in its own commit, before the commit of the server
+  that needs it.
+- A guide program formats with `dart format`: `final x = F({...}, a: b)`
+  may become one argument per line; run the formatter on the fence before
+  trusting the guide test.
 
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and

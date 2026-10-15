@@ -6,14 +6,16 @@
 
 **A fully typed GraphQL server for Dart: a typed schema builder, the execution engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws and graphql-sse handlers.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
-> **Status: under construction.** The typed schema builder (M5a), query
-> execution (M5b), introspection and subscriptions (M5c) work: you can declare
-> a schema in typed Dart code, parse and validate a request with the core, and
+> **Status: under construction.** Stage M5 is complete. The typed schema
+> builder (M5a), query execution (M5b), introspection and subscriptions (M5c),
+> look-ahead, authorization and cancellation (M5d) work: you can declare a
+> schema in typed Dart code, parse and validate a request with the core, and
 > execute it, with variables, specified null propagation, error behaviours,
-> masking and field middleware, answer introspection queries and run a
-> subscription over a stream of events. Look-ahead, authorization and
-> cancellation arrive in M5d; the request pipeline and the HTTP, graphql-ws and
-> graphql-sse handlers later. See the
+> masking and field middleware, answer introspection queries, run a
+> subscription over a stream of events, read which fields a request selected
+> under a field, guard fields with an authorizer and stop a request with a
+> cancel signal or a timeout. DataLoader and the request pipeline come in M6,
+> the HTTP, graphql-ws and graphql-sse handlers in M7. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
 ## Contents
@@ -47,7 +49,7 @@ dependencies:
 - **You do not need it when** you only call a GraphQL server: that is the
   client package, not usable yet. Today it also has no HTTP or
   WebSocket handler: you call `ExecutableSchema.execute` or `subscribe`
-  yourself with a parsed and validated document.
+  yourself with a parsed and validated document (the handlers are M6 and M7).
 - **What it replaces**: resolvers written against `Map<String, dynamic>`, where
   a wrong result type or a misspelled argument name fails at run time in the
   middle of a request. Here the wrong type does not compile, and every error
@@ -140,6 +142,12 @@ It prints:
   answer as the core, `IntrospectionPolicy`, root types without a root value.
 - [Subscriptions](doc/subscriptions.md): source streams, one event at a time,
   rejected and failed subscriptions.
+- [Look-ahead](doc/lookahead.md): the fields a request selected under a field,
+  `fingerprint` as a DataLoader key, `ColumnWhitelist`.
+- [Authorization](doc/authorization.md): rules on fields and types, the
+  `Authorizer`, deny messages, `AuthorizationCoverage`.
+- [Cancellation](doc/cancellation.md): `CancelSignal`, timeouts, what
+  resolvers and subscriptions see.
 
 ## License
 
