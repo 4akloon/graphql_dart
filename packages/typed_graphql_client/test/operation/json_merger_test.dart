@@ -60,13 +60,23 @@ void main() {
     );
   });
 
-  test('lets the later value win for other pairs', () {
+  test('keeps the fragment value when the later class writes null', () {
     expect(
       merger.merge([
         JsonObject({'a': JsonNumber(1)}),
         JsonObject({'a': const JsonNull()}),
       ]),
-      JsonObject({'a': const JsonNull()}),
+      JsonObject({'a': JsonNumber(1)}),
+    );
+  });
+
+  test('lets the later value win for other pairs', () {
+    expect(
+      merger.merge([
+        JsonObject({'a': JsonNumber(1)}),
+        JsonObject({'a': const JsonString('x')}),
+      ]),
+      JsonObject({'a': const JsonString('x')}),
     );
   });
 }

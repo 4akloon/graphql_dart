@@ -7,7 +7,9 @@ import 'package:typed_graphql/typed_graphql.dart';
 /// same response name with different sub-selections; the written object
 /// must hold the fields of both. Objects merge by key, recursively; arrays
 /// merge by index, as the reader reads the same list once per selection;
-/// for any other pair the later value wins.
+/// a null never replaces a value (a class that does not select a field
+/// writes null where its fragment wrote the object); for any other pair the
+/// later value wins.
 ///
 /// {@category operations}
 final class const JsonMerger() {
@@ -47,6 +49,7 @@ final class const JsonMerger() {
           base,
           extra,
         ),
+        (_, JsonNull()) => base,
         _ => extra,
       };
 
