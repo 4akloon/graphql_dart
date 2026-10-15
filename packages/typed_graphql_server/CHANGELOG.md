@@ -137,3 +137,5 @@
   lists), so a resolver cannot change the cached arguments of later requests.
 - The `ExecutableSchema` and `FieldDef` constructors, `FieldDef.lane`,
   `FieldDef.middleware` and `CancelSignal.listenerCount` are `@internal`.
+- A run that halted (for example `GQL337`) and is then cancelled answers with
+  the halt error, not `GQL350`.

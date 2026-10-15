@@ -126,17 +126,19 @@ final class ExecutionRun {
       return _response(data);
     }
     final response = data.then(_response);
-    return cancellation?.race(response) ?? response;
+    return cancellation?.race(response, () => _response(null)) ?? response;
   }
 
-  // A call cancelled meanwhile answers with the cancellation only (spec 13).
+  // A halt wins over a cancellation that arrives after it: the limit is the
+  // cause, the cancel only cut the wait (spec 18.38). Otherwise a call
+  // cancelled meanwhile answers with the cancellation only (spec 13).
   ExecutionResult _response(JsonObject? data) {
-    if (cancellation case final cancelled? when cancelled.isCancelled) {
-      return cancelled.result;
-    }
     final log = reporter.log;
     if (log.haltError case final halted?) {
       return ExecutionResult(null, errors: [halted]);
+    }
+    if (cancellation case final cancelled? when cancelled.isCancelled) {
+      return cancelled.result;
     }
     return ExecutionResult(data, errors: log.errors);
   }

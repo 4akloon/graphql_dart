@@ -64,15 +64,18 @@ final class RunCancellation {
   /// The response of a cancelled run: no data and [error].
   ExecutionResult get result => ExecutionResult(null, errors: [error]);
 
-  /// [pending], or the cancelled [result] as soon as the run is cancelled.
-  Future<ExecutionResult> race(Future<ExecutionResult> pending) {
+  /// [pending], or [cancelledResult] as soon as the run is cancelled.
+  Future<ExecutionResult> race(
+    Future<ExecutionResult> pending,
+    ExecutionResult Function() cancelledResult,
+  ) {
     if (isCancelled) {
-      return Future.value(result);
+      return Future.value(cancelledResult());
     }
     final completer = Completer<ExecutionResult>();
     final detach = signal.addListener(() {
       if (!completer.isCompleted) {
-        completer.complete(result);
+        completer.complete(cancelledResult());
       }
     });
     pending.then(

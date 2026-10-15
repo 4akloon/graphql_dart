@@ -80,6 +80,20 @@ void main() {
       expect(result.errors, hasLength(1));
     });
 
+    test('after a halt keeps the halt error', () async {
+      final probe = Probe();
+      final signal = CancelSignal();
+      final pending = fixture.execute(
+        '{ slow sync after }',
+        probe,
+        options: ExecutionOptions(cancelSignal: signal, maxSteps: 1),
+      );
+      signal.cancel();
+      final result = await (pending as Future<ResponsePayload>);
+      probe.gate.complete();
+      expect(CancellationFixture.codeOf(result), 'GQL337');
+    });
+
     test('starts no field after it', () async {
       final probe = Probe();
       final signal = CancelSignal();

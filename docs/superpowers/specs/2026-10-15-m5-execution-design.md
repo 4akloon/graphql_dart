@@ -716,7 +716,9 @@ depends on the other). These constraints keep that possible:
     `__typename`.
 38. The executor races the pending result against cancellation once, at the
     root, and checks `isCancelled` before it starts each field. A resolver
-    already running is not interrupted; its result is dropped.
+    already running is not interrupted; its result is dropped. A halt (for
+    example `GQL337`) wins over a cancellation that arrives after it: the
+    response carries the halt error, not `GQL350`.
 39. Request errors win over an already-cancelled signal: an unknown
     operation or unusable variables are a `RequestErrorResult`, and no timer
     starts for them.
