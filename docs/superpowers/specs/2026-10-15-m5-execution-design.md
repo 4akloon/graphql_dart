@@ -608,6 +608,60 @@ depends on the other). These constraints keep that possible:
     each, so core and server commits stay apart (the task's rule); the
     catalog test still sees each code used by a test before the stage
     ends.
+13. The executor waits for the resolvers that already started before it
+    answers, so a late error of a branch that a sibling's null already
+    discarded is still in the response; graphql-js answers first and drops
+    it. Waiting keeps `onError` and the error log complete and never
+    leaves work running behind a finished response
+    (`executor_errors_test.dart`, `nonnull_multiple_test.dart`).
+14. Operation request errors (`GQL320`-`GQL323`) carry no `locations`, and
+    a `RequestErrorResult` has no `data: null`: the type says "no data"
+    (`executor_operations_test.dart`).
+15. A resolver reports an error by throwing or failing its future. A
+    returned error value, a thrown value that is not an `Error` or
+    `Exception` and an empty rejection are JavaScript-only: a Dart value
+    is never an error, and anything thrown is masked like any other
+    unexpected error (`executor_errors_test.dart`).
+16. When two errors both reach the response they come in document order;
+    graphql-js orders them by completion time, which a deterministic
+    response must not depend on (`nonnull_multiple_test.dart`).
+17. A typed list holds values, not futures or errors; a field may return
+    a `Future` of the whole list. A list stops at its first failing or
+    null item without draining the iterable, and an async iterable is not
+    a list value (M14 brings streams of items)
+    (`lists_nullability_test.dart`, `lists_test.dart`).
+18. A `String` field takes a Dart `String`: there is no number-to-string
+    serialization, because the builder fixes the result type at compile
+    time (`lists_test.dart`).
+19. An argument reports only its first problem, where graphql-js lists all
+    of them (a field fails at its first bad argument); a variable
+    reports every problem, up to `maxCoercionErrors`. The
+    problems arrive as one variable or argument error each, with the path
+    in the message, not as (message, path) pairs
+    (`validate_input_value_test.dart`, `validate_input_literal_test.dart`).
+20. A codec's failure message is reported as it is, without graphql-js's
+    "Expected value of type X" wrapper, so a codec owns its message
+    (`validate_input_value_test.dart`).
+21. A custom scalar has no literal parser (R2.9): a literal is converted
+    to JSON and decoded by the codec, and a Boolean variable used where a
+    list is expected is refused, where graphql-js passes it through
+    (`coerce_input_literal_test.dart`).
+22. JSON has no `undefined` and no `NaN`: a missing value is a key left
+    out, and a test that needs `NaN` uses another invalid value
+    (`variables_lists_test.dart`, `coerce_input_value_test.dart`).
+23. Fragment arguments (experimental in graphql-js) and
+    `@experimental_disableErrorPropagation` are not supported; the second
+    is `ErrorBehavior.nullValue` for the whole request. The tests are
+    `skipped` in `mapping/execution.csv`
+    (`error_propagation_test.dart`).
+24. `resolveType` and `isTypeOf` are synchronous and take only the value
+    (no context, info or promise), and `resolveType` returns a definition,
+    never a name, so graphql-js's messages for an unknown or misspelled
+    type name are unreachable. There is no default `__typename`-key
+    resolution (`abstract_test.dart`).
+25. Enum values are Dart enum values, with no internal values: the tests
+    with a "bad" complex internal value or a string given for an enum
+    cannot be written (`enum_type_test.dart`).
 
 ## 19. Conformance (R0.7, R10.3)
 
