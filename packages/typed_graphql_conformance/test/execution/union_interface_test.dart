@@ -51,6 +51,10 @@ void main() {
   late final ObjectTypeDef<_Dog> dog;
   late final ObjectTypeDef<_Cat> cat;
   late final ObjectTypeDef<_Person> person;
+  // late: the person's fields are a thunk that reads them after they are set,
+  // and the types are created in graphql-js's order (Person before Plant).
+  late final UnionTypeDef<Object?> pet;
+  late final UnionTypeDef<Object?> petOrPlant;
   final named = b.interface<Object?>(
     'Named',
     fields: (t) => [t.field('name', b.string.nullable).declareOnly()],
@@ -94,21 +98,6 @@ void main() {
       t.field('father', cat.nullable).pure((c) => c.father),
     ],
   );
-  final plant = b.object<_Plant>(
-    'Plant',
-    interfaces: [named],
-    options: ObjectOptions(isTypeOf: (value) => value is _Plant),
-    fields: (t) => [t.field('name', b.string.nullable).pure((p) => p.name)],
-  );
-  final pet = b.union<Object?>(
-    'Pet',
-    members: [dog, cat],
-    resolveType: (value) => value is _Dog ? dog : cat,
-  );
-  final petOrPlant = b.union<Object?>(
-    'PetOrPlantType',
-    members: [plant, dog, cat],
-  );
   person = b.object<_Person>(
     'Person',
     interfaces: [named, mammal, life],
@@ -128,6 +117,21 @@ void main() {
       t.field('mother', person.nullable).pure((p) => p.mother),
       t.field('father', person.nullable).pure((p) => p.father),
     ],
+  );
+  final plant = b.object<_Plant>(
+    'Plant',
+    interfaces: [named],
+    options: ObjectOptions(isTypeOf: (value) => value is _Plant),
+    fields: (t) => [t.field('name', b.string.nullable).pure((p) => p.name)],
+  );
+  pet = b.union<Object?>(
+    'Pet',
+    members: [dog, cat],
+    resolveType: (value) => value is _Dog ? dog : cat,
+  );
+  petOrPlant = b.union<Object?>(
+    'PetOrPlantType',
+    members: [plant, dog, cat],
   );
   final schema = b.build(query: person);
 
@@ -158,6 +162,78 @@ void main() {
   ];
 
   group('Execute: Union and intersection types', () {
+    test('can introspect on union and intersection types', () async {
+      String selection(String alias, String name) =>
+          '''
+        $alias: __type(name: "$name") {
+          kind
+          name
+          fields { name }
+          interfaces { name }
+          possibleTypes { name }
+          enumValues { name }
+          inputFields { name }
+        }
+''';
+      expect(
+        await run('''
+      {
+${selection('Named', 'Named')}${selection('Mammal', 'Mammal')}${selection('Pet', 'Pet')}      }
+    ''', rootValue: john),
+        {
+          'data': {
+            'Named': {
+              'kind': 'INTERFACE',
+              'name': 'Named',
+              'fields': [
+                {'name': 'name'},
+              ],
+              'interfaces': <Object?>[],
+              'possibleTypes': [
+                {'name': 'Dog'},
+                {'name': 'Cat'},
+                {'name': 'Person'},
+                {'name': 'Plant'},
+              ],
+              'enumValues': null,
+              'inputFields': null,
+            },
+            'Mammal': {
+              'kind': 'INTERFACE',
+              'name': 'Mammal',
+              'fields': [
+                {'name': 'progeny'},
+                {'name': 'mother'},
+                {'name': 'father'},
+              ],
+              'interfaces': [
+                {'name': 'Life'},
+              ],
+              'possibleTypes': [
+                {'name': 'Dog'},
+                {'name': 'Cat'},
+                {'name': 'Person'},
+              ],
+              'enumValues': null,
+              'inputFields': null,
+            },
+            'Pet': {
+              'kind': 'UNION',
+              'name': 'Pet',
+              'fields': null,
+              'interfaces': null,
+              'possibleTypes': [
+                {'name': 'Dog'},
+                {'name': 'Cat'},
+              ],
+              'enumValues': null,
+              'inputFields': null,
+            },
+          },
+        },
+      );
+    });
+
     test('executes using union types', () async {
       expect(
         await run('''

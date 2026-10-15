@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:test/test.dart';
+import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 import '../support/execution_port.dart';
@@ -49,6 +52,17 @@ void main() {
   final thunkFromEnum = Arg('fromEnum', thunkValues.nullable);
   final colorArg = Arg('color', color.nullable);
   final schema = b.build(
+    subscription: b.object<Object?>(
+      'Subscription',
+      fields: (t) => [
+        t
+            .field('subscribeToEnum', color.nullable, args: [colorArg])
+            .subscribeWith<Object?>(
+              (parent, args, context, info) => const Stream.empty(),
+              (event, args, context, info) => args.get(colorArg),
+            ),
+      ],
+    ),
     query: b.object<Object?>(
       'Query',
       fields: (t) => [
@@ -229,6 +243,21 @@ void main() {
       );
     });
 
+    test(
+      'accepts enum literals as input arguments to subscriptions',
+      () async {
+        expect(
+          await respond(
+            r'subscription ($color: Color!) { subscribeToEnum(color: $color) }',
+            variables: {'color': 'GREEN'},
+          ),
+          {
+            'data': {'subscribeToEnum': 'GREEN'},
+          },
+        );
+      },
+    );
+
     test('does not accept internal value as enum variable', () async {
       expect(
         await respond(
@@ -351,6 +380,13 @@ void main() {
       expect(await respond('{ thunkValuesString(fromEnum: B) }'), {
         'data': {'thunkValuesString': 'b'},
       });
+    });
+
+    test('can be introspected without error', () {
+      expect(
+        () => schema.schema.schema.toIntrospection(IntrospectionQuery.full),
+        returnsNormally,
+      );
     });
   });
 }

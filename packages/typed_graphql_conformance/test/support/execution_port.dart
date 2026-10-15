@@ -39,18 +39,40 @@ final class ExecutionPort {
     context: context,
     operationName: operationName,
     variables: variables,
-    options: ExecutionOptions(
-      rootValue: options.rootValue,
-      source: Source(text),
-      errorBehavior: options.errorBehavior,
-      maskErrors: options.maskErrors,
-      includesSuggestions: options.includesSuggestions,
-      onError: options.onError,
-      maxCoercionErrors: options.maxCoercionErrors,
-      maxDepth: options.maxDepth,
-      maxSteps: options.maxSteps,
-    ),
+    options: _withSource(options, text),
   );
+
+  /// graphql-js's `subscribe` for the unvalidated [text]: the source of the
+  /// single root field is created and the stream (or the request error) is
+  /// returned.
+  FutureOr<SubscriptionResult> subscribe<C>(
+    ExecutableSchema<C> schema,
+    String text, {
+    required C context,
+    String? operationName,
+    JsonObject? variables,
+    ExecutionOptions options = unmasked,
+  }) => schema.subscribe(
+    ValidDocument.assumeValid(schema.schema, parse(text)),
+    context: context,
+    operationName: operationName,
+    variables: variables,
+    options: _withSource(options, text),
+  );
+
+  ExecutionOptions _withSource(ExecutionOptions options, String text) =>
+      ExecutionOptions(
+        rootValue: options.rootValue,
+        source: Source(text),
+        errorBehavior: options.errorBehavior,
+        maskErrors: options.maskErrors,
+        includesSuggestions: options.includesSuggestions,
+        onError: options.onError,
+        maxCoercionErrors: options.maxCoercionErrors,
+        maxDepth: options.maxDepth,
+        maxSteps: options.maxSteps,
+        introspection: options.introspection,
+      );
 
   /// [payload] for a schema whose context is not read.
   FutureOr<ResponsePayload> run(
