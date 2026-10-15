@@ -54,3 +54,9 @@
 - **Breaking:** `FieldInfo` carries the parent `ObjectType`, `returnType`,
   `fieldNodes`, `operation`, `variables`, `schema` and `rootValue`, and its
   `path` is a `ResponsePath` (`toList()` gives the segments).
+- Field middleware: `FieldResolver<C>`, `FieldMiddleware<C>`, `DirectiveMiddleware<C>` and `FieldSite`; `FieldStub.withMiddleware`, `BuildOptions.middleware` and
+  `BuildOptions.directiveMiddleware`. Chains are composed once per field at
+  build time (global, field, directive slots; outermost first); the pure lane
+  and an empty chain are called directly. A slot for an undefined directive is
+  an `ArgumentError`.
+- **Breaking:** `BuildOptions` is generic (`BuildOptions<C>`) and `build` takes `BuildOptions<C>?`.

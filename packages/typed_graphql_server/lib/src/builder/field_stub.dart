@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../execution/field_info.dart';
+import '../execution/field_middleware.dart';
 import 'arg.dart';
 import 'arguments.dart';
 import 'arguments_def.dart';
@@ -24,7 +25,7 @@ final class FieldStub<P, R, C> {
     OutputRef<R> type, {
     List<Arg<Object?>> args = const [],
     String? description,
-  }) : this._(name, type, args, description, null, const []);
+  }) : this._(name, type, args, description, null, const [], const []);
 
   FieldStub._(
     this.name,
@@ -33,6 +34,7 @@ final class FieldStub<P, R, C> {
     this.description,
     this._deprecationReason,
     this._directives,
+    this._middleware,
   );
 
   /// The field's name.
@@ -47,17 +49,41 @@ final class FieldStub<P, R, C> {
   final List<Arg<Object?>> _args;
   final String? _deprecationReason;
   final List<AppliedDirective> _directives;
+  final List<FieldMiddleware<C>> _middleware;
 
   /// The same field, deprecated for [reason].
-  FieldStub<P, R, C> deprecated(String reason) =>
-      FieldStub._(name, type, _args, description, reason, _directives);
+  FieldStub<P, R, C> deprecated(String reason) => FieldStub._(
+    name,
+    type,
+    _args,
+    description,
+    reason,
+    _directives,
+    _middleware,
+  );
 
   /// The same field with [directives] applied after the ones already given.
   FieldStub<P, R, C> withDirectives(List<AppliedDirective> directives) =>
       FieldStub._(name, type, _args, description, _deprecationReason, [
         ..._directives,
         ...directives,
-      ]);
+      ], _middleware);
+
+  /// The same field with [middleware] after the ones already given.
+  ///
+  /// They run inside the global middleware and outside the directive ones,
+  /// the first of the list outermost (spec 8). A pure field has no chain:
+  /// combining it with middleware is an [ArgumentError].
+  FieldStub<P, R, C> withMiddleware(List<FieldMiddleware<C>> middleware) =>
+      FieldStub._(
+        name,
+        type,
+        _args,
+        description,
+        _deprecationReason,
+        _directives,
+        [..._middleware, ...middleware],
+      );
 
   /// Completes the field with a synchronous getter (the pure lane, R4.2).
   ///
@@ -68,6 +94,12 @@ final class FieldStub<P, R, C> {
       throw ArgumentError(
         'Field "$name" gives args and pure; a pure getter reads no '
         'arguments, use resolve or resolveWith.',
+      );
+    }
+    if (_middleware.isNotEmpty) {
+      throw ArgumentError(
+        'Field "$name" gives middleware and pure; a pure getter has no '
+        'middleware chain, use resolve.',
       );
     }
     return _define(PureLane((parent) => read(parent as P)), _args);
@@ -125,5 +157,6 @@ final class FieldStub<P, R, C> {
     deprecationReason: _deprecationReason,
     directives: _directives,
     lane: lane,
+    middleware: _middleware,
   );
 }

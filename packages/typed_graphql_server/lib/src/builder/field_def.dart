@@ -20,8 +20,10 @@ final class FieldDef<P, C> {
     required this.lane,
     this.description,
     this.deprecationReason,
+    List<Object> middleware = const [],
   }) : args = List.unmodifiable(args),
-       directives = List.unmodifiable(directives);
+       directives = List.unmodifiable(directives),
+       middleware = List.unmodifiable(middleware);
 
   /// The field's name in the schema.
   final String name;
@@ -43,4 +45,21 @@ final class FieldDef<P, C> {
 
   /// How the field produces its value.
   final FieldLane lane;
+
+  /// The `FieldMiddleware<C>` values of the field, erased to [Object]: a
+  /// definition read as `FieldDef<Object?, Object?>` must not hold a
+  /// `C`-typed function. The build casts them back where `C` is known.
+  final List<Object> middleware;
+
+  /// The same field with [lane] and no middleware of its own: the build
+  /// stores the composed chain this way.
+  FieldDef<P, C> withLane(FieldLane lane) => FieldDef(
+    name: name,
+    type: type,
+    args: args,
+    directives: directives,
+    lane: lane,
+    description: description,
+    deprecationReason: deprecationReason,
+  );
 }

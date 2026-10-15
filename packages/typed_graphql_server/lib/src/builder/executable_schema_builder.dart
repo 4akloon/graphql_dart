@@ -192,12 +192,12 @@ final class ExecutableSchemaBuilder<C>() with BuiltInScalarDefinitions {
     required ObjectTypeDef<Object?> query,
     ObjectTypeDef<Object?>? mutation,
     ObjectTypeDef<Object?>? subscription,
-    BuildOptions options = const BuildOptions(),
+    BuildOptions<C>? options,
   }) => ExecutableSchemaAssembly<C>(
     definitions: definitions,
     query: query,
     mutation: mutation,
     subscription: subscription,
-    options: options,
+    options: options ?? BuildOptions<C>(),
   ).assemble();
 }

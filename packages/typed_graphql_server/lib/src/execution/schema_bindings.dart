@@ -20,6 +20,17 @@ final class SchemaBindings {
        leaves = Map.unmodifiable(leaves),
        inputObjects = Map.unmodifiable(inputObjects);
 
+  /// The same tables with [fields] in place of the field tables.
+  SchemaBindings withFields(
+    Map<String, Map<String, FieldDef<Object?, Object?>>> fields,
+  ) => SchemaBindings(
+    objects: objects,
+    fields: fields,
+    abstractTypes: abstractTypes,
+    leaves: leaves,
+    inputObjects: inputObjects,
+  );
+
   /// The object types.
   final Map<String, ObjectTypeDef<Object?>> objects;
 

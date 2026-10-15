@@ -3,6 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 import '../execution/executable_schema.dart';
 import 'build_options.dart';
 import 'builder_checks.dart';
+import 'field_middleware_composer.dart';
 import 'input_value_assembler.dart';
 import 'literal_writer.dart';
 import 'named_type_def.dart';
@@ -37,7 +38,7 @@ final class ExecutableSchemaAssembly<C> {
   final ObjectTypeDef<Object?>? subscription;
 
   /// The other settings.
-  final BuildOptions options;
+  final BuildOptions<C> options;
 
   /// Assembles the schema; throws [SchemaBuildError] on any problem.
   ExecutableSchema<C> assemble() {
@@ -52,9 +53,13 @@ final class ExecutableSchemaAssembly<C> {
     if (problems.any((problem) => problem.isError)) {
       throw SchemaBuildError(problems);
     }
+    final bindings = SchemaBindingsAssembler().assemble(
+      definitions,
+      possibleTypes,
+    );
     return ExecutableSchema(
       ValidSchema.assumeValid(schema),
-      SchemaBindingsAssembler().assemble(definitions, possibleTypes),
+      FieldMiddlewareComposer<C>(schema, options).compose(bindings),
       planCacheSize: options.planCacheSize,
     );
   }
