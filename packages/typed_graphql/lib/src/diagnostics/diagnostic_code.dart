@@ -551,6 +551,15 @@ enum DiagnosticCode(
   /// mapped to.
   reservedTypeName('GQL508'),
 
+  /// `GQL509`: `check` found a generated file that is missing or differs from
+  /// what `generate` would write; reported without a span.
+  outputOutdated('GQL509'),
+
+  /// `GQL510`: a file the command line must read, such as the configuration,
+  /// the schema or a document, or the schema URL, cannot be read; reported
+  /// without a span.
+  inputUnreadable('GQL510'),
+
   /// `GQL511`: an operation or fragment whose selections would make the code
   /// generator declare more classes than its fixed limit (10000); reported at
   /// the operation or fragment name.
