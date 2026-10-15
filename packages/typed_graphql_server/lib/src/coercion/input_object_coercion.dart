@@ -1,9 +1,9 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
-import '../builder/arguments.dart';
-import '../execution/graphql_exception.dart';
 import 'coercion_environment.dart';
 import 'coercion_problems.dart';
+import 'input_messages.dart';
+import 'input_object_decoder.dart';
 import 'input_path.dart';
 import 'invalid_value.dart';
 import 'value_coercion.dart';
@@ -18,7 +18,6 @@ final class InputObjectCoercion {
   InputObjectCoercion(this.environment, this.problems, this.values);
 
   static const ValueInspector _inspector = ValueInspector();
-  static const Suggestions _suggestions = Suggestions();
   static const LiteralConverter _converter = LiteralConverter();
 
   /// The schema and the definitions.
@@ -30,6 +29,9 @@ final class InputObjectCoercion {
   /// Coerces the values of the fields.
   final ValueCoercion values;
 
+  InputMessages get _messages =>
+      InputMessages(includesSuggestions: environment.includesSuggestions);
+
   /// The Dart value of [value] for [type] at [path].
   Object? coerce(
     JsonValue value,
@@ -39,8 +41,7 @@ final class InputObjectCoercion {
   ) {
     if (value is! JsonObject) {
       problems.add(
-        'Expected value of type "${type.name}" to be an object, '
-        'found: ${_inspector.inspect(value)}.',
+        _messages.notObject(type.name, _inspector.inspect(value)),
         path,
       );
       return InvalidValue.instance;
@@ -49,7 +50,9 @@ final class InputObjectCoercion {
     var isValid = _coerceFields(value, type, coerced, path, depth);
     isValid = _checkUnknown(value, type, path) && isValid;
     isValid = (!type.isOneOf || _checkOneOf(value, type, path)) && isValid;
-    return isValid ? _decode(coerced, type, path) : InvalidValue.instance;
+    return isValid
+        ? InputObjectDecoder(environment, problems).decode(coerced, type, path)
+        : InvalidValue.instance;
   }
 
   bool _coerceFields(
@@ -91,8 +94,11 @@ final class InputObjectCoercion {
     }
     if (field.type is NonNullType) {
       problems.add(
-        'Expected value of type "${type.name}" to include required field '
-        '"${field.name}", found: ${_inspector.inspect(value)}.',
+        _messages.missingField(
+          type.name,
+          field.name,
+          _inspector.inspect(value),
+        ),
         path,
       );
       return InvalidValue.instance;
@@ -132,13 +138,13 @@ final class InputObjectCoercion {
       if (problems.hasOverflowed) {
         break;
       }
-      final suggestion = environment.includesSuggestions
-          ? _suggestions.didYouMean(_suggestions.listFor(name, names))
-          : '';
-      final lead = suggestion.isEmpty ? ', found' : '.$suggestion Found';
       problems.add(
-        'Expected value of type "${type.name}" not to include unknown field '
-        '"$name"$lead: ${_inspector.inspect(value)}.',
+        _messages.unknownField(
+          type.name,
+          name,
+          names,
+          _inspector.inspect(value),
+        ),
         path,
       );
     }
@@ -146,9 +152,7 @@ final class InputObjectCoercion {
   }
 
   bool _checkOneOf(JsonObject value, InputObjectType type, InputPath path) {
-    final message =
-        'Within OneOf Input Object type "${type.name}", exactly one field '
-        'must be specified, and the value for that field must be non-null.';
+    final message = _messages.oneOf(type.name);
     final known = {for (final field in type.fields) field.name};
     final given = [
       for (final name in value.fields.keys)
@@ -163,29 +167,5 @@ final class InputObjectCoercion {
       isValid = false;
     }
     return isValid;
-  }
-
-  Object? _decode(
-    Map<String, Object?> coerced,
-    InputObjectType type,
-    InputPath path,
-  ) {
-    final definition = environment.bindings.inputObjects[type.name];
-    if (definition == null) {
-      return _reject('Input object "${type.name}" has no definition.', path);
-    }
-    try {
-      return definition.decode(Arguments(definition.fields, coerced));
-    } on GraphQLException catch (exception) {
-      problems.add(exception.message, path, extensions: exception.extensions);
-    } on Object catch (error, stackTrace) {
-      problems.add(
-        'Unexpected error.',
-        path,
-        code: DiagnosticCode.inputDecodeFailed,
-        thrown: (error: error, stackTrace: stackTrace),
-      );
-    }
-    return InvalidValue.instance;
   }
 }

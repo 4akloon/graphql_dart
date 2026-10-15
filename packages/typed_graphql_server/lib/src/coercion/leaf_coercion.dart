@@ -79,19 +79,21 @@ final class LeafCoercion {
       final printed = _inspector.inspect(value);
       return _reject(
         'Enum "${type.name}" cannot represent non-string value: $printed.'
-        '${_didYouMean(printed, type)}',
+        '${suggestEnumValue(printed, type)}',
         path,
       );
     }
     return definition.valueNamed(value.value) ??
         _reject(
           'Value "${value.value}" does not exist in "${type.name}" enum.'
-          '${_didYouMean(value.value, type)}',
+          '${suggestEnumValue(value.value, type)}',
           path,
         );
   }
 
-  String _didYouMean(String input, EnumType type) {
+  /// graphql-js's "Did you mean the enum value ..." text for [input], empty
+  /// when suggestions are off.
+  String suggestEnumValue(String input, EnumType type) {
     if (!environment.includesSuggestions) {
       return '';
     }

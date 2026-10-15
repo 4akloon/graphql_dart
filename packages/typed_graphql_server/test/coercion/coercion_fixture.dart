@@ -1,4 +1,5 @@
 import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_server/src/coercion/coercion_environment.dart';
 import 'package:typed_graphql_server/src/coercion/coercion_problem.dart';
 import 'package:typed_graphql_server/src/coercion/coercion_result.dart';
 import 'package:typed_graphql_server/src/coercion/input_coercion.dart';
@@ -137,6 +138,21 @@ final class CoercionFixture {
             .resolve((parent, args, context, info) => null),
         t
             .field(
+              'typed',
+              b.string.nullable,
+              args: [
+                Arg('req', b.int),
+                Arg('opt', b.string.nullable),
+                Arg('limit', b.int, defaultValue: 10),
+                Arg('ids', b.inputList(b.int).nullable),
+                Arg('color', color.nullable),
+                Arg('big', complex.nullable),
+                Arg('flag', b.boolean.nullable),
+              ],
+            )
+            .resolve((parent, args, context, info) => null),
+        t
+            .field(
               'more',
               b.string.nullable,
               args: [
@@ -150,6 +166,7 @@ final class CoercionFixture {
     );
     final built = b.build(query: query);
     schema = built.schema.schema;
+    environment = CoercionEnvironment(schema, built.bindings);
     coercion = InputCoercion(schema, built.bindings);
     hiddenSuggestions = InputCoercion(
       schema,
@@ -159,6 +176,7 @@ final class CoercionFixture {
   }
 
   late final Schema schema;
+  late final CoercionEnvironment environment;
   late final InputCoercion coercion;
   late final InputCoercion hiddenSuggestions;
 
