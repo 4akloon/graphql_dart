@@ -323,5 +323,5 @@ enum DiagnosticCode(
   /// result without its `ofType`: the type is deeper than the query read
   /// (spec §4.2), or a chain of more than 100 wrappers, the most a query
   /// can read.
-  introspectionTypeTooDeep('GQL155');
+  introspectionTypeTooDeep('GQL155'),
 }

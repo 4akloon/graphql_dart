@@ -404,6 +404,12 @@ Learned in M3a:
 - An empty document is a syntax error (spec §2.2), so an empty schema
   prints text that does not build back; a round trip treats it apart.
 
+Learned in the discoverability stage:
+- CI formats with the newest stable SDK (3.13.5), which is stricter than 3.13.1:
+  an enum without members ends its values with `,`, not `;`. A newer SDK may
+  live under `~/fvm/versions/`; run `dart format --output=none
+  --set-exit-if-changed packages test` with both before a push.
+
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
 refer to identifiers in `[brackets]`; a boolean property starts with
