@@ -531,6 +531,10 @@ enum DiagnosticCode(
   /// of the subscription root type without one.
   misplacedSubscriptionField('GQL303'),
 
+  /// `GQL304`: reported when the executable schema builder finds fields
+  /// guarded by an authorization rule and no `Authorizer` to check them.
+  missingAuthorizer('GQL304'),
+
   /// `GQL310`: reported when a variable value is invalid, or a required
   /// variable is missing, as `ExecutableSchema.execute` coerces the variable
   /// values. It is a `GraphQLError`'s `extensions.code` in a
@@ -632,6 +636,24 @@ enum DiagnosticCode(
   /// `GQL340`: reported when the source stream of a subscription emitted an
   /// error; the response stream ends with it.
   subscriptionSourceFailed('GQL340'),
+
+  /// `GQL350`: reported when the caller's cancel signal fired before the
+  /// execution finished; the response has no data. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute` or the last result of a subscription.
+  executionCancelled('GQL350'),
+
+  /// `GQL351`: reported when the execution's timeout elapsed before it
+  /// finished; the response has no data. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `ExecutableSchema.execute` or the
+  /// last result of a subscription.
+  executionTimedOut('GQL351'),
+
+  /// `GQL352`: reported when the `Authorizer` denied access to a field; the
+  /// field is an error and null propagates as for any field error. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute`.
+  notAuthorized('GQL352'),
 
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
   /// the YAML parser's.

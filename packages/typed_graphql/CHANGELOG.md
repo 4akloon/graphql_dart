@@ -270,6 +270,7 @@
 - `Suggestions` is exported: graphql-js's "Did you mean" text for messages that suggest a name.
 - `GQL310`-`GQL337`: the diagnostics of execution (variable and argument coercion, operation selection, completion errors, limits); they are the `extensions.code` of the errors `ExecutableSchema.execute` returns.
 - `GQL303`, `GQL324`, `GQL338`, `GQL340`: the diagnostics of introspection and subscriptions (misplaced or missing subscription source, `subscribe` with a query or mutation, introspection not allowed, failed subscription source).
+- `GQL304`, `GQL350`, `GQL351`, `GQL352`: the diagnostics of authorization and cancellation (guarded fields without an authorizer, execution cancelled, execution timed out, field not authorized).
 - The messages of the built-in scalar codecs print an offending list or object as graphql-js does (`[1, 2, 3]`, `{ a: 1 }`, at most ten items, nested containers cut at depth two), not as compact JSON.
 - The catalog has the code generator's codes `GQL500`-`GQL506`: configuration
   syntax and content, schema input, anonymous operations, unsupported
