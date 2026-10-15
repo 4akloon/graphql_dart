@@ -182,7 +182,12 @@ relative to the file's folder. `--help` prints the usage.
 checks and, when there is no error, writes each generated file whose text
 differs from what is on disk (creating folders as needed). It prints
 `Wrote N files.` or `Nothing to write.` and never deletes a file: a library
-whose document you removed stays until you delete it. `check` writes nothing;
+whose document you removed stays until you delete it, and neither `generate`
+nor `check` looks at it, so `check` can be clean while a stale library is
+still compiled. A file is written through a temporary file and a rename; a
+file that cannot be written is a `GQL510` and the others are still written.
+The `documents` globs do not follow symbolic links, and an invalid glob is a
+`GQL501`. `check` writes nothing;
 it reports a `GQL509` for each generated file that is missing or differs, and
 prints `Up to date.` when none does, so a CI job can run it to catch generated
 code that was not regenerated. Nothing is written when a document has an
@@ -201,11 +206,18 @@ configuration, the schema, a document) that cannot be read is a `GQL510`.
 
 When `schema` is a URL, the command posts the full introspection query to it
 (the response may be an introspection result or a GraphQL response around
-one) and uses the result as the schema; a network failure, a timeout or a
-response that is not an introspection result is a diagnostic, not a crash. A
-`${NAME}` in a value of `headers` is replaced by the environment variable
-`NAME`; an unset variable is a `GQL501`. The values are never printed, not in
-a diagnostic either. Put secrets there, not in `typed_graphql.yaml`:
+one) and uses the result as the schema. A network failure, a timeout, a
+redirect (not followed: the diagnostic names the URL to put in `schema`), a
+body over 64 MiB, a non-success status or an unreadable body is a `GQL510`;
+a body that is not an introspection result is a `GQL502`. A `${NAME}` in a
+value of `headers` is replaced by the environment variable `NAME`; a
+variable that is not set or is empty is a `GQL501`, and so is a value that
+is not ASCII. The tool never prints a header value, and it hides them (and
+the user information and query of the URL) in what it prints of the server's
+answer, but a server can echo a value in a form it changed, so keep secrets
+out of URLs. Everything printed is free of terminal control characters. The
+command sends the headers also over plain `http`; use `https` for secrets.
+Put secrets in `headers`, not in `typed_graphql.yaml`:
 
 ```text
 schema: https://example.com/graphql
@@ -895,7 +907,7 @@ and are never reused.
 | `GQL507` | error | The generator would declare one Dart name twice, such as an enum `Role` and an input object `RoleKnown` (the enum also declares `RoleKnown` and `RoleUnknown`), a class of an operation and a fragment, two members of one class (such as the fields `user_name` and `userName`, or two fragments `UserCard` and `userCard`), or two files at one path. |
 | `GQL508` | error | A name the generator would declare hides a Dart type the generated code uses, such as `List`, or a `dart:core` type a scalar is mapped to. |
 | `GQL509` | error | `check` found a generated file that is missing or differs from what `generate` would write. |
-| `GQL510` | error | The command line cannot read the configuration, the schema file, a document or the schema URL (a network failure, a timeout, a non-success status or a body that is not an introspection result). |
+| `GQL510` | error | The command line cannot read the configuration, the schema file, a document or the schema URL (a network failure, a timeout, a redirect, a body over 64 MiB, a non-success status or an unreadable body). |
 | `GQL511` | error | An operation or fragment would generate more than 10000 classes, for instance a selection on an interface that reaches many types, repeated under many aliases. |
 
 The problems of the schema and of the documents keep the codes of the core:

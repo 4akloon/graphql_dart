@@ -19,7 +19,8 @@ schema: schema.graphql
 documents: lib/**.graphql
 ```
 
-Then run it; `check` exits with 1 when a generated file is out of date:
+Add the package to your project (`dart pub add --dev typed_graphql_codegen`),
+then run it; `check` exits with 1 when a generated file is out of date:
 
 ```sh
 dart run typed_graphql_codegen generate

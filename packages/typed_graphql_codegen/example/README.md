@@ -21,3 +21,8 @@ This folder has its own `pubspec.yaml` (`publish_to: none`) and is a member
 of the repository's pub workspace: the generated code imports
 `typed_graphql` and `typed_graphql_client`, which the code generator itself
 does not depend on, so the repository's `dart analyze` needs them here.
+
+`resolution: workspace` in its `pubspec.yaml` means the example resolves
+only inside this repository. In your own project, add
+`typed_graphql_codegen` as a dev dependency (`dart pub add --dev
+typed_graphql_codegen`) and run the same commands there.

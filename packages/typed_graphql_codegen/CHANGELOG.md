@@ -71,22 +71,19 @@
   needs `__typename` at the root of an operation (and is a `GQL504` in a
   subscription); name problems are limited like every other run; `GQL507`
   names the two classes of a variant for a type called `Unknown`.
-- `dart run typed_graphql_codegen generate` writes the generated files and
-  `check` fails when one is missing or out of date (`GQL509`); a file the
-  command cannot read is `GQL510`. `--config` names the configuration file.
-  `generate` never deletes a file. `CodegenCommand` (in `src/cli/`, not exported: it imports `dart:io`) runs
-  both in process.
+- `dart run typed_graphql_codegen generate` writes the changed files (through
+  a temporary file and a rename) and never deletes; `check` fails with
+  `GQL509` when a file is missing or out of date and writes nothing.
+  `--config` names the configuration file; exit codes are 0, 1 and 64. A file
+  the command cannot read or write is `GQL510`. `CodegenCommand` (in
+  `src/cli/`, not exported: it imports `dart:io`) runs it in process.
 - A `schema:` URL is fetched with a POST of the full introspection query
-  (`SchemaFetcher`, 30 s timeout); a failure is `GQL510` with the status, and
-  a response with `errors` and no `data` is `GQL502`. Header values may use
-  `${NAME}` (`HeaderExpander`): a variable that is not set is `GQL501`, a line
-  break from a variable is refused, and no header value is ever printed.
-- The command line `dart run typed_graphql_codegen generate|check [--config]`:
-  `generate` writes the changed files and never deletes; `check` reports
-  `GQL509` for a missing or outdated file; exit codes 0, 1 and 64; unreadable
-  inputs are `GQL510`.
-- A `schema` URL is fetched with the full introspection query; `${NAME}` in
-  `headers` is read from the environment and values are never printed.
+  (`SchemaFetcher`: 30 s timeout, 64 MiB body cap, redirects not followed);
+  a failure is `GQL510` and a response with `errors` and no `data` is
+  `GQL502`. Header values may use `${NAME}` (`HeaderExpander`): a variable
+  that is not set or is empty is `GQL501`, and so is a value that is not
+  ASCII. Header values are hidden (`***`) in everything printed, and the
+  URL is printed without user information and query.
 - The README's quick start, the guide's "Command line" section and the
   `example/` project with its generated code checked in
   (`test/example_test.dart`).
