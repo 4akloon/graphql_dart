@@ -99,6 +99,20 @@ void main() {
     expect(rebuilt.directives, isEmpty);
   });
 
+  test('reads a foreign @cost directive as an ordinary directive', () {
+    final json = Built(
+      'directive @cost(rate: Int) on OBJECT\ntype Query { a: Int }',
+    ).schema.toIntrospection().toJson();
+    final value = switch (const JsonReader().read(json)) {
+      DecodeSuccess(:final value) => value,
+      DecodeFailure() => fail('not JSON'),
+    };
+    final rebuilt =
+        (const SchemaBuilder().fromIntrospection(value) as BuildSuccess).schema;
+    expect(rebuilt.includesCostDirectives, isFalse);
+    expect(rebuilt.directives.map((directive) => directive.name), ['cost']);
+  });
+
   test('tells the cost directives as built-ins by the flag', () {
     const builtIns = BuiltIns();
     expect(
@@ -110,7 +124,11 @@ void main() {
       isTrue,
     );
     expect(
-      builtIns.isBuiltInDirective('listSize', includesDeferAndStream: true),
+      builtIns.isBuiltInDirective(
+        'listSize',
+        includesDeferAndStream: true,
+        includesCostDirectives: false,
+      ),
       isFalse,
     );
   });

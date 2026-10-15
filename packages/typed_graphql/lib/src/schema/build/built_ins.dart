@@ -139,7 +139,7 @@ final class const BuiltIns() {
   bool isBuiltInDirective(
     String name, {
     required bool includesDeferAndStream,
-    bool includesCostDirectives = false,
+    required bool includesCostDirectives,
   }) =>
       directiveNamed(name) != null ||
       (includesDeferAndStream && (name == 'defer' || name == 'stream')) ||

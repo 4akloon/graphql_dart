@@ -332,7 +332,8 @@ enum DiagnosticCode(
 
   /// `GQL157`: a `@cost` on a field of an interface or on one of its
   /// arguments; the draft applies it to the fields of the implementing
-  /// types.
+  /// types. This is stricter than the draft, which only advises against it:
+  /// the cost of an abstract type is the heaviest of its possible types.
   misplacedCost('GQL157'),
 
   /// `GQL158`: a `@listSize` on a field whose type is not a list and that

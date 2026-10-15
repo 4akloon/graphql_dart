@@ -170,19 +170,35 @@ void main() {
 
   test('tells the built-in directives, @defer and @stream by the flag', () {
     expect(
-      builtIns.isBuiltInDirective('skip', includesDeferAndStream: false),
+      builtIns.isBuiltInDirective(
+        'skip',
+        includesDeferAndStream: false,
+        includesCostDirectives: false,
+      ),
       isTrue,
     );
     expect(
-      builtIns.isBuiltInDirective('defer', includesDeferAndStream: false),
+      builtIns.isBuiltInDirective(
+        'defer',
+        includesDeferAndStream: false,
+        includesCostDirectives: false,
+      ),
       isFalse,
     );
     expect(
-      builtIns.isBuiltInDirective('stream', includesDeferAndStream: true),
+      builtIns.isBuiltInDirective(
+        'stream',
+        includesDeferAndStream: true,
+        includesCostDirectives: false,
+      ),
       isTrue,
     );
     expect(
-      builtIns.isBuiltInDirective('key', includesDeferAndStream: true),
+      builtIns.isBuiltInDirective(
+        'key',
+        includesDeferAndStream: true,
+        includesCostDirectives: false,
+      ),
       isFalse,
     );
   });
