@@ -7,7 +7,9 @@ final class const HeaderReader() {
   /// Creates the reader.
   this;
 
-  static final RegExp _name = RegExp(r'^[^\s:]+$');
+  // RFC 7230 token.
+  static final RegExp _name = RegExp(r"^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$");
+  static final RegExp _control = RegExp(r'[\x00-\x08\x0A-\x1F\x7F]');
 
   /// Returns the headers of [node], sorted by name; the entries with problems
   /// are left out and reported.
@@ -26,7 +28,15 @@ final class const HeaderReader() {
         continue;
       }
       final text = report.string(value, 'headers.$name');
-      if (text != null) headers[name] = text;
+      if (text == null) continue;
+      if (_control.hasMatch(text)) {
+        report.error(
+          value,
+          "The value of header '$name' must not have a control character.",
+        );
+        continue;
+      }
+      headers[name] = text;
     }
     return {
       for (final name in headers.keys.toList()..sort()) name: headers[name]!,

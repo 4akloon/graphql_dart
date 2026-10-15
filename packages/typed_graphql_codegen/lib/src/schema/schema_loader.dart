@@ -1,5 +1,6 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../config/schema_location.dart';
 import '../project/project_file.dart';
 import 'introspection_file_reader.dart';
 import 'schema_load_result.dart';
@@ -15,7 +16,7 @@ final class const SchemaLoader() {
   /// Builds and validates the schema [file] holds; never throws.
   SchemaLoadResult load(ProjectFile file) {
     final source = Source(file.text, name: file.path);
-    final built = file.path.endsWith('.json')
+    final built = SchemaFile(file.path).isIntrospection
         ? const IntrospectionFileReader().read(file.text, source)
         : _fromSdl(source);
     return switch (built) {

@@ -8,7 +8,9 @@ import 'project_source_map.dart';
 /// is visible from every operation (R7.2).
 ///
 /// The document's offsets index [ProjectSourceMap.source]; the map gives the
-/// file of each offset.
+/// file of each offset. A file with no tokens adds nothing. Documents are
+/// parsed with the parser's default limits, except that the token limit is
+/// lifted.
 final class ProjectDocuments(
   /// The files, sorted by path.
   final List<ProjectFile> files,
@@ -39,15 +41,17 @@ final class ProjectDocuments(
       return ProjectDocumentsUnreadable(problems);
     }
     final map = ProjectSourceMap(sorted);
-    if (sorted.isEmpty) {
-      // An empty text is a syntax error, so the empty document is built.
+    if (sorted.every(_isBlank)) {
+      // An empty text is a syntax error (spec §2.2), so the empty document is
+      // built.
       return ProjectDocumentsRead(
         ProjectDocuments(sorted, map, Document(const [])),
       );
     }
-    // Each file parsed alone and ends at a token boundary, and the joining
-    // line break ends a trailing comment, so the whole cannot fail; the
-    // branch is defensive.
+    // Each file parsed alone, but the joined text can still fail: a file
+    // ending in `extend enum E @d` makes the next file's leading `{` the
+    // extension's body. The core parser cannot start at an offset, so the
+    // joined text is parsed again and its problems are translated.
     final whole = const Parser(
       options: ParserOptions(maxTokens: null),
     ).parse(map.source);
@@ -67,6 +71,7 @@ final class ProjectDocuments(
   static List<Diagnostic> _parseEach(List<ProjectFile> sorted) {
     final problems = <Diagnostic>[];
     for (final file in sorted) {
+      if (_isBlank(file)) continue;
       final result = const Parser().parse(Source(file.text, name: file.path));
       if (result is ParseFailure) {
         problems.addAll(result.diagnostics);
@@ -74,4 +79,13 @@ final class ProjectDocuments(
     }
     return problems;
   }
+
+  // Only ignored tokens (whitespace, commas, comments, BOM): the file adds no
+  // definition and is not a syntax error.
+  static bool _isBlank(ProjectFile file) =>
+      Lexer(
+        Source(file.text, name: file.path),
+        DiagnosticSink(),
+      ).advance().kind ==
+      TokenKind.eof;
 }

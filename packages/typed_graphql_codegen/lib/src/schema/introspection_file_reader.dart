@@ -10,11 +10,8 @@ final class const IntrospectionFileReader() {
   BuildResult read(String text, Source source) {
     final place = SourceSpan(source, 0, 0);
     return switch (const JsonReader().parse(text)) {
-      DecodeFailure(:final message, :final path) => _failure(
-        path.isEmpty
-            ? 'The schema file is $message.'
-            : 'The schema file is not valid JSON: '
-                  '${DecodeFailure(message, path: path)}.',
+      final DecodeFailure failure => _failure(
+        'The schema file cannot be read: $failure.',
         place,
       ),
       DecodeSuccess(value: final JsonObject object) => _build(object, place),

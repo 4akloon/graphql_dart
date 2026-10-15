@@ -11,10 +11,10 @@ final class ConfigDraft {
   SchemaLocation? schema;
 
   /// The `documents` globs.
-  List<String> documents = const ['lib/**.graphql'];
+  List<String> documents = CodegenConfig.defaultDocuments;
 
   /// The `schema_types` path.
-  String schemaTypes = 'lib/schema.graphql.dart';
+  String schemaTypes = CodegenConfig.defaultSchemaTypes;
 
   /// The `persisted_operations` path, if any.
   String? persistedOperations;

@@ -79,4 +79,19 @@ void main() {
     );
     expect(map.translateDiagnostic(diagnostic), diagnostic);
   });
+
+  test('a span at the end of the text is clamped into the last file', () {
+    final span = map.translate(SourceSpan(map.source, 13, 13));
+    expect(['$span', span.start, span.end], ['c.graphql:1:3', 2, 2]);
+  });
+
+  test('a span at the first offset of a later file starts there', () {
+    final span = map.translate(SourceSpan(map.source, 4, 6));
+    expect(['$span', span.text], ['b.graphql:1:1', 'de']);
+  });
+
+  test('a span on the joining line break is empty at the file end', () {
+    final span = map.translate(SourceSpan(map.source, 3, 4));
+    expect(['$span', span.start, span.end], ['a.graphql:1:4', 3, 3]);
+  });
 }

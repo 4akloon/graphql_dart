@@ -43,7 +43,10 @@ final class const DartReferenceReader() {
     }
     final library = text.substring(0, hash);
     final name = text.substring(hash + 1);
-    if (!_library.hasMatch(library) || !_identifier.hasMatch(name)) {
+    final isCoreName = library != 'dart:core' || _coreTypes.contains(name);
+    if (!_library.hasMatch(library) ||
+        !_identifier.hasMatch(name) ||
+        !isCoreName) {
       report.error(
         node,
         "'$label' must be '<library>#<Name>', such as "

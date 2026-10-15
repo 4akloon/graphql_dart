@@ -13,12 +13,18 @@ final class CodegenConfig {
   /// file's missing key has.
   const CodegenConfig({
     required this.schema,
-    this.documents = const ['lib/**.graphql'],
-    this.schemaTypes = 'lib/schema.graphql.dart',
+    this.documents = defaultDocuments,
+    this.schemaTypes = defaultSchemaTypes,
     this.persistedOperations,
     this.scalars = const {},
     this.headers = const {},
   });
+
+  /// The `documents` of a file without that key.
+  static const List<String> defaultDocuments = ['lib/**.graphql'];
+
+  /// The `schema_types` of a file without that key.
+  static const String defaultSchemaTypes = 'lib/schema.graphql.dart';
 
   /// Reads the text of the configuration file at [path].
   ///
@@ -26,7 +32,7 @@ final class CodegenConfig {
   /// problem a `GQL501`, all in a [ConfigFailure]. [path] only names the file
   /// in the diagnostics.
   static ConfigResult parse(String text, {required String path}) =>
-      ConfigReader(Source(text, name: path)).read(text);
+      ConfigReader(Source(text, name: path)).read();
 
   /// Where the schema is: a file or an endpoint.
   final SchemaLocation schema;

@@ -14,7 +14,8 @@ final class const SchemaLocationReader() {
   SchemaLocation? read(YamlNode node, ConfigReport report) {
     final text = report.string(node, 'schema');
     if (text == null) return null;
-    if (!text.startsWith('http://') && !text.startsWith('https://')) {
+    final lower = text.toLowerCase();
+    if (!lower.startsWith('http://') && !lower.startsWith('https://')) {
       final path = const RelativePath().read(node, 'schema', report);
       return path == null ? null : SchemaFile(path);
     }

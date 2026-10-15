@@ -137,7 +137,7 @@ void main() {
       );
     });
 
-    test('an operation name used in two files is reported in both', () {
+    test('an operation name used in two files is reported once, relating the other file', () {
       expect(
         check(const [
           ProjectFile('a.graphql', 'query A { hello }\n'),
@@ -247,6 +247,61 @@ scalars:
           NamedOperationsRule,
           UnsupportedDirectivesRule,
         ],
+      );
+    });
+  });
+
+  group('more inputs', () {
+    test('empty and comment-only files next to a valid one are accepted', () {
+      expect(
+        check(const [
+          ProjectFile('0.graphql', ''),
+          _aFile,
+          _bFile,
+          ProjectFile('z.graphql', '# only a comment\n'),
+        ]),
+        isEmpty,
+      );
+    });
+
+    test('a project of only empty files has no documents', () {
+      expect(check(const [ProjectFile('a.graphql', '')]), [
+        "warning GQL506: No document matches the configuration's "
+            "'documents'.",
+      ]);
+    });
+
+    test('a schema failure hides an unmapped custom scalar', () {
+      // The mapping is checked against a schema, so only the schema's own
+      // problem is reported.
+      expect(
+        check(
+          const [_aFile, _bFile],
+          schema: const ProjectFile('schema.graphql', 'type Query {\n'),
+          config:
+              'schema: schema.graphql\nscalars:\n  Foo:\n    type: DateTime\n'
+              '    codec: package:a/a.dart#C\n',
+        ),
+        ['schema.graphql:2:1: error GQL007: Expected Name, found <EOF>.'],
+      );
+    });
+
+    test('a JSON schema is read as an introspection result', () {
+      final document = const Parser()
+          .parse(Source(_schema.text))
+          .requireDocument();
+      final built = const SchemaBuilder().fromSdl(document) as BuildSuccess;
+      final json = ProjectFile(
+        'schema.json',
+        built.schema.toIntrospection().toString(),
+      );
+      expect(
+        check(
+          const [_aFile, _bFile],
+          schema: json,
+          config: 'schema: schema.json\n',
+        ),
+        isEmpty,
       );
     });
   });

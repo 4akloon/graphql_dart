@@ -56,6 +56,10 @@ final class const ClientGenerator(final CodegenConfig config) {
   /// Checks the schema and the documents as `generate` will read them;
   /// returns every diagnostic, warnings included, in report order.
   ///
+  /// When the schema cannot be loaded, the documents are only parsed: their
+  /// syntax errors come after the schema's, and no validation error is
+  /// reported.
+  ///
   /// [schema] is the schema file and [documents] the files the configuration's
   /// `documents` globs matched; nothing is written.
   List<Diagnostic> check({
@@ -64,6 +68,7 @@ final class const ClientGenerator(final CodegenConfig config) {
   }) {
     final result = ClientProjectLoader(
       config,
+      rules,
     ).load(schema: schema, documents: documents);
     return switch (result) {
       ClientProjectLoaded(:final warnings) => warnings,

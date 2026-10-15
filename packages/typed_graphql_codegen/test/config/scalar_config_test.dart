@@ -67,7 +67,7 @@ void main() {
     });
 
     test('a codec in dart:core has no library', () {
-      expect(problems(scalar('    type: Uri\n    codec: dart:core#Codec\n')), [
+      expect(problems(scalar('    type: Uri\n    codec: dart:core#String\n')), [
         "$_path:5:12: error GQL501: 'codec' must name a library.",
       ]);
     });

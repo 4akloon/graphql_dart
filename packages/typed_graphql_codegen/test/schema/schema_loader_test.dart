@@ -81,7 +81,10 @@ void main() {
       expect(messages, hasLength(1));
       expect(
         messages.single,
-        startsWith('x.json:1:1: error GQL502: The schema file is not JSON: '),
+        startsWith(
+          r'x.json:1:1: error GQL502: The schema file cannot be read: $: '
+          'not JSON: ',
+        ),
       );
     });
 
@@ -97,4 +100,18 @@ void main() {
       expect(messages.single, startsWith('x.json:1:1: error GQL15'));
     });
   });
+
+  test(
+    'a JSON nested past the depth limit is reported with the depth limit',
+    () {
+      final text = '${'[' * 2000}${']' * 2000}';
+      final messages = problems('x.json', text);
+      expect(messages, hasLength(1));
+      expect(
+        messages.single,
+        r'x.json:1:1: error GQL502: The schema file cannot be read: $: arrays '
+        'and objects are nested deeper than 512.',
+      );
+    },
+  );
 }

@@ -275,4 +275,91 @@ scalars:
       ]);
     });
   });
+
+  group('review fixes', () {
+    test('dart:core accepts only a core type', () {
+      expect(
+        problems(
+          'schema: s.graphql\n'
+          'scalars:\n'
+          '  A:\n'
+          '    type: dart:core#Nope\n'
+          '    codec: package:a/a.dart#C\n',
+        ),
+        [
+          "$_path:4:11: error GQL501: 'type' must be "
+              "'<library>#<Name>', such as 'package:my_app/codecs.dart#MyType'.",
+        ],
+      );
+    });
+
+    test('an upper-case HTTPS scheme is a URL', () {
+      expect(read('schema: HTTPS://x/graphql\n').schema, isA<SchemaUrl>());
+    });
+
+    test('another scheme is not a path', () {
+      expect(problems('schema: ftp://x\n'), [
+        "$_path:1:9: error GQL501: 'schema' must be a relative path.",
+      ]);
+    });
+
+    test('a one-letter scheme is not a path', () {
+      expect(problems('schema: c:/s.graphql\n'), [
+        "$_path:1:9: error GQL501: 'schema' must be a relative path.",
+      ]);
+    });
+
+    test('a header value with a control character', () {
+      expect(
+        problems('schema: https://h.dev/g\nheaders:\n  A: "x\\ny"\n'),
+        [
+          "$_path:3:6: error GQL501: The value of header 'A' must not have a "
+              'control character.',
+        ],
+      );
+    });
+
+    test('a header name that is not an HTTP token', () {
+      expect(problems('schema: https://h.dev/g\nheaders:\n  "A(b)": c\n'), [
+        "$_path:3:3: error GQL501: 'A(b)' is not a valid header name.",
+      ]);
+    });
+
+    test('a schema without a file name', () {
+      expect(problems('schema: .\n'), [
+        "$_path:1:9: error GQL501: 'schema' must name a file.",
+      ]);
+    });
+
+    test('schema_types without a base name', () {
+      expect(problems('schema: s.graphql\nschema_types: .dart\n'), [
+        "$_path:2:15: error GQL501: 'schema_types' must have a file name "
+            "before '.dart'.",
+      ]);
+    });
+
+    test('a YAML alias value is a string error, not a throw', () {
+      expect(problems('schema: s.graphql\nx: &a 1\nschema_types: *a\n'), [
+        "$_path:2:1: error GQL501: Unknown key 'x'; the keys are "
+            "'documents', 'headers', 'persisted_operations', 'scalars', "
+            "'schema', 'schema_types'.",
+        "$_path:2:4: error GQL501: 'schema_types' must be a string.",
+      ]);
+    });
+
+    test('a non-string key is reported, not thrown', () {
+      expect(problems('schema: s.graphql\n1: a\n'), [
+        "$_path:2:1: error GQL501: Unknown key '1'; the keys are "
+            "'documents', 'headers', 'persisted_operations', 'scalars', "
+            "'schema', 'schema_types'.",
+      ]);
+    });
+
+    test('a .. segment inside a documents glob', () {
+      expect(problems('schema: s.graphql\ndocuments: lib/../x/**.graphql\n'), [
+        "$_path:2:12: error GQL501: 'documents' must not have a '..' "
+            'segment.',
+      ]);
+    });
+  });
 }

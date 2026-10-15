@@ -8,12 +8,12 @@ final class const ScalarMappingChecker() {
   /// Creates the checker.
   this;
 
-  static const _builtIn = {'Int', 'Float', 'String', 'Boolean', 'ID'};
-
   /// The problems of [config]'s mappings against [schema], in name order.
   List<Diagnostic> check(CodegenConfig config, Schema schema) {
     final problems = <Diagnostic>[];
-    for (final MapEntry(:key, :value) in config.scalars.entries) {
+    final names = config.scalars.keys.toList()..sort();
+    for (final key in names) {
+      final value = config.scalars[key]!;
       final message = _problemWith(key, schema);
       if (message != null) {
         problems.add(
@@ -25,7 +25,7 @@ final class const ScalarMappingChecker() {
   }
 
   String? _problemWith(String name, Schema schema) {
-    if (_builtIn.contains(name)) {
+    if (const BuiltIns().scalarNamed(name) != null) {
       return "The built-in scalar '$name' cannot be mapped.";
     }
     return switch (schema.typeNamed(name)) {

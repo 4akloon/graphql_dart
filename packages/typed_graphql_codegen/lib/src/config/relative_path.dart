@@ -8,7 +8,9 @@ final class const RelativePath() {
   /// Creates the reader.
   this;
 
-  static final RegExp _driveLetter = RegExp('^[A-Za-z]:');
+  // Any scheme, a one-letter one included: paths are POSIX, so a drive
+  // letter is not a path either.
+  static final RegExp _scheme = RegExp('^[A-Za-z][A-Za-z0-9+.-]*:');
 
   /// Returns the path [node] holds, or reports why it is not one named by
   /// [label] and returns null.
@@ -24,11 +26,17 @@ final class const RelativePath() {
   String? _problemOf(String path) {
     if (path.isEmpty) return 'must not be empty.';
     if (path.contains(r'\')) return "must use '/' as the separator.";
-    if (path.startsWith('/') || _driveLetter.hasMatch(path)) {
+    if (path.startsWith('/') ||
+        path.contains('://') ||
+        _scheme.hasMatch(path)) {
       return 'must be a relative path.';
     }
-    if (path.split('/').contains('..')) {
+    final segments = path.split('/');
+    if (segments.contains('..')) {
       return "must not have a '..' segment.";
+    }
+    if (segments.last.isEmpty || segments.last == '.') {
+      return 'must name a file.';
     }
     return null;
   }

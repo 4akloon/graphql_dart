@@ -116,4 +116,34 @@ void main() {
   test('no files give an empty document', () {
     expect(read(const []).document.definitions, isEmpty);
   });
+
+  test('an empty file and a comment-only file add no definition', () {
+    final documents = read(const [
+      ProjectFile('0.graphql', ''),
+      fileA,
+      ProjectFile('c.graphql', '# nothing here\n'),
+      ProjectFile('d.graphql', '\uFEFF , \n'),
+    ]);
+    expect(documents.document.definitions, hasLength(1));
+  });
+
+  test('only empty files give an empty document', () {
+    final documents = read(const [
+      ProjectFile('a.graphql', ''),
+      ProjectFile('b.graphql', '# c'),
+    ]);
+    expect(documents.document.definitions, isEmpty);
+  });
+
+  test('a join that fails although each file parses is reported', () {
+    expect(
+      problems(const [
+        ProjectFile('a.graphql', 'extend enum E @d'),
+        ProjectFile('b.graphql', '{ user { name } }'),
+      ]),
+      [
+        'b.graphql:1:8: error GQL007: Expected Name, found "{".',
+      ],
+    );
+  });
 }

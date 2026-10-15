@@ -28,8 +28,9 @@ final class ConfigReader(
     'schema_types',
   ];
 
-  /// Reads [text], the body of [source].
-  ConfigResult read(String text) {
+  /// Reads the body of [source].
+  ConfigResult read() {
+    final text = source.body;
     final YamlNode root;
     try {
       root = loadYamlNode(text);
@@ -133,7 +134,12 @@ final class ConfigReader(
   ) {
     final path = const RelativePath().read(node, label, report);
     if (path == null) return null;
-    if (path.endsWith(suffix)) return path;
+    final name = path.substring(path.lastIndexOf('/') + 1);
+    if (name == suffix) {
+      report.error(node, "'$label' must have a file name before '$suffix'.");
+      return null;
+    }
+    if (name.endsWith(suffix)) return path;
     report.error(node, "'$label' must end with '$suffix'.");
     return null;
   }

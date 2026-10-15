@@ -64,13 +64,12 @@ final class ProjectSourceMap(List<ProjectFile> files) {
     final index = fileIndexAt(span.start);
     final fileSource = _sources[index];
     final fileStart = _starts[index];
-    final end = span.end - fileStart;
-    return SourceSpan(
-      fileSource,
-      span.start - fileStart,
-      // A span can end on the joining line break, which is not in the file.
-      end > fileSource.body.length ? fileSource.body.length : end,
-    );
+    final length = fileSource.body.length;
+    // A span can start or end on the joining line break, or past the last
+    // file, which are not in the file.
+    final start = (span.start - fileStart).clamp(0, length);
+    final end = (span.end - fileStart).clamp(start, length);
+    return SourceSpan(fileSource, start, end);
   }
 
   /// [diagnostic] with its span and related spans translated by [translate].

@@ -20,3 +20,4 @@
   only given files.
 - The Client Code Generation guide covers the configuration keys, checking a
   project and the codes `GQL500`-`GQL506`; the `codegen` dartdoc category.
+- A `.graphql` file with no tokens adds nothing instead of failing the project; stricter checks of `schema`, paths and `headers` (all `GQL501`).

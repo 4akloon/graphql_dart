@@ -6,15 +6,17 @@ import '../documents/project_documents_result.dart';
 import '../project/project_file.dart';
 import '../schema/schema_load_result.dart';
 import '../schema/schema_loader.dart';
-import 'client_generator.dart';
 import 'client_project.dart';
 import 'client_project_result.dart';
 import 'scalar_mapping_checker.dart';
 
 /// Reads the schema and the documents of a project and validates them with
-/// [ClientGenerator.rules]; shared by `check` and `generate`.
-final class const ClientProjectLoader(final CodegenConfig config) {
-  /// Creates a loader for [config].
+/// `rules` (`ClientGenerator.rules`); shared by `check` and `generate`.
+final class const ClientProjectLoader(
+  final CodegenConfig config,
+  final List<ValidationRule> rules,
+) {
+  /// Creates a loader for [config] that validates documents with [rules].
   this;
 
   /// Loads the project; never throws for bad input.
@@ -23,26 +25,30 @@ final class const ClientProjectLoader(final CodegenConfig config) {
     required List<ProjectFile> documents,
   }) {
     final read = ProjectDocuments.read(documents);
-    final loaded = const SchemaLoader().load(schema);
-    if (loaded is! SchemaLoaded) {
+    return switch (const SchemaLoader().load(schema)) {
       // The documents are read anyway so that one run shows every syntax
       // error.
-      return ClientProjectFailed([
-        if (loaded is SchemaNotLoaded) ...loaded.diagnostics,
-        if (read is ProjectDocumentsUnreadable) ...read.diagnostics,
-      ]);
-    }
-    final mapping = const ScalarMappingChecker().check(
-      config,
-      loaded.schema.schema,
-    );
+      SchemaNotLoaded(:final diagnostics) => ClientProjectFailed([
+        ...diagnostics,
+        if (read case ProjectDocumentsUnreadable(diagnostics: final more))
+          ...more,
+      ]),
+      SchemaLoaded(schema: final valid) => _withSchema(valid, read),
+    };
+  }
+
+  ClientProjectResult _withSchema(
+    ValidSchema schema,
+    ProjectDocumentsResult read,
+  ) {
+    final mapping = const ScalarMappingChecker().check(config, schema.schema);
     return switch (read) {
       ProjectDocumentsUnreadable(:final diagnostics) => ClientProjectFailed([
         ...mapping,
         ...diagnostics,
       ]),
       ProjectDocumentsRead(documents: final files) => _validate(
-        loaded.schema,
+        schema,
         files,
         mapping,
       ),
@@ -55,7 +61,7 @@ final class const ClientProjectLoader(final CodegenConfig config) {
     List<Diagnostic> mapping,
   ) {
     final warnings = <Diagnostic>[
-      if (documents.files.isEmpty)
+      if (documents.document.definitions.isEmpty)
         Diagnostic(
           .noDocuments,
           .warning,
@@ -63,7 +69,7 @@ final class const ClientProjectLoader(final CodegenConfig config) {
         ),
     ];
     final map = documents.sourceMap;
-    final result = const DocumentValidator(rules: ClientGenerator.rules)
+    final result = DocumentValidator(rules: rules)
         .validate(schema, documents.document, source: map.source);
     return switch (result) {
       InvalidDocument(:final diagnostics) => ClientProjectFailed([

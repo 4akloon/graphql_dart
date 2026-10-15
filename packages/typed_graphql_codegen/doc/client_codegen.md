@@ -121,7 +121,7 @@ and are never reused.
 | `GQL501` | error | A configuration key is missing, unknown or mistyped, or a path or Dart reference is malformed. |
 | `GQL502` | error | The schema file is not JSON, or is JSON that is not an object, when it should be an introspection result. |
 | `GQL503` | error | An operation has no name; the generated classes are named after the operation. |
-| `GQL504` | error | A document uses `@defer`, `@stream`, or a fragment on an abstract type at the root of a subscription, which the generator does not support yet. |
+| `GQL504` | error | A document uses `@defer` or `@stream`, which the generator does not support yet. |
 | `GQL505` | error | The configuration maps a scalar that the schema does not declare as a custom scalar: it is unknown, is not a scalar, or is built in. |
 | `GQL506` | warning | No document matches `documents`. |
 
