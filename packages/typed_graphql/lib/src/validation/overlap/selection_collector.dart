@@ -13,8 +13,9 @@ import 'merge_item.dart';
 /// its fields and inline fragments in order, then each spread fragment's
 /// fields, depth first.
 ///
-/// A fragment is expanded once per collection and not at all when it is on
-/// the [path], so recursive fragments end. Each field charges one step.
+/// A fragment is expanded once per collection and not at all when it is
+/// cyclic and on the [path], so recursive fragments end. Each field
+/// charges one step.
 final class SelectionCollector(
   /// The run the work is charged to and reported in.
   final ValidationContext context,
@@ -22,8 +23,11 @@ final class SelectionCollector(
   /// The parent type and definition of each field of the document.
   final Map<Field, FieldOrigin> origins,
   final FragmentPath path,
+
+  /// The fragments that may be on a cycle: only these are skipped on [path].
+  final Set<String> cyclicFragments,
 ) {
-  /// Creates a collector that skips the fragments on [path].
+  /// Creates a collector that skips the cyclic fragments on [path].
   this;
 
   /// The fields under [sources] (each a selection set and the item it
@@ -57,7 +61,8 @@ final class SelectionCollector(
   ) {
     final fragments = <(String, SelectionSet)>[];
     for (final name in spreads) {
-      if (path.contains(name) || expanded.contains(name)) continue;
+      if (expanded.contains(name)) continue;
+      if (cyclicFragments.contains(name) && path.contains(name)) continue;
       if (context.fragmentNamed(name) case final fragment?) {
         expanded.add(name);
         fragments.add((name, fragment.selectionSet));

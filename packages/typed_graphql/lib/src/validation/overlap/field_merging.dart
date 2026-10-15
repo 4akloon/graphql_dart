@@ -5,6 +5,7 @@ import '../validation_context.dart';
 import 'argument_text.dart';
 import 'conflict_judge.dart';
 import 'conflict_reports.dart';
+import 'cyclic_fragments.dart';
 import 'field_origin.dart';
 import 'field_shape.dart';
 import 'fragment_path.dart';
@@ -37,6 +38,8 @@ final class FieldMerging(
   final ArgumentText _arguments = ArgumentText();
   final ConflictReports _reports = ConflictReports(context);
   final Set<String> _expanded = {};
+  // Late: found on the first root, once the run's budget is known to last.
+  late final Set<String> _cyclicFragments = CyclicFragments(context).names;
 
   /// Reports the conflicts of every root.
   void check() {
@@ -66,7 +69,7 @@ final class FieldMerging(
         path.enter([root.name.value]);
     }
     final merge = _RootMerge(
-      SelectionCollector(context, origins, path),
+      SelectionCollector(context, origins, path, _cyclicFragments),
       MergeSplit(context, _shapes, _arguments),
       ConflictJudge(context, _shapes, _arguments, root),
     );
