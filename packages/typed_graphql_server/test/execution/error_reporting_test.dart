@@ -136,6 +136,17 @@ void main() {
       ]);
     });
 
+    test('of an invalid argument value are those of the value', () async {
+      const text = '{\n  greet(name: null)\n}';
+      final json = await f.json(
+        text,
+        options: ExecutionOptions(source: Source(text)),
+      );
+      expect((errorsOf(json).single! as Map<String, Object?>)['locations'], [
+        {'line': 2, 'column': 15},
+      ]);
+    });
+
     test('are absent without the source', () async {
       final json = await f.json('{ fail }');
       expect(

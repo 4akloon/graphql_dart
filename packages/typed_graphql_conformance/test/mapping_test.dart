@@ -94,7 +94,11 @@ void main() {
       path: 'mapping/execution.csv',
       prefix: '',
       covered: const [
+        'execution/__tests__/errorPropagation-test.ts',
         'execution/__tests__/executor-test.ts',
+        'execution/__tests__/lists-test.ts',
+        'execution/__tests__/mutations-test.ts',
+        'execution/__tests__/nonnull-test.ts',
         'execution/__tests__/resolve-test.ts',
         'execution/__tests__/schema-test.ts',
         'execution/__tests__/sync-test.ts',

@@ -37,7 +37,10 @@ final class ErrorReporter {
     final code = problem.code ?? DiagnosticCode.invalidArgumentValue;
     final reported = GraphQLError(
       '${problem.message}${problem.where}',
-      locations: _locations(nodes),
+      locations: switch (problem.node) {
+        final node? => _locations([node]),
+        null => _locations(nodes),
+      },
       path: path?.toList(),
       extensions: problem.extensions ?? _codeOf(code),
     );
@@ -116,7 +119,7 @@ final class ErrorReporter {
   JsonObject _codeOf(DiagnosticCode code) =>
       JsonObject({'code': JsonString(code.id)});
 
-  List<SourceLocation> _locations(List<Field> nodes) {
+  List<SourceLocation> _locations(List<Node> nodes) {
     final source = options.source;
     if (source == null) {
       return const [];

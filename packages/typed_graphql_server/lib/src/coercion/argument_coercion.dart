@@ -122,6 +122,7 @@ final class ArgumentCoercion {
       return _problem(
         '$subject has invalid value',
         problem: problems.kept.first,
+        node: written,
       );
     }
     values[definition.name] = coerced;
@@ -129,7 +130,11 @@ final class ArgumentCoercion {
   }
 
   // Words `[lead][where]: [message]` of a cause, or a plain message.
-  CoercionProblem _problem(String lead, {CoercionProblem? problem}) {
+  CoercionProblem _problem(
+    String lead, {
+    CoercionProblem? problem,
+    Node? node,
+  }) {
     if (problem == null) {
       return CoercionProblem(
         lead,
@@ -143,6 +148,7 @@ final class ArgumentCoercion {
       code: problem.code ?? DiagnosticCode.invalidArgumentValue,
       extensions: problem.extensions,
       thrown: problem.thrown,
+      node: node,
     );
   }
 }

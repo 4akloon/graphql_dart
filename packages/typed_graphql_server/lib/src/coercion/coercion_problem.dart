@@ -18,6 +18,10 @@ final class CoercionProblem(
   /// The error user code threw and its stack trace, which the caller
   /// reports to `onError`; null when the problem is not about a throw.
   final ({Object error, StackTrace stackTrace})? thrown,
+
+  /// The value node an argument problem points at, as graphql-js locates
+  /// it; null when the problem is about the field.
+  final Node? node,
 }) {
   /// Describes a problem.
   this;
