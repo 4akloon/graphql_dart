@@ -34,6 +34,10 @@ abstract class ServerExtension<C> {
   ) => next(request);
 
   /// Wraps the execution, which has the context and the options.
+  ///
+  /// The method check and the cost limit judged the request as it reached
+  /// this phase: a hook that rewrites the request's operation name or
+  /// variables is server code, trusted to keep within the limits.
   Future<ServerResponse> onExecute(
     ExecutionRequest<C> request,
     ExecutionHandler<C> next,

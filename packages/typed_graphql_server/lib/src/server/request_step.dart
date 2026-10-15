@@ -25,6 +25,7 @@ final class RequestStep<C> {
   /// Creates the step.
   const RequestStep({
     required this.length,
+    required this.operations,
     required this.documentPhase,
     required this.contextFactory,
     required this.executionStep,
@@ -35,6 +36,9 @@ final class RequestStep<C> {
 
   /// The length check of the request's query.
   final DocumentLength length;
+
+  /// Finds the operation the request selects.
+  final OperationLookup operations;
 
   /// The document phase with its extensions.
   final DocumentHandler documentPhase;
@@ -72,7 +76,7 @@ final class RequestStep<C> {
     ServerRequest request,
   ) async {
     final document = accepted.document.document;
-    final operation = const OperationLookup().operationOf(
+    final operation = operations.operationOf(
       document,
       request.params.operationName,
     );

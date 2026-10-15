@@ -50,15 +50,20 @@ final class CostFixture {
     );
   }
 
+  // Late: the constructor body builds it, before any reader can run.
   late final ExecutableSchema<Ctx> schema;
 
   /// A server limiting the cost to [maxCost]; null is no limit.
-  GraphQLServer<Ctx> server(double? maxCost, ContextFactory<Ctx> factory) =>
-      GraphQLServer<Ctx>(
-        schema: schema,
-        contextFactory: factory,
-        profile: ServerProfile.development.withLimits(
-          ServerLimits(maxCost: maxCost),
-        ),
-      );
+  GraphQLServer<Ctx> server(
+    double? maxCost,
+    ContextFactory<Ctx> factory, {
+    List<ValidationRule> validationRules = DocumentValidator.recommendedRules,
+  }) => GraphQLServer<Ctx>(
+    schema: schema,
+    contextFactory: factory,
+    profile: ServerProfile.development.withLimits(
+      ServerLimits(maxCost: maxCost),
+    ),
+    validationRules: validationRules,
+  );
 }

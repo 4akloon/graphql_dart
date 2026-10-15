@@ -208,6 +208,23 @@ void main() {
       expect(fixture.codeOf(response), 'GQL402');
     });
 
+    test(
+      'of a query and a mutation sharing a name, the last decides',
+      () async {
+        // Without UniqueOperationNames the executor would run the mutation.
+        final response = await fixture
+            .server(validationRules: [])
+            .handle(
+              fixture.request(
+                'query Q { hello } mutation Q { bump }',
+                method: 'GET',
+                operationName: 'Q',
+              ),
+            );
+        expect(fixture.codeOf(response), 'GQL402');
+      },
+    );
+
     test('an empty operation name names no operation: GQL320', () async {
       final response = await fixture.server().handle(
         fixture.request('{ hello }', operationName: ''),

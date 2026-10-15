@@ -3,6 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../execution/error_hook.dart';
 import '../execution/executable_schema.dart';
+import '../plan/operation_selection.dart';
 import 'context_factory.dart';
 import 'cost_limit.dart';
 import 'csrf_extension.dart';
@@ -13,6 +14,7 @@ import 'document_length.dart';
 import 'document_step.dart';
 import 'execution_step.dart';
 import 'extension_chain.dart';
+import 'operation_lookup.dart';
 import 'pipeline_errors.dart';
 import 'request_handler.dart';
 import 'request_step.dart';
@@ -75,6 +77,7 @@ final class PipelineAssembly<C> {
     final executionStep = ExecutionStep<C>(schema, profile, onError);
     final request = RequestStep<C>(
       length: length,
+      operations: OperationLookup(OperationSelection(schema.schema.schema)),
       documentPhase: chain.document(_documentStep(length)),
       contextFactory: contextFactory,
       executionStep: executionStep,

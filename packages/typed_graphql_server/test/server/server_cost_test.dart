@@ -10,10 +10,13 @@ void main() {
   final fixture = ServerFixture();
   var built = 0;
 
-  GraphQLServer<Ctx> serverWith(double? maxCost) => costs.server(maxCost, (_) {
+  GraphQLServer<Ctx> serverWith(
+    double? maxCost, {
+    List<ValidationRule> validationRules = DocumentValidator.recommendedRules,
+  }) => costs.server(maxCost, (_) {
     built++;
     return const Ctx('x');
-  });
+  }, validationRules: validationRules);
 
   Future<ServerResponse> send(
     double? maxCost,
@@ -33,9 +36,13 @@ void main() {
   setUp(() => built = 0);
 
   group('a literal size', () {
-    test('over the limit is GQL238 with the core rule message', () async {
+    test('over the limit is GQL238', () async {
       final response = await send(10, '{ items(first: 10) { name } }');
       expect(fixture.codeOf(response), 'GQL238');
+    });
+
+    test('over the limit has the core rule message', () async {
+      final response = await send(10, '{ items(first: 10) { name } }');
       expect(
         fixture.messageOf(response),
         'The anonymous operation has a field cost of 1 and a type cost of 11, '
@@ -43,16 +50,24 @@ void main() {
       );
     });
 
-    test('is a request error pointing at a named operation', () async {
+    test('over the limit is a request error', () async {
+      final response = await send(10, '{ items(first: 10) { name } }');
+      expect((response as SingleResponse).outcome, ServerOutcome.requestError);
+    });
+
+    test('over the limit points at the operation', () async {
       final response = await send(
         10,
         '\n  query Q { items(first: 10) { name } }',
       );
-      expect((response as SingleResponse).outcome, ServerOutcome.requestError);
       final errors = fixture.json(response)['errors']! as List<Object?>;
       expect((errors.first! as Map<String, Object?>)['locations'], [
         {'line': 2, 'column': 3},
       ]);
+    });
+
+    test('names a named operation', () async {
+      final response = await send(10, 'query Q { items(first: 10) { name } }');
       expect(
         fixture.messageOf(response),
         startsWith('The operation "Q" has a field cost of 1'),
@@ -68,6 +83,20 @@ void main() {
       final response = await send(10, '{ items(first: 9) { name } }');
       expect(fixture.json(response)['data'], isNotNull);
     });
+  });
+
+  test('the message is the one MaxCostRule reports', () async {
+    const text = 'query Q { items(first: 10) { name } }';
+    final source = Source(text);
+    final document = const Parser().parse(source).requireDocument();
+    final result = const DocumentValidator(
+      rules: [MaxCostRule(maxCost: 10)],
+    ).validate(costs.schema.schema, document, source: source);
+    final response = await send(10, text);
+    expect(
+      fixture.messageOf(response),
+      (result as InvalidDocument).diagnostics.single.message,
+    );
   });
 
   group('a size given by a variable', () {
@@ -90,31 +119,87 @@ void main() {
       );
       expect(fixture.json(response)['data'], isNotNull);
     });
+
+    test('is costed again for a cached document', () async {
+      final server = serverWith(10);
+      await server.handle(
+        fixture.request(text, variables: JsonObject({'n': JsonNumber(1)})),
+      );
+      final response = await server.handle(
+        fixture.request(
+          text,
+          variables: JsonObject({'n': JsonNumber(1000000)}),
+        ),
+      );
+      expect(fixture.codeOf(response), 'GQL238');
+    });
   });
 
-  group('a hostile variable value', () {
+  group('a variable value that names no size counts as not given', () {
+    // Not given, `items` has the default list size, 10: a type cost of 11.
     const text = r'query ($n: Int) { items(first: $n) { name } }';
 
     for (final (label, value) in <(String, JsonValue)>[
       ('a string', const JsonString('many')),
-      ('a fraction', JsonNumber(1.5)),
       ('a negative number', JsonNumber(-5)),
-      ('a huge number', JsonNumber(1e300)),
       ('null', const JsonNull()),
       ('an object', JsonObject({})),
     ]) {
-      test('$label is never an internal error', () async {
+      test(label, () async {
         final response = await send(
           10,
           text,
           variables: JsonObject({'n': value}),
         );
-        expect(
-          (response as SingleResponse).outcome,
-          isNot(ServerOutcome.internalError),
-        );
+        expect(fixture.codeOf(response), 'GQL238');
       });
     }
+
+    test('a missing value', () async {
+      final response = await send(10, text);
+      expect(fixture.codeOf(response), 'GQL238');
+    });
+  });
+
+  test('a huge variable value is refused', () async {
+    final response = await send(
+      10,
+      r'query ($n: Int) { items(first: $n) { name } }',
+      variables: JsonObject({'n': JsonNumber(1e300)}),
+    );
+    expect(fixture.codeOf(response), 'GQL238');
+  });
+
+  test('a fractional variable value is left to coercion', () async {
+    // 1.5 is within the limit; the executor refuses it as an Int.
+    final response = await send(
+      10,
+      r'query ($n: Int) { items(first: $n) { name } }',
+      variables: JsonObject({'n': JsonNumber(1.5)}),
+    );
+    expect(fixture.codeOf(response), isNot('GQL238'));
+  });
+
+  test('the operation named by operationName is costed', () async {
+    final response = await send(
+      10,
+      'query Cheap { items(first: 1) { name } } '
+      'query Costly { items(first: 10) { name } }',
+      operationName: 'Costly',
+    );
+    expect(fixture.codeOf(response), 'GQL238');
+  });
+
+  test('of two operations sharing a name the executed one is costed', () async {
+    // Without UniqueOperationNames the executor runs the last one.
+    final response = await serverWith(10, validationRules: const []).handle(
+      fixture.request(
+        'query Q { items(first: 1) { name } } '
+        'query Q { items(first: 10) { name } }',
+        operationName: 'Q',
+      ),
+    );
+    expect(fixture.codeOf(response), 'GQL238');
   });
 
   test('a GET query is costed', () async {
@@ -137,6 +222,6 @@ void main() {
       '{ items(first: 10) { name } }',
       operationName: 'Nope',
     );
-    expect(fixture.codeOf(response), isNot('GQL238'));
+    expect(fixture.codeOf(response), 'GQL320');
   });
 }
