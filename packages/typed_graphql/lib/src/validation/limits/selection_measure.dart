@@ -12,8 +12,11 @@ import 'measured_quantity.dart';
 /// chain of fragments that expands exponentially costs one visit each.
 /// The walk uses an explicit stack. A fragment on the stack when it is
 /// spread again is a cycle (`NoFragmentCyclesRule` reports it) and counts
-/// 0, like an unknown fragment. Counts saturate at one over the [limit]:
-/// they cannot overflow and an excess is all a rule needs.
+/// 0, like an unknown fragment. A fragment cut by a cycle is memoised like
+/// any other: on a document with fragment cycles its value can depend on
+/// which fragment is measured first, and stays deterministic. Counts saturate
+/// at one over the [limit]: they cannot overflow and an excess is all a rule
+/// needs.
 final class SelectionMeasure(
   final ValidationContext context,
   final MeasuredQuantity quantity,
@@ -26,7 +29,10 @@ final class SelectionMeasure(
 
   final Map<String, int> _fragmentValues = {};
 
-  int? get _cap => quantity.isAdditive ? limit + 1 : null;
+  // `limit + 1` wraps to a negative number at the VM's largest int: then the
+  // cap is the limit itself, which a value cannot exceed anyway.
+  int? get _cap =>
+      quantity.isAdditive ? (limit + 1 > limit ? limit + 1 : limit) : null;
 
   /// The value of [operation], or null once the context's step budget is
   /// spent.

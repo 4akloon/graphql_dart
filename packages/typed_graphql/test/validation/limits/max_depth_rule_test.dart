@@ -74,4 +74,14 @@ void main() {
     expect(run(depth), isEmpty);
     expect(run(depth - 1).single.message, contains('a depth of $depth,'));
   });
+
+  test('one fragment spread at two depths gives the greater depth', () {
+    const definition = ' fragment F on Query { a { b } }';
+    for (final selections in ['...F a { ...F }', 'a { ...F } ...F']) {
+      expect(errors('{ $selections }$definition', 3), isEmpty);
+      expect(errors('{ $selections }$definition', 2), [
+        contains('a depth of 3,'),
+      ]);
+    }
+  });
 }

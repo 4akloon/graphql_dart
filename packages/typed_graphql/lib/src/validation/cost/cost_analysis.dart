@@ -54,9 +54,13 @@ import 'operation_cost.dart';
 /// selections are not counted; nor are a field its parent type does not
 /// define and its selections.
 ///
-/// The cost is computed in time linear in the document, however often
-/// fragments are spread, and without recursion. A fragment spread inside
-/// itself counts 0, like an unknown fragment.
+/// The cost is computed without recursion in time polynomial in the
+/// document, however often fragments are spread: each fragment is walked
+/// once for each distinct sizing context it is spread in (at most the
+/// fragments times the contexts `sizedFields` create). Costs saturate at the
+/// largest finite double, so an overflowing size is a very large cost, never
+/// NaN or infinite. A fragment spread inside itself counts 0, like an
+/// unknown fragment.
 ///
 /// {@category validation}
 final class const CostAnalysis(

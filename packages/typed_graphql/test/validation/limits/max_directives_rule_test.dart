@@ -51,4 +51,12 @@ void main() {
       '1:18 GQL234 The operation "B" has more than 1 directives.',
     ]);
   });
+
+  test('a fragment spread three times counts its nested directives each', () {
+    const text =
+        '{ ...F ...F ...F } fragment F on Query { b @x ...G } '
+        'fragment G on Query { b @y }';
+    expect(errors(text, 6), isEmpty);
+    expect(errors(text, 5), hasLength(1));
+  });
 }

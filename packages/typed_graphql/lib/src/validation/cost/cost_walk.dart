@@ -9,6 +9,7 @@ import '../meta_fields.dart';
 import 'argument_cost.dart';
 import 'cost_weights.dart';
 import 'list_sizes.dart';
+import 'saturating_cost.dart';
 import 'sized_context.dart';
 
 /// One computation of an operation's cost: walks the selections with an
@@ -18,8 +19,13 @@ import 'sized_context.dart';
 /// effect where it is spread, so it is computed once per pair and a chain of
 /// fragments that expands exponentially costs one visit each. A fragment on
 /// the stack when it is spread again is a cycle and counts 0, like an unknown
-/// fragment. The costs are sums and products of doubles: they cannot
-/// overflow an integer.
+/// fragment. The costs are sums and products of doubles, saturated at the
+/// largest finite double ([SaturatingCost]): never NaN or infinite.
+///
+/// A fragment cut by a cycle is memoised like any other, so on a document
+/// with fragment cycles (which `NoFragmentCyclesRule` reports) its cost can
+/// depend on which fragment is entered first; it is still deterministic and
+/// an upper bound is not claimed there.
 final class CostWalk(
   /// The schema.
   final Schema schema,
@@ -84,8 +90,8 @@ final class CostWalk(
         return (fieldCost: frame.fieldCost, typeCost: frame.typeCost);
       }
       stack.last.add(
-        frame.rawCost + frame.multiplier * frame.fieldCost,
-        frame.multiplier * (frame.typeWeight + frame.typeCost),
+        frame.rawCost.plus(frame.multiplier.times(frame.fieldCost)),
+        frame.multiplier.times(frame.typeWeight.plus(frame.typeCost)),
       );
     }
   }
@@ -132,16 +138,17 @@ final class CostWalk(
     }
     final raw = max<double>(
       0,
-      weights.ofField(definition) +
-          _arguments.of(node.arguments, definition.argumentNamed) +
-          _directives(node),
+      weights
+          .ofField(definition)
+          .plus(_arguments.of(node.arguments, definition.argumentNamed))
+          .plus(_directives(node)),
     );
     final size = sizes.of(node, definition, frame.sized);
     final typeWeight = weights.ofNamedTypeIn(definition.type);
     final named = schema.namedTypeOf(definition.type);
     final selectionSet = node.selectionSet;
     if (selectionSet == null || named == null) {
-      frame.add(raw, size.size * typeWeight);
+      frame.add(raw, size.size.times(typeWeight));
       return null;
     }
     return _Frame(
@@ -167,7 +174,9 @@ final class CostWalk(
     var total = 0.0;
     for (final directive in node.directives) {
       if (schema.directiveNamed(directive.name.value) case final definition?) {
-        total += _arguments.of(directive.arguments, definition.argumentNamed);
+        total = total.plus(
+          _arguments.of(directive.arguments, definition.argumentNamed),
+        );
       }
     }
     return total;
@@ -193,7 +202,7 @@ final class _Frame(
   double typeCost = 0;
 
   void add(double field, double type) {
-    fieldCost += field;
-    typeCost += type;
+    fieldCost = fieldCost.plus(field);
+    typeCost = typeCost.plus(type);
   }
 }

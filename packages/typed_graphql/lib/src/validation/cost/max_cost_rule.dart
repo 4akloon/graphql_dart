@@ -49,7 +49,8 @@ final class _MaxCost(
       context.schema,
       defaultListSize: defaultListSize,
     ).costOf(context.document, operation);
-    if (cost.fieldCost > maxCost || cost.typeCost > maxCost) {
+    // Written as a negated `<=` so that a NaN could never pass the limit.
+    if (!(cost.fieldCost <= maxCost && cost.typeCost <= maxCost)) {
       context.report(
         .maxCostExceeded,
         '${OperationSubject(operation).text} has a field cost of '

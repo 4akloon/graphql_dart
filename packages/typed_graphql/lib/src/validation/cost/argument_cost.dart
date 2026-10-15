@@ -4,6 +4,7 @@ import '../../schema/model/input_value.dart';
 import '../../schema/model/schema_type.dart';
 import '../../schema/schema.dart';
 import 'cost_weights.dart';
+import 'saturating_cost.dart';
 
 /// The cost of the arguments written on a field or a directive (IBM cost
 /// draft): the weight of each argument given plus the weight of each input
@@ -31,11 +32,9 @@ final class ArgumentCost(
     var total = 0.0;
     for (final argument in arguments) {
       if (definitionNamed(argument.name.value) case final definition?) {
-        total += weights.ofInputValue(definition);
-        total += _inside(
-          argument.value,
-          schema.namedTypeOf(definition.type),
-        );
+        total = total
+            .plus(weights.ofInputValue(definition))
+            .plus(_inside(argument.value, schema.namedTypeOf(definition.type)));
       }
     }
     return total;
@@ -52,7 +51,7 @@ final class ArgumentCost(
         case ObjectValue(:final fields) when currentType is InputObjectType:
           for (final field in fields) {
             if (currentType.fieldNamed(field.name.value) case final input?) {
-              total += weights.ofInputValue(input);
+              total = total.plus(weights.ofInputValue(input));
               stack.add((field.value, schema.namedTypeOf(input.type)));
             }
           }

@@ -1,7 +1,11 @@
 /// A cost as the messages print it.
-final class CostNumber(final double value) {
+final class CostNumber(double value) {
   /// Creates the printable form of [value].
   this;
+
+  // -0.0 prints as "-0" on the VM and "0" on JavaScript: normalised.
+  /// The cost, with a negative zero turned into zero.
+  final double value = value == 0 ? 0.0 : value;
 
   // Beyond 1e15 the platforms print doubles differently (the VM
   // `1.152921504606847e+18`, JavaScript `1152921504606847000`); the
