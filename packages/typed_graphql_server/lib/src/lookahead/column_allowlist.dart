@@ -5,10 +5,10 @@ import 'field_selection.dart';
 /// preloads nothing and writes no SQL.
 ///
 /// {@category lookahead}
-final class ColumnWhitelist {
+final class ColumnAllowlist {
   /// Maps each field name in [columns] to its column; the [always] columns
   /// are in every answer (a key, say).
-  ColumnWhitelist(Map<String, String> columns, {List<String> always = const []})
+  ColumnAllowlist(Map<String, String> columns, {List<String> always = const []})
     : _columns = Map.unmodifiable(columns),
       _always = List.unmodifiable(always);
 

@@ -45,7 +45,7 @@ and the executor reads the builder's definitions, so `builder/` and
 | `execution/` | `ExecutableSchema.execute`, the executor, errors, `ExecutionOptions`, `FieldInfo`, middleware composition | M5a (`FieldInfo`, `ExecutableSchema`), M5b |
 | `introspection/` | the `__Schema` family as object types, `IntrospectionPolicy` | M5c |
 | `subscription/` | `subscribe`, `SubscriptionResult` | M5c |
-| `lookahead/` | `FieldSelection`, `SelectedField`, `ColumnWhitelist` | M5d |
+| `lookahead/` | `FieldSelection`, `SelectedField`, `ColumnAllowlist` | M5d |
 | `authorization/` | `Authorizer`, `Authorization`, `AuthorizationCoverage` | M5d |
 | `cancellation/` | `CancelSignal` | M5d |
 
@@ -427,7 +427,7 @@ member is read.
 - `fingerprint`: a canonical string of the sub-selection (field names
   sorted, arguments printed in sorted key order, children nested), usable
   as a DataLoader key; built with an explicit stack.
-- `ColumnWhitelist({fieldName: column}, {always})`:
+- `ColumnAllowlist({fieldName: column}, {always})`:
   `columnsFor(selection)` gives the sorted, de-duplicated columns of the
   requested fields the map knows, plus `always`. No preload, no SQL.
 - Typed handles (`has(user.posts)`): not in M5; the builder does not

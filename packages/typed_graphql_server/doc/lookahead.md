@@ -135,7 +135,7 @@ the rest of the execution goes on. Fields over the same field nodes are read
 once, so a selection whose aliases use the same arguments costs time in
 proportion to the request, not to its expansion.
 
-`ColumnWhitelist` turns a selection into database columns. It maps field
+`ColumnAllowlist` turns a selection into database columns. It maps field
 names to columns, adds the `always` columns (a key, say), ignores the fields
 it does not know and returns the sorted, de-duplicated list. It preloads
 nothing and writes no SQL: the resolver builds the query.
@@ -154,7 +154,7 @@ Future<void> main() async {
       t.field('email', b.string).pure((_) => 'ada@example.com'),
     ],
   );
-  final columns = ColumnWhitelist(
+  final columns = ColumnAllowlist(
     {'name': 'full_name', 'email': 'email_address'},
     always: ['id'],
   );

@@ -100,7 +100,7 @@
   `fields`, `forType`, `has('posts.comments')`, `fieldsNamed` and
   `fingerprint` (canonical, for DataLoader keys); `SelectedField` has `name`,
   `alias`, `responseKey`, `arguments` (coerced on first read; an argument that
-  fails reads as absent) and its own `selection`. `ColumnWhitelist` maps field
+  fails reads as absent) and its own `selection`. `ColumnAllowlist` maps field
   names to sorted, de-duplicated columns. `isDeferred` arrives with
   incremental delivery.
 - The Look-ahead guide and its dartdoc category `lookahead`.

@@ -5,7 +5,7 @@ import 'look_ahead_fixture.dart';
 
 void main() {
   final f = LookAheadFixture();
-  final whitelist = ColumnWhitelist(
+  final allowlist = ColumnAllowlist(
     {'name': 'full_name', 'friend': 'friend_id', 'alias': 'full_name'},
     always: ['id'],
   );
@@ -15,16 +15,16 @@ void main() {
       'user',
       '{ user { friend { name } name } }',
     );
-    expect(whitelist.columnsFor(selection), ['friend_id', 'full_name', 'id']);
+    expect(allowlist.columnsFor(selection), ['friend_id', 'full_name', 'id']);
   });
 
   test('ignores the fields the map does not know', () async {
     final selection = await f.selection('user', '{ user { posts { title } } }');
-    expect(whitelist.columnsFor(selection), ['id']);
+    expect(allowlist.columnsFor(selection), ['id']);
   });
 
   test('lists a column once when two fields share it', () async {
-    final both = ColumnWhitelist({'name': 'n', 'friend': 'n'});
+    final both = ColumnAllowlist({'name': 'n', 'friend': 'n'});
     final selection = await f.selection(
       'user',
       '{ user { name friend { name } } }',
@@ -33,11 +33,11 @@ void main() {
   });
 
   test('adds the always columns to an empty selection', () {
-    expect(whitelist.columnsFor(FieldSelection.empty), ['id']);
+    expect(allowlist.columnsFor(FieldSelection.empty), ['id']);
   });
 
   test('reads names, so an alias does not hide a column', () async {
     final selection = await f.selection('user', '{ user { shown: name } }');
-    expect(whitelist.columnsFor(selection), ['full_name', 'id']);
+    expect(allowlist.columnsFor(selection), ['full_name', 'id']);
   });
 }

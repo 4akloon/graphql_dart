@@ -47,7 +47,7 @@ export 'src/execution/field_site.dart';
 export 'src/execution/graphql_exception.dart';
 export 'src/execution/response_path.dart';
 export 'src/introspection/introspection_policy.dart';
-export 'src/lookahead/column_whitelist.dart';
+export 'src/lookahead/column_allowlist.dart';
 export 'src/lookahead/field_selection.dart';
 export 'src/lookahead/selected_field.dart';
 export 'src/subscription/subscription_result.dart';
