@@ -2,8 +2,8 @@
 /// engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws
 /// and graphql-sse handlers.
 ///
-/// Under construction: the typed schema builder is partly in place (refs,
-/// scalars, enums, arguments, input objects); see the package README.
+/// Under construction: the typed schema builder works (M5a); execution
+/// arrives in M5b. See the package README.
 library;
 
 export 'src/builder/arg.dart';
