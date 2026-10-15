@@ -24,7 +24,11 @@ final class OperationPlanner {
 
   /// The plan of the operation named [operationName] in [document].
   PlanResult plan(Document document, String? operationName) {
-    final known = cache.lookup(document, operationName);
+    final known = cache.lookup(
+      document,
+      operationName,
+      includesSuggestions: environment.includesSuggestions,
+    );
     if (known != null) {
       return PlanReady(known);
     }
@@ -33,26 +37,36 @@ final class OperationPlanner {
       case OperationRejected(:final error):
         return PlanRejected(error);
       case OperationSelected(:final operation):
-        final rootName = schema.rootTypeName(operation.operation);
-        final rootType = rootName == null ? null : schema.typeNamed(rootName);
-        if (rootType is! ObjectType) {
-          throw StateError(
-            'The root type of ${operation.operation.name} is '
-            'an object type of a validated schema.',
-          );
-        }
-        final plan = OperationPlan(
-          operation,
-          rootType,
-          {
-            for (final definition in document.definitions)
-              if (definition is FragmentDefinition)
-                definition.name.value: definition,
-          },
-          environment,
+        final plan = _build(document, operation);
+        cache.store(
+          document,
+          operationName,
+          plan,
+          includesSuggestions: environment.includesSuggestions,
         );
-        cache.store(document, operationName, plan);
         return PlanReady(plan);
     }
+  }
+
+  OperationPlan _build(Document document, OperationDefinition operation) {
+    final schema = environment.schema;
+    final rootName = schema.rootTypeName(operation.operation);
+    final rootType = rootName == null ? null : schema.typeNamed(rootName);
+    if (rootType is! ObjectType) {
+      throw StateError(
+        'The root type of ${operation.operation.name} is '
+        'an object type of a validated schema.',
+      );
+    }
+    return OperationPlan(
+      operation,
+      rootType,
+      {
+        for (final definition in document.definitions)
+          if (definition is FragmentDefinition)
+            definition.name.value: definition,
+      },
+      environment,
+    );
   }
 }
