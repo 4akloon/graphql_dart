@@ -82,6 +82,91 @@ final class DartWriter {
     line(close);
   }
 
+  /// Whether [text] written as one line at the current indentation stays
+  /// within 80 columns.
+  bool fits(String text) => _indentation.length + text.length <= _maxColumns;
+
+  /// Writes `head = expression;`, breaking after the `=` when it is too long.
+  void assign(String head, String expression) =>
+      _continued(head, '=', expression);
+
+  /// Writes `head => expression;`, breaking after the `=>` when it is too
+  /// long.
+  void arrow(String head, String expression) =>
+      _continued(head, '=>', expression);
+
+  /// Writes `head => a op b op c;` on one line when it fits, otherwise
+  /// `head =>` and one operand per line, each but the last ending with
+  /// [operator].
+  void arrowJoined(String head, List<String> operands, String operator) {
+    final String single = '$head => ${operands.join(' $operator ')};';
+    if (fits(single)) {
+      line(single);
+      return;
+    }
+    line('$head =>');
+    indented(() {
+      indented(() {
+        for (final (int index, String operand) in operands.indexed) {
+          final bool isLast = index == operands.length - 1;
+          line(isLast ? '$operand;' : '$operand $operator');
+        }
+      });
+    });
+  }
+
+  void _continued(String head, String operator, String expression) {
+    final String single = '$head $operator $expression;';
+    if (fits(single)) {
+      line(single);
+      return;
+    }
+    if (_fitsAfterBreak(expression) ||
+        !expression.endsWith(')') ||
+        !expression.contains('(')) {
+      line('$head $operator');
+      indented(() => indented(() => line('$expression;')));
+      return;
+    }
+    final int open = expression.indexOf('(');
+    final String opening = expression.substring(0, open + 1);
+    final String inner = expression.substring(open + 1, expression.length - 1);
+    if (fits('$head $operator $opening')) {
+      line('$head $operator $opening');
+      indented(() => _breakCall(inner));
+      line(');');
+      return;
+    }
+    line('$head $operator');
+    indented(() {
+      indented(() {
+        line(opening);
+        indented(() => _breakCall(inner));
+        line(');');
+      });
+    });
+  }
+
+  bool _fitsAfterBreak(String expression) {
+    _level += 2;
+    final bool result = fits('$expression;');
+    _level -= 2;
+    return result;
+  }
+
+  // Writes the argument [text] of a call, breaking nested single-argument
+  // calls until each line fits.
+  void _breakCall(String text) {
+    final int open = text.indexOf('(');
+    if (fits('$text,') || open < 0 || !text.endsWith(')')) {
+      line('$text,');
+      return;
+    }
+    line(text.substring(0, open + 1));
+    indented(() => _breakCall(text.substring(open + 1, text.length - 1)));
+    line('),');
+  }
+
   /// Everything written; ends with exactly one line break.
   String get text {
     final String written = _buffer.toString().trimRight();

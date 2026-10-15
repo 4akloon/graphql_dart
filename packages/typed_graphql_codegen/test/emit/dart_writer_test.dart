@@ -73,4 +73,40 @@ void main() {
   test('text of an empty writer is empty', () {
     expect(DartWriter().text, '');
   });
+
+  test('assign stays on one line when it fits', () {
+    final DartWriter writer = DartWriter();
+    writer.assign('final x', 'f(1)');
+    expect(writer.text, 'final x = f(1);\n');
+  });
+
+  test('assign breaks after the equals sign when that fits', () {
+    final DartWriter writer = DartWriter();
+    final String call = 'f(${'a' * 70})';
+    writer.assign('final x', call);
+    expect(writer.text, 'final x =\n    $call;\n');
+  });
+
+  test('arrow breaks a long call into its arguments', () {
+    final DartWriter writer = DartWriter();
+    final String inner = 'g(${'a' * 70})';
+    writer.arrow('int get x', 'f($inner)');
+    expect(writer.text, 'int get x => f(\n  $inner,\n);\n');
+  });
+
+  test('arrowJoined puts one operand per line when it is too long', () {
+    final DartWriter writer = DartWriter();
+    final String operand = 'a' * 40;
+    writer.arrowJoined('bool get x', <String>[operand, operand], '&&');
+    expect(
+      writer.text,
+      'bool get x =>\n    $operand &&\n    $operand;\n',
+    );
+  });
+
+  test('arrowJoined joins the operands on one line when they fit', () {
+    final DartWriter writer = DartWriter();
+    writer.arrowJoined('bool get x', <String>['a', 'b'], '&&');
+    expect(writer.text, 'bool get x => a && b;\n');
+  });
 }
