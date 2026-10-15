@@ -44,6 +44,7 @@ final class ExecutionPort {
       source: Source(text),
       errorBehavior: options.errorBehavior,
       maskErrors: options.maskErrors,
+      includesSuggestions: options.includesSuggestions,
       onError: options.onError,
       maxCoercionErrors: options.maxCoercionErrors,
       maxDepth: options.maxDepth,
@@ -66,6 +67,14 @@ final class ExecutionPort {
     variables: variables,
     options: options,
   );
+
+  /// The request variables for [plain], the object `jsonDecode` would give
+  /// (maps, lists, strings, numbers, booleans and null).
+  JsonObject variablesOf(Map<String, Object?> plain) =>
+      switch (const JsonReader().read(plain)) {
+        DecodeSuccess(value: final JsonObject object) => object,
+        _ => throw ArgumentError.value(plain, 'plain', 'is not a JSON object'),
+      };
 
   /// The response of [run] as JSON, awaited.
   Future<Map<String, Object?>> json(

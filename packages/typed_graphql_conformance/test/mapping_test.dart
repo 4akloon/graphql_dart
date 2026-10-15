@@ -102,6 +102,10 @@ void main() {
         'execution/__tests__/resolve-test.ts',
         'execution/__tests__/schema-test.ts',
         'execution/__tests__/sync-test.ts',
+        'execution/__tests__/variables-test.ts',
+        'execution/__tests__/oneof-test.ts',
+        'utilities/__tests__/coerceInputValue-test.ts',
+        'utilities/__tests__/validateInputValue-test.ts',
       ],
     ),
     (
