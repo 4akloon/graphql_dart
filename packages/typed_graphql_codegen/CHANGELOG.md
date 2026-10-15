@@ -38,3 +38,7 @@
   `decode`, `toJson`, value equality and a private codec per field, and a
   `...Fragments` holder per selection that spreads fragments) and the imports
   they need. Depends on `package:path`.
+- A selection on an interface or union that tells types apart (`... on User`)
+  generates a sealed class that reads `__typename`, a final class per type
+  and an unknown class for any other type; fields every class selects the same
+  way are declared by the sealed class.

@@ -1,7 +1,12 @@
+import 'package:typed_graphql/typed_graphql.dart';
+
 import '../plan/data_class_role.dart';
 import '../plan/planned_class.dart';
+import '../plan/planned_field.dart';
+import 'dart_string_literal.dart';
 import 'dart_writer.dart';
 import 'data_class_field.dart';
+import 'fragment_decode_writer.dart';
 import 'imports.dart';
 import 'reader_factory_writer.dart';
 import 'to_json_writer.dart';
@@ -22,30 +27,42 @@ final class DataClassEmitter {
 
   /// Writes [plan] with the class doc comment [doc].
   ///
-  /// Only the roles [DataClassRole.fragment] and [DataClassRole.nested] are
-  /// written here; any other is a [StateError].
+  /// A variant implements its sealed base, which reads it and declares its
+  /// shared members; [DataClassRole.operationData] is not written here and
+  /// is a [StateError].
   void emit(
     DataClassPlan plan,
     String doc,
     DartWriter writer,
     Imports imports,
   ) {
-    if (plan.role != DataClassRole.fragment &&
-        plan.role != DataClassRole.nested) {
+    if (plan.role == DataClassRole.operationData) {
       throw StateError('${plan.name} is a ${plan.role.name} class.');
     }
     final fields = [
+      // The unknown variant holds the type name it was read with.
+      if (plan.role == DataClassRole.unknownVariant)
+        DataClassField.of(_typenameField, mapper, imports),
       for (final field in plan.fields)
         DataClassField.of(field, mapper, imports),
     ];
     final String noun = plan.role == DataClassRole.fragment
         ? 'fragment'
         : 'value';
+    final String implemented = plan.baseName ?? 'client.DataObject';
     writer.doc(doc);
-    writer.block('final class ${plan.name} implements client.DataObject', () {
+    writer.block('final class ${plan.name} implements $implemented', () {
       _members(writer, plan, fields, noun);
     });
   }
+
+  static const PlannedField _typenameField = PlannedField(
+    responseName: '__typename',
+    memberName: 'typename',
+    type: NonNullType(NamedType(Name('String'))),
+    isConditional: false,
+    overridesBase: true,
+  );
 
   void _members(
     DartWriter writer,
@@ -57,12 +74,15 @@ final class DataClassEmitter {
     _constructor(writer, plan, fields, noun);
     writer.line();
     _reader(writer, plan, fields);
-    writer.line();
-    writer.doc('Reads and writes the $noun.');
-    writer.assign(
-      'static const client.DataCodec<$name> codec',
-      'client.ObjectDataCodec($name._read)',
-    );
+    // The sealed base reads a variant.
+    if (plan.baseName == null) {
+      writer.line();
+      writer.doc('Reads and writes the $noun.');
+      writer.assign(
+        'static const client.DataCodec<$name> codec',
+        'client.ObjectDataCodec($name._read)',
+      );
+    }
     for (final field in fields) {
       writer.line();
       writer.assign(
@@ -70,10 +90,11 @@ final class DataClassEmitter {
         field.type.codec,
       );
     }
+    _typename(writer, plan);
     _fields(writer, plan, fields);
     if (plan.role == DataClassRole.fragment) {
       writer.line();
-      _decode(writer, name);
+      const FragmentDecodeWriter().write(writer, name);
     }
     writer.line();
     _toJson(writer, plan, fields);
@@ -128,29 +149,41 @@ final class DataClassEmitter {
   ) {
     for (final field in fields) {
       writer.line();
-      writer.doc(field.doc);
+      _documentation(writer, field.doc, isOverride: field.overridesBase);
       writer.line('final ${field.type.type} ${field.member};');
     }
     if (plan.holderName case final holder?) {
       writer.line();
-      writer.doc('The fragments spread on this value.');
+      _documentation(
+        writer,
+        'The fragments spread on this value.',
+        isOverride: plan.holderOverridesBase,
+      );
       writer.line('final $holder fragments;');
     }
   }
 
-  void _decode(DartWriter writer, String name) {
-    writer
-      ..doc(
-        'Reads [json], an object the fragment was spread on, in the response\n'
-        'to an operation sent with [variables].',
-      )
-      ..line('static graphql.DecodeResult<$name> decode(')
-      ..indented(() {
-        writer
-          ..line('graphql.JsonObject json, {')
-          ..line('graphql.JsonObject? variables,');
-      })
-      ..line('}) => codec.decode(json, client.DataContext(variables));');
+  // An overriding member inherits the doc comment of the base's declaration.
+  void _documentation(
+    DartWriter writer,
+    String doc, {
+    required bool isOverride,
+  }) {
+    if (isOverride) {
+      writer.line('@override');
+    } else {
+      writer.doc(doc);
+    }
+  }
+
+  void _typename(DartWriter writer, DataClassPlan plan) {
+    if (plan.variantTypeName case final typeName?) {
+      writer.line();
+      writer.line('@override');
+      writer.line(
+        'String get typename => ${const DartStringLiteral().of(typeName)};',
+      );
+    }
   }
 
   void _toJson(
@@ -160,6 +193,9 @@ final class DataClassEmitter {
   ) {
     const ToJsonWriter().write(writer, [
       if (plan.holderName != null) '...fragments.toJson().fields',
+      if (plan.variantTypeName case final typeName?)
+        "'__typename': const graphql.JsonString("
+            '${const DartStringLiteral().of(typeName)})',
       for (final field in fields)
         '${field.keyLiteral}: ${field.codecName}.write(${field.member})',
     ]);

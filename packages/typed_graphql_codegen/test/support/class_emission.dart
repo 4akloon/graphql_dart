@@ -4,6 +4,7 @@ import 'package:typed_graphql_codegen/src/emit/dart_writer.dart';
 import 'package:typed_graphql_codegen/src/emit/data_class_emitter.dart';
 import 'package:typed_graphql_codegen/src/emit/fragment_holder_emitter.dart';
 import 'package:typed_graphql_codegen/src/emit/imports.dart';
+import 'package:typed_graphql_codegen/src/emit/polymorphic_base_emitter.dart';
 import 'package:typed_graphql_codegen/src/emit/type_mapper.dart';
 import 'package:typed_graphql_codegen/src/plan/planned_class.dart';
 import 'package:typed_graphql_codegen/src/plan/shape_planner.dart';
@@ -57,8 +58,11 @@ final class ClassEmission(
         DataClassEmitter(mapper).emit(data, doc, writer, imports);
       case final FragmentHolderPlan holder:
         const FragmentHolderEmitter().emit(holder, writer);
-      case PolymorphicBasePlan():
-        throw StateError('not emitted by these tests');
+      case final PolymorphicBasePlan base:
+        final doc = ClassDocumentation(
+          plan,
+        ).ofBase(base, fragmentName: fragmentName);
+        PolymorphicBaseEmitter(mapper).emit(base, doc, writer, imports);
     }
     return writer.text;
   }

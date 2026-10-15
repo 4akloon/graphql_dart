@@ -47,6 +47,10 @@ final class DataClassField {
   /// Whether the field may be absent because of a variable condition.
   bool get isConditional => _field.isConditional;
 
+  /// Whether the field is declared by the sealed base, which this class
+  /// overrides.
+  bool get overridesBase => _field.overridesBase;
+
   /// Whether the Dart type is nullable.
   bool get isNullable => type.type.endsWith('?');
 

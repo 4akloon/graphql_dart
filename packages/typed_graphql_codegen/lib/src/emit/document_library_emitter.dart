@@ -9,6 +9,7 @@ import 'fragment_holder_emitter.dart';
 import 'generated_header.dart';
 import 'imports.dart';
 import 'library_imports.dart';
+import 'polymorphic_base_emitter.dart';
 import 'type_mapper.dart';
 
 /// Writes the library of one document file: the classes of its fragments
@@ -74,8 +75,11 @@ final class DocumentLibraryEmitter {
         DataClassEmitter(mapper).emit(plan, doc, body, imports);
       case final FragmentHolderPlan plan:
         const FragmentHolderEmitter().emit(plan, body);
-      case PolymorphicBasePlan():
-        throw StateError('${planned.name} needs the polymorphic emitter.');
+      case final PolymorphicBasePlan plan:
+        final doc = ClassDocumentation(
+          classes,
+        ).ofBase(plan, fragmentName: fragmentName);
+        PolymorphicBaseEmitter(mapper).emit(plan, doc, body, imports);
     }
   }
 }

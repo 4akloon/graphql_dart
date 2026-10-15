@@ -60,14 +60,16 @@ final class LibraryImports {
   }
 
   bool _usesSchemaTypes(List<PlannedClass> classes) => classes.any(
-    (planned) =>
-        planned is DataClassPlan &&
-        planned.fields.any(
-          (field) => switch (schema.namedTypeOf(field.type)) {
-            EnumType() || InputObjectType() => true,
-            _ => false,
-          },
-        ),
+    (planned) => switch (planned) {
+      DataClassPlan(:final fields) ||
+      PolymorphicBasePlan(sharedFields: final fields) => fields.any(
+        (field) => switch (schema.namedTypeOf(field.type)) {
+          EnumType() || InputObjectType() => true,
+          _ => false,
+        },
+      ),
+      FragmentHolderPlan() => false,
+    },
   );
 
   Iterable<String> _spreadFragments(List<PlannedClass> classes) => [

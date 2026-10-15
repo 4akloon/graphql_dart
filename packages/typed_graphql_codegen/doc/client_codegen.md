@@ -248,6 +248,16 @@ fragment on its own, and `toJson` writes it back; `==` compares lists by
 content. The golden `test/goldens/fragments` is analyzed and run like the
 other goldens.
 
+A selection on an interface or a union that spreads inline fragments or
+fragments on other types generates a sealed class. `NodeCard` on `Node`
+with `... on User` and `... on Bot` is a sealed `NodeCard` that reads the
+`__typename`, `NodeCardUser` and `NodeCardBot`, and `NodeCardUnknown` for any
+other type, which a server may add later. A `switch` over the sealed class is
+exhaustive. The sealed class declares `typename` and every field that all
+classes select in the same way, and `fragments` when they all spread the same
+fragments; `NodeCardUnknown` keeps the `typename` it was read with. The golden
+`test/goldens/polymorphic` is analyzed and run like the other goldens.
+
 ## Schema types
 
 The file at `schema_types` holds what the documents reach: the enums and
