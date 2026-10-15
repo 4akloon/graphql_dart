@@ -14,8 +14,8 @@ void main() {
 
   const generated = 'lib/user.graphql.dart';
 
-  test('generate writes the files of the goldens', () {
-    expect(project.run(['generate']), 0);
+  test('generate writes the files of the goldens', () async {
+    expect(await project.run(['generate']), 0);
     expect(project.out.toString(), 'Wrote 5 files.\n');
     for (final golden in Directory(
       'test/goldens/operations/output',
@@ -28,20 +28,20 @@ void main() {
     }
   });
 
-  test('a second generate writes nothing', () {
-    project.run(['generate']);
-    expect(project.run(['generate']), 0);
+  test('a second generate writes nothing', () async {
+    await project.run(['generate']);
+    expect(await project.run(['generate']), 0);
     expect(project.out.toString(), 'Nothing to write.\n');
   });
 
-  test('check after generate is clean', () {
-    project.run(['generate']);
-    expect(project.run(['check']), 0);
+  test('check after generate is clean', () async {
+    await project.run(['generate']);
+    expect(await project.run(['check']), 0);
     expect(project.out.toString(), 'Up to date.\n');
   });
 
-  test('check reports a missing file and writes nothing', () {
-    expect(project.run(['check']), 1);
+  test('check reports a missing file and writes nothing', () async {
+    expect(await project.run(['check']), 1);
     expect(
       project.err.toString(),
       contains(
@@ -52,10 +52,10 @@ void main() {
     expect(project.file(generated).existsSync(), isFalse);
   });
 
-  test('check reports an edited file and does not rewrite it', () {
-    project.run(['generate']);
+  test('check reports an edited file and does not rewrite it', () async {
+    await project.run(['generate']);
     project.file(generated).writeAsStringSync('// edited\n');
-    expect(project.run(['check']), 1);
+    expect(await project.run(['check']), 1);
     expect(
       project.err.toString(),
       "error GQL509: The generated file '$generated' is out of date; run "
@@ -64,56 +64,56 @@ void main() {
     expect(project.file(generated).readAsStringSync(), '// edited\n');
   });
 
-  test('a missing schema file is GQL510', () {
+  test('a missing schema file is GQL510', () async {
     project.file('schema.graphql').deleteSync();
-    expect(project.run(['generate']), 1);
+    expect(await project.run(['generate']), 1);
     expect(
       project.err.toString(),
       startsWith("error GQL510: Cannot read 'schema.graphql': "),
     );
   });
 
-  test('a missing configuration is GQL510', () {
-    expect(project.run(['generate', '--config', 'other.yaml']), 1);
+  test('a missing configuration is GQL510', () async {
+    expect(await project.run(['generate', '--config', 'other.yaml']), 1);
     expect(
       project.err.toString(),
       startsWith("error GQL510: Cannot read 'other.yaml': "),
     );
   });
 
-  test('a syntax error prints its place and excerpt', () {
+  test('a syntax error prints its place and excerpt', () async {
     project.file('lib/x.graphql').writeAsStringSync('query Q {\n');
-    expect(project.run(['generate']), 1);
+    expect(await project.run(['generate']), 1);
     expect(project.err.toString(), startsWith('lib/x.graphql:2:1: error GQL'));
     expect(project.err.toString(), contains('1 | query Q {'));
   });
 
-  test('a warning alone exits 0', () {
+  test('a warning alone exits 0', () async {
     for (final path in ['user', 'user_mutations', 'user_subscriptions']) {
       project.file('lib/$path.graphql').deleteSync();
     }
-    expect(project.run(['generate']), 0);
+    expect(await project.run(['generate']), 0);
     expect(project.err.toString(), contains('warning GQL506'));
   });
 
-  test('a document outside the glob is ignored', () {
+  test('a document outside the glob is ignored', () async {
     project.file('other/z.graphql').createSync(recursive: true);
     project.file('other/z.graphql').writeAsStringSync('query {');
-    expect(project.run(['generate']), 0);
+    expect(await project.run(['generate']), 0);
     expect(project.file('other/z.graphql.dart').existsSync(), isFalse);
   });
 
-  test('generate never deletes a stale generated file', () {
-    project.run(['generate']);
+  test('generate never deletes a stale generated file', () async {
+    await project.run(['generate']);
     project.file('lib/user_mutations.graphql').deleteSync();
-    expect(project.run(['generate']), 0);
+    expect(await project.run(['generate']), 0);
     expect(
       project.file('lib/user_mutations.graphql.dart').existsSync(),
       isTrue,
     );
   });
 
-  test('the executable passes the exit code to the process', () {
+  test('the executable passes the exit code to the process', () async {
     final result = Process.runSync(Platform.resolvedExecutable, [
       'run',
       '${Directory.current.path}/bin/typed_graphql_codegen.dart',

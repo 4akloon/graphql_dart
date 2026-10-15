@@ -9,61 +9,81 @@ import '../config/codegen_config.dart';
 import '../config/config_result.dart';
 import '../config/schema_location.dart';
 import '../project/project_file.dart';
+import 'header_expander.dart';
 import 'project_read_result.dart';
+import 'schema_fetch_result.dart';
+import 'schema_fetcher.dart';
 
 /// Reads the configuration, the schema file and the documents of a project
 /// from disk.
 ///
 /// {@category codegen}
-final class const ProjectReader(
+final class ProjectReader {
+  /// Creates a reader for the project in [directory]; [environment] feeds the
+  /// `${NAME}` references of the headers and [fetcher] gets a schema URL.
+  const ProjectReader(
+    this.directory, {
+    this.environment = const {},
+    this.fetcher = const SchemaFetcher(),
+  });
+
   /// The directory of the configuration file; every path is relative to it.
-  final String directory,
-) {
-  /// Creates a reader for the project in [directory].
-  this;
+  final String directory;
+
+  /// The environment variables the header values may reference.
+  final Map<String, String> environment;
+
+  /// What fetches the schema of a configuration with a `schema` URL.
+  final SchemaFetcher fetcher;
 
   /// Reads the project whose configuration is the file [configName].
-  ProjectReadResult read(String configName) {
+  Future<ProjectReadResult> read(String configName) async {
     final configText = _readText(configName);
-    if (configText is _Failed) return ProjectReadFailed([configText.problem]);
-    final parsed = CodegenConfig.parse(
-      (configText as _Text).text,
-      path: configName,
-    );
+    if (configText is! _FileText) {
+      return ProjectReadFailed([(configText as _FileFailed).problem]);
+    }
+    final parsed = CodegenConfig.parse(configText.text, path: configName);
     if (parsed is ConfigFailure) return ProjectReadFailed(parsed.diagnostics);
     final config = (parsed as ConfigSuccess).config;
-    final location = config.schema;
-    if (location is! SchemaFile) {
-      return ProjectReadFailed([
-        _unreadable(
-          '${location is SchemaUrl ? location.url : location}',
-          'Fetching a schema URL is not supported here.',
-        ),
-      ]);
-    }
-    return _readSources(config, location.path);
+    final schema = await _readSchema(config);
+    return switch (schema) {
+      _Text(:final file) => _readSources(config, file),
+      _Failed(:final problems) => ProjectReadFailed(problems),
+    };
   }
 
-  ProjectReadResult _readSources(CodegenConfig config, String schemaPath) {
-    final schema = _readText(schemaPath);
-    if (schema is _Failed) return ProjectReadFailed([schema.problem]);
+  Future<_SchemaOutcome> _readSchema(CodegenConfig config) async {
+    switch (config.schema) {
+      case SchemaFile(:final path):
+        final text = _readText(path);
+        return switch (text) {
+          _FileText() => _Text(ProjectFile(path, text.text)),
+          _FileFailed() => _Failed([text.problem]),
+        };
+      case SchemaUrl(:final url):
+        final expansion = HeaderExpander(environment).expand(config.headers);
+        if (expansion.problems.isNotEmpty) return _Failed(expansion.problems);
+        return switch (await fetcher.fetch(url, expansion.headers)) {
+          SchemaFetched(:final file) => _Text(file),
+          SchemaFetchFailed(:final diagnostic) => _Failed([diagnostic]),
+        };
+    }
+  }
+
+  ProjectReadResult _readSources(CodegenConfig config, ProjectFile schema) {
     final problems = <Diagnostic>[];
     final documents = <ProjectFile>[];
-    for (final path in _documentPaths(config, schemaPath)) {
+    for (final path in _documentPaths(config, schema.path)) {
       final text = _readText(path);
       switch (text) {
-        case _Text():
+        case _FileText():
           documents.add(ProjectFile(path, text.text));
-        case _Failed():
+        case _FileFailed():
           problems.add(text.problem);
       }
     }
     if (problems.isNotEmpty) return ProjectReadFailed(problems);
-    return ProjectRead(
-      config,
-      ProjectFile(schemaPath, (schema as _Text).text),
-      documents,
-    );
+    return ProjectRead(config, schema, documents);
   }
 
   List<String> _documentPaths(CodegenConfig config, String schemaPath) {
@@ -80,15 +100,15 @@ final class const ProjectReader(
     return paths.toList()..sort();
   }
 
-  _ReadOutcome _readText(String path) {
+  _FileOutcome _readText(String path) {
     try {
-      return _Text(File(p.join(directory, path)).readAsStringSync());
+      return _FileText(File(p.join(directory, path)).readAsStringSync());
     } on FileSystemException catch (error) {
-      return _Failed(
+      return _FileFailed(
         _unreadable(path, error.osError?.message ?? error.message),
       );
     } on FormatException catch (error) {
-      return _Failed(_unreadable(path, error.message));
+      return _FileFailed(_unreadable(path, error.message));
     }
   }
 
@@ -99,16 +119,30 @@ final class const ProjectReader(
   );
 }
 
-sealed class _ReadOutcome {
-  const _ReadOutcome();
+sealed class _FileOutcome {
+  const _FileOutcome();
 }
 
-final class _Text extends _ReadOutcome {
-  const _Text(this.text);
+final class _FileText extends _FileOutcome {
+  const _FileText(this.text);
   final String text;
 }
 
-final class _Failed extends _ReadOutcome {
-  const _Failed(this.problem);
+final class _FileFailed extends _FileOutcome {
+  const _FileFailed(this.problem);
   final Diagnostic problem;
+}
+
+sealed class _SchemaOutcome {
+  const _SchemaOutcome();
+}
+
+final class _Text extends _SchemaOutcome {
+  const _Text(this.file);
+  final ProjectFile file;
+}
+
+final class _Failed extends _SchemaOutcome {
+  const _Failed(this.problems);
+  final List<Diagnostic> problems;
 }

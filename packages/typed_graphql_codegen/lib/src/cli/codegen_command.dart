@@ -8,29 +8,44 @@ import 'diagnostic_printer.dart';
 import 'output_writer.dart';
 import 'project_read_result.dart';
 import 'project_reader.dart';
+import 'schema_fetcher.dart';
 
 /// Runs the code generator's command line, with injected streams and working
 /// directory so tests run it in process.
 ///
 /// {@category codegen}
-final class const CodegenCommand(
+final class CodegenCommand {
+  /// Creates a command that writes to [out] and [err]; [environment] feeds
+  /// the `${NAME}` references of the headers (`bin/` passes the process's)
+  /// and [fetcher] gets a schema URL.
+  const CodegenCommand(
+    this.out,
+    this.err,
+    this.workingDirectory, {
+    this.environment = const {},
+    this.fetcher = const SchemaFetcher(),
+  });
+
   /// Where normal output goes.
-  final StringSink out,
+  final StringSink out;
 
   /// Where diagnostics and usage errors go.
-  final StringSink err,
+  final StringSink err;
 
   /// The directory relative `--config` paths are resolved against.
-  final String workingDirectory,
-) {
-  /// Creates a command that writes to [out] and [err].
-  this;
+  final String workingDirectory;
+
+  /// The environment variables the header values may reference.
+  final Map<String, String> environment;
+
+  /// What fetches a schema URL.
+  final SchemaFetcher fetcher;
 
   /// The exit code of a usage error.
   static const int usageExitCode = 64;
 
   /// Runs [arguments]; returns the process exit code.
-  int run(List<String> arguments) {
+  Future<int> run(List<String> arguments) async {
     const commandLine = CodegenCommandLine();
     switch (commandLine.parse(arguments)) {
       case CommandLineHelp():
@@ -41,14 +56,21 @@ final class const CodegenCommand(
         err.writeln(commandLine.usage);
         return usageExitCode;
       case CommandLineRun(:final isCheck, :final configPath):
-        return _run(isCheck: isCheck, configPath: configPath);
+        return await _run(isCheck: isCheck, configPath: configPath);
     }
   }
 
-  int _run({required bool isCheck, required String configPath}) {
+  Future<int> _run({
+    required bool isCheck,
+    required String configPath,
+  }) async {
     final absolute = p.normalize(p.absolute(workingDirectory, configPath));
     final directory = p.dirname(absolute);
-    final project = ProjectReader(directory).read(p.basename(absolute));
+    final project = await ProjectReader(
+      directory,
+      environment: environment,
+      fetcher: fetcher,
+    ).read(p.basename(absolute));
     if (project is! ProjectRead) {
       return _report((project as ProjectReadFailed).diagnostics);
     }

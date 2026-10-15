@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:typed_graphql_codegen/src/cli/codegen_command.dart';
+import 'package:typed_graphql_codegen/src/cli/schema_fetcher.dart';
 
 /// A temporary project copied from the `operations` golden input, and the
 /// way to run the command line in it.
@@ -29,10 +30,20 @@ final class CliProject {
   final StringBuffer err = StringBuffer();
 
   /// Runs [arguments] in the project; returns the exit code.
-  int run(List<String> arguments) {
+  Future<int> run(
+    List<String> arguments, {
+    Map<String, String> environment = const {},
+    SchemaFetcher fetcher = const SchemaFetcher(),
+  }) {
     out.clear();
     err.clear();
-    return CodegenCommand(out, err, directory.path).run(arguments);
+    return CodegenCommand(
+      out,
+      err,
+      directory.path,
+      environment: environment,
+      fetcher: fetcher,
+    ).run(arguments);
   }
 
   /// The file at [path], relative to the project.

@@ -74,4 +74,10 @@
 - `dart run typed_graphql_codegen generate` writes the generated files and
   `check` fails when one is missing or out of date (`GQL509`); a file the
   command cannot read is `GQL510`. `--config` names the configuration file.
-  `generate` never deletes a file. `CodegenCommand` runs both in process.
+  `generate` never deletes a file. `CodegenCommand` (in `src/cli/`, not exported: it imports `dart:io`) runs
+  both in process.
+- A `schema:` URL is fetched with a POST of the full introspection query
+  (`SchemaFetcher`, 30 s timeout); a failure is `GQL510` with the status, and
+  a response with `errors` and no `data` is `GQL502`. Header values may use
+  `${NAME}` (`HeaderExpander`): a variable that is not set is `GQL501`, a line
+  break from a variable is refused, and no header value is ever printed.

@@ -25,6 +25,14 @@ final class const IntrospectionFileReader() {
   BuildResult _build(JsonObject object, SourceSpan place) {
     // A raw HTTP response wraps the result in `data`.
     final data = object['data'];
+    final answer = _errorMessage(object);
+    if (data is! JsonObject && answer != null) {
+      return _failure(
+        'The server answered the introspection query with errors and no '
+        'data: $answer',
+        place,
+      );
+    }
     final result = const SchemaBuilder(
       includesDeferAndStream: true,
     ).fromIntrospection(data is JsonObject ? data : object);
@@ -35,6 +43,14 @@ final class const IntrospectionFileReader() {
         [for (final diagnostic in diagnostics) _placed(diagnostic, place)],
       ),
     };
+  }
+
+  // The first message of a GraphQL response's `errors`, if it has one.
+  String? _errorMessage(JsonObject object) {
+    if (object['errors'] case JsonArray(items: [final JsonObject first, ...])) {
+      if (first['message'] case JsonString(:final value)) return value;
+    }
+    return null;
   }
 
   BuildResult _failure(String message, SourceSpan place) => BuildFailure(
