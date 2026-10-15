@@ -9,6 +9,9 @@ dartdoc:
     cancellation:
       markdown: doc/cancellation.md
       displayName: Cancellation
+    dataloader:
+      markdown: doc/dataloader.md
+      displayName: DataLoader
     execution:
       markdown: doc/execution.md
       displayName: Execution
@@ -25,6 +28,7 @@ dartdoc:
     - authorization
     - builder
     - cancellation
+    - dataloader
     - execution
     - introspection
     - lookahead

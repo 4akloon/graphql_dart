@@ -139,3 +139,7 @@
   `FieldDef.middleware` and `CancelSignal.listenerCount` are `@internal`.
 - A run that halted (for example `GQL337`) and is then cancelled answers with
   the halt error, not `GQL350`.
+- `BatchLoader` batches and caches loads by key within a request (dispatch
+  after the microtask queue drains, `maxBatchSize`, `prime`, `clear`);
+  `MissingValueException` for a key the batch function left out. The DataLoader
+  guide and its dartdoc category `dataloader`.
