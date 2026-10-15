@@ -56,6 +56,7 @@ export 'src/lookahead/field_selection.dart';
 export 'src/lookahead/selected_field.dart';
 export 'src/persisted/memory_persisted_query_store.dart';
 export 'src/persisted/persisted_query_store.dart';
+export 'src/persisted/trusted_documents.dart';
 export 'src/server/context_factory.dart';
 export 'src/server/csrf_prevention.dart';
 export 'src/server/document_handler.dart';

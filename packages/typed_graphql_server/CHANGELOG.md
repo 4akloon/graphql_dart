@@ -182,3 +182,8 @@
   with its hash is checked (`GQL411`) and stored once it validates, a
   malformed `extensions.persistedQuery` is `GQL413`. Without a store a hash
   alone is `GQL412`. A stored text is hashed again when read.
+- `TrustedDocuments` (built from a map or decoded from the manifest
+  `typed_graphql_codegen` writes) and `GraphQLServer(trustedDocuments:)`: a
+  hash runs its trusted text (`GQL415` when none), a text runs only when it
+  is trusted to the character (`GQL414`). Combined with `persistedQueries`
+  it is an `ArgumentError`.

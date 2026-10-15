@@ -96,6 +96,7 @@ final class ServerFixture {
     int documentCacheSize = 1000,
     List<ServerExtension<Ctx>> extensions = const [],
     PersistedQueryStore? persistedQueries,
+    TrustedDocuments? trustedDocuments,
   }) => GraphQLServer<Ctx>(
     schema: schema,
     contextFactory: contextFactory ?? (_) => const Ctx('default'),
@@ -105,6 +106,7 @@ final class ServerFixture {
     documentCacheSize: documentCacheSize,
     extensions: extensions,
     persistedQueries: persistedQueries,
+    trustedDocuments: trustedDocuments,
   );
 
   ServerRequest request(

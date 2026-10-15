@@ -4,6 +4,7 @@ import '../execution/error_hook.dart';
 import '../execution/executable_schema.dart';
 import '../execution/graphql_exception.dart';
 import '../persisted/persisted_query_store.dart';
+import '../persisted/trusted_documents.dart';
 import 'context_factory.dart';
 import 'pipeline_assembly.dart';
 import 'pipeline_errors.dart';
@@ -41,6 +42,11 @@ final class GraphQLServer<C> {
   /// [persistedQueries] turns on automatic persisted queries (R5.4): a
   /// request may send only the SHA-256 of a document the store holds. Without
   /// a store, a request that sends only a hash is refused with `GQL412`.
+  ///
+  /// [trustedDocuments] runs only the documents it holds, named by their
+  /// hash or sent as their exact text. It cannot be combined with
+  /// [persistedQueries], which would let a client register any document:
+  /// both are an [ArgumentError].
   factory GraphQLServer({
     required ExecutableSchema<C> schema,
     required ContextFactory<C> contextFactory,
@@ -50,7 +56,15 @@ final class GraphQLServer<C> {
     int documentCacheSize = 1000,
     List<ServerExtension<C>> extensions = const [],
     PersistedQueryStore? persistedQueries,
+    TrustedDocuments? trustedDocuments,
   }) {
+    if (persistedQueries != null && trustedDocuments != null) {
+      throw ArgumentError(
+        'Automatic persisted queries would let a client register any '
+            'document, which trusted documents forbid.',
+        'persistedQueries',
+      );
+    }
     final assembly = PipelineAssembly<C>(
       schema: schema,
       contextFactory: contextFactory,
@@ -60,6 +74,7 @@ final class GraphQLServer<C> {
       documentCacheSize: documentCacheSize,
       extensions: extensions,
       persistedQueries: persistedQueries,
+      trustedDocuments: trustedDocuments,
     );
     return GraphQLServer._(assembly.errors, assembly.handler());
   }

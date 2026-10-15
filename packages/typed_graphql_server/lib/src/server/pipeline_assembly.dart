@@ -6,6 +6,8 @@ import '../execution/executable_schema.dart';
 import '../persisted/automatic_persisted_queries.dart';
 import '../persisted/persisted_queries_unsupported.dart';
 import '../persisted/persisted_query_store.dart';
+import '../persisted/trusted_documents.dart';
+import '../persisted/trusted_documents_check.dart';
 import '../plan/operation_selection.dart';
 import 'context_factory.dart';
 import 'cost_limit.dart';
@@ -38,6 +40,7 @@ final class PipelineAssembly<C> {
     required this.documentCacheSize,
     required this.extensions,
     required this.persistedQueries,
+    required this.trustedDocuments,
   }) : errors = PipelineErrors(
          maskErrors: profile.maskErrors,
          onError: onError,
@@ -66,6 +69,9 @@ final class PipelineAssembly<C> {
 
   /// The store of automatic persisted queries; null keeps none.
   final PersistedQueryStore? persistedQueries;
+
+  /// The only documents the server runs; null runs any document.
+  final TrustedDocuments? trustedDocuments;
 
   /// Makes the refusals and the unexpected-error responses.
   final PipelineErrors errors;
@@ -96,9 +102,14 @@ final class PipelineAssembly<C> {
   }
 
   ServerExtension<C> _persistedDocuments(DocumentLength length) =>
-      switch (persistedQueries) {
-        final store? => AutomaticPersistedQueries<C>(store, length, errors),
-        null => PersistedQueriesUnsupported<C>(errors),
+      switch ((trustedDocuments, persistedQueries)) {
+        (final trusted?, _) => TrustedDocumentsCheck<C>(trusted, errors),
+        (null, final store?) => AutomaticPersistedQueries<C>(
+          store,
+          length,
+          errors,
+        ),
+        (null, null) => PersistedQueriesUnsupported<C>(errors),
       };
 
   DocumentHandler _documentStep(DocumentLength length) => DocumentStep(
