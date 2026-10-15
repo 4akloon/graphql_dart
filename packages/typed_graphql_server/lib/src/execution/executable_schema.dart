@@ -4,11 +4,11 @@ import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../plan/plan_cache.dart';
+import '../subscription/subscription_result.dart';
 import 'execution_options.dart';
 import 'operation_execution.dart';
 import 'schema_bindings.dart';
 import 'subscription_execution.dart';
-import 'subscription_result.dart';
 
 /// A validated schema with the resolvers behind it: what
 /// `ExecutableSchemaBuilder.build` returns. `C` is the context type the

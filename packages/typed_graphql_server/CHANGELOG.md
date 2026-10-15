@@ -86,3 +86,17 @@
   `SubscriptionRejected` (request errors, `GQL324` for a query or mutation, a
   failing source function). `execute` on a subscription runs it once as a
   query.
+- Introspection: `__schema` and `__type(name:)` on the query root and the
+  `__Schema`, `__Type`, `__Field`, `__InputValue`, `__EnumValue`,
+  `__Directive` types are answered from the core model, in the order of
+  `IntrospectionListing`; executing `IntrospectionQuery.full` gives
+  `toIntrospection`. `ExecutionOptions.introspection` takes
+  `IntrospectionPolicy` (`enabled`, `disabled`); disabled gives `GQL338`.
+- Subscriptions: `FieldStub.subscribe` and `subscribeWith` declare a source
+  stream; `ExecutableSchema.subscribe` answers a `SubscriptionResult`
+  (`SubscriptionStarted` with a stream of results, or `SubscriptionRejected`).
+  Events are executed one at a time and in order; a source that fails after
+  it started ends the stream with a final `GQL340` result; a query or
+  mutation is `GQL324`.
+- The Introspection and Subscriptions guides, with the dartdoc categories
+  `introspection` and `subscription`.

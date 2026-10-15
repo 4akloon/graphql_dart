@@ -27,7 +27,8 @@ What works today: the language (parse, print, visit and transform queries and
 SDL), the schema (build it from SDL, extend, print and validate it, introspection
 both ways, schema coordinates), operation validation, the wire protocol types,
 scalar codecs and the diagnostics model; and, in `typed_graphql_server`, a
-typed schema builder and the execution of a validated operation.
+typed schema builder, the execution of a validated operation, introspection
+and subscriptions.
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';
@@ -110,7 +111,7 @@ This repository is a Dart **pub workspace**. Dart SDK: `^3.13.0`.
 | Package | Role | Status |
 |---|---|---|
 | [`typed_graphql`](packages/typed_graphql) | Core: language, type system, validation, wire protocol, diagnostics. Pure Dart, depends only on `meta`. | diagnostics, protocol types, the language, the schema model, SDL, scalar codecs, schema validation, introspection, operation validation, limits and cost analysis (M1, M2, M3, M4) |
-| [`typed_graphql_server`](packages/typed_graphql_server) | Typed schema builder, executor, subscriptions, DataLoader, HTTP / graphql-ws / graphql-sse handlers. | builder and query execution (M5a, M5b) |
+| [`typed_graphql_server`](packages/typed_graphql_server) | Typed schema builder, executor, subscriptions, DataLoader, HTTP / graphql-ws / graphql-sse handlers. | builder, query execution, introspection and subscriptions (M5a-M5c) |
 | [`typed_graphql_shelf`](packages/typed_graphql_shelf) | `shelf` adapter with an optional GraphiQL page. | skeleton (M7) |
 | [`typed_graphql_client`](packages/typed_graphql_client) | Client runtime: links, transports, normalized cache, `MockLink`. | under construction (the generated-code contract, M10; the rest M11) |
 | [`typed_graphql_codegen`](packages/typed_graphql_codegen) | Code generation engine and CLI, without `analyzer`. | under construction (M10) |

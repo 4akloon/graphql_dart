@@ -6,7 +6,15 @@ dartdoc:
     execution:
       markdown: doc/execution.md
       displayName: Execution
+    introspection:
+      markdown: doc/introspection.md
+      displayName: Introspection
+    subscription:
+      markdown: doc/subscriptions.md
+      displayName: Subscriptions
   categoryOrder:
     - builder
     - execution
+    - introspection
+    - subscription
   showUndocumentedCategories: true

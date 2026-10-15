@@ -6,12 +6,13 @@
 
 **A fully typed GraphQL server for Dart: a typed schema builder, the execution engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws and graphql-sse handlers.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
-> **Status: under construction.** The typed schema builder (M5a) and query
-> execution (M5b) work: you can declare a schema in typed Dart code, parse and
-> validate a request with the core, and execute it, with variables, specified
-> null propagation, error behaviours, masking and field middleware. Introspection
-> resolvers and subscriptions arrive in M5c; look-ahead, authorization and
-> cancellation in M5d; the request pipeline and the HTTP, graphql-ws and
+> **Status: under construction.** The typed schema builder (M5a), query
+> execution (M5b), introspection and subscriptions (M5c) work: you can declare
+> a schema in typed Dart code, parse and validate a request with the core, and
+> execute it, with variables, specified null propagation, error behaviours,
+> masking and field middleware, answer introspection queries and run a
+> subscription over a stream of events. Look-ahead, authorization and
+> cancellation arrive in M5d; the request pipeline and the HTTP, graphql-ws and
 > graphql-sse handlers later. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
@@ -44,9 +45,9 @@ dependencies:
   ([Schema Builder](doc/schema_builder.md#objects-and-fields),
   [Execution](doc/execution.md#executing-a-request)).
 - **You do not need it when** you only call a GraphQL server: that is the
-  client package, not usable yet. Today it also has no HTTP handler or
-  subscriptions: you call `ExecutableSchema.execute` yourself with a parsed
-  and validated document.
+  client package, not usable yet. Today it also has no HTTP or
+  WebSocket handler: you call `ExecutableSchema.execute` or `subscribe`
+  yourself with a parsed and validated document.
 - **What it replaces**: resolvers written against `Map<String, dynamic>`, where
   a wrong result type or a misspelled argument name fails at run time in the
   middle of a request. Here the wrong type does not compile, and every error
@@ -135,6 +136,10 @@ It prints:
 - [Execution](doc/execution.md): executing a request, variables, request errors
   and field errors, error behaviours, masking and `onError`, middleware,
   abstract types, limits and the plan cache.
+- [Introspection](doc/introspection.md): `__schema` and `__type`, the same
+  answer as the core, `IntrospectionPolicy`, root types without a root value.
+- [Subscriptions](doc/subscriptions.md): source streams, one event at a time,
+  rejected and failed subscriptions.
 
 ## License
 

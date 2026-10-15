@@ -51,7 +51,11 @@ executor with specified null propagation, error behaviours, masking and
 `onError`, field middleware, abstract-type resolution at run time
 (`GQL310`-`GQL337`), the graphql-js execution, variables, directives,
 abstract-type, enum and input-coercion suites, and the Execution guide and
-example. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+example. M5c (introspection and subscriptions) delivers the `__schema` and
+`__type` resolvers, `IntrospectionPolicy` (`GQL338`), `subscribe` with its
+source streams and rejected requests (`GQL324`, `GQL340`), the graphql-js
+introspection and subscribe suites, and the Introspection and Subscriptions
+guides. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
 file or a URL, the project's documents as one fragment graph, the planner and
 emitters that generate the schema-types library and a library per document
 (operations, variables, data, fragments, sealed polymorphic classes, the
@@ -407,9 +411,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 **Server** (`packages/typed_graphql_server/lib/src/`; M5). Imports the core
 only through its barrel. One folder per concern, with no import order
 (`builder/` and `execution/` import each other): `builder/` (M5a),
-`coercion/`, `plan/` and `execution/` (M5b), then `introspection/`,
-`subscription/`, `lookahead/`, `authorization/` and `cancellation/` in later
-sub-stages. The package is
+`coercion/`, `plan/` and `execution/` (M5b), `introspection/` and
+`subscription/` (M5c), then `lookahead/`, `authorization/` and `cancellation/`
+in later sub-stages. The package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
 or web framework, only `dart:async`, `dart:collection`, `dart:core`,
 `dart:math`, `meta` and the core (`test/quality/imports_test.dart`), and the
@@ -442,7 +446,16 @@ field tables (pure lanes over the core model; a list or non-null `__Type` is an
 `IntrospectedType` wrapper) and the query root's `__schema`/`__type` to the
 bindings after middleware; `EntryFields` gives the planner their `SchemaField`s,
 only on the query root; `ExecutionOptions.introspection` (`IntrospectionPolicy`)
-turns them into `GQL338` field errors.
+turns them into `GQL338` field errors. `IntrospectionPolicy` is in
+`introspection/` and `SubscriptionResult` in `subscription/` because a type's
+dartdoc category is its folder.
+Subscriptions (M5c): `FieldStub.subscribe`/`subscribeWith` make a
+`SubscribeLane` (source plus per-event `resolve`; middleware wraps only the
+latter); `execution/SubscriptionExecution` prepares the operation once
+(`OperationPreparation`) and `SubscriptionResponses` executes each event in
+order, pausing the source meanwhile; a source that fails after listening is the
+last result (`GQL340`), one that fails at start is a `SubscriptionRejected`.
+`subscription/` holds only the public `SubscriptionResult` family.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine

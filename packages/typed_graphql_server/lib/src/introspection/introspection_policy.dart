@@ -3,7 +3,7 @@
 /// `__typename` is answered either way: it describes the response, not the
 /// schema.
 ///
-/// {@category execution}
+/// {@category introspection}
 enum IntrospectionPolicy {
   /// `__schema` and `__type` are answered (September2025 4.2).
   enabled,

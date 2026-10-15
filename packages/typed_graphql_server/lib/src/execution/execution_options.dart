@@ -1,9 +1,9 @@
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../introspection/introspection_policy.dart';
 import 'error_behavior.dart';
 import 'error_hook.dart';
-import 'introspection_policy.dart';
 
 /// The settings of one call of `ExecutableSchema.execute`.
 ///

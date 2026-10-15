@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../plan/plan_cache.dart';
+import '../subscription/subscription_result.dart';
 import 'execution_options.dart';
 import 'execution_run.dart';
 import 'operation_preparation.dart';
 import 'prepared_operation.dart';
 import 'schema_bindings.dart';
 import 'subscription_responses.dart';
-import 'subscription_result.dart';
 
 /// One call of `ExecutableSchema.subscribe` (September2025 6.2.3
 /// "Subscription"): prepares the operation, creates the source event stream

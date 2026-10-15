@@ -3,7 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 /// What `ExecutableSchema.subscribe` answers: a stream of results, or a
 /// request error and no stream.
 ///
-/// {@category execution}
+/// {@category subscription}
 sealed class SubscriptionResult {
   const SubscriptionResult();
 }
@@ -15,7 +15,7 @@ sealed class SubscriptionResult {
 /// cancelling the subscription to [results] cancels the source. It closes
 /// when the source is done.
 ///
-/// {@category execution}
+/// {@category subscription}
 final class SubscriptionStarted extends SubscriptionResult {
   /// Wraps [results].
   const SubscriptionStarted(this.results);
@@ -28,7 +28,7 @@ final class SubscriptionStarted extends SubscriptionResult {
 /// could not be created (September2025 6.2.3.1), as graphql-js answers with
 /// a result of errors instead of a stream.
 ///
-/// {@category execution}
+/// {@category subscription}
 final class SubscriptionRejected extends SubscriptionResult {
   /// Wraps [error].
   const SubscriptionRejected(this.error);

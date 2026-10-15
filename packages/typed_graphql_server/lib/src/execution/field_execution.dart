@@ -7,11 +7,11 @@ import '../builder/field_def.dart';
 import '../builder/field_lane.dart';
 import '../coercion/coercion_result.dart';
 import '../introspection/entry_fields.dart';
+import '../introspection/introspection_policy.dart';
 import '../plan/field_plan.dart';
 import 'completion_site.dart';
 import 'execution_run.dart';
 import 'field_info.dart';
-import 'introspection_policy.dart';
 import 'response_path.dart';
 
 /// Resolves one field (September2025 6.4 "Executing Fields"): answers the
