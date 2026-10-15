@@ -5,6 +5,7 @@ import 'coercion_problems.dart';
 import 'input_path.dart';
 import 'invalid_value.dart';
 import 'leaf_coercion.dart';
+import 'variable_literal_json.dart';
 
 /// Coerces a literal to a scalar or an enum value with graphql-js's
 /// `coerceInputLiteral` rules: a literal has a kind, and the kind matters
@@ -15,11 +16,10 @@ import 'leaf_coercion.dart';
 /// goes through [LeafCoercion] as the JSON the literal stands for.
 final class LiteralLeafCoercion {
   /// Coerces into [problems].
-  LiteralLeafCoercion(this.environment, this.problems)
+  LiteralLeafCoercion(this.environment, this.problems, this.variables)
     : _leaves = LeafCoercion(environment, problems);
 
   static const Printer _printer = Printer();
-  static const LiteralConverter _converter = LiteralConverter();
 
   // The message of each built-in scalar for a literal of a kind it refuses.
   static const Map<String, String> _refusals = {
@@ -35,6 +35,9 @@ final class LiteralLeafCoercion {
 
   /// Where problems go.
   final CoercionProblems problems;
+
+  /// The coerced variable values a custom scalar's literal may hold.
+  final Map<String, Object?> variables;
 
   final LeafCoercion _leaves;
 
@@ -54,7 +57,7 @@ final class LiteralLeafCoercion {
       problems.add('${_refusals[type.name]}: ${_printer.print(literal)}', path);
       return InvalidValue.instance;
     }
-    return switch (_converter.convert(literal)) {
+    return switch (VariableLiteralJson(variables).convert(literal)) {
       DecodeSuccess(:final value) => _leaves.coerce(value, type, path),
       DecodeFailure(:final message) => _reject(message, path),
     };

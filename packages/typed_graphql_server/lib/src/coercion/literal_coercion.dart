@@ -21,7 +21,7 @@ final class LiteralCoercion {
   /// Coerces into [problems], reading variables from [variables] (the
   /// coerced values by name; a variable that is not a key has no value).
   LiteralCoercion(this.environment, this.problems, this.variables)
-    : _leaves = LiteralLeafCoercion(environment, problems);
+    : _leaves = LiteralLeafCoercion(environment, problems, variables);
 
   static const Printer _printer = Printer();
 
