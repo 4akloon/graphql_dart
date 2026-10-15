@@ -108,12 +108,21 @@ It prints:
 ## One event at a time
 
 Events are executed one at a time and in order. While an event executes, the
-source subscription is paused, so a source that emits faster than the
-resolvers answer waits instead of piling up; a source error, or the end of
-the source, is seen after the event in flight. Pausing and resuming
-`results` pause and resume the source, and the source is listened to only
-when `results` is. The field errors of an event are in that event's result,
-with the null propagation of a query, and do not end the stream.
+source subscription is paused; a source error, or the end of the source, is
+seen after the event in flight. A single-subscription source then waits for
+the resolvers. A broadcast source, the usual publish and subscribe channel,
+keeps buffering inside its paused subscription without bound, so the
+application must bound it (drop or sample events before they reach the
+stream). Pausing and resuming `results` pause and resume the source, and the
+source is listened to only when `results` is. The field errors of an event
+are in that event's result, with the null propagation of a query, and do not
+end the stream. An unexpected library error while executing an event ends
+the stream with a `GQL340` result.
+
+The source function runs when the subscription starts, before anyone listens
+to `results`. A response stream that is never listened to has therefore
+already called it: when the source registers eagerly, listen to `results` or
+drop it promptly.
 
 Global and field middleware wrap the per-event resolution, not the source
 function, and the parent that middleware sees is the event.

@@ -685,9 +685,17 @@ depends on the other). These constraints keep that possible:
     seen at start: it becomes the final `GQL340` result of the stream, which
     then closes, where graphql-js rejects `next()` (item 10)
     (`subscribe_publish_test.dart`).
-32. The source subscription is paused while an event executes, so events are
-    executed one at a time and in order, and a source error or its end waits
-    for the event in flight (`subscribe_publish_test.dart`).
+32. Events are executed one at a time and in order. The source subscription
+    is paused while an event executes, and a source error or its end waits
+    for the event in flight, also when the source delivers synchronously
+    inside `listen` (`subscribe_publish_test.dart`,
+    `subscription_flow_test.dart`). A single-subscription source then waits;
+    a broadcast source keeps buffering inside its paused subscription
+    without bound, so the application must bound it. An unexpected library
+    error while executing an event ends the stream with a `GQL340` result. A
+    response stream that is never listened to has already called the source
+    function: listen to it or drop it promptly when the source registers
+    eagerly.
 33. `execute` needs a root value that the root type accepts, introspection
     queries included: a root typed `Object?` or `void` takes `null`, any
     other root takes a value of its Dart type. A guide shows how to declare a

@@ -76,27 +76,21 @@
   `__EnumValue` and `__Directive` objects registered by `build`.
   `ExecutionOptions.introspection` takes `IntrospectionPolicy`: `disabled`
   makes `__schema` and `__type` a `GQL338` field error; `__typename` still works.
+  `__type` answers only for the types `__schema` lists, in the order of
+  `IntrospectionListing`; global middleware does not wrap introspection fields.
 - Subscriptions: `t.field(...).subscribe(source)` (each event is the field's
   value) and `subscribeWith<E>(source, resolve)` declare a subscription root
   field; `build` reports `GQL303` for a source outside the subscription root
   or a root field without one. `ExecutableSchema.subscribe` answers a
   `SubscriptionStarted` with a single-subscription stream of
-  `ExecutionResult`s (one event at a time, in order; cancel, pause and resume
-  reach the source; a source error is a last masked `GQL340` result) or a
+  `ExecutionResult`s (one event at a time, in order, the source paused while
+  an event executes, so a broadcast source buffers without bound inside its
+  paused subscription and the application must bound it; cancel, pause and
+  resume reach the source; a source error, or an unexpected library error
+  while executing an event, is a last masked `GQL340` result; the source
+  function has already run when the stream is never listened to) or a
   `SubscriptionRejected` (request errors, `GQL324` for a query or mutation, a
   failing source function). `execute` on a subscription runs it once as a
   query.
-- Introspection: `__schema` and `__type(name:)` on the query root and the
-  `__Schema`, `__Type`, `__Field`, `__InputValue`, `__EnumValue`,
-  `__Directive` types are answered from the core model, in the order of
-  `IntrospectionListing`; executing `IntrospectionQuery.full` gives
-  `toIntrospection`. `ExecutionOptions.introspection` takes
-  `IntrospectionPolicy` (`enabled`, `disabled`); disabled gives `GQL338`.
-- Subscriptions: `FieldStub.subscribe` and `subscribeWith` declare a source
-  stream; `ExecutableSchema.subscribe` answers a `SubscriptionResult`
-  (`SubscriptionStarted` with a stream of results, or `SubscriptionRejected`).
-  Events are executed one at a time and in order; a source that fails after
-  it started ends the stream with a final `GQL340` result; a query or
-  mutation is `GQL324`.
 - The Introspection and Subscriptions guides, with the dartdoc categories
   `introspection` and `subscription`.
