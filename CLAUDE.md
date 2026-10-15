@@ -333,7 +333,9 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `maxSteps`) validates a `Document` against a `ValidSchema` and returns the
   sealed `DocumentValidationResult` (`ValidDocument` | `InvalidDocument`).
   `specifiedRules` are the 30 rules of spec §5 in graphql-js's order, three
-  graphql-js rules split so that one class reports one code.
+  graphql-js rules split so that one class reports one code; the default of
+  `rules` is `recommendedRules` (`specifiedRules` and
+  `MaxIntrospectionDepthRule`).
 - A `ValidationRule` is const configuration; `createVisitor(context)` gives
   a fresh `AstVisitor` per run. `ValidationWalk` walks the document once
   with all of them (a `ParallelVisitor`), with `TypeInfo` (graphql-js's:
@@ -367,8 +369,8 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   and order them by the selection set graphql-js finds them in.
 - `limits/` holds the opt-in rules `MaxDepthRule`, `MaxAliasesRule`,
   `MaxDirectivesRule`, `NoIntrospectionRule` and `MaxIntrospectionDepthRule`
-  (R3.5), none in `specifiedRules`; `DocumentValidator.recommendedRules` is
-  `specifiedRules` plus the last. `SelectionMeasure` is a memoised
+  (R3.5), none in `specifiedRules`; `DocumentValidator.recommendedRules`, the
+  default, is `specifiedRules` plus the last. `SelectionMeasure` is a memoised
   explicit-stack fold over operations with fragments expanded, one per
   `MeasuredQuantity` (depth, aliases, directives); `LimitVisitor` reports
   an operation at most once; `OperationSubject` words the operation in a

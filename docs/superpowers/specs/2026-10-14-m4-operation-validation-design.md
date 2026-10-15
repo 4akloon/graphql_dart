@@ -100,7 +100,7 @@ re-walking fragments that may come later in the document) do it at
 
 ```dart
 const DocumentValidator({
-  List<ValidationRule> rules = DocumentValidator.specifiedRules,
+  List<ValidationRule> rules = DocumentValidator.recommendedRules,
   int maxErrors = 100,          // graphql-js's maxErrors
   bool includesSuggestions = true,  // graphql-js's !hideSuggestions (R5.15)
   int maxSteps = ValidationContext.defaultMaxSteps,  // 1 000 000
@@ -119,7 +119,7 @@ diagnostics. `ValidDocument` has a private constructor: only `validate` and
 `specifiedRules` order without the defer/stream rules, each split rule right
 after the rule it was split from. `recommendedRules` (M4b) is
 `specifiedRules` followed by `MaxIntrospectionDepthRule`, graphql-js's
-recommended set; the default stays `specifiedRules` (open question 2). Bad
+recommended set and the default (open question 2, owner answer). Bad
 input never throws (R0.3); a rule that throws is a bug.
 
 ## 4. Diagnostics
@@ -512,7 +512,8 @@ list and Documentation section, the package CHANGELOG, `CLAUDE.md` (a
    `DocumentValidator.recommendedRules` (= specified + it) and keep
    `specifiedRules` the default. Recommendation: make `recommendedRules` the
    default (a one-line change in `DocumentValidator`), since the rule only
-   rejects introspection queries no tool sends.
+   rejects introspection queries no tool sends. Accepted by the owner
+   (2026-10-15): `recommendedRules` is the default.
 3. **Public rule classes.** Recommendation: export all 30 (graphql-js does;
    the conformance package needs them, and users compose lists). The plans do.
 4. **Variables in cost** (section 11): a slicing argument given by a variable

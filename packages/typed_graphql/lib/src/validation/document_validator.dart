@@ -42,12 +42,13 @@ import 'validation_rule.dart';
 /// every rule in one walk, the result a [ValidDocument] or an
 /// [InvalidDocument] with every error up to [maxErrors].
 ///
-/// The default rules are [specifiedRules], the 30 rules of spec §5. Add
-/// limits or custom rules to a copy of the list:
+/// The default rules are [recommendedRules]: the 30 rules of spec §5
+/// ([specifiedRules]) and [MaxIntrospectionDepthRule], graphql-js's
+/// recommended set. Add limits or custom rules to a copy of the list:
 ///
 /// ```dart
 /// const validator = DocumentValidator(
-///   rules: [...DocumentValidator.specifiedRules, NoDogsRule()],
+///   rules: [...DocumentValidator.recommendedRules, NoDogsRule()],
 /// );
 /// ```
 ///
@@ -55,7 +56,7 @@ import 'validation_rule.dart';
 final class const DocumentValidator({
   /// The rules each run checks, in the order their visitors are called
   /// at each node.
-  final List<ValidationRule> rules = specifiedRules,
+  final List<ValidationRule> rules = recommendedRules,
 
   /// The most errors a run reports; the next becomes `GQL000` and stops
   /// the run, as graphql-js's `maxErrors`.
@@ -107,10 +108,7 @@ final class const DocumentValidator({
   ];
 
   /// [specifiedRules] and [MaxIntrospectionDepthRule], graphql-js's
-  /// `recommendedRules`.
-  ///
-  /// The default of [rules] stays [specifiedRules]; whether it should
-  /// become this list is an open decision.
+  /// `recommendedRules`, the default of [rules].
   static const List<ValidationRule> recommendedRules = [
     ...specifiedRules,
     MaxIntrospectionDepthRule(),

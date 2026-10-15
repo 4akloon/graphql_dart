@@ -8,8 +8,8 @@ an invalid document never throws.
 
 ## Validating a document
 
-By default the validator runs `DocumentValidator.specifiedRules`, the 30
-rules of the specification. Each problem is a diagnostic with a stable code
+By default the validator runs `DocumentValidator.recommendedRules`: the 30
+rules of the specification (`specifiedRules`) and `MaxIntrospectionDepthRule`. Each problem is a diagnostic with a stable code
 and graphql-js's message, at the place it is about when the validator is
 given the `Source`:
 
@@ -61,7 +61,7 @@ the schema's names.
 ## The specified rules
 
 The rules are public classes, so a list can drop, reorder or extend them:
-`DocumentValidator(rules: [...DocumentValidator.specifiedRules, MyRule()])`.
+`DocumentValidator(rules: [...DocumentValidator.recommendedRules, MyRule()])`.
 Three graphql-js rules are split so that each class checks one rule of the
 specification and reports one code.
 
@@ -194,7 +194,7 @@ the run after that many errors with one `GQL000`.
 A document the specification accepts can still be too expensive to
 serve. These rules bound it; each is opt-in and none is in
 `DocumentValidator.specifiedRules`. Add one to the list of rules, as
-`DocumentValidator(rules: [...DocumentValidator.specifiedRules, ...])`.
+`DocumentValidator(rules: [...DocumentValidator.recommendedRules, ...])`.
 
 | Code | Rule | Counts |
 |---|---|---|
@@ -222,8 +222,9 @@ pass through three of the list fields `fields`, `interfaces`,
 `possibleTypes` and `inputFields`.
 
 `DocumentValidator.recommendedRules` is `specifiedRules` plus
-`MaxIntrospectionDepthRule`, as graphql-js's `recommendedRules`. It is not
-the default of `rules`; whether it becomes the default is an open decision.
+`MaxIntrospectionDepthRule`, as graphql-js's `recommendedRules`, and it is
+the default of `rules`; pass `rules: DocumentValidator.specifiedRules` for
+the specification's rules alone.
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';
@@ -244,7 +245,7 @@ void main() {
   final source = Source('query Deep { me { me { me { name } } } }');
   final document = const Parser().parse(source).requireDocument();
   const validator = DocumentValidator(
-    rules: [...DocumentValidator.specifiedRules, MaxDepthRule(maxDepth: 3)],
+    rules: [...DocumentValidator.recommendedRules, MaxDepthRule(maxDepth: 3)],
   );
   switch (validator.validate(valid, document, source: source)) {
     case ValidDocument():

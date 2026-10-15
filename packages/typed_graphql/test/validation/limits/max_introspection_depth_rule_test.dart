@@ -65,4 +65,19 @@ void main() {
       isA<MaxIntrospectionDepthRule>(),
     );
   });
+
+  test('the default rules are the recommended rules and report it', () {
+    expect(
+      const DocumentValidator().rules,
+      same(DocumentValidator.recommendedRules),
+    );
+    final result = checked.validate(
+      '{ __schema { types { fields { type { interfaces { possibleTypes '
+      '{ n } } } } } } }',
+    );
+    expect(
+      result.diagnostics.map((diagnostic) => diagnostic.code),
+      contains(DiagnosticCode.maxIntrospectionDepthExceeded),
+    );
+  });
 }
