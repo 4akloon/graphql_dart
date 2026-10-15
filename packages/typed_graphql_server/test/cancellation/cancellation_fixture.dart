@@ -122,6 +122,7 @@ final class CancellationFixture {
           (parent, args, context, info) => context.source.stream,
           (event, args, context, info) async {
             context.log.add('held $event');
+            context.seen = info.cancelSignal;
             await context.gate.future;
             return event;
           },

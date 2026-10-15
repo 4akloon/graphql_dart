@@ -725,10 +725,13 @@ depends on the other). These constraints keep that possible:
 41. An object field that redeclares an interface field does not inherit the
     interface field's authorization rule: the rule guards the
     implementations that inherit the field.
-42. A subscription response stream that is never listened to keeps its
-    listener on the caller's `CancelSignal` until that signal is cancelled;
-    the listener attaches on `listen`, the timeout timer starts at
-    `subscribe`. The guide says to listen to the stream or drop the signal.
+42. A subscription's timeout timer and its listener on the caller's
+    `CancelSignal` start at `subscribe`, not at `listen`. When the run's signal
+    fires (the caller cancels or the timeout elapses) the cancellation
+    releases both even if nobody listens to the response stream. A stream never
+    listened to, with no cancel and no timeout, keeps its listener on the
+    caller's signal until that signal is cancelled or collected; the guide
+    says to listen to the stream or drop the signal.
 
 ## 19. Conformance (R0.7, R10.3)
 

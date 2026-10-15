@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../cancellation/cancel_signal.dart';
@@ -10,7 +11,9 @@ import 'execution_options.dart';
 ///
 /// Nothing exists when the options have neither a signal nor a timeout, so
 /// the plain path pays nothing. [dispose] ends the timer and the listener
-/// when the run ends.
+/// when the run ends; the run's own signal calls it when it fires, so a
+/// subscription nobody listens to is released when it is cancelled or times
+/// out.
 final class RunCancellation {
   RunCancellation._(this.signal);
 
@@ -23,6 +26,9 @@ final class RunCancellation {
       return null;
     }
     final cancellation = RunCancellation._(CancelSignal());
+    // First, so that a cancellation from the caller's signal, already
+    // cancelled or not, or from the timer, releases both.
+    cancellation.signal.addListener(cancellation.dispose);
     if (caller != null) {
       cancellation._detach = caller.addListener(
         () => cancellation.signal.cancel(caller.reason),
@@ -116,6 +122,10 @@ final class RunCancellation {
     );
     return completer.future;
   }
+
+  /// Whether the timeout timer is still running.
+  @visibleForTesting
+  bool get isTimerActive => _timer?.isActive ?? false;
 
   /// Ends the timer and stops listening to the caller's signal.
   void dispose() {

@@ -486,7 +486,9 @@ the run's signal (`FieldInfo.cancelSignal`) when `OperationPreparation` has no
 request error, and disposes the timer and the listener when the run ends.
 `ExecutionRun.executeRoot` races the pending result against it once and
 `FieldExecution` starts no field after it fires (`GQL350`, `GQL351`); a
-subscription keeps the timer from `subscribe` and the listener from `listen`.
+subscription starts the timer and the listener at `subscribe`, and the run's
+own signal releases both when it fires, so an unlistened stream is freed by a
+cancel or a timeout (one with neither keeps its listener on the caller's signal).
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine

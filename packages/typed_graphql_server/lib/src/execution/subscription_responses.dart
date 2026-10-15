@@ -35,6 +35,7 @@ final class SubscriptionResponses {
   StreamSubscription<Object?>? _subscription;
   final Queue<void Function()> _waiting = Queue<void Function()>();
   bool _isCancelled = false;
+  void Function()? _detachStop;
   bool _isBusy = false;
   bool _isDraining = false;
   // Pauses owed to the source because it delivered before `listen` returned.
@@ -49,7 +50,9 @@ final class SubscriptionResponses {
         _stop(cancellation);
         return;
       }
-      cancellation.signal.addListener(() => _stop(cancellation));
+      _detachStop = cancellation.signal.addListener(
+        () => _stop(cancellation),
+      );
     }
     _subscription = _source.listen(
       _onEvent,
@@ -70,7 +73,7 @@ final class SubscriptionResponses {
     final wasCancelled = _isCancelled;
     _isCancelled = true;
     _waiting.clear();
-    _template.cancellation?.dispose();
+    _release();
     if (wasCancelled) {
       return Future<void>.value();
     }
@@ -147,9 +150,18 @@ final class SubscriptionResponses {
     _isDraining = false;
   }
 
+  // The run's signal may outlive the stream (a resolver holds it), so the
+  // stream stops listening to it and ignores it from here on.
+  void _release() {
+    _detachStop?.call();
+    _detachStop = null;
+    _template.cancellation?.dispose();
+  }
+
   void _close() {
     if (!_isCancelled) {
-      _template.cancellation?.dispose();
+      _isCancelled = true;
+      _release();
       _controller.close();
     }
   }
@@ -178,7 +190,7 @@ final class SubscriptionResponses {
     }
     _isCancelled = true;
     _waiting.clear();
-    _template.cancellation?.dispose();
+    _release();
     final reported = _template.reporter.sourceFailure(error, stackTrace);
     _controller.add(ExecutionResult(null, errors: [reported]));
     _controller.close();

@@ -28,6 +28,10 @@ final class CancelSignal {
   /// complete for a signal that was.
   Future<void> get whenCancelled => _completer.future;
 
+  /// How many listeners wait for the signal.
+  @visibleForTesting
+  int get listenerCount => _listeners?.length ?? 0;
+
   /// Cancels the signal with an optional [reason]. Only the first call has
   /// an effect.
   void cancel([Object? reason]) {
@@ -49,6 +53,10 @@ final class CancelSignal {
   /// Calls [listener] at once when the signal is cancelled, else when it
   /// is; returns a function that removes the listener. Unlike
   /// [whenCancelled] it leaves nothing behind once removed.
+  ///
+  /// A listener must not throw: [cancel] calls them in turn and one that
+  /// throws would keep the rest from running. Every listener is the
+  /// library's own, written not to.
   @internal
   void Function() addListener(void Function() listener) {
     if (_isCancelled) {

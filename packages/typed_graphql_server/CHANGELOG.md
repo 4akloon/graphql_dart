@@ -126,3 +126,6 @@
   ends with a final cancellation result, cancels its source and closes; a
   signal cancelled at `subscribe` is a `SubscriptionRejected`. The Cancellation
   guide and its dartdoc category `cancellation`.
+- A subscription starts its timer and its listener on the caller's signal at
+  `subscribe` and releases both when the run's signal fires, also for a response
+  stream nobody listens to; a finished stream stops listening to the run's signal.

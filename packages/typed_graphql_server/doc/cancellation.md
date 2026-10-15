@@ -103,9 +103,9 @@ For `ExecutableSchema.subscribe` the signal and the timeout last as long as
 the subscription. When one fires, the stream delivers one last result with the
 cancellation error, the source subscription is cancelled and the stream
 closes; the event being executed is dropped. A signal already cancelled at
-`subscribe` gives a `SubscriptionRejected` with `GQL350`. The timeout starts
-at `subscribe`; the listener on the caller's signal attaches when the response
-stream is listened to.
+`subscribe` gives a `SubscriptionRejected` with `GQL350`. The timeout and the
+listener on the caller's signal both start at `subscribe`, whether or not the
+response stream is ever listened to.
 
 ```dart
 import 'dart:async';
@@ -162,6 +162,9 @@ source cancelled: true
 ## Listen to the stream, or drop the signal
 
 A response stream that is never listened to has already called the source
-function and holds a listener on the caller's signal until that signal is
-cancelled. Listen to the stream, or cancel the signal, as soon as you decide
-not to use the subscription; a signal per request makes the second free.
+function and holds the timer and a listener on the caller's signal. When that
+signal is cancelled or the timeout elapses, the stream releases both, even
+though nobody listens. With neither a cancel nor a timeout, the listener stays
+on the caller's signal until the signal is cancelled or collected. Listen to
+the stream, or cancel the signal, as soon as you decide not to use the
+subscription; a signal per request makes the second free.
