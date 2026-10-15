@@ -12,6 +12,7 @@ final class DartWriter {
   final StringBuffer _buffer = StringBuffer();
   int _level = 0;
   bool _isInFence = false;
+  static final RegExp _lineBreak = RegExp(r'\r\n|\r|\n');
 
   String get _indentation => '  ' * _level;
 
@@ -49,7 +50,8 @@ final class DartWriter {
   void doc(String text) {
     // A comment is a unit: an unclosed fence must not leak into the next one.
     _isInFence = false;
-    for (final String content in text.split('\n')) {
+    // Dart ends a line at CR, LF or CRLF only; a lone CR would end the comment.
+    for (final String content in text.split(_lineBreak)) {
       line(_docLine(content.trimRight()));
     }
   }

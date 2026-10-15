@@ -26,6 +26,13 @@ void main() {
     expect(writer.text, '/// First.\n///\n/// Second.\n');
   });
 
+  test('doc splits on a lone carriage return', () {
+    final DartWriter writer = DartWriter();
+    writer.doc('a\rb\r\nc');
+    expect(writer.text, '/// a\n/// b\n/// c\n');
+    expect(writer.text.contains('\r'), isFalse);
+  });
+
   test('doc gives an opening bare fence the text language', () {
     final DartWriter writer = DartWriter();
     writer.doc('A.\n```\ncode\n```\nB.\n```\nmore\n```');
