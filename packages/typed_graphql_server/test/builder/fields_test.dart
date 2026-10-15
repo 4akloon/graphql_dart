@@ -20,8 +20,16 @@ final class AppContext {
 void main() {
   FieldInfo infoOf(String field) => FieldInfo(
     fieldName: field,
-    parentTypeName: 'User',
-    path: [PathKey(field)],
+    parentType: ObjectType('User'),
+    returnType: const NamedType(Name('String')),
+    path: ResponsePath.root.key(field),
+    fieldNodes: const [],
+    operation: OperationDefinition(
+      OperationType.query,
+      SelectionSet([]),
+    ),
+    variables: JsonObject({}),
+    schema: ValidSchema.assumeValid(Schema(types: [])),
   );
 
   final b = ExecutableSchemaBuilder<AppContext>();

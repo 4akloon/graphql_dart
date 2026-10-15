@@ -37,3 +37,20 @@
 - `pure` on a field that was given `args` is an `ArgumentError`.
 - `GraphQLException`: an error a resolver, scalar or input object `decode` throws on purpose; its message and extensions reach the client unmasked.
 - `BuildOptions.planCacheSize` (default 1000): operation plans (field collection per condition key, constant arguments coerced once) are cached per `ExecutableSchema`, least recently used first out.
+- `ExecutableSchema.execute` runs a `ValidDocument` and returns
+  `FutureOr<ResponsePayload>`: a query of synchronous resolvers returns an
+  `ExecutionResult` at once. Request errors (`GQL320`-`GQL323`, bad
+  variables) are a `RequestErrorResult`. Mutation root fields run one after
+  another.
+- Field errors follow the specified null propagation; errors the library
+  makes carry `extensions.code` (`GQL330`-`GQL337`). Unexpected errors are
+  masked (`Unexpected error.`) unless `maskErrors` is off; `GraphQLException`
+  reaches the client as it is.
+- `ExecutionOptions` (`rootValue`, `source`, `errorBehavior`, `maskErrors`,
+  `onError`, `includesSuggestions`, `maxCoercionErrors`, `maxDepth`,
+  `maxSteps`), `ErrorBehavior` (`propagate`, `nullValue`, `halt`) and the
+  `ErrorHook` typedef. `maxDepth` (256) and `maxSteps` (10 000 000) end
+  runaway executions with `GQL336` and `GQL337`.
+- **Breaking:** `FieldInfo` carries the parent `ObjectType`, `returnType`,
+  `fieldNodes`, `operation`, `variables`, `schema` and `rootValue`, and its
+  `path` is a `ResponsePath` (`toList()` gives the segments).

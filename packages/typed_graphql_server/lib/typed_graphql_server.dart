@@ -2,8 +2,8 @@
 /// engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws
 /// and graphql-sse handlers.
 ///
-/// Under construction: the typed schema builder works (M5a); execution
-/// arrives in M5b. See the package README.
+/// Under construction: the typed schema builder (M5a) and query execution
+/// (M5b) work. See the package README.
 library;
 
 export 'src/builder/arg.dart';
@@ -29,6 +29,10 @@ export 'src/builder/output_ref.dart';
 export 'src/builder/scalar_type_def.dart';
 export 'src/builder/schema_build_error.dart';
 export 'src/builder/union_type_def.dart';
+export 'src/execution/error_behavior.dart';
+export 'src/execution/error_hook.dart';
 export 'src/execution/executable_schema.dart';
+export 'src/execution/execution_options.dart';
 export 'src/execution/field_info.dart';
 export 'src/execution/graphql_exception.dart';
+export 'src/execution/response_path.dart';
