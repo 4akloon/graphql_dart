@@ -511,8 +511,9 @@ enum DiagnosticCode(
   /// maximum `MaxCostRule` allows.
   maxCostExceeded('GQL238'),
 
-  /// `GQL300`: an object type built with `ExecutableSchemaBuilder` lists an
-  /// interface whose Dart type is not a supertype of the object's Dart type.
+  /// `GQL300`: an object type or an interface type built with
+  /// `ExecutableSchemaBuilder` lists an interface whose Dart type is not a
+  /// supertype of its own Dart type.
   incompatibleImplementation('GQL300'),
 
   /// `GQL301`: two possible types of an abstract type have Dart types where
