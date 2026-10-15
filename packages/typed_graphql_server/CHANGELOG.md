@@ -146,3 +146,6 @@
 - `GroupedLoader` loads the list of children of a key (posts by author id) in
   one batch, with the cache and failure behaviour of `BatchLoader`; a missing
   key is an empty list and the lists it hands out are unmodifiable.
+- `RequestInfo`, `ServerRequest`, `ServerResponse` (`SingleResponse`,
+  `StreamResponse`), `ServerOutcome` and `ContextFactory`: the values the
+  request pipeline takes and returns. Header names are lower-case.
