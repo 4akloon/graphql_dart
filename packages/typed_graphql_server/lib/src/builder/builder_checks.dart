@@ -1,5 +1,6 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
+import 'field_def.dart';
 import 'field_lane.dart';
 import 'interface_type_def.dart';
 import 'named_type_def.dart';
@@ -49,31 +50,48 @@ final class BuilderChecks {
   }
 
   // `GQL303`: a subscribe source belongs to the fields of the subscription
-  // root, and each of those fields needs one.
+  // root, and each of those fields needs one. An interface is never the root.
   void _checkSubscriptionFields(
     List<NamedTypeDef> definitions,
     ObjectTypeDef<Object?>? subscription,
   ) {
     for (final definition in definitions) {
-      if (definition is! ObjectTypeDef<Object?>) continue;
-      final isRoot = identical(definition, subscription);
-      for (final field in definition.fields) {
-        final hasSource = field.lane is SubscribeLane;
-        if (hasSource == isRoot) continue;
-        problems.add(
-          Diagnostic(
-            .misplacedSubscriptionField,
-            .error,
-            isRoot
-                ? 'Field "${definition.name}.${field.name}" of the '
-                      'subscription root type has no subscribe source: '
-                      'declare it with subscribe or subscribeWith.'
-                : 'Field "${definition.name}.${field.name}" has a subscribe '
-                      'source but "${definition.name}" is not the '
-                      'subscription root type.',
-          ),
-        );
+      switch (definition) {
+        case ObjectTypeDef<Object?>():
+          _checkSourcesOf(
+            definition.name,
+            definition.fields,
+            identical(definition, subscription),
+          );
+        case InterfaceTypeDef<Object?>():
+          _checkSourcesOf(definition.name, definition.fields, false);
+        // `NamedTypeDef` is not sealed, so the switch needs a default.
+        default:
       }
+    }
+  }
+
+  void _checkSourcesOf(
+    String typeName,
+    List<FieldDef<Object?, Object?>> fields,
+    bool isRoot,
+  ) {
+    for (final field in fields) {
+      final hasSource = field.lane is SubscribeLane;
+      if (hasSource == isRoot) continue;
+      problems.add(
+        Diagnostic(
+          .misplacedSubscriptionField,
+          .error,
+          isRoot
+              ? 'Field "$typeName.${field.name}" of the '
+                    'subscription root type has no subscribe source: '
+                    'declare it with subscribe or subscribeWith.'
+              : 'Field "$typeName.${field.name}" has a subscribe '
+                    'source but "$typeName" is not the '
+                    'subscription root type.',
+        ),
+      );
     }
   }
 

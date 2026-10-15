@@ -39,6 +39,30 @@ void main() {
       );
     });
 
+    test('a subscribe source on an interface field', () {
+      final query = b.object<Object?>(
+        'Query',
+        fields: (t) => [t.field('ok', b.boolean).pure((_) => true)],
+      );
+      b.interface<Object?>(
+        'Ticker',
+        resolveType: (value) => query,
+        fields: (t) => [
+          t
+              .field('ticks', b.int)
+              .subscribe((parent, args, context, info) => Stream.value(1)),
+        ],
+      );
+      final problems = problemsOf(() => b.build(query: query));
+      expect(
+        problems.map((problem) => problem.message),
+        [
+          'Field "Ticker.ticks" has a subscribe source but "Ticker" is not '
+              'the subscription root type.',
+        ],
+      );
+    });
+
     test('a subscription root field without a source', () {
       final query = b.object<Object?>(
         'Query',
