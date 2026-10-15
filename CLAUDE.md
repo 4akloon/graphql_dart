@@ -474,10 +474,12 @@ Learned in M3a:
   prints text that does not build back; a round trip treats it apart.
 
 Learned in the discoverability stage:
-- CI formats with the newest stable SDK (3.13.5), which is stricter than 3.13.1:
-  an enum without members ends its values with `,`, not `;`. A newer SDK may
-  live under `~/fvm/versions/`; run `dart format --output=none
-  --set-exit-if-changed packages test` with both before a push.
+- CI formats with the newest stable SDK (3.13.5 or later). Its formatter ends
+  the values of a member-less enum with `,`, not `;`, and Dart 3.13.1's
+  formatter crashes on that form ("Hit a bug in the formatter" for
+  `diagnostic_code.dart`), so format with 3.13.5 or later (a Flutter
+  checkout under `~/fvm/versions/` has one) and read the whole output, not
+  its last line.
 
 Learned in M4a:
 - Equal messages need equal order: a comparator that is not a total
