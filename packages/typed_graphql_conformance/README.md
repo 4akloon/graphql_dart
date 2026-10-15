@@ -61,6 +61,24 @@ never throws; `hostile_shape_fuzz_test.dart` validates documents of hostile
 shapes (deep, wide, exponentially expanding, cyclic) and checks that each
 run ends within ten seconds and that exponential merging gives `GQL230`.
 
+## Benchmarks
+
+`benchmark/execution_benchmark.dart` measures the executor (R4.17): a
+synchronous query of 1 000 objects with 10 fields each, the same with
+asynchronous resolvers, a nested query with fragments, and the full
+introspection query against a schema of 40 types. For each it prints
+operations per second and the growth of the resident set
+(`ProcessInfo.currentRss`) over a three-second run after a warm-up. It runs
+by hand, not in CI; keep the memory limit and the timeout:
+
+```sh
+cd packages/typed_graphql_conformance
+ulimit -v 8000000; timeout 600 dart run benchmark/execution_benchmark.dart
+```
+
+`test/benchmark/execution_benchmark_test.dart` runs each scenario once and
+checks that the response has no errors.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). The ported tests derive from graphql-js,
