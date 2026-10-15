@@ -152,3 +152,8 @@
 - `ServerProfile` (`development`, `production`, one `with*` method per
   protection), `ServerLimits` and `CsrfPrevention`: the protections of a
   server as values that compare by value.
+- `GraphQLServer<C>`: `handle(ServerRequest)` runs the request pipeline (document
+  length, `GQL400`/`GQL401`, the document cache, the operation lookup, `GQL402`
+  for a mutation over `GET`, the context factory, execution or subscription
+  with the options of the `ServerProfile`) and never throws; unexpected errors
+  go to `onError` and are masked (`GQL330`) per the profile.

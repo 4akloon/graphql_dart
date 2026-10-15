@@ -56,6 +56,7 @@ export 'src/lookahead/field_selection.dart';
 export 'src/lookahead/selected_field.dart';
 export 'src/server/context_factory.dart';
 export 'src/server/csrf_prevention.dart';
+export 'src/server/graphql_server.dart';
 export 'src/server/request_info.dart';
 export 'src/server/server_limits.dart';
 export 'src/server/server_outcome.dart';
