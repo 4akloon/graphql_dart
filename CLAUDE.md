@@ -64,7 +64,12 @@ benchmark and the Look-ahead, Authorization and Cancellation guides; with it
 stage M5 (execution) is complete. M6a (DataLoader) delivers `BatchLoader` and
 `GroupedLoader` (per-request batching after the microtask queue drains,
 de-duplication, a per-loader cache, `MissingValueException`) and the DataLoader
-guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+guide. M6b (request pipeline) delivers `GraphQLServer`, `RequestInfo`,
+`ServerRequest`, `ServerResponse` and `ServerOutcome`, the document cache,
+`ServerExtension` and its three phases, `ServerProfile` and `ServerLimits`
+(length, tokens, depth, aliases, directives, cost per request), CSRF
+prevention, error masking and the error hook in the pipeline (`GQL400`-
+`GQL403`), the hostile-input tests and the Server guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
 file or a URL, the project's documents as one fragment graph, the planner and
 emitters that generate the schema-types library and a library per document
 (operations, variables, data, fragments, sealed polymorphic classes, the
@@ -422,10 +427,11 @@ only through its barrel. One folder per concern, with no import order
 (`builder/` and `execution/` import each other): `builder/` (M5a),
 `coercion/`, `plan/` and `execution/` (M5b), `introspection/` and
 `subscription/` (M5c), `lookahead/`, `authorization/` and `cancellation/`
-(M5d). The package is
+(M5d), `dataloader/` (M6a) and `server/` (M6b). The package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
-or web framework, only `dart:async`, `dart:collection`, `dart:core`,
-`dart:math`, `meta` and the core (`test/quality/imports_test.dart`), and the
+or web framework, only `dart:async`, `dart:collection`, `dart:convert`,
+`dart:core`, `dart:math`, `meta`, `crypto` and the core
+(`test/quality/imports_test.dart`), and the
 builder never instantiates resolvers or services: closures get them from the
 context `C`. `ExecutableSchemaBuilder<C>` makes `OutputRef`/`InputRef`/
 `LeafRef` types and definitions in creation order; a field is
@@ -510,6 +516,22 @@ keeps the cache (a failed key is evicted by identity, so a later `clear` or
 listener on every future it creates, so an unread load never reports an
 unhandled error. Loaders are request-scoped because the context factory
 creates them for each request.
+`server/` (M6b): `GraphQLServer` builds a `PipelineAssembly` once: the
+extension chains (`ExtensionChain`, a fold per phase, the first extension
+outermost; the internal `CsrfExtension` sits inside the user's) around the
+core steps. `RequestStep` checks the length (`DocumentLength`, before any
+hashing), runs the document phase (`DocumentStep`: `GQL400`, the length
+again, `DocumentCache`, an LRU keyed by the server-computed SHA-256 of the
+text that also caches rejections, over `DocumentCompiler`: the parser with
+`maxTokens`, the validator with the base rules plus the limit rules),
+selects the operation with the executor's own `OperationSelection`
+(`OperationLookup`), refuses a `GET` mutation (`GQL402`), applies
+`CostLimit` (`CostAnalysis` with the request's variables, the message of
+`MaxCostRule` through `CostMessage`), and only then builds the context and
+runs the execution phase (`ExecutionStep`, options per profile).
+`PipelineErrors` makes every refusal and the masked `GQL330`;
+`GraphQLServer.handle` is the outermost catch, so it never throws.
+`dart:convert` and `crypto` are allowed in `lib/` for the hash.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine

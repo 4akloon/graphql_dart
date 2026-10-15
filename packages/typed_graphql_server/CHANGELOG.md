@@ -173,3 +173,5 @@
   request whose field cost or type cost is over the limit is refused with
   `GQL238` and `MaxCostRule`'s message. Slicing arguments given as variables
   count with the request's values.
+- The Server guide and the example now serve a request with
+  `GraphQLServer`.
