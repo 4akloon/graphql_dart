@@ -216,3 +216,51 @@
   the topics `graphql`, `parser`, `ast`, `sdl` and `schema`, and a
   `repository` URL that points at the package folder; pub.dev is expected to
   rewrite relative README links from it (to confirm at M16).
+- A value printed in a schema validation message about a scalar or enum
+  type is bounded as the other value messages are, so a deeply nested value
+  cannot overflow the printer.
+- Operation validation framework (M4): `DocumentValidator` runs every
+  `ValidationRule` in one walk and returns `ValidDocument` or
+  `InvalidDocument`; `ValidationContext` gives rules the schema, `TypeInfo`,
+  fragments, variable usages and a step budget (`GQL230`); custom rules
+  report `GQL231`. The Operation Validation guide.
+- The operation rules: `ExecutableDefinitionsRule`, `KnownOperationTypesRule`,
+  `UniqueOperationNamesRule`, `LoneAnonymousOperationRule` and
+  `SingleFieldSubscriptionsRule` (`GQL200`-`GQL204`).
+- The type rules: `KnownTypeNamesRule`, `FragmentsOnCompositeTypesRule`,
+  `VariablesAreInputTypesRule`, `ScalarLeafsRule` and
+  `FieldsOnCorrectTypeRule` (`GQL205`, `GQL207`, `GQL212`, `GQL213`,
+  `GQL226`).
+- The argument rules: `KnownArgumentNamesRule`, `UniqueArgumentNamesRule` and
+  `ProvidedRequiredArgumentsRule` (`GQL208`-`GQL210`).
+- The fragment rules: `UniqueFragmentNamesRule`, `KnownFragmentNamesRule`,
+  `NoUnusedFragmentsRule`, `NoFragmentCyclesRule` and
+  `PossibleFragmentSpreadsRule` (`GQL211`, `GQL214`-`GQL217`).
+- The value rules: `ValuesOfCorrectTypeRule`, `InputObjectFieldNamesRule`,
+  `UniqueInputFieldNamesRule` and `InputObjectRequiredFieldsRule`
+  (`GQL218`-`GQL221`).
+- The directive rules: `KnownDirectivesRule`, `DirectivesInValidLocationsRule`
+  and `UniqueDirectivesPerLocationRule` (`GQL222`-`GQL224`); graphql-js's
+  `KnownDirectivesRule` is split in two.
+- The variable rules: `UniqueVariableNamesRule`, `NoUndefinedVariablesRule`,
+  `NoUnusedVariablesRule` and `VariablesInAllowedPositionRule`
+  (`GQL225`, `GQL227`-`GQL229`).
+- `OverlappingFieldsCanBeMergedRule` (`GQL206`): field selection merging
+  in linear time (R3.3); with three or more conflicting fields of one
+  response name it reports fewer conflicts than graphql-js.
+- `ValidationContext.maxErrors`.
+- The Operation Validation guide covers validating a document, the
+  specified rules and their codes, field selection merging and custom rules;
+  the example and the README tour validate a request.
+- pub.dev metadata, README and `llms.txt` say that the package validates
+  operations; the discovery query "validate a GraphQL operation dart"
+  works today.
+- `MaxDepthRule`, `MaxAliasesRule` and `MaxDirectivesRule` limit an operation's depth, aliases and directives, fragments expanded (`GQL232`-`GQL234`).
+- `NoIntrospectionRule` (`GQL235`) and `MaxIntrospectionDepthRule` (`GQL236`), graphql-js's introspection rules; the depth rule is linear in the document with fragments expanded.
+- `DocumentValidator.recommendedRules`: the specified rules and `MaxIntrospectionDepthRule`; it is the default rules of `DocumentValidator`.
+- `includesCostDirectives` on `SchemaBuilder` and `Schema`: the IBM draft's `@cost` and `@listSize` as opt-in built-in directives.
+- With `includesCostDirectives`, `SchemaValidator` checks the IBM draft's rules for `@cost` and `@listSize` (`GQL156`-`GQL161`).
+- `CostAnalysis` computes an operation's field cost and type cost by the IBM cost directives draft, fragments expanded, in time polynomial in the fragments times the sizing contexts they are spread in (a `@listSize` with `sizedFields` creates one); a directive counts only when the schema has its definition.
+- `SlicingArgumentsRule` (`GQL237`): a field with `@listSize(slicingArguments:)` is given exactly one slicing argument.
+- `MaxCostRule` (`GQL238`) limits an operation's field cost and type cost.
+- The Operation Validation guide covers the limit rules and cost analysis.

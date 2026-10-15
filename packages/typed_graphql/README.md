@@ -5,17 +5,20 @@
 ![Part of](https://img.shields.io/badge/part%20of-typed__graphql-purple)
 
 **Parse, print and transform GraphQL queries and SDL in Dart, build and
-validate a schema from SDL, and decode GraphQL responses into sealed
-`ResponsePayload` values, with every syntax error reported in one pass with
-its line and column.** Pure Dart, depends only on `meta`, runs on the VM, AOT
-and the web (dart2js and dart2wasm). Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
+validate a schema from SDL, validate operations against it, and decode
+GraphQL responses into sealed `ResponsePayload` values, with every syntax
+error reported in one pass with its line and column.** Pure Dart, depends
+only on `meta`, runs on the VM, AOT and the web (dart2js and dart2wasm). Part
+of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
 > **Status: under construction.** This release has the diagnostics model, the
 > protocol data types, the language (syntax trees, lexer, parser, printer,
 > visitors, transformers, schema coordinates) and the schema (its model, building and
 > extending it from SDL, printing it, scalar codecs, validating it,
-> introspection both ways, resolving schema coordinates). Document validation
-> arrives in M4 (see the
+> introspection both ways, resolving schema coordinates) and the validation
+> of executable documents by the specification's 30 rules, with opt-in
+> limit rules and cost analysis. Execution
+> arrives in M5 (see the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)).
 
 ## Contents
@@ -41,16 +44,18 @@ dependencies:
 ## Should I use this?
 
 - **Use it when** you need to parse, print, rewrite or inspect GraphQL text,
-  or build and validate a schema from SDL, in Dart (VM, web or Wasm), and want
-  every problem as a diagnostic with a stable code (and a place when the
-  source is given), or a decode failure with a path
+  build and validate a schema from SDL, or validate operations against it (with
+  limits on depth, aliases and cost),
+  in Dart (VM, web or Wasm), and want every problem as a diagnostic with a
+  stable code (and a place when the source is given), or a decode failure
+  with a path
   ([Language](doc/language.md#parsing-a-document),
   [Schema](doc/schema.md#building-a-schema-from-sdl),
+  [Operation validation](doc/validation.md#validating-a-document),
   [Diagnostics](doc/diagnostics.md#reading-a-diagnostic)).
 - **You do not need it when** you only send a query string to a server and
-  read the JSON back. Today it also does not validate an operation against a
-  schema or execute one: operation validation arrives in this package in M4,
-  and execution in `typed_graphql_server` (M5).
+  read the JSON back. Today it also does not execute an operation:
+  execution arrives in `typed_graphql_server` (M5).
 - **What it replaces**: matching GraphQL text with regular expressions or
   string splitting, and reading responses as `Map<String, dynamic>`. A regular
   expression does not see comments, block strings or nested selections, and
@@ -66,8 +71,8 @@ dependencies:
 
 ## A quick tour
 
-Bad input never throws: a syntax error or a problem in the SDL is a value you
-inspect. The same program is in [example/example.dart](example/example.dart).
+Bad input never throws: a syntax error, a problem in the SDL or an invalid
+request is a value you inspect. The same program is in [example/example.dart](example/example.dart).
 
 ```dart
 import 'dart:io';
@@ -98,6 +103,19 @@ void main() {
   switch (result) {
     case BuildSuccess(:final schema):
       stdout.writeln('query root: ${schema.queryTypeName}');
+      // A request is checked against a valid schema by the spec's rules.
+      final request = Source('{ heroes }', name: 'request.graphql');
+      if (const SchemaValidator().validate(schema)
+          case final ValidSchema valid) {
+        final checked = const DocumentValidator().validate(
+          valid,
+          parser.parse(request).requireDocument(),
+          source: request,
+        );
+        if (checked case InvalidDocument(:final diagnostics)) {
+          diagnostics.forEach(stdout.writeln);
+        }
+      }
     case BuildFailure(:final diagnostics):
       diagnostics.forEach(stdout.writeln);
   }
@@ -114,6 +132,7 @@ query Hero {
   }
 }
 query root: Query
+request.graphql:1:3: error GQL205: Cannot query field "heroes" on type "Query". Did you mean "hero"?
 ```
 
 ## Guides
@@ -130,6 +149,7 @@ is run by the test suite, so what they print is what the package does.
 | [Schema](doc/schema.md) | Build a schema from SDL, read it, validate it, extend it, print it; resolve coordinates |
 | [Scalars and codecs](doc/scalars.md) | The built-in codecs and your own |
 | [Introspection](doc/introspection.md) | Write the introspection query, answer it from a schema, build a schema from an answer |
+| [Operation validation](doc/validation.md) | Validate a document against a schema; the rules and their codes; custom rules; work limits; limit rules and cost analysis |
 
 The API reference is generated by `dart doc` and groups every type under the
 same topics. Run it in this directory and open `doc/api/index.html`.

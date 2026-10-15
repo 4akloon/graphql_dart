@@ -50,3 +50,6 @@
   `GQL150`-`GQL155` diagnostics with a path; every element's coordinate
   resolves to it, and hostile coordinate text never throws. Random type
   names no longer start with `_`.
+- Fuzzers for operation validation: operations valid by construction over
+  random valid schemas, random and mutated documents with every rule on,
+  and documents of hostile shapes that must end within ten seconds.

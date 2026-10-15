@@ -1,5 +1,6 @@
 import '../schema.dart';
 import 'applied_directive_rules.dart';
+import 'cost_directive_rules.dart';
 import 'directive_definition_rules.dart';
 import 'root_type_rules.dart';
 import 'schema_validation_result.dart';
@@ -30,6 +31,9 @@ final class const SchemaValidator() {
     ).check(schema.appliedDirectives, .schema);
     DirectiveDefinitionRules(report, schema).check();
     TypeRules(report, schema).check();
+    if (schema.includesCostDirectives) {
+      CostDirectiveRules(report, schema).check();
+    }
     return report.hasErrors
         ? InvalidSchema(schema, report.diagnostics)
         : ValidSchema.assumeValid(schema);

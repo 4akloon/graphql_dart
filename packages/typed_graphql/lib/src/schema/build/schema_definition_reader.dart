@@ -54,6 +54,7 @@ final class SchemaDefinitionReader(
           ...elements.appliedAll(extension.directives),
       ],
       includesDeferAndStream: base.includesDeferAndStream,
+      includesCostDirectives: base.includesCostDirectives,
       span:
           base.span ??
           (definition == null ? null : report.spans.of(definition)),

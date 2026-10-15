@@ -45,6 +45,7 @@ final class SchemaMapper {
     description: schema.description,
     appliedDirectives: directives(schema),
     includesDeferAndStream: schema.includesDeferAndStream,
+    includesCostDirectives: schema.includesCostDirectives,
   );
 
   SchemaType _type(SchemaType type) => switch (type) {

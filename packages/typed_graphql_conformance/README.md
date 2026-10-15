@@ -52,6 +52,14 @@ same elements (`SchemaDump`) and prints the same text;
 `hostile_sdl_fuzz_test.dart` builds random and mutated type-system text,
 and extends a schema with it, and checks that the builder reports every
 kind of problem, within the sink limit, and never throws.
+`valid_operation_fuzz_test.dart` builds random operations that are valid by
+construction over random valid schemas (`RandomValidSchema`,
+`RandomOperation`) and checks that every specified rule accepts them;
+`hostile_operation_fuzz_test.dart` validates random and mutated documents
+with every rule and limit on and checks that the result is bounded and
+never throws; `hostile_shape_fuzz_test.dart` validates documents of hostile
+shapes (deep, wide, exponentially expanding, cyclic) and checks that each
+run ends within ten seconds and that exponential merging gives `GQL230`.
 
 ## License
 

@@ -100,7 +100,7 @@ re-walking fragments that may come later in the document) do it at
 
 ```dart
 const DocumentValidator({
-  List<ValidationRule> rules = DocumentValidator.specifiedRules,
+  List<ValidationRule> rules = DocumentValidator.recommendedRules,
   int maxErrors = 100,          // graphql-js's maxErrors
   bool includesSuggestions = true,  // graphql-js's !hideSuggestions (R5.15)
   int maxSteps = ValidationContext.defaultMaxSteps,  // 1 000 000
@@ -119,7 +119,7 @@ diagnostics. `ValidDocument` has a private constructor: only `validate` and
 `specifiedRules` order without the defer/stream rules, each split rule right
 after the rule it was split from. `recommendedRules` (M4b) is
 `specifiedRules` followed by `MaxIntrospectionDepthRule`, graphql-js's
-recommended set; the default stays `specifiedRules` (open question 2). Bad
+recommended set and the default (open question 2, owner answer). Bad
 input never throws (R0.3); a rule that throws is a bug.
 
 ## 4. Diagnostics
@@ -267,7 +267,16 @@ expanded once per root. The code is in `validation/overlap/`.
   `maxErrors` conflicts are known (`ValidationContext.maxErrors`).
 - **Bounds.** Each collected item and each judged chain step is charged to the
   step budget (section 8): a document whose fragments expand exponentially
-  ends with `GQL230`, not a hang.
+  ends with `GQL230`, not a hang. The subfields of a field that is alone in
+  its set are descended once per root and check kind, wherever the field is
+  reached from (the pairs under it have their nearest distinct ancestors
+  below it), unless a cyclic fragment is on the path; so `p: a { ...F }
+  q: b { ...F }` over 20 levels is merged in linear steps and is valid.
+  The memo covers lone fields only: a part that repeats a response name
+  beside its spreads (`fragment G_i on Node { p: child { ...G_next }
+  p: child { ...G_next } q: child { ...G_next } q: child { ...G_next } }`)
+  fans out through parts that are not alone, and from about 18 levels it
+  ends with `GQL230` (section 8, deviation 15).
 
 Conflicts come in graphql-js's order in the common cases; with three or more
 fields of one name in conflict the count differs (deviation 4; one adapted
@@ -293,10 +302,16 @@ reports one `GQL230` "The document is too complex to validate: it needs more
 than N steps." at the document and aborts the run, which is then an
 `InvalidDocument`. The default is measured, not guessed: the VM does about
 1.2 million steps a second, so the budget bounds a run near one second (a
-10 000 000 budget let the 2^60 hostile document run 10.9 s). A document within
-the parser's default limits stays far below it; the budget exists for
+10 000 000 budget let the 2^60 hostile document run 10.9 s). The budget exists for
 documents built in code, parsed without limits, or shaped to expand
-exponentially through fragments.
+exponentially through fragments. Within the parser's default limits a
+document stays below it except in one shape: the field merging memoises the
+subfields of a field that is alone in its set, so a fragment spread under
+two fields over 25 levels is merged in linear steps, but a fan-out through
+parts that repeat a response name (`fragment G_i on Node { p: child
+{ ...G_next } p: child { ...G_next } q: child { ...G_next } q: child
+{ ...G_next } }`, about 18 levels or more) still spends the budget and ends
+with `GQL230`. This is an honest, bounded limit, not a hang.
 
 ## 9. Hostile documents (R0.3)
 
@@ -312,7 +327,9 @@ minutes or overflows:
 - 100000 aliases, conflicting fields of one response name, directives,
   repeated arguments, variables, operations and spreads;
 - 1000 operations each spreading one chain of 1000 fragments spend the budget
-  (`GQL230`), and so do fragments that expand to 2^60 fields to merge.
+  (`GQL230`); fragments that expand to 2^60 fields through lone fields are
+  merged in near-linear steps and are valid, while a fan-out through parts
+  that repeat a response name ends with `GQL230` (section 8).
 
 The M4b fuzzers (section 12) repeat these shapes with random sizes and every
 opt-in rule on.
@@ -409,9 +426,13 @@ directive @listSize(assumedSize: Int, slicingArguments: [String!], sizedFields: 
   - fragments and inline fragments add their selections (an upper bound);
     meta-fields and unknown fields cost 0 and their selections are not counted;
   - the costs of a fragment's selections are memoised per (fragment, sized
-    context), so the analysis is linear in the document even when fragments
-    expand 2^60 times; it uses explicit stacks; weights are parsed once per
-    call and an unparsable weight counts as the default.
+    context), so the analysis is polynomial in the fragments times the contexts
+    (a `sizedFields` list creates one) even when fragments expand 2^60 times;
+    it uses explicit stacks and charges each selection walked to the step
+    budget; weights are parsed once per run (`CostRun`) and an unparsable
+    weight counts as the default; `@cost` and `@listSize` count only when the
+    schema has the directive (the built-in one under `includesCostDirectives`,
+    or one declared in SDL).
 - **`SlicingArgumentsRule`** (`GQL237`): with `requireOneSlicingArgument` (the
   default), a field with slicing arguments must be given exactly one of them,
   not as a `null` literal: `Field "users" must be given exactly one of its
@@ -465,8 +486,10 @@ list and Documentation section, the package CHANGELOG, `CLAUDE.md` (a
 
 ## 14. Deviations from the architecture spec
 
-1. The 30 rules include three splits of graphql-js rules (§5.6.2, §5.6.4,
-   §5.7.2) so that each spec rule is one class and one code (section 5).
+1. The 30 rules include two graphql-js rules split into five classes
+   (`ValuesOfCorrectTypeRule` into §5.6.1, §5.6.2 and §5.6.4;
+   `KnownDirectivesRule` into §5.7.1 and §5.7.2) so that each spec rule is
+   one class and one code (section 5).
 2. The limit and cost rules are `ValidationRule`s too, configured by their
    constructor; the architecture spec named them only.
 3. Rules that need an operation's fragment closure report at
@@ -496,10 +519,21 @@ list and Documentation section, the package CHANGELOG, `CLAUDE.md` (a
     walked (section 3).
 12. `OverlappingFieldsCanBeMergedRule` checks a fragment where an earlier
     root expanded it, not again on its own (section 6): the conflicts are the
-    same, found once.
-13. Limit counts, cost and introspection depth are memoised per fragment, so
-    they are linear where graphql-js's `MaxIntrospectionDepthRule` is
-    exponential (sections 10 and 11).
+    same, found once. A fragment on a cycle is not expanded below itself, so
+    in a document with fragment cycles (invalid anyway, `GQL216`) it may miss
+    a conflict graphql-js finds; it never reports one that is not there.
+13. Limit counts and introspection depth are memoised per fragment, so they
+    are linear where graphql-js's `MaxIntrospectionDepthRule` is exponential;
+    cost is memoised per fragment and sizing context, so it is polynomial in
+    their product (sections 10 and 11).
+14. "Did you mean" suggestions are skipped for an input longer than 256
+    UTF-16 code units (`Suggestions.maxInputLength`): graphql-js measures
+    any length, which lets one hostile name make every error cost its
+    length.
+15. The field-merging memo covers fields alone in their set only: a part that
+    repeats a response name and fans out through fragments (about 18 levels
+    of four spreads) still ends with `GQL230` where graphql-js, with no
+    bound, would take exponential time (section 8).
 
 ## 15. Open questions for the owner
 
@@ -512,7 +546,8 @@ list and Documentation section, the package CHANGELOG, `CLAUDE.md` (a
    `DocumentValidator.recommendedRules` (= specified + it) and keep
    `specifiedRules` the default. Recommendation: make `recommendedRules` the
    default (a one-line change in `DocumentValidator`), since the rule only
-   rejects introspection queries no tool sends.
+   rejects introspection queries no tool sends. Accepted by the owner
+   (2026-10-15): `recommendedRules` is the default.
 3. **Public rule classes.** Recommendation: export all 30 (graphql-js does;
    the conformance package needs them, and users compose lists). The plans do.
 4. **Variables in cost** (section 11): a slicing argument given by a variable

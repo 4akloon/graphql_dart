@@ -324,4 +324,190 @@ enum DiagnosticCode(
   /// (spec §4.2), or a chain of more than 100 wrappers, the most a query
   /// can read.
   introspectionTypeTooDeep('GQL155'),
+
+  /// `GQL156`: the `weight` of an applied `@cost` that is not a GraphQL
+  /// number (an integer or float literal written as text), reported when
+  /// the schema includes the cost directives (IBM cost draft).
+  invalidCostWeight('GQL156'),
+
+  /// `GQL157`: a `@cost` on a field of an interface or on one of its
+  /// arguments; the draft applies it to the fields of the implementing
+  /// types. This is stricter than the draft, which only advises against it:
+  /// the cost of an abstract type is the heaviest of its possible types.
+  misplacedCost('GQL157'),
+
+  /// `GQL158`: a `@listSize` on a field whose type is not a list and that
+  /// names no `sizedFields`.
+  listSizeOnNonList('GQL158'),
+
+  /// `GQL159`: a name in the `slicingArguments` of a `@listSize` that is
+  /// not an argument of type `Int` or `Int!` of the field.
+  invalidSlicingArgument('GQL159'),
+
+  /// `GQL160`: a name in the `sizedFields` of a `@listSize` that is not a
+  /// list field of the field's object or interface return type.
+  invalidSizedField('GQL160'),
+
+  /// `GQL161`: a `@listSize` that gives `assumedSize` together with
+  /// slicing arguments, without `requireOneSlicingArgument: false` and
+  /// slicing arguments that have no default value.
+  conflictingAssumedSize('GQL161'),
+
+  /// `GQL200`: a type system definition or extension in a document sent
+  /// for execution (spec §5.1.1).
+  executableDefinitions('GQL200'),
+
+  /// `GQL201`: an operation whose type has no root type in the schema,
+  /// such as a mutation against a schema without one (spec §5.2.1.1).
+  knownOperationTypes('GQL201'),
+
+  /// `GQL202`: two operations with the same name (spec §5.2.2.1).
+  uniqueOperationNames('GQL202'),
+
+  /// `GQL203`: an anonymous operation beside another operation
+  /// (spec §5.2.3.1).
+  loneAnonymousOperation('GQL203'),
+
+  /// `GQL204`: a subscription that selects more than one top-level field,
+  /// an introspection field at the top level, or uses `@skip` or
+  /// `@include` there (spec §5.2.4.1).
+  singleFieldSubscriptions('GQL204'),
+
+  /// `GQL205`: a field the parent type does not define and that is no
+  /// meta-field (spec §5.3.1).
+  fieldsOnCorrectType('GQL205'),
+
+  /// `GQL206`: two fields with one response name that cannot be merged:
+  /// different fields or arguments under one parent, or different
+  /// response shapes (spec §5.3.2).
+  overlappingFieldsCanBeMerged('GQL206'),
+
+  /// `GQL207`: a leaf field with a selection, or a composite field without
+  /// one (spec §5.3.3).
+  scalarLeafs('GQL207'),
+
+  /// `GQL208`: an argument that the field or directive does not define
+  /// (spec §5.4.1).
+  knownArgumentNames('GQL208'),
+
+  /// `GQL209`: a field or directive that names an argument more than once
+  /// (spec §5.4.2).
+  uniqueArgumentNames('GQL209'),
+
+  /// `GQL210`: a non-null argument without a default value that a field or
+  /// directive does not provide (spec §5.4.3).
+  providedRequiredArguments('GQL210'),
+
+  /// `GQL211`: two fragment definitions with the same name (spec
+  /// §5.5.1.1).
+  uniqueFragmentNames('GQL211'),
+
+  /// `GQL212`: a type name in a type condition or a variable definition
+  /// that the schema does not define (spec §5.5.1.2, §5.8.1).
+  knownTypeNames('GQL212'),
+
+  /// `GQL213`: a fragment or inline fragment whose type condition is not
+  /// an object, interface or union type (spec §5.5.1.3).
+  fragmentsOnCompositeTypes('GQL213'),
+
+  /// `GQL214`: a fragment definition that no operation spreads, directly or
+  /// through other fragments (spec §5.5.1.4).
+  noUnusedFragments('GQL214'),
+
+  /// `GQL215`: a fragment spread whose fragment the document does not
+  /// define (spec §5.5.2.1).
+  knownFragmentNames('GQL215'),
+
+  /// `GQL216`: a fragment that spreads itself, directly or through other
+  /// fragments (spec §5.5.2.2).
+  noFragmentCycles('GQL216'),
+
+  /// `GQL217`: a fragment spread or inline fragment whose type condition
+  /// can never apply to the parent type (spec §5.5.2.3).
+  possibleFragmentSpreads('GQL217'),
+
+  /// `GQL218`: a value literal that is not a value of the input type
+  /// expected at its position (spec §5.6.1).
+  valuesOfCorrectType('GQL218'),
+
+  /// `GQL219`: an input object literal that gives a field its type does
+  /// not define (spec §5.6.2).
+  inputObjectFieldNames('GQL219'),
+
+  /// `GQL220`: an input object literal that gives a field more than once
+  /// (spec §5.6.3).
+  uniqueInputFieldNames('GQL220'),
+
+  /// `GQL221`: an input object literal that omits a required field of its
+  /// type (spec §5.6.4).
+  inputObjectRequiredFields('GQL221'),
+
+  /// `GQL222`: a directive the schema does not define (spec §5.7.1).
+  knownDirectives('GQL222'),
+
+  /// `GQL223`: a directive applied at a location its definition does not
+  /// list (spec §5.7.2).
+  directivesInValidLocations('GQL223'),
+
+  /// `GQL224`: a non-repeatable directive applied more than once at one
+  /// location (spec §5.7.3).
+  uniqueDirectivesPerLocation('GQL224'),
+
+  /// `GQL225`: an operation that declares two variables with one name
+  /// (spec §5.8.1).
+  uniqueVariableNames('GQL225'),
+
+  /// `GQL226`: a variable whose type is not an input type (spec §5.8.2).
+  variablesAreInputTypes('GQL226'),
+
+  /// `GQL227`: a variable an operation uses, directly or through
+  /// fragments, without declaring it (spec §5.8.3).
+  noUndefinedVariables('GQL227'),
+
+  /// `GQL228`: a variable an operation declares and never uses, directly or
+  /// through fragments (spec §5.8.4).
+  noUnusedVariables('GQL228'),
+
+  /// `GQL229`: a variable used where its type is not allowed, or a nullable
+  /// variable used for a field of a `@oneOf` input object (spec §5.8.5).
+  variablesInAllowedPosition('GQL229'),
+
+  /// `GQL230`: validating a document needed more work than the
+  /// validator's step budget allows, such as fragments that expand to
+  /// more fields than the budget, or many operations each spreading a
+  /// long chain of fragments. Validation stops there.
+  documentTooComplex('GQL230'),
+
+  /// `GQL231`: a problem a custom validation rule reports (R3.6); its
+  /// message says what the rule checks.
+  customRuleViolation('GQL231'),
+
+  /// `GQL232`: an operation whose deepest field, fragments expanded, is
+  /// deeper than the maximum `MaxDepthRule` allows.
+  maxDepthExceeded('GQL232'),
+
+  /// `GQL233`: an operation with more aliased fields, fragments expanded,
+  /// than the maximum `MaxAliasesRule` allows.
+  maxAliasesExceeded('GQL233'),
+
+  /// `GQL234`: an operation with more directives, fragments expanded, than
+  /// the maximum `MaxDirectivesRule` allows.
+  maxDirectivesExceeded('GQL234'),
+
+  /// `GQL235`: a field that returns an introspection type, such as
+  /// `__schema`, in a document checked by `NoIntrospectionRule`.
+  introspectionDisabled('GQL235'),
+
+  /// `GQL236`: a `__schema` or `__type` field with a path through three or
+  /// more of `fields`, `interfaces`, `possibleTypes` and `inputFields`,
+  /// fragments expanded (`MaxIntrospectionDepthRule`).
+  maxIntrospectionDepthExceeded('GQL236'),
+
+  /// `GQL237`: a field with `@listSize(slicingArguments:)` that is not given
+  /// exactly one of its slicing arguments (`SlicingArgumentsRule`).
+  slicingArgumentsRequired('GQL237'),
+
+  /// `GQL238`: an operation whose field cost or type cost is more than the
+  /// maximum `MaxCostRule` allows.
+  maxCostExceeded('GQL238'),
 }

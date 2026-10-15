@@ -1,6 +1,6 @@
 # Handoff: where typed_graphql stands and how to continue
 
-Last updated: 2026-10-14 (M3a, M3c and M3b merged into `main` locally, not pushed). Read this
+Last updated: 2026-10-15 (M3a, M3c and M3b merged into `main` locally, not pushed; M4a and M4b done on the stage branch, not merged). Read this
 first on a new device or in a new Claude session. Session memory and scratch
 directories do not travel; this file and the repository hold everything
 needed.
@@ -15,6 +15,7 @@ needed.
 | M3 Type system | [spec](specs/2026-10-14-m3-type-system-design.md) | M3a: [plan](plans/2026-10-14-m3a-schema-core.md); M3b: [plan](plans/2026-10-14-m3b-schema-validation.md) | M3a and M3b merged into `main` locally (not pushed); M3 is complete; next is M4 (operation validation) |
 | M3c Core docs | [plan](plans/2026-10-14-m3c-core-docs.md) | — | merged into `main` locally (not pushed): six guides in `packages/typed_graphql/doc/`, `example/`, dartdoc categories, doc test suite (`test/doc/`), CI `dart doc` step. M3b added "Validating a schema" and "Resolving a coordinate" to `doc/schema.md`, and the `introspection` category with its guide `doc/introspection.md` |
 | Agent discoverability | [spec](specs/2026-10-14-agent-discoverability-design.md) | [plan](plans/2026-10-14-agent-discoverability.md) | merged locally into main (3df6740, not pushed): pub.dev metadata, the core README's "Should I use this?", `llms.txt`, `docs/discovery.md`, the `test/discovery/` suite |
+| M4 Operation validation | [spec](specs/2026-10-14-m4-operation-validation-design.md) | M4a: [plan](plans/2026-10-14-m4a-operation-validation.md); M4b: [plan](plans/2026-10-14-m4b-limits-and-cost.md) | M4a and M4b are complete on the stage branch (not merged). M4a: the rule framework, the 30 rules of spec §5 (`GQL200`-`GQL229`), field selection merging in linear time, the step budget (`GQL230`), custom rules (`GQL231`), every graphql-js validation suite in `mapping/validation.csv`, the hostile-document tests and `doc/validation.md`. M4b: the opt-in limit rules `MaxDepthRule`, `MaxAliasesRule`, `MaxDirectivesRule`, `NoIntrospectionRule`, `MaxIntrospectionDepthRule` (`GQL232`-`GQL236`) and `DocumentValidator.recommendedRules`; `includesCostDirectives` with `@cost` and `@listSize` and their schema checks (`GQL156`-`GQL161`); `CostAnalysis` / `OperationCost`, `SlicingArgumentsRule` (`GQL237`), `MaxCostRule` (`GQL238`); three operation fuzzers; the guide sections "Limits" and "Cost"; next is the merge of the stage branch, then M5 |
 
 **Decisions (2026-10-14):**
 - Layer order is diagnostics < language < protocol < schema < validation; the
@@ -87,6 +88,22 @@ M3b is complete and merged into `main` locally (not pushed). Left open by the M3
   guide); a result that redefines a built-in directive has it dropped.
 - **Directive reference cycles with repeated names.** A cycle is judged per
   directive name (the first definition is the node).
+
+- **Field merging reports fewer conflicts than graphql-js** when three or
+  more fields of one response name conflict: each field is compared with
+  the first field of every other class (M4 spec, deviation 4; one adapted
+  row in `mapping/validation.csv`).
+- **`recommendedRules` as the default?** `DocumentValidator.rules` still
+  defaults to `specifiedRules`; whether it becomes `recommendedRules` (adds
+  `MaxIntrospectionDepthRule`) is undecided.
+- **`defaultListSize` is 10.** The draft names no default; 10 is this
+  library's choice for `CostAnalysis` and `MaxCostRule`.
+- **Variables in validation-time cost.** `MaxCostRule` has no variable
+  values, so a slicing variable counts with its default in the operation,
+  else `defaultListSize`; `CostAnalysis.costOf(variables:)` takes coerced
+  values. Whether validation should be stricter is open.
+- **Validation budget.** `maxSteps` defaults to 1 000 000 (about a second
+  on the VM); a document that needs more is `GQL230` (M4 spec section 8).
 
 ## Rules the user set
 

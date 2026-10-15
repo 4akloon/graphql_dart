@@ -17,7 +17,9 @@ import 'type_ref_reader.dart';
 ///
 /// The built-in scalars and introspection types the result lists are the
 /// schema's built-ins, not declared types; so are the built-in directives,
-/// and `@defer` or `@stream` turn on `includesDeferAndStream`. A result
+/// and `@defer` or `@stream` turn on `includesDeferAndStream`, `@cost` or
+/// `@listSize` with the draft's arguments on `includesCostDirectives`; one
+/// of those names with other arguments is an ordinary directive. A result
 /// without `directives` has none declared, as graphql-js reads it.
 final class IntrospectionReader(
   /// Where problems are reported.
@@ -61,6 +63,7 @@ final class IntrospectionReader(
       subscriptionTypeName: subscription,
       description: root.optionalString('description'),
       includesDeferAndStream: directives.any(_isDeferOrStream),
+      includesCostDirectives: directives.any(_isCostDirective),
     );
   }
 
@@ -108,8 +111,30 @@ final class IntrospectionReader(
 
   bool _isBuiltInDirective(SchemaDirective directive) =>
       const BuiltIns().directiveNamed(directive.name) != null ||
-      _isDeferOrStream(directive);
+      _isDeferOrStream(directive) ||
+      _isCostDirective(directive);
 
   bool _isDeferOrStream(SchemaDirective directive) =>
       directive.name == 'defer' || directive.name == 'stream';
+
+  // Only the draft's shape counts: a foreign `cost` directive of another
+  // schema stays an ordinary directive and turns nothing on.
+  bool _isCostDirective(SchemaDirective directive) {
+    final arguments = {
+      for (final argument in directive.arguments) argument.name,
+    };
+    return switch (directive.name) {
+      'cost' => arguments.length == 1 && arguments.contains('weight'),
+      'listSize' =>
+        arguments.length == 4 && arguments.containsAll(_listSizeArguments),
+      _ => false,
+    };
+  }
+
+  static const List<String> _listSizeArguments = [
+    'assumedSize',
+    'slicingArguments',
+    'requireOneSlicingArgument',
+    'sizedFields',
+  ];
 }

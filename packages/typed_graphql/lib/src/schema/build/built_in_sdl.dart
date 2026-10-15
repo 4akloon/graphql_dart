@@ -1,6 +1,9 @@
+import 'cost_directive_sdl.dart';
+
 /// The SDL of the built-in definitions: the definitions of the September2025
 /// spec (Appendix D) with graphql-js 17's descriptions, then `@defer` and
-/// `@stream` as graphql-js defines them.
+/// `@stream` as graphql-js defines them, then the IBM draft's `@cost` and
+/// `@listSize`.
 ///
 /// graphql-js 17 also has working-draft additions (deprecated directives,
 /// fragment variables, `includeDeprecated` on `__Schema.directives`,
@@ -12,8 +15,9 @@ final class const BuiltInSdl() {
   this;
 
   /// The built-in scalars, directives and introspection types, in the
-  /// order of Appendix D, then `@defer` and `@stream`.
-  String get text => _text;
+  /// order of Appendix D, then `@defer`, `@stream`, `@cost` and `@listSize`.
+  /// The last two come from [CostDirectiveSdl].
+  String get text => '$_text${const CostDirectiveSdl().text}';
 
   static const String _text = '''
 """

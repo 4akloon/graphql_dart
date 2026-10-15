@@ -16,8 +16,8 @@ import 'type_printer.dart';
 /// {@category schema}
 final class const SchemaPrinter({
   /// Whether the built-in directives, scalars and introspection types
-  /// are printed too, around the declared ones; `@defer` and `@stream`
-  /// only when the schema includes them.
+  /// are printed too, around the declared ones; `@defer`, `@stream`,
+  /// `@cost` and `@listSize` only when the schema includes them.
   final bool includesBuiltIns = false,
 }) {
   /// Creates a printer.
@@ -36,6 +36,10 @@ final class const SchemaPrinter({
           if (schema.includesDeferAndStream) ...[
             _builtIns.defer,
             _builtIns.stream,
+          ],
+          if (schema.includesCostDirectives) ...[
+            _builtIns.cost,
+            _builtIns.listSize,
           ],
         ].map(_types.directive),
       ...schema.directives.map(_types.directive),

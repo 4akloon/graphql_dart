@@ -66,6 +66,8 @@ void main() {
         'GraphQL request response JSON types dart',
         'validate a GraphQL schema dart',
         'GraphQL introspection query schema dart',
+        'validate a GraphQL operation dart',
+        'limit GraphQL query depth or cost dart',
       ]),
     );
   });

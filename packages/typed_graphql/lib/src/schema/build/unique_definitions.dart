@@ -60,6 +60,7 @@ final class UniqueDefinitions(
       if (const BuiltIns().isBuiltInDirective(
         name,
         includesDeferAndStream: base.includesDeferAndStream,
+        includesCostDirectives: base.includesCostDirectives,
       )) {
         report.error(
           .builtInRedefinition,

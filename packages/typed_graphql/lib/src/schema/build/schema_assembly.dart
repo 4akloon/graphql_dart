@@ -28,8 +28,12 @@ final class SchemaAssembly(
   Schema fromSdl(
     DocumentDefinitions definitions, {
     required bool includesDeferAndStream,
+    bool includesCostDirectives = false,
   }) => _apply(
-    Schema(includesDeferAndStream: includesDeferAndStream),
+    Schema(
+      includesDeferAndStream: includesDeferAndStream,
+      includesCostDirectives: includesCostDirectives,
+    ),
     definitions,
     appliesDefaultRoots: definitions.schemas.isEmpty,
   );
@@ -80,6 +84,7 @@ final class SchemaAssembly(
           operation: ?header.rootTypeSpan(operation),
       },
       includesDeferAndStream: base.includesDeferAndStream,
+      includesCostDirectives: base.includesCostDirectives,
       span: header.span,
     );
   }

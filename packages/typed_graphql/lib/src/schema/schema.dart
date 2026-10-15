@@ -47,6 +47,11 @@ final class Schema({
   /// graphql-js defines them; R2.6).
   final bool includesDeferAndStream = false,
 
+  /// Whether `@cost` and `@listSize` of the IBM GraphQL Cost Directives
+  /// draft exist in this schema. They are not in the specification, so they
+  /// are an opt-in and schemas stay portable.
+  final bool includesCostDirectives = false,
+
   /// Where the schema definition was; null without one.
   final SourceSpan? span,
 }) {
@@ -108,6 +113,8 @@ final class Schema({
     return switch (name) {
       'defer' when includesDeferAndStream => builtIns.defer,
       'stream' when includesDeferAndStream => builtIns.stream,
+      'cost' when includesCostDirectives => builtIns.cost,
+      'listSize' when includesCostDirectives => builtIns.listSize,
       _ => builtIns.directiveNamed(name),
     };
   }

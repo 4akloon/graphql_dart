@@ -34,7 +34,15 @@ relations, the schema validator, the introspection query, introspection
 results in both directions, coordinate resolution, the graphql-js
 `validateSchema`, `buildClientSchema`, `introspectionFromSchema` and
 `resolveSchemaCoordinate` suites, the introspection and coordinate fuzzers,
-and the Introspection guide.
+and the Introspection guide. M4a (operation validation) delivers the rule
+framework, the 30 rules of spec §5 (`GQL200`-`GQL229`), field selection
+merging in linear time, the step budget (`GQL230`), every graphql-js
+validation suite, the hostile-document tests and the Operation Validation
+guide. M4b (limits and cost) delivers the opt-in limit rules (depth, aliases,
+directives, introspection: `GQL232`-`GQL236`), `recommendedRules`, the IBM
+cost directives (`includesCostDirectives`, `GQL156`-`GQL161`), `CostAnalysis`,
+`SlicingArgumentsRule` and `MaxCostRule` (`GQL237`, `GQL238`), the operation
+fuzzers and the guide sections on limits and cost.
 
 ## Documents
 
@@ -314,6 +322,71 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   then reports each cycle among the rest once; `DefaultValueCycleRules`
   walks default values depth-first and, created once per run, remembers
   the fields it walked across types.
+- Cost directives (opt-in): `SchemaBuilder(includesCostDirectives: true)`
+  (and `Schema`) adds `@cost` and `@listSize` from the internal
+  `CostDirectiveSdl`, kept apart from `BuiltInSdl` because the IBM draft is
+  not part of the specification. `SchemaValidator` runs `CostDirectiveRules`
+  and `ListSizeRules` (`GQL156`-`GQL161`) only with the flag.
+
+**Validation** (`validation/`; M4). Imports every layer before it.
+- `DocumentValidator` (const: `rules`, `maxErrors`, `includesSuggestions`,
+  `maxSteps`) validates a `Document` against a `ValidSchema` and returns the
+  sealed `DocumentValidationResult` (`ValidDocument` | `InvalidDocument`).
+  `specifiedRules` are the 30 rules of spec §5 in graphql-js's order, two
+  graphql-js rules split into five classes so that one class reports one
+  code; the default of `rules` is `recommendedRules` (`specifiedRules` and
+  `MaxIntrospectionDepthRule`).
+- A `ValidationRule` is const configuration; `createVisitor(context)` gives
+  a fresh `AstVisitor` per run. `ValidationWalk` walks the document once
+  with all of them (a `ParallelVisitor`), with `TypeInfo` (graphql-js's:
+  parent type, field definition, input type, directive, argument) entered
+  before the rules and left after them, and `UsageIndex` recording
+  variable usages and spreads per definition. Descriptions are not walked
+  (spec §2.2).
+- `ValidationContext`: `report(code, message, nodes)` (the first node is
+  the place, the others related), `fragmentNamed` (the last definition of a
+  name), `recursivelyReferencedFragments` and `recursiveVariableUsages`
+  (only from `leave(Document)`), `spend(steps)` (the step budget: past
+  `maxSteps` one `GQL230` and the run stops), `isAborted`, `maxErrors`.
+  A rule that needs operation closures reports at `leave(Document)`
+  (`OperationVisitor`), after the rules that report during the walk.
+- Shared pieces: `FragmentSpreadCollector`, `ValueProblemVisitor` (one
+  `ValueChecker` pass per literal, split by `ValueProblemKind` into
+  `GQL218`-`GQL221`), `FieldTypeSuggestions`, `MetaFields`.
+  `EngineOrderedSort` reproduces the order V8's sort gives graphql-js's
+  type suggestions, whose comparator is not a total order, so messages
+  match to the character. "Did you mean" text is
+  `diagnostics/Suggestions` over `LexicalDistance`.
+- `overlap/` is `OverlappingFieldsCanBeMergedRule` (R3.3; spec section 6 of
+  M4): `FieldMerging` merges each operation, and each fragment no earlier
+  root expanded, level by level over an explicit stack.
+  `SelectionCollector` groups `MergeItem`s by response name (each with its
+  `FragmentTrail`, a persistent list of the fragments spread to reach it),
+  `MergeSplit` classes them by `FieldShape` and by name and `ArgumentText`
+  per object parent and pairs each with the first item of every other
+  class, `ConflictJudge` judges a pair at its nearest distinct ancestors,
+  `ConflictTree` and `ConflictReports` build graphql-js's nested messages
+  and order them by the selection set graphql-js finds them in.
+- `limits/` holds the opt-in rules `MaxDepthRule`, `MaxAliasesRule`,
+  `MaxDirectivesRule`, `NoIntrospectionRule` and `MaxIntrospectionDepthRule`
+  (R3.5), none in `specifiedRules`; `DocumentValidator.recommendedRules`, the
+  default, is `specifiedRules` plus the last. `SelectionMeasure` is a memoised
+  explicit-stack fold over operations with fragments expanded, one per
+  `MeasuredQuantity` (depth, aliases, directives); `LimitVisitor` reports
+  an operation at most once; `OperationSubject` words the operation in a
+  message.
+- `cost/` (R3.8): `CostAnalysis` is const and makes a `CostRun` per call;
+  `MaxCostRule` makes one per run (fragment map and `CostWeights` built
+  once, the walk charged to the step budget through `spend`). A `CostWalk`
+  per operation is an explicit-stack walk over `CostWeights` (type and
+  field weight caches; `@cost` and `@listSize` count only when the schema
+  has the directive) with a fragment memo keyed by fragment and
+  `SizedContext`: polynomial in the fragments times the contexts, not
+  linear. `ListSizes` and `ListSizeSetting` read `@listSize`,
+  `ArgumentCost` the weights of arguments and input fields, `CostNumber`
+  prints a cost. `OperationCost` holds the field cost and type cost.
+  `MaxCostRule` (`GQL238`) and `SlicingArgumentsRule` (`GQL237`) are
+  opt-in rules.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
@@ -405,10 +478,29 @@ Learned in M3a:
   prints text that does not build back; a round trip treats it apart.
 
 Learned in the discoverability stage:
-- CI formats with the newest stable SDK (3.13.5), which is stricter than 3.13.1:
-  an enum without members ends its values with `,`, not `;`. A newer SDK may
-  live under `~/fvm/versions/`; run `dart format --output=none
-  --set-exit-if-changed packages test` with both before a push.
+- CI formats with the newest stable SDK (3.13.5 or later). Its formatter ends
+  the values of a member-less enum with `,`, not `;`, and Dart 3.13.1's
+  formatter crashes on that form ("Hit a bug in the formatter" for
+  `diagnostic_code.dart`), so format with 3.13.5 or later (a Flutter
+  checkout under `~/fvm/versions/` has one) and read the whole output, not
+  its last line.
+
+Learned in M4a:
+- Equal messages need equal order: a comparator that is not a total
+  order sorts differently in Dart and in V8; `EngineOrderedSort` follows V8.
+- A ported template literal keeps its indentation: moving tests between
+  groups must not re-indent the query text, or every column shifts.
+- A work budget is measured, not guessed: about a million steps take a
+  second on the VM, so the default `maxSteps` is a million.
+
+Learned in M4b:
+- `avoid_classes_with_only_static_members` rejects a static-only helper:
+  make it a small instance class (const when it holds nothing).
+- A fold over fragments must be memoised per fragment (and per sized
+  context for the cost), or a chain of fragments that each spread the next
+  twice is exponential; a fragment on the stack is a cycle and counts 0.
+- graphql-js test names may be double-quoted in the source; the suite
+  reader handles both quotes.
 
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
@@ -491,13 +583,16 @@ README that leaves the package folder is an absolute URL.
   `packages/typed_graphql/example/example.dart`. The documentation suite is
   `packages/typed_graphql/test/doc/`.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
-- Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`
-  and `mapping/schema.csv`, checked by `test/mapping_test.dart` there; port
-  helpers in its `test/support/` (`SchemaPort` for the schema suites,
-  `ValidationPort` for `validateSchema`, `IntrospectionPort` for
-  `buildClientSchema`).
+- Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`,
+  `mapping/schema.csv` and `mapping/validation.csv`, checked by
+  `test/mapping_test.dart` there; port helpers in its `test/support/`
+  (`SchemaPort` for the schema suites, `ValidationPort` for
+  `validateSchema`, `IntrospectionPort` for `buildClientSchema`,
+  `RulePort` for the validation rule suites).
+- Hostile-document tests: `packages/typed_graphql/test/validation/hostile_*_test.dart`.
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
   round trip, hostile SDL, introspection round trip, hostile
-  introspection, coordinates); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
+  introspection, coordinates, valid operations, hostile operations and
+  hostile shapes); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
   `TYPED_GRAPHQL_FUZZ_SEED` tune them.
 - CI: `.github/workflows/ci.yml`.

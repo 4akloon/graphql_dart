@@ -1,6 +1,7 @@
+import '../../diagnostics/suggestions.dart';
 import '../../language/ast/value.dart';
-import '../../language/printer/printer.dart';
 import '../model/schema_type.dart';
+import 'bounded_value_printer.dart';
 
 /// Whether a constant literal is a value of a scalar or enum type, with
 /// the messages of graphql-js's `coerceInputLiteral` of the built-in
@@ -12,15 +13,23 @@ final class const LeafValueChecker() {
   /// Creates the checker; it keeps no state.
   this;
 
-  static const Printer _printer = Printer();
+  // Bounded: a value nested deeper than the printer can recurse is not
+  // printed whole (M3 deviation 14).
+  static const BoundedValuePrinter _printer = BoundedValuePrinter();
   static const int _minInt = -2147483648;
   static const int _maxInt = 2147483647;
   static const int _longestInt = 11;
   static final RegExp _integer = RegExp(r'^-?(0|[1-9][0-9]*)$');
 
   /// The message of why [value] is not a value of [type]; null when it is.
-  String? errorOf(Value value, SchemaType type) => switch (type) {
-    EnumType() => _enumError(value, type),
+  /// With [includesSuggestions], a wrong enum value gets graphql-js's
+  /// "Did you mean the enum value" text.
+  String? errorOf(
+    Value value,
+    SchemaType type, {
+    bool includesSuggestions = false,
+  }) => switch (type) {
+    EnumType() => _enumError(value, type, includesSuggestions),
     ScalarType(name: 'Int') => _intError(value),
     ScalarType(name: 'Float') when value is! IntValue && value is! FloatValue =>
       'Float cannot represent non numeric value: ${_printer.print(value)}',
@@ -51,14 +60,20 @@ final class const LeafValueChecker() {
     return null;
   }
 
-  String? _enumError(Value value, EnumType type) {
-    if (value is! EnumValue) {
-      return 'Enum "${type.name}" cannot represent non-enum value: '
-          '${_printer.print(value)}.';
+  String? _enumError(Value value, EnumType type, bool includesSuggestions) {
+    if (value is EnumValue && type.valueNamed(value.value) != null) {
+      return null;
     }
-    if (type.valueNamed(value.value) == null) {
-      return 'Value "${value.value}" does not exist in "${type.name}" enum.';
+    final printed = _printer.print(value);
+    final message = value is EnumValue
+        ? 'Value "$printed" does not exist in "${type.name}" enum.'
+        : 'Enum "${type.name}" cannot represent non-enum value: $printed.';
+    if (!includesSuggestions) {
+      return message;
     }
-    return null;
+    const suggestions = Suggestions();
+    final names = [for (final known in type.values) known.name];
+    return '$message'
+        '${suggestions.didYouMean(suggestions.listFor(printed, names), subject: 'the enum value')}';
   }
 }

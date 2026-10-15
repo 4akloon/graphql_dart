@@ -12,7 +12,8 @@ import 'type_reader.dart';
 
 /// The definitions every schema has without declaring them (spec §3.5,
 /// §3.13, §4.5; R2.6): the five scalars, the five directives and the
-/// introspection types, and the opt-in `@defer` and `@stream`.
+/// introspection types, and the opt-in `@defer`, `@stream`, `@cost` and
+/// `@listSize`.
 ///
 /// They are read once from [BuiltInSdl] and have no spans. `Schema` finds
 /// the scalars and directives by name; the SDL printer prints them only
@@ -51,13 +52,24 @@ final class const BuiltIns() {
 
   static final SchemaDirective _stream = _directiveNamed('stream');
 
-  // The five specified directives are all but the two opt-in ones, so the
-  // SDL order of `@defer` and `@stream` cannot swap them.
+  static final SchemaDirective _cost = _directiveNamed('cost');
+
+  static final SchemaDirective _listSize = _directiveNamed('listSize');
+
+  // The five specified directives are all but the opt-in ones, so the SDL
+  // order of the opt-in ones cannot swap them.
   static final List<SchemaDirective> _directives = List.unmodifiable(
     _allDirectives.where(
-      (directive) => directive != _defer && directive != _stream,
+      (directive) => !_optIn.contains(directive),
     ),
   );
+
+  static final Set<SchemaDirective> _optIn = {
+    _defer,
+    _stream,
+    _cost,
+    _listSize,
+  };
 
   static SchemaDirective _directiveNamed(String name) =>
       _allDirectives.singleWhere((directive) => directive.name == name);
@@ -78,6 +90,12 @@ final class const BuiltIns() {
 
   /// `@stream`, added to a schema only by an opt-in.
   SchemaDirective get stream => _stream;
+
+  /// `@cost` of the IBM draft, added to a schema only by an opt-in.
+  SchemaDirective get cost => _cost;
+
+  /// `@listSize` of the IBM draft, added to a schema only by an opt-in.
+  SchemaDirective get listSize => _listSize;
 
   /// `__Schema`, `__Type`, `__TypeKind`, `__Field`, `__InputValue`,
   /// `__EnumValue`, `__Directive` and `__DirectiveLocation`, in that order.
@@ -116,11 +134,14 @@ final class const BuiltIns() {
   }
 
   /// Whether [name] is a built-in directive: one of [directives], or
-  /// `defer` or `stream` when [includesDeferAndStream].
+  /// `defer` or `stream` when [includesDeferAndStream], `cost` or
+  /// `listSize` when [includesCostDirectives].
   bool isBuiltInDirective(
     String name, {
     required bool includesDeferAndStream,
+    required bool includesCostDirectives,
   }) =>
       directiveNamed(name) != null ||
-      (includesDeferAndStream && (name == 'defer' || name == 'stream'));
+      (includesDeferAndStream && (name == 'defer' || name == 'stream')) ||
+      (includesCostDirectives && (name == 'cost' || name == 'listSize'));
 }

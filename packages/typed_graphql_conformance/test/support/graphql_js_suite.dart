@@ -16,11 +16,9 @@ final class GraphqlJsSuite {
     final tests = <(String, String)>[];
     for (final line in source.split('\n')) {
       final match = _block.firstMatch(line);
-      if (match?.groups([1, 2, 3]) case [
-        final indent?,
-        final kind?,
-        final name?,
-      ]) {
+      final name = match?.group(3) ?? match?.group(4);
+      if (match?.groups([1, 2]) case [final indent?, final kind?]
+          when name != null) {
         groups.removeWhere((group) => group.$1 >= indent.length);
         if (kind == 'describe') {
           groups.add((indent.length, name));
@@ -54,7 +52,10 @@ final class GraphqlJsSuite {
     ]..sort();
   }
 
-  static final RegExp _block = RegExp(r"^(\s*)(describe|it)\('([^']*)'");
+  // A name with an apostrophe is written in double quotes.
+  static final RegExp _block = RegExp(
+    r'''^(\s*)(describe|it)\((?:'([^']*)'|"([^"]*)")''',
+  );
 
   /// Each test as its group path and its name, in file order.
   final List<(String, String)> tests;

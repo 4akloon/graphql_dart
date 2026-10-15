@@ -33,6 +33,12 @@ void main() {
       }
     });
 
+    test('a skipped row names no Dart test', () {
+      for (final row in table.rows.where((row) => row['status'] == 'skipped')) {
+        expect(row['dart_file'], isEmpty, reason: '$row');
+      }
+    });
+
     test('no graphql-js test has two rows', () {
       final keys = [
         for (final row in table.rows)
@@ -44,8 +50,12 @@ void main() {
     test('ported and adapted rows name a Dart test that exists', () {
       // `name(` and the quoted argument, with any whitespace between: the
       // formatter moves a long name to its own line.
-      RegExp call(String name, String argument) =>
-          RegExp('$name\\(\\s*${RegExp.escape("'$argument'")}');
+      // A name with an apostrophe is written in double quotes.
+      RegExp call(String name, String argument) {
+        final escaped = RegExp.escape(argument);
+        return RegExp('$name\\(\\s*(?:\'$escaped\'|"$escaped")');
+      }
+
       for (final row in table.rows.where((row) => row['status'] != 'skipped')) {
         final file = File('${row['dart_file']}');
         expect(file.existsSync(), isTrue, reason: '$row');
@@ -78,6 +88,14 @@ void main() {
         'utilities/__tests__/introspectionFromSchema-test.ts',
         'utilities/__tests__/printSchema-test.ts',
         'utilities/__tests__/resolveSchemaCoordinate-test.ts',
+      ],
+    ),
+    (
+      path: 'mapping/validation.csv',
+      prefix: '',
+      covered: [
+        for (final file in GraphqlJsSuite.filesIn('validation/__tests__'))
+          'validation/__tests__/$file',
       ],
     ),
   ];
