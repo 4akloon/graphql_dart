@@ -1,0 +1,8 @@
+dartdoc:
+  categories:
+    codegen:
+      markdown: doc/client_codegen.md
+      displayName: Client Code Generation
+  categoryOrder:
+    - codegen
+  showUndocumentedCategories: true

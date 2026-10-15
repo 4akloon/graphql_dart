@@ -264,3 +264,6 @@
 - `SlicingArgumentsRule` (`GQL237`): a field with `@listSize(slicingArguments:)` is given exactly one slicing argument.
 - `MaxCostRule` (`GQL238`) limits an operation's field cost and type cost.
 - The Operation Validation guide covers the limit rules and cost analysis.
+- The catalog has the code generator's codes `GQL500`-`GQL506`: configuration
+  syntax and content, schema input, anonymous operations, unsupported
+  constructs, unknown scalar mappings and no documents (a warning).

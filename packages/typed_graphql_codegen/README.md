@@ -4,15 +4,20 @@
 ![Role](https://img.shields.io/badge/role-codegen-blue)
 ![Part of](https://img.shields.io/badge/part%20of-typed__graphql-purple)
 
-**The typed_graphql code generator and its CLI: Dart client code from .graphql operations and SDL-first server code, without the analyzer.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
+**Check a GraphQL project for Dart client code generation: read `typed_graphql.yaml`, load the schema and validate the `.graphql` operations, with every problem reported at its file, line and column.** No code is generated yet. Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
-> **Status: skeleton.** The package exists so the workspace, CI and the
-> code rules cover it from the start. Its code arrives in stages M8 and M10 of the
-> [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md); nothing is exported yet.
+> **Status: under construction.** This release reads the project's
+> configuration, `typed_graphql.yaml` (`CodegenConfig`), and checks a project:
+> `ClientGenerator.check` loads the schema, parses and validates the
+> `.graphql` documents as one fragment graph, and reports every problem with
+> its file, line and column. It does not generate code yet; client generation
+> arrives in M10 and the SDL-first server generator in M8 (see the
+> [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)).
 
-**Not usable yet.** This package exports nothing; the part of typed_graphql that works today is the core package, [typed_graphql](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql).
-
-Planned: the client generator and its CLI (M10), then the SDL-first server generator (M8). It does not depend on `analyzer`.
+It does not depend on `analyzer`. The
+[Client Code Generation guide](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_codegen/doc/client_codegen.md)
+lists the configuration keys, shows a check and lists the codes `GQL500` to
+`GQL506`.
 
 ## License
 
