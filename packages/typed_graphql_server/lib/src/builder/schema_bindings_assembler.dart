@@ -48,6 +48,7 @@ final class SchemaBindingsAssembler {
           _leaves.putIfAbsent(definition.name, () => definition);
         case InputObjectDef<Object>():
           _inputObjects.putIfAbsent(definition.name, () => definition);
+        // `NamedTypeDef` is not sealed, so the switch needs a default.
         default:
       }
     }

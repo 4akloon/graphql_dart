@@ -194,7 +194,7 @@ void main() {
                 b.boolean,
                 args: [Arg('box', box, defaultValue: const Box())],
               )
-              .pure((_) => true),
+              .resolve((parent, args, context, info) => true),
         ],
       );
       final problems = problemsOf(() => b.build(query: query));
@@ -215,7 +215,9 @@ void main() {
       );
       final query = queryWith(
         (t) => [
-          t.field('open', b.boolean, args: [Arg('box', box)]).pure((_) => true),
+          t
+              .field('open', b.boolean, args: [Arg('box', box)])
+              .resolve((parent, args, context, info) => true),
         ],
       );
       final problems = problemsOf(() => b.build(query: query));

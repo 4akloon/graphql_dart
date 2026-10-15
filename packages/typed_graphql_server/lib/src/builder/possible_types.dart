@@ -8,18 +8,16 @@ import 'union_type_def.dart';
 final class PossibleTypes {
   /// Collects the possible types of every abstract type in [definitions].
   ///
-  /// An object counts for each interface it lists and for the interfaces
-  /// those list, walked with an explicit stack.
+  /// An object counts for each interface it lists itself, as in graphql-js
+  /// and the core `Schema`; an object must list the interfaces of its
+  /// interfaces too, and the core validator reports one that does not.
   PossibleTypes(Iterable<NamedTypeDef> definitions) {
     for (final definition in definitions) {
       if (definition is! ObjectTypeDef<Object?>) continue;
-      final visited = Set<InterfaceTypeDef<Object?>>.identity();
-      final pending = [...definition.interfaces];
-      while (pending.isNotEmpty) {
-        final next = pending.removeLast();
-        if (!visited.add(next)) continue;
-        (_implementations[next] ??= []).add(definition);
-        pending.addAll(next.interfaces);
+      final listed = Set<InterfaceTypeDef<Object?>>.identity()
+        ..addAll(definition.interfaces);
+      for (final interface in listed) {
+        (_implementations[interface] ??= []).add(definition);
       }
     }
   }

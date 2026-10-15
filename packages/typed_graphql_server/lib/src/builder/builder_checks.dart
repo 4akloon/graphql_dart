@@ -34,6 +34,7 @@ final class BuilderChecks {
             definition.interfaces,
             definition.isDartSubtypeOf,
           );
+        // `NamedTypeDef` is not sealed, so the switch needs a default.
         default:
       }
     }

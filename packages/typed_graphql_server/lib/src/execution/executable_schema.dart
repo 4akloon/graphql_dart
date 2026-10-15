@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import 'schema_bindings.dart';
@@ -16,6 +17,7 @@ final class ExecutableSchema<C> {
   /// The validated schema.
   final ValidSchema schema;
 
-  /// The run-time tables the executor reads.
+  /// The run-time tables the executor reads; not part of the public API.
+  @internal
   final SchemaBindings bindings;
 }

@@ -4,9 +4,13 @@ import 'enum_type_def.dart';
 import 'input_object_def.dart';
 import 'named_type_def.dart';
 
-/// Writes a [JsonValue] as a constant language [Value], as graphql-js's
-/// `astFromValue` does: an enum type gives an enum value, a list a list, an
+/// Writes a [JsonValue] as a constant language [Value], like graphql-js's
+/// `astFromValue`: an enum type gives an enum value, a list a list, an
 /// input object an object, a number an `Int` when it is integral.
+///
+/// One difference: an `ID` default is always written as a string, where
+/// graphql-js writes an integer-looking one as an `Int`; both coerce to the
+/// same value.
 ///
 /// Guided by the language type and the definitions of the named types it
 /// meets. The definitions are used, not the assembled schema types, because

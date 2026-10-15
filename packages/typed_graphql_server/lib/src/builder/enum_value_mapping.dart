@@ -23,7 +23,7 @@ final class const EnumValueMapping<E extends Enum>({
   /// The definition of [value] under this mapping.
   EnumValueDef<E> define(E value) => EnumValueDef(
     value,
-    nameOf == null ? value.name : nameOf!(value),
+    nameOf?.call(value) ?? value.name,
     description: descriptionOf?.call(value),
     deprecationReason: deprecationReasonOf?.call(value),
   );

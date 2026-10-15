@@ -40,6 +40,15 @@ void main() {
       expect(lane.read(const User('Ada')), 'Ada');
     });
 
+    test('pure with args is an ArgumentError', () {
+      final stub = FieldsBuilder<User, AppContext>().field(
+        'name',
+        b.string,
+        args: [times],
+      );
+      expect(() => stub.pure((user) => user.name), throwsArgumentError);
+    });
+
     test('pure casts the parent to P', () {
       final field = fieldOf(
         (t) => t.field('name', b.string).pure((user) => user.name),

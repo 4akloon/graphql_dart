@@ -29,3 +29,9 @@
   argument of a resolver.
 - The Schema Builder and Execution guides, with the dartdoc categories
   `builder` and `execution`.
+- A bad default on an interface field argument is reported once (`GQL302`),
+  not once per implementing type; the reason keeps the value and name of an
+  `ArgumentError.value`.
+- An interface counts only the objects that list it themselves as possible
+  types, as graphql-js does.
+- `pure` on a field that was given `args` is an `ArgumentError`.

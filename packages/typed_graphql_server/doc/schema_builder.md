@@ -15,7 +15,7 @@ works today is declaring, checking and printing a schema.
 Every type you declare, and the five built-in scalars (`b.int`, `b.float`,
 `b.string`, `b.boolean`, `b.id`), is a ref, and a ref carries its Dart type.
 A ref is non-null by default, as a Dart type is: `b.string` is `String!` and
-stands for a Dart `String`. `.nullable` gives `String` and a Dart `String?`.
+stands for a Dart `String`. `.nullable` gives `String` (no `!`) and a Dart `String?`.
 `b.list(item)` is a non-null list of `item`, so `b.list(b.string.nullable)`
 is `[String]!` and `b.list(b.string).nullable` is `[String!]`.
 

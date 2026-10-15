@@ -12,6 +12,10 @@ final class InputValueAssembler {
 
   final LiteralWriter _literals;
 
+  // An inherited interface field is assembled once per implementing type
+  // with the same Arg; its bad default is reported once.
+  final Set<Arg<Object?>> _reported = Set.identity();
+
   /// The diagnostics found so far; this assembler adds to them.
   final List<Diagnostic> problems;
 
@@ -36,13 +40,16 @@ final class InputValueAssembler {
       // ArgumentError or a StateError; `avoid_catching_errors` forbids naming
       // them, so anything else is rethrown.
       if (error is! ArgumentError && error is! StateError) rethrow;
-      _report(coordinate, _reasonOf(error));
+      if (_reported.add(arg)) _report(coordinate, _reasonOf(error));
     }
     return null;
   }
 
   String _reasonOf(Object error) => switch (error) {
-    ArgumentError(:final message) => '$message',
+    ArgumentError(:final message, :final name, :final invalidValue) =>
+      '$message'
+          '${name == null ? '' : ' (argument "$name")'}'
+          '${invalidValue == null ? '' : ' (value: $invalidValue)'}',
     StateError(:final message) => message,
     _ => '$error',
   };

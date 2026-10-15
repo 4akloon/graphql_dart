@@ -60,8 +60,18 @@ final class FieldStub<P, R, C> {
       ]);
 
   /// Completes the field with a synchronous getter (the pure lane, R4.2).
-  FieldDef<P, C> pure(R Function(P parent) read) =>
-      _define(PureLane((parent) => read(parent as P)), _args);
+  ///
+  /// A pure field has no arguments: giving `args` to the field as well is an
+  /// [ArgumentError].
+  FieldDef<P, C> pure(R Function(P parent) read) {
+    if (_args.isNotEmpty) {
+      throw ArgumentError(
+        'Field "$name" gives args and pure; a pure getter reads no '
+        'arguments, use resolve or resolveWith.',
+      );
+    }
+    return _define(PureLane((parent) => read(parent as P)), _args);
+  }
 
   /// Completes the field with a resolver.
   FieldDef<P, C> resolve(

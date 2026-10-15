@@ -34,10 +34,20 @@ class FixtureCompiler {
 void main() {
   const compiler = FixtureCompiler();
   const timeout = Timeout(Duration(minutes: 3));
+  // Under `--compiler exe` the executable is the test binary, not `dart`.
+  final executable = Platform.resolvedExecutable.split(Platform.pathSeparator);
+  final String? skip = const ['dart', 'dart.exe'].contains(executable.last)
+      ? null
+      : 'needs the dart tool; the VM run covers it';
 
-  test('a correct program compiles', () async {
-    await compiler.compile('ok', isExpected: true);
-  }, timeout: timeout);
+  test(
+    'a correct program compiles',
+    () async {
+      await compiler.compile('ok', isExpected: true);
+    },
+    timeout: timeout,
+    skip: skip,
+  );
 
   const failing = {
     'nullable_for_non_null': "can't be returned from",
@@ -49,9 +59,14 @@ void main() {
         "'Arg<int>' can't be assigned to the parameter type 'Arg<String>'",
   };
   failing.forEach((name, text) {
-    test('$name does not compile', () async {
-      final output = await compiler.compile(name, isExpected: false);
-      expect(output, contains(text));
-    }, timeout: timeout);
+    test(
+      '$name does not compile',
+      () async {
+        final output = await compiler.compile(name, isExpected: false);
+        expect(output, contains(text));
+      },
+      timeout: timeout,
+      skip: skip,
+    );
   });
 }
