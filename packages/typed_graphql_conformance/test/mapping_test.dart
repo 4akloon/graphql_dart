@@ -33,6 +33,12 @@ void main() {
       }
     });
 
+    test('a skipped row names no Dart test', () {
+      for (final row in table.rows.where((row) => row['status'] == 'skipped')) {
+        expect(row['dart_file'], isEmpty, reason: '$row');
+      }
+    });
+
     test('no graphql-js test has two rows', () {
       final keys = [
         for (final row in table.rows)

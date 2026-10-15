@@ -456,7 +456,7 @@ validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts,Validate: Overlapp
 validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts,Validate: Overlapping fields can be merged,allows different args where no conflict is possible,ported,test/validation/overlapping_fields_can_be_merged_test.dart,
 validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts,Validate: Overlapping fields can be merged,allows different order of args,ported,test/validation/overlapping_fields_can_be_merged_test.dart,
 validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts,Validate: Overlapping fields can be merged,allows different order of input object fields in arg values,ported,test/validation/overlapping_fields_can_be_merged_test.dart,
-validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts,Validate: Overlapping fields can be merged,encounters conflict in fragments,skipped,,the @stream directive waits for incremental delivery (M14)
+validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts,Validate: Overlapping fields can be merged,encounters conflict in fragments,ported,test/validation/overlapping_fields_can_be_merged_test.dart,
 validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts,Validate: Overlapping fields can be merged,reports each conflict once,ported,test/validation/overlapping_fields_can_be_merged_test.dart,
 validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts,Validate: Overlapping fields can be merged,deep conflict,ported,test/validation/overlapping_fields_deep_conflicts_test.dart,
 validation/__tests__/OverlappingFieldsCanBeMergedRule-test.ts,Validate: Overlapping fields can be merged,deep conflict with multiple issues,ported,test/validation/overlapping_fields_deep_conflicts_test.dart,
