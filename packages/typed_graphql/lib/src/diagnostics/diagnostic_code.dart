@@ -508,7 +508,8 @@ enum DiagnosticCode(
   slicingArgumentsRequired('GQL237'),
 
   /// `GQL238`: an operation whose field cost or type cost is more than the
-  /// maximum `MaxCostRule` allows.
+  /// maximum `MaxCostRule` allows. `GraphQLServer` also reports it, once per
+  /// request, with the request's variables.
   maxCostExceeded('GQL238'),
 
   /// `GQL300`: an object type or an interface type built with
@@ -589,7 +590,9 @@ enum DiagnosticCode(
   /// `GQL330`: reported when a resolver, codec or decode function threw
   /// an unexpected error; the message is masked. It is a
   /// `GraphQLError`'s `extensions.code` in a response of
-  /// `ExecutableSchema.execute`.
+  /// `ExecutableSchema.execute`. `GraphQLServer` also reports it for an
+  /// unexpected error of its own pipeline (the context factory, an extension
+  /// or a store).
   unexpectedError('GQL330'),
 
   /// `GQL331`: reported when a resolver returned null for a non-null
@@ -654,6 +657,28 @@ enum DiagnosticCode(
   /// `GraphQLError`'s `extensions.code` in a response of
   /// `ExecutableSchema.execute`.
   notAuthorized('GQL352'),
+
+  /// `GQL400`: reported when a request has no document text and no persisted
+  /// document resolved one ("Must provide query string."). It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  queryRequired('GQL400'),
+
+  /// `GQL401`: reported when the document text is longer than the server's
+  /// `maxDocumentLength`; it is refused before it is hashed or parsed. It is
+  /// a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  documentTooLong('GQL401'),
+
+  /// `GQL402`: reported when a `GET` request selects a mutation; only a
+  /// `POST` request may run one. It is a `GraphQLError`'s `extensions.code`
+  /// in a response of `GraphQLServer.handle`.
+  mutationRequiresPost('GQL402'),
+
+  /// `GQL403`: reported when CSRF prevention refused the request. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  csrfRequestBlocked('GQL403'),
 
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
   /// the YAML parser's.

@@ -285,3 +285,6 @@
   code uses).
 - The catalog adds `GQL511` (an operation or fragment that would generate
   too many classes).
+- `DiagnosticCode`: `GQL400`-`GQL403` (`queryRequired`, `documentTooLong`,
+  `mutationRequiresPost`, `csrfRequestBlocked`), reported by the server's
+  request pipeline.
