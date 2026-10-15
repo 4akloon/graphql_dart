@@ -27,7 +27,8 @@ Generated code composes them as constants:
 
 `DataContext` carries the variables, which decide whether a fragment under
 `@include` or `@skip` was selected. `DataEquality` compares the members of
-generated classes that hold lists or optionals.
+generated classes that hold lists or optionals. `JsonMerger` merges the JSON
+of a class and its fragments when they select the same response name.
 
 ## Failures
 

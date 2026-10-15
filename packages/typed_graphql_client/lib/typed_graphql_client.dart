@@ -16,6 +16,7 @@ export 'src/operation/data_object.dart';
 export 'src/operation/enum_data_codec.dart';
 export 'src/operation/graphql_operation.dart';
 export 'src/operation/json_data_codec.dart';
+export 'src/operation/json_merger.dart';
 export 'src/operation/list_data_codec.dart';
 export 'src/operation/nullable_data_codec.dart';
 export 'src/operation/object_data_codec.dart';
