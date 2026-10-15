@@ -16,7 +16,7 @@
 
 It does not depend on `analyzer`. The
 [Client Code Generation guide](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_codegen/doc/client_codegen.md)
-lists the configuration keys, shows a check and lists the codes `GQL500` to
+lists the configuration keys, shows a check and a generation, describes the generated enums, input objects and scalars, and lists the codes `GQL500` to
 `GQL508`.
 
 ## License

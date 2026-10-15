@@ -30,3 +30,6 @@
   written.
 - Golden cases in `test/goldens/` and an analysis test that analyzes and runs
   the generated code in a temporary package (tag `analysis`).
+- The guide documents generation and the generated schema types (enums, input
+  objects, `@oneOf`, scalars, pruning, the file header) and lists `GQL507` and
+  `GQL508`.
