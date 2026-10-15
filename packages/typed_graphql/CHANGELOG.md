@@ -272,6 +272,11 @@
 - `GQL303`, `GQL324`, `GQL338`, `GQL340`: the diagnostics of introspection and subscriptions (misplaced or missing subscription source, `subscribe` with a query or mutation, introspection not allowed, failed subscription source).
 - `GQL304`, `GQL350`, `GQL351`, `GQL352`: the diagnostics of authorization and cancellation (guarded fields without an authorizer, execution cancelled, execution timed out, field not authorized).
 - The messages of the built-in scalar codecs print an offending list or object as graphql-js does (`[1, 2, 3]`, `{ a: 1 }`, at most ten items, nested containers cut at depth two), not as compact JSON.
+- `IntrospectionListing`: which types and directives introspection lists for
+  a schema, and in which order (the order `Schema.toIntrospection` writes);
+  the server's introspection resolvers share it.
+- `ProvidedRequiredArgumentsRule` names the missing argument of `__type`
+  `<meta>.__type(name:)`, as graphql-js.
 - The catalog has the code generator's codes `GQL500`-`GQL506`: configuration
   syntax and content, schema input, anonymous operations, unsupported
   constructs, unknown scalar mappings and no documents (a warning).
@@ -280,8 +285,3 @@
   code uses).
 - The catalog adds `GQL511` (an operation or fragment that would generate
   too many classes).
-- `IntrospectionListing`: which types and directives introspection lists for
-  a schema, and in which order (the order `Schema.toIntrospection` writes);
-  the server's introspection resolvers share it.
-- `ProvidedRequiredArgumentsRule` names the missing argument of `__type`
-  `<meta>.__type(name:)`, as graphql-js.
