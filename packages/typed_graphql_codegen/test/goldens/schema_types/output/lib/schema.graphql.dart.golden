@@ -13,6 +13,7 @@ final class Paging implements client.DataObject {
     required this.other,
     this.default$ = const graphql.Optional.absent(),
     this.after = const graphql.Optional.absent(),
+    this.client$ = const graphql.Optional.absent(),
   });
 
   factory Paging._read(graphql.JsonObject json, client.DataContext context) =>
@@ -20,6 +21,7 @@ final class Paging implements client.DataObject {
         default$: _default$Codec.optionalField(json, 'default', context),
         other: _otherCodec.field(json, 'other', context),
         after: _afterCodec.optionalField(json, 'after', context),
+        client$: _client$Codec.optionalField(json, 'client', context),
       );
 
   /// Reads and writes the values of `Paging`.
@@ -35,6 +37,9 @@ final class Paging implements client.DataObject {
   static const client.DataCodec<graphql.JsonValue?> _afterCodec =
       client.NullableDataCodec(client.JsonDataCodec());
 
+  static const client.DataCodec<int?> _client$Codec =
+      client.NullableDataCodec(client.ScalarDataCodec(graphql.IntCodec()));
+
   /// The field `default`.
   final graphql.Optional<int?> default$;
 
@@ -44,6 +49,9 @@ final class Paging implements client.DataObject {
   /// The field `after`.
   final graphql.Optional<graphql.JsonValue?> after;
 
+  /// The field `client`.
+  final graphql.Optional<int?> client$;
+
   @override
   graphql.JsonObject toJson() => graphql.JsonObject({
     if (default$ case graphql.Present(:final value))
@@ -51,6 +59,8 @@ final class Paging implements client.DataObject {
     'other': _otherCodec.write(other),
     if (after case graphql.Present(:final value))
       'after': _afterCodec.write(value),
+    if (client$ case graphql.Present(:final value))
+      'client': _client$Codec.write(value),
   });
 
   @override
@@ -58,18 +68,21 @@ final class Paging implements client.DataObject {
       other is Paging &&
       other.default$ == default$ &&
       other.other == this.other &&
-      other.after == after;
+      other.after == after &&
+      other.client$ == client$;
 
   @override
   int get hashCode => Object.hashAll([
     default$.hashCode,
     other.hashCode,
     after.hashCode,
+    client$.hashCode,
   ]);
 
   @override
   String toString() =>
-      'Paging(default\$: ${default$}, other: $other, after: $after)';
+      'Paging(default\$: ${default$}, other: $other, after: $after, '
+      'client\$: ${client$})';
 }
 
 /// A user role.
@@ -130,8 +143,9 @@ sealed class SearchBy implements client.DataObject {
       switch (json.fields.keys.toList()) {
         ['name'] => SearchByName(_nameCodec.field(json, 'name', context)),
         ['id'] => SearchById(_idCodec.field(json, 'id', context)),
+        ['ids'] => SearchByIds(_idsCodec.field(json, 'ids', context)),
         _ => throw const client.DataFormatException(
-          'Expected exactly one of the fields name, id.',
+          'Expected exactly one of the fields name, id, ids.',
         ),
       };
 
@@ -144,6 +158,9 @@ sealed class SearchBy implements client.DataObject {
 
   static const client.DataCodec<String> _idCodec =
       client.ScalarDataCodec(graphql.IdCodec());
+
+  static const client.DataCodec<List<String>> _idsCodec =
+      client.ListDataCodec(client.ScalarDataCodec(graphql.IdCodec()));
 }
 
 /// [SearchBy] with its field `name`.
@@ -192,6 +209,31 @@ final class SearchById implements SearchBy {
   String toString() => 'SearchById($id)';
 }
 
+/// [SearchBy] with its field `ids`.
+final class SearchByIds implements SearchBy {
+  /// Creates the input object with its field `ids`.
+  const SearchByIds(this.ids);
+
+  /// The field `ids`.
+  final List<String> ids;
+
+  @override
+  graphql.JsonObject toJson() => graphql.JsonObject({
+    'ids': SearchBy._idsCodec.write(ids),
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      other is SearchByIds &&
+      const client.DataEquality().equals(other.ids, ids);
+
+  @override
+  int get hashCode => const client.DataEquality().hash(ids);
+
+  @override
+  String toString() => 'SearchByIds($ids)';
+}
+
 /// The input object `UserFilter`.
 final class UserFilter implements client.DataObject {
   /// Creates the input object.
@@ -201,6 +243,7 @@ final class UserFilter implements client.DataObject {
     this.name = const graphql.Optional.absent(),
     this.nested = const graphql.Optional.absent(),
     this.since = const graphql.Optional.absent(),
+    this.matrix = const graphql.Optional.absent(),
   });
 
   factory UserFilter._read(
@@ -212,6 +255,7 @@ final class UserFilter implements client.DataObject {
     ids: _idsCodec.field(json, 'ids', context),
     nested: _nestedCodec.optionalField(json, 'nested', context),
     since: _sinceCodec.optionalField(json, 'since', context),
+    matrix: _matrixCodec.optionalField(json, 'matrix', context),
   );
 
   /// Reads and writes the values of `UserFilter`.
@@ -235,6 +279,19 @@ final class UserFilter implements client.DataObject {
         client.ScalarDataCodec(scalar_0.DateTimeCodec()),
       );
 
+  static const client.DataCodec<List<List<int?>?>?> _matrixCodec =
+      client.NullableDataCodec(
+        client.ListDataCodec(
+          client.NullableDataCodec(
+            client.ListDataCodec(
+              client.NullableDataCodec(
+                client.ScalarDataCodec(graphql.IntCodec()),
+              ),
+            ),
+          ),
+        ),
+      );
+
   /// The field `role`.
   final graphql.Optional<Role?> role;
 
@@ -250,6 +307,9 @@ final class UserFilter implements client.DataObject {
   /// The field `since`.
   final graphql.Optional<DateTime?> since;
 
+  /// The field `matrix`.
+  final graphql.Optional<List<List<int?>?>?> matrix;
+
   @override
   graphql.JsonObject toJson() => graphql.JsonObject({
     if (role case graphql.Present(:final value))
@@ -261,6 +321,8 @@ final class UserFilter implements client.DataObject {
       'nested': _nestedCodec.write(value),
     if (since case graphql.Present(:final value))
       'since': _sinceCodec.write(value),
+    if (matrix case graphql.Present(:final value))
+      'matrix': _matrixCodec.write(value),
   });
 
   @override
@@ -270,7 +332,8 @@ final class UserFilter implements client.DataObject {
       other.name == name &&
       const client.DataEquality().equals(other.ids, ids) &&
       other.nested == nested &&
-      other.since == since;
+      other.since == since &&
+      const client.DataEquality().equals(other.matrix, matrix);
 
   @override
   int get hashCode => Object.hashAll([
@@ -279,10 +342,11 @@ final class UserFilter implements client.DataObject {
     const client.DataEquality().hash(ids),
     nested.hashCode,
     since.hashCode,
+    const client.DataEquality().hash(matrix),
   ]);
 
   @override
   String toString() =>
       'UserFilter(role: $role, name: $name, ids: $ids, nested: $nested, '
-      'since: $since)';
+      'since: $since, matrix: $matrix)';
 }

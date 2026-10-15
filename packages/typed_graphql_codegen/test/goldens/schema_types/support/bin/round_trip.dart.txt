@@ -12,16 +12,22 @@ void main() {
     role: const Optional.present(RoleKnown.admin),
     name: const Optional.present(null),
     since: Optional.present(DateTime.utc(2026, 10, 15)),
+    matrix: const Optional.present([
+      [1, null],
+      [2],
+    ]),
   );
   const paging = Paging(
     other: 'x',
     default$: Optional.present(3),
     after: Optional.present(JsonString('c1')),
+    client$: Optional.present(4),
   );
   _check('UserFilter', UserFilter.codec, filter);
   _check('Paging', Paging.codec, paging);
   _check('SearchBy', SearchBy.codec, const SearchByName('Ada'));
   _check('SearchBy', SearchBy.codec, const SearchById('7'));
+  _check('SearchBy', SearchBy.codec, const SearchByIds(['1', '2']));
   _check('Role', Role.codec, RoleKnown.editor);
   _check('Role', Role.codec, const RoleUnknown('NEW'));
   if (!paging.toString().contains(r'default$: ')) {

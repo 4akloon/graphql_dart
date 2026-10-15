@@ -2,7 +2,8 @@
 /// operations and SDL-first server code, without the analyzer.
 ///
 /// Under construction: so far the package reads `typed_graphql.yaml`
-/// ([CodegenConfig]); see the package README.
+/// ([CodegenConfig]) and [ClientGenerator] writes the Dart enums and input
+/// objects of the schema; see the package README.
 library;
 
 export 'src/config/codegen_config.dart';

@@ -45,8 +45,10 @@ final class DartWriter {
   ///
   /// A bare Markdown fence that opens a block gets the language `text`.
   void doc(String text) {
+    // A comment is a unit: an unclosed fence must not leak into the next one.
+    _isInFence = false;
     for (final String content in text.split('\n')) {
-      line(_docLine(content));
+      line(_docLine(content.trimRight()));
     }
   }
 
@@ -158,7 +160,11 @@ final class DartWriter {
   // calls until each line fits.
   void _breakCall(String text) {
     final int open = text.indexOf('(');
-    if (fits('$text,') || open < 0 || !text.endsWith(')')) {
+    // A call without arguments cannot be broken: `(` and `)` stay together.
+    if (fits('$text,') ||
+        open < 0 ||
+        !text.endsWith(')') ||
+        open + 1 == text.length - 1) {
       line('$text,');
       return;
     }

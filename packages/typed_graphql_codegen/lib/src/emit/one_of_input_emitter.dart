@@ -152,7 +152,7 @@ final class OneOfInputEmitter {
           })
           ..line('});')
           ..line();
-        _writeEquality(variant, name, writer);
+        _writeEquality(variant, field, writer);
         writer
           ..line()
           ..line('@override')
@@ -160,18 +160,25 @@ final class OneOfInputEmitter {
       });
   }
 
-  void _writeEquality(String variant, String name, DartWriter writer) {
+  void _writeEquality(String variant, InputField field, DartWriter writer) {
+    final String name = field.dartName;
     // The parameter keeps the name `other` (avoid_renaming_method_parameters);
     // a field of that name is read through `this`.
     final String own = name == 'other' ? 'this.other' : name;
+    final String same = field.holdsList
+        ? 'const client.DataEquality().equals(other.$name, $own)'
+        : 'other.$name == $own';
+    final String hash = field.holdsList
+        ? 'const client.DataEquality().hash($name)'
+        : '$name.hashCode';
     writer
       ..line('@override')
-      ..arrow(
-        'bool operator ==(Object other)',
-        'other is $variant && other.$name == $own',
-      )
+      ..arrowJoined('bool operator ==(Object other)', [
+        'other is $variant',
+        same,
+      ], '&&')
       ..line()
       ..line('@override')
-      ..line('int get hashCode => $name.hashCode;');
+      ..arrow('int get hashCode', hash);
   }
 }

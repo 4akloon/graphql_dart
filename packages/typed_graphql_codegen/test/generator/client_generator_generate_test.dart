@@ -1,4 +1,5 @@
 import 'package:test/test.dart';
+import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_codegen/typed_graphql_codegen.dart';
 
 const _schema = ProjectFile('schema.graphql', '''
@@ -153,5 +154,31 @@ type Query {
     expect(result.hasErrors, isFalse);
     expect(result.diagnostics.single.code.id, 'GQL506');
     expect(result.files, hasLength(1));
+  });
+
+  test('an introspection enum reached through __type is generated', () {
+    final built = const SchemaBuilder().fromSdl(
+      const Parser().parse(Source(_schema.text)).requireDocument(),
+    ) as BuildSuccess;
+    final result = ClientGenerator(configOf('schema: schema.json\n')).generate(
+      schema: ProjectFile(
+        'schema.json',
+        built.schema.toIntrospection().toString(),
+      ),
+      documents: const [
+        ProjectFile(
+          'lib/a.graphql',
+          'query A { __type(name: "Role") { kind } }\n',
+        ),
+      ],
+    );
+    expect(result.hasErrors, isFalse, reason: '${result.diagnostics}');
+    expect(
+      result.files.single.text,
+      allOf(
+        contains(r'sealed class $$TypeKind'),
+        contains(r'enum $$TypeKindKnown'),
+      ),
+    );
   });
 }

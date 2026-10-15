@@ -77,26 +77,77 @@ final class GeneratedNames {
   /// Records every name the classes of the enum or input object [type]
   /// declare; any other type declares none.
   void registerSchemaType(SchemaType type) {
-    const names = DartNames();
-    final base = names.typeName(type.name);
     switch (type) {
       case EnumType():
-        final declarer = "the enum '${type.name}'";
-        for (final name in [base, '${base}Known', '${base}Unknown']) {
-          register(name, declarer, type.span);
-        }
-      case InputObjectType(:final fields, :final isOneOf):
-        final declarer = "the input object '${type.name}'";
-        register(base, declarer, type.span);
-        if (isOneOf) {
-          for (final field in fields) {
-            final variant = names.capitalized(
-              InputField.dartNameOf(field.name),
-            );
-            register('$base$variant', declarer, type.span);
-          }
-        }
+        _registerEnum(type);
+      case InputObjectType():
+        _registerInputObject(type);
       case _:
+    }
+  }
+
+  void _registerEnum(EnumType type) {
+    const names = DartNames();
+    final base = names.typeName(type.name);
+    final declarer = "the enum '${type.name}'";
+    for (final name in [base, '${base}Known', '${base}Unknown']) {
+      register(name, declarer, type.span);
+    }
+    _registerMembers(declarer, [
+      for (final value in type.values)
+        (
+          names.memberName(value.name, reservedMembers: DartNames.enumMembers),
+          "the value '${value.name}'",
+          value.span ?? type.span,
+        ),
+    ]);
+  }
+
+  void _registerInputObject(InputObjectType type) {
+    const names = DartNames();
+    final base = names.typeName(type.name);
+    final declarer = "the input object '${type.name}'";
+    register(base, declarer, type.span);
+    if (type.isOneOf) {
+      for (final field in type.fields) {
+        final variant = names.capitalized(InputField.dartNameOf(field.name));
+        register('$base$variant', declarer, type.span);
+      }
+      return;
+    }
+    _registerMembers(declarer, [
+      for (final field in type.fields)
+        (
+          InputField.dartNameOf(field.name),
+          "the field '${field.name}'",
+          field.span ?? type.span,
+        ),
+    ]);
+  }
+
+  // Several GraphQL names can give one Dart member name (`RED` and `red`,
+  // `first_name` and `firstName`), which would not compile.
+  void _registerMembers(
+    String owner,
+    List<(String, String, SourceSpan?)> members,
+  ) {
+    final Map<String, (String, SourceSpan?)> seen = {};
+    for (final (name, declarer, span) in members) {
+      final first = seen[name];
+      if (first == null) {
+        seen[name] = (declarer, span);
+        continue;
+      }
+      _diagnostics.add(
+        Diagnostic(
+          .generatedNameCollision,
+          .error,
+          "The generated member name '$name' of $owner is declared twice: "
+          'by ${first.$1} and by $declarer.',
+          span: span,
+          related: [?first.$2],
+        ),
+      );
     }
   }
 }

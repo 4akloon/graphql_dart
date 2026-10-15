@@ -42,9 +42,9 @@ final class GoldenCase {
 
   /// Every `.graphql` input but the schema.
   List<ProjectFile> get documents => [
-    for (final entry in inputs.entries)
-      if (entry.key.endsWith('.graphql') && entry.key != schema.path)
-        ProjectFile(entry.key, entry.value),
+    for (final path in inputs.keys.toList()..sort())
+      if (path.endsWith('.graphql') && path != schema.path)
+        ProjectFile(path, inputs[path]!),
   ];
 
   /// The generated files the case expects, by their path (the `.golden`

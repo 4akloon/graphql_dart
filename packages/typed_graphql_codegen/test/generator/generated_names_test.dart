@@ -94,5 +94,47 @@ type Query { a: Int }
         ],
       );
     });
+
+    test('enum values with one Dart name are a GQL507', () {
+      expect(
+        problems(
+          'enum Status { NOT_FOUND notFound OK }\ntype Query { a: Int }',
+        ),
+        [
+          "The generated member name 'notFound' of the enum 'Status' is "
+              "declared twice: by the value 'NOT_FOUND' and by the value "
+              "'notFound'.",
+        ],
+      );
+    });
+
+    test('input fields with one Dart name are a GQL507 at the field', () {
+      final schema = (const SchemaBuilder().fromSdl(
+        const Parser()
+            .parse(
+              Source(
+                'input In { first_name: Int firstName: Int }\n'
+                'type Query { a: Int }',
+              ),
+            )
+            .requireDocument(),
+        source: Source(
+          'input In { first_name: Int firstName: Int }\n'
+          'type Query { a: Int }',
+        ),
+      ) as BuildSuccess).schema;
+      final names = GeneratedNames()
+        ..registerSchemaType(schema.typeNamed('In')!);
+      final diagnostic = names.diagnostics.single;
+      expect(diagnostic.code, DiagnosticCode.generatedNameCollision);
+      expect(
+        diagnostic.message,
+        "The generated member name 'firstName' of the input object 'In' is "
+        "declared twice: by the field 'first_name' and by the field "
+        "'firstName'.",
+      );
+      expect(diagnostic.span, isNotNull);
+      expect(diagnostic.related, hasLength(1));
+    });
   });
 }

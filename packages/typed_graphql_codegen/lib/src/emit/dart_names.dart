@@ -18,6 +18,9 @@ final class DartNames {
     'codec',
     'decode',
     'fragments',
+    // Prefixes of the imports the instance members use.
+    'client',
+    'graphql',
   };
 
   /// Members every generated enum has, including those of `Enum`.

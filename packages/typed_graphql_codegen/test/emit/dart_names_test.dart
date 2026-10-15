@@ -45,6 +45,16 @@ void main() {
     );
   });
 
+  test('memberName escapes the import prefixes of the generated code', () {
+    expect(
+      [
+        for (final name in ['client', 'graphql'])
+          names.memberName(name, reservedMembers: DartNames.objectMembers),
+      ],
+      [r'client$', r'graphql$'],
+    );
+  });
+
   test('memberName leaves a member the caller did not reserve', () {
     expect(names.memberName('toJson'), 'toJson');
   });

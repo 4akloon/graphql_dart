@@ -400,4 +400,41 @@ final class Doc implements client.DataObject {
 ''',
     );
   });
+
+  test('a oneOf variant that holds a list compares its items', () {
+    final text = emit(
+      'input Pick @oneOf { ids: [ID!], name: String }',
+      'Pick',
+    );
+    expect(
+      text,
+      allOf(
+        contains(
+          'other is PickIds &&\n'
+          '      const client.DataEquality().equals(other.ids, ids);',
+        ),
+        contains('int get hashCode => const client.DataEquality().hash(ids);'),
+        contains('other is PickName && other.name == name'),
+      ),
+    );
+  });
+
+  test('a field named like an import prefix gets a dollar', () {
+    final text = emit(
+      'input Prefixed { client: [Int!], graphql: Int }',
+      'Prefixed',
+    );
+    expect(
+      text,
+      allOf(
+        contains(r'final graphql.Optional<List<int>?> client$;'),
+        contains(r'final graphql.Optional<int?> graphql$;'),
+        contains(
+          r'const client.DataEquality().equals(other.client$, client$)',
+        ),
+        isNot(contains(' client;')),
+        isNot(contains(' graphql;')),
+      ),
+    );
+  });
 }

@@ -19,11 +19,13 @@ input UserFilter {
   ids: [ID!]!
   nested: UserFilter
   since: DateTime
+  matrix: [[Int]]
 }
 
 input SearchBy @oneOf {
   name: String
   id: ID
+  ids: [ID!]
 }
 
 "Names that Dart reserves or that the generated class already has."
@@ -31,6 +33,7 @@ input Paging {
   default: Int
   other: String!
   after: Cursor
+  client: Int
 }
 
 input Unreached {

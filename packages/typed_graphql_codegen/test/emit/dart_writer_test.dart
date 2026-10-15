@@ -109,4 +109,28 @@ void main() {
     writer.arrowJoined('bool get x', <String>['a', 'b'], '&&');
     expect(writer.text, 'bool get x => a && b;\n');
   });
+
+  test('arrow keeps a call without arguments whole when it is too long', () {
+    final DartWriter writer = DartWriter();
+    final String codec = '${'A' * 80}()';
+    writer.arrow('int get x', 'f($codec)');
+    expect(writer.text, 'int get x => f(\n  $codec,\n);\n');
+  });
+
+  test('doc forgets an unclosed fence of the previous comment', () {
+    final DartWriter writer = DartWriter();
+    writer
+      ..doc('```\ncode')
+      ..doc('```\nmore\n```');
+    expect(
+      writer.text,
+      '/// ```text\n/// code\n/// ```text\n/// more\n/// ```\n',
+    );
+  });
+
+  test('doc leaves no trailing whitespace and drops carriage returns', () {
+    final DartWriter writer = DartWriter();
+    writer.doc('a  \r\n   \nb');
+    expect(writer.text, '/// a\n///\n/// b\n');
+  });
 }
