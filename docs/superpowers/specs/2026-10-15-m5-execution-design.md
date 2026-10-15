@@ -705,6 +705,30 @@ depends on the other). These constraints keep that possible:
     the `GQL350` message is always "Execution was cancelled.", where
     graphql-js surfaces the abort reason's message
     (`cancellation_test.dart`).
+35. `SelectedField.isDeferred` (section 11) is not in M5: no `@defer` is
+    executed, so it would always be false. It arrives with incremental
+    delivery.
+36. `SelectedField.arguments` reads an argument whose value fails coercion
+    as absent. Reading a required one then throws, which the resolver's
+    error masking turns into `GQL330`; the executor reports the real
+    coercion error when that field runs, so no problem is silent.
+37. Look-ahead hides every meta field (a name starting with `__`), not only
+    `__typename`.
+38. The executor races the pending result against cancellation once, at the
+    root, and checks `isCancelled` before it starts each field. A resolver
+    already running is not interrupted; its result is dropped.
+39. Request errors win over an already-cancelled signal: an unknown
+    operation or unusable variables are a `RequestErrorResult`, and no timer
+    starts for them.
+40. `GQL304` is one diagnostic that lists every guarded field as
+    `Type.field`, not one diagnostic per field.
+41. An object field that redeclares an interface field does not inherit the
+    interface field's authorization rule: the rule guards the
+    implementations that inherit the field.
+42. A subscription response stream that is never listened to keeps its
+    listener on the caller's `CancelSignal` until that signal is cancelled;
+    the listener attaches on `listen`, the timeout timer starts at
+    `subscribe`. The guide says to listen to the stream or drop the signal.
 
 ## 19. Conformance (R0.7, R10.3)
 
