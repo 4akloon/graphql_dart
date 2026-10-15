@@ -1,9 +1,11 @@
 /// The typed_graphql code generator and its CLI: Dart client code from .graphql
 /// operations and SDL-first server code, without the analyzer.
 ///
-/// Under construction: so far the package reads `typed_graphql.yaml`
-/// ([CodegenConfig]) and [ClientGenerator] writes the Dart enums and input
-/// objects of the schema; see the package README.
+/// Under construction: the package reads `typed_graphql.yaml`
+/// ([CodegenConfig]) and [ClientGenerator] writes the Dart for a schema's
+/// enums and input objects, for operations and fragments, and the persisted
+/// operations manifest. The command line is `bin/typed_graphql_codegen.dart`;
+/// see the package README.
 library;
 
 export 'src/config/codegen_config.dart';

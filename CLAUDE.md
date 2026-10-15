@@ -413,9 +413,10 @@ and `GeneratedFile`s.
 - `generator/`: `ClientGenerator(config)` has `rules` (the specified rules
   minus the unused-fragment and lone-anonymous ones, plus `GQL503` named
   operations, `GQL504` unsupported `@defer`/`@stream`/`__schema`/`__type` and
-  a subscription whose root fragment becomes a sealed class, and `GQL506` no
-  document as a warning), `check` and `generate` (`GenerationResult`: diagnostics
-  and files; an error means no files). It also checks the scalar mappings
+  a subscription whose root fragment becomes a sealed class), `check` and
+  `generate` (`GenerationResult`: diagnostics and files; an error means no
+  files). `GQL506` (no document, a warning) comes from `ClientProjectLoader`,
+  not from a rule. It also checks the scalar mappings
   (`GQL505`), the names (`GQL507` a Dart name declared twice, also members
   and paths; `GQL508` a name that hides a Dart type the code uses) and the
   size (`GQL511`, 10000 classes per operation or fragment).
@@ -447,6 +448,17 @@ and `GeneratedFile`s.
   `test/example_test.dart` generates `example/` again and compares it byte for
   byte. `example/` is a workspace member with its own `pubspec.yaml`
   (`publish_to: none`) because the generated code imports the client.
+
+**Client contract** (`typed_graphql_client/lib/src/operation/`; M10). What
+generated code imports. `GraphQLOperation` (query, mutation, subscription)
+carries an `OperationDocument` (text, sha256) and `decodeData`. A data class
+reads itself through a `DataCodec<T>` constant composed of `ObjectDataCodec`,
+`ListDataCodec`, `NullableDataCodec`, `ScalarDataCodec`, `EnumDataCodec`
+(a `DataEnum` is a known or unknown value) and `JsonDataCodec` (an unmapped
+scalar); `read` throws `DataFormatException`, `decode` turns it into a
+`DecodeFailure`. `DataContext.flag` answers `@include`/`@skip` variables,
+`DataEquality` compares lists and `Optional`s by value, and `JsonMerger`
+merges what a class and its fragments write for one object.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
