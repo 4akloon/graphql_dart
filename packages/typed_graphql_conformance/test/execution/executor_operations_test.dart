@@ -23,6 +23,26 @@ void main() {
     ],
   );
 
+  // The same, as a subscription root: `execute` runs it once and hands the
+  // root value to the per-event resolver as the event.
+  ObjectTypeDef<Object?> subscriptionRoot(
+    ExecutableSchemaBuilder<Object?> b,
+    String typeName,
+    List<String> names,
+  ) => b.object<Object?>(
+    typeName,
+    fields: (t) => [
+      for (final name in names)
+        t
+            .field(name, b.string.nullable)
+            .subscribeWith<Object?>(
+              (parent, args, context, info) => const Stream<Object?>.empty(),
+              (event, args, context, info) =>
+                  (event as Map<String, String>?)?[name],
+            ),
+    ],
+  );
+
   ExecutableSchema<Object?> querySchema() {
     final b = ExecutableSchemaBuilder<Object?>();
     return b.build(query: root(b, 'Type', ['a']));
@@ -155,7 +175,7 @@ void main() {
       final schema = b.build(
         query: root(b, 'Q', ['a']),
         mutation: root(b, 'M', ['c']),
-        subscription: root(b, 'S', ['a']),
+        subscription: subscriptionRoot(b, 'S', ['a']),
       );
       expect(
         await port.json(
@@ -200,7 +220,7 @@ void main() {
       final b = ExecutableSchemaBuilder<Object?>();
       final schema = b.build(
         query: root(b, 'Q', ['a']),
-        subscription: root(b, 'S', ['a']),
+        subscription: subscriptionRoot(b, 'S', ['a']),
       );
       expect(
         await port.json(

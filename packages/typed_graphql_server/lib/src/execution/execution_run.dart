@@ -11,6 +11,7 @@ import 'field_execution.dart';
 import 'leaf_completion.dart';
 import 'list_completion.dart';
 import 'object_completion.dart';
+import 'response_path.dart';
 import 'schema_bindings.dart';
 import 'selection_executor.dart';
 import 'value_completion.dart';
@@ -77,6 +78,41 @@ final class ExecutionRun {
 
   /// Completes the value of an object, interface or union.
   late final ObjectCompletion objects = ObjectCompletion(this);
+
+  /// The same execution with a fresh error log: what each event of a
+  /// subscription runs in (spec 10).
+  ExecutionRun restarted() => ExecutionRun(
+    plan: plan,
+    bindings: bindings,
+    schema: schema,
+    context: context,
+    variables: variables,
+    rawVariables: rawVariables,
+    options: options,
+  );
+
+  /// Executes the operation's root selection on [rootValue] and builds the
+  /// response (September2025 6.2 "Executing Operations"). A mutation runs
+  /// its root fields serially.
+  FutureOr<ExecutionResult> executeRoot(Object? rootValue) {
+    final root = plan.rootFor(plan.keyFor(variables));
+    if (root.problem case final problem?) {
+      reporter.problem(problem, null, const []);
+      return _response(null);
+    }
+    final data = plan.operation.operation == OperationType.mutation
+        ? selection.executeSerially(rootValue, root, ResponsePath.root, 1)
+        : selection.execute(rootValue, root, ResponsePath.root, 1);
+    return data is Future<JsonObject?> ? data.then(_response) : _response(data);
+  }
+
+  ExecutionResult _response(JsonObject? data) {
+    final log = reporter.log;
+    if (log.haltError case final halted?) {
+      return ExecutionResult(null, errors: [halted]);
+    }
+    return ExecutionResult(data, errors: log.errors);
+  }
 
   /// A completed value at a position of type [type], after the position's
   /// own rule for failure (spec 6.4.4): a failed value (Dart `null`) becomes

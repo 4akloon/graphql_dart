@@ -76,3 +76,13 @@
   `__EnumValue` and `__Directive` objects registered by `build`.
   `ExecutionOptions.introspection` takes `IntrospectionPolicy`: `disabled`
   makes `__schema` and `__type` a `GQL338` field error; `__typename` still works.
+- Subscriptions: `t.field(...).subscribe(source)` (each event is the field's
+  value) and `subscribeWith<E>(source, resolve)` declare a subscription root
+  field; `build` reports `GQL303` for a source outside the subscription root
+  or a root field without one. `ExecutableSchema.subscribe` answers a
+  `SubscriptionStarted` with a single-subscription stream of
+  `ExecutionResult`s (one event at a time, in order; cancel, pause and resume
+  reach the source; a source error is a last masked `GQL340` result) or a
+  `SubscriptionRejected` (request errors, `GQL324` for a query or mutation, a
+  failing source function). `execute` on a subscription runs it once as a
+  query.

@@ -35,6 +35,34 @@ final class ResolverLane extends FieldLane {
   resolve;
 }
 
+/// A subscription root field: a source of events and the resolver run for
+/// each event (spec 10).
+final class SubscribeLane extends FieldLane {
+  /// Creates a lane that opens events with [source] and answers each with
+  /// [resolve].
+  const SubscribeLane(this.source, this.resolve);
+
+  /// Opens the stream of source events (September2025 6.2.3.1), once per
+  /// subscription; it may wait before it answers.
+  final FutureOr<Stream<Object?>> Function(
+    Object? parent,
+    Arguments arguments,
+    Object? context,
+    FieldInfo info,
+  )
+  source;
+
+  /// Turns one source event into the field's value (6.2.3.2). It is also
+  /// what `execute` calls, with the root value as the event.
+  final FutureOr<Object?> Function(
+    Object? event,
+    Arguments arguments,
+    Object? context,
+    FieldInfo info,
+  )
+  resolve;
+}
+
 /// An interface field without a resolver: implementations declare it.
 final class DeclaredOnlyLane extends FieldLane {
   /// Creates the lane.

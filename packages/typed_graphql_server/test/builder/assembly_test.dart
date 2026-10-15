@@ -135,7 +135,11 @@ void main() {
       );
       final subscription = b.object<Object?>(
         'Subscription',
-        fields: (t) => [t.field('ticks', b.int).pure((_) => 1)],
+        fields: (t) => [
+          t
+              .field('ticks', b.int)
+              .subscribe((parent, args, context, info) => Stream.value(1)),
+        ],
       );
       final schema = b
           .build(query: query, subscription: subscription)

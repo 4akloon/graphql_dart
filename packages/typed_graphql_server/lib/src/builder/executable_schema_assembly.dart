@@ -45,7 +45,7 @@ final class ExecutableSchemaAssembly<C> {
   ExecutableSchema<C> assemble() {
     final problems = <Diagnostic>[];
     final possibleTypes = PossibleTypes(definitions);
-    BuilderChecks(problems).check(definitions, possibleTypes);
+    BuilderChecks(problems).check(definitions, possibleTypes, subscription);
     final schema = _schemaOf(problems);
     final result = const SchemaValidator().validate(schema);
     if (result case InvalidSchema(:final diagnostics)) {

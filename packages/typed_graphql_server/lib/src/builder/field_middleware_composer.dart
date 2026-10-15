@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../execution/field_info.dart';
 import '../execution/field_middleware.dart';
 import '../execution/field_resolver.dart';
 import '../execution/field_site.dart';
 import '../execution/schema_bindings.dart';
+import 'arguments.dart';
 import 'build_options.dart';
 import 'field_def.dart';
 import 'field_lane.dart';
@@ -57,21 +61,32 @@ final class FieldMiddlewareComposer<C> {
   ) {
     final lane = definition.lane;
     final schemaField = parent.fieldNamed(definition.name);
-    if (lane is! ResolverLane || schemaField == null) return definition;
+    if (schemaField == null) return definition;
+    // A subscription field's per-event resolver is the field's resolver; its
+    // source function is not wrapped (spec 10).
+    final FieldResolver<C>? base = switch (lane) {
+      ResolverLane(:final resolve) => resolve,
+      SubscribeLane(:final resolve) => resolve,
+      _ => null,
+    };
+    if (base == null) return definition;
     final site = FieldSite(parent, schemaField);
-    final FieldResolver<C> base = lane.resolve;
     var resolver = base;
     for (final middleware in _chainOf(definition, schemaField).reversed) {
       resolver = middleware(resolver, site);
     }
     if (identical(resolver, base)) return definition;
     final composed = resolver;
-    return definition.withLane(
-      ResolverLane(
-        (parent, arguments, context, info) =>
-            composed(parent, arguments, context as C, info),
-      ),
-    );
+    FutureOr<Object?> run(
+      Object? parent,
+      Arguments arguments,
+      Object? context,
+      FieldInfo info,
+    ) => composed(parent, arguments, context as C, info);
+    return definition.withLane(switch (lane) {
+      SubscribeLane(:final source) => SubscribeLane(source, run),
+      _ => ResolverLane(run),
+    });
   }
 
   // Global, then the field's own, then the directive slots in the order the

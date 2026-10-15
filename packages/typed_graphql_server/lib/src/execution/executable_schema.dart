@@ -7,6 +7,8 @@ import '../plan/plan_cache.dart';
 import 'execution_options.dart';
 import 'operation_execution.dart';
 import 'schema_bindings.dart';
+import 'subscription_execution.dart';
+import 'subscription_result.dart';
 
 /// A validated schema with the resolvers behind it: what
 /// `ExecutableSchemaBuilder.build` returns. `C` is the context type the
@@ -49,13 +51,7 @@ final class ExecutableSchema<C> {
     JsonObject? variables,
     ExecutionOptions options = const ExecutionOptions(),
   }) {
-    if (!identical(document.schema, schema)) {
-      throw ArgumentError.value(
-        document,
-        'document',
-        'was validated against another schema',
-      );
-    }
+    _checkDocument(document);
     return OperationExecution(
       schema,
       bindings,
@@ -67,5 +63,47 @@ final class ExecutableSchema<C> {
       operationName: operationName,
       variables: variables,
     );
+  }
+
+  /// Starts the subscription named [operationName] of [document] (the only
+  /// operation when null): September2025 6.2.3 "Subscription".
+  ///
+  /// The result is a [SubscriptionStarted] with the stream of responses, or
+  /// a [SubscriptionRejected] when the request cannot start: the request
+  /// errors of [execute], `GQL324` for a query or a mutation, and a source
+  /// function that threw or whose future failed. Each source event is
+  /// executed on its own, in order.
+  ///
+  /// The requirements on [document] and [ExecutionOptions.rootValue] are
+  /// those of [execute].
+  FutureOr<SubscriptionResult> subscribe(
+    ValidDocument document, {
+    required C context,
+    String? operationName,
+    JsonObject? variables,
+    ExecutionOptions options = const ExecutionOptions(),
+  }) {
+    _checkDocument(document);
+    return SubscriptionExecution(
+      schema,
+      bindings,
+      planCache,
+      options,
+    ).subscribe(
+      document.document,
+      context,
+      operationName: operationName,
+      variables: variables,
+    );
+  }
+
+  void _checkDocument(ValidDocument document) {
+    if (!identical(document.schema, schema)) {
+      throw ArgumentError.value(
+        document,
+        'document',
+        'was validated against another schema',
+      );
+    }
   }
 }

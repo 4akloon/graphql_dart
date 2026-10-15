@@ -66,6 +66,23 @@ final class ErrorReporter {
     );
   }
 
+  /// The error a failed source stream ends a subscription with (`GQL340`,
+  /// spec 10): a [GraphQLException] as it is, else the masked message, then
+  /// offered to `ExecutionOptions.onError`. It has no path or locations.
+  GraphQLError sourceFailure(Object error, StackTrace stackTrace) {
+    final reported = switch (error) {
+      GraphQLException(:final message, :final extensions) => GraphQLError(
+        message,
+        extensions: extensions,
+      ),
+      _ => GraphQLError(
+        options.maskErrors ? _masked : error.toString(),
+        extensions: _codeOf(DiagnosticCode.subscriptionSourceFailed),
+      ),
+    };
+    return hooked(error, stackTrace, reported);
+  }
+
   /// [reported] after `ExecutionOptions.onError` has seen it: the hook's
   /// replacement, [reported] itself, or the masked error when the hook
   /// throws.

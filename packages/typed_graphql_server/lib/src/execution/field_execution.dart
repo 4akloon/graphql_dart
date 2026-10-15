@@ -61,6 +61,65 @@ final class FieldExecution {
     return _resolve(parent, definition, field.type, site);
   }
 
+  /// Opens the source stream of the subscription root field [plan]
+  /// (September2025 6.2.3.1 "CreateSourceEventStream") on the root value
+  /// [parent]. Null after the problem has been recorded in the run's log:
+  /// an argument that cannot be coerced, a source function that threw or
+  /// whose future failed. Middleware does not wrap the source (spec 10).
+  FutureOr<Stream<Object?>?> openSource(Object? parent, FieldPlan plan) {
+    final site = CompletionSite(
+      plan,
+      ResponsePath.root.key(plan.responseKey, 0),
+      1,
+    );
+    final definition =
+        _run.bindings.fields[plan.parentType.name]?[plan.fieldName];
+    final lane = definition?.lane;
+    final field = plan.field;
+    if (definition == null || lane is! SubscribeLane || field == null) {
+      _run.reporter.fieldError(
+        DiagnosticCode.unexpectedError,
+        'Field "${site.fieldLabel}" is not a subscription field.',
+        site,
+      );
+      return null;
+    }
+    final arguments = _argumentsOf(definition, site);
+    if (arguments == null) {
+      return null;
+    }
+    return _callSource(lane, parent, arguments, (field.type, site));
+  }
+
+  FutureOr<Stream<Object?>?> _callSource(
+    SubscribeLane lane,
+    Object? parent,
+    Arguments arguments,
+    (TypeRef, CompletionSite) where,
+  ) {
+    final site = where.$2;
+    try {
+      final opened = lane.source(
+        parent,
+        arguments,
+        _run.context,
+        _infoOf(where.$1, site),
+      );
+      return opened is Future<Stream<Object?>>
+          ? opened.then<Stream<Object?>?>(
+              (stream) => stream,
+              onError: (Object error, StackTrace stackTrace) {
+                _run.reporter.thrown(error, stackTrace, site);
+                return null;
+              },
+            )
+          : opened;
+    } on Object catch (error, stackTrace) {
+      _run.reporter.thrown(error, stackTrace, site);
+      return null;
+    }
+  }
+
   // Only `__typename` has no schema field; the planner drops any other
   // name that is not defined.
   FutureOr<JsonValue?> _metaField(FieldPlan plan, CompletionSite site) {
@@ -143,7 +202,8 @@ final class FieldExecution {
     FieldDef<Object?, Object?> definition,
     CompletionSite site,
   ) {
-    if (definition.lane is! ResolverLane) {
+    final lane = definition.lane;
+    if (lane is PureLane || lane is DeclaredOnlyLane) {
       return Arguments.empty;
     }
     switch (site.plan.argumentsFor(_run.variables)) {
@@ -166,6 +226,13 @@ final class FieldExecution {
   ) => switch (definition.lane) {
     PureLane(:final read) => read(parent),
     ResolverLane(:final resolve) => resolve(
+      parent,
+      arguments,
+      _run.context,
+      _infoOf(where.$1, where.$2),
+    ),
+    // `execute` on a subscription runs it once: the root value is the event.
+    SubscribeLane(:final resolve) => resolve(
       parent,
       arguments,
       _run.context,

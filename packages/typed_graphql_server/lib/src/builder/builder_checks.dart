@@ -1,5 +1,6 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
+import 'field_lane.dart';
 import 'interface_type_def.dart';
 import 'named_type_def.dart';
 import 'object_type_def.dart';
@@ -16,8 +17,13 @@ final class BuilderChecks {
   /// The diagnostics found so far; the checks add to them.
   final List<Diagnostic> problems;
 
-  /// Runs both checks over [definitions].
-  void check(List<NamedTypeDef> definitions, PossibleTypes possibleTypes) {
+  /// Runs the checks over [definitions]; [subscription] is the
+  /// subscription root, null when the schema has none.
+  void check(
+    List<NamedTypeDef> definitions,
+    PossibleTypes possibleTypes,
+    ObjectTypeDef<Object?>? subscription,
+  ) {
     for (final definition in definitions) {
       switch (definition) {
         case ObjectTypeDef<Object?>():
@@ -39,6 +45,36 @@ final class BuilderChecks {
       }
     }
     _checkTypeResolution(definitions, possibleTypes);
+    _checkSubscriptionFields(definitions, subscription);
+  }
+
+  // `GQL303`: a subscribe source belongs to the fields of the subscription
+  // root, and each of those fields needs one.
+  void _checkSubscriptionFields(
+    List<NamedTypeDef> definitions,
+    ObjectTypeDef<Object?>? subscription,
+  ) {
+    for (final definition in definitions) {
+      if (definition is! ObjectTypeDef<Object?>) continue;
+      final isRoot = identical(definition, subscription);
+      for (final field in definition.fields) {
+        final hasSource = field.lane is SubscribeLane;
+        if (hasSource == isRoot) continue;
+        problems.add(
+          Diagnostic(
+            .misplacedSubscriptionField,
+            .error,
+            isRoot
+                ? 'Field "${definition.name}.${field.name}" of the '
+                      'subscription root type has no subscribe source: '
+                      'declare it with subscribe or subscribeWith.'
+                : 'Field "${definition.name}.${field.name}" has a subscribe '
+                      'source but "${definition.name}" is not the '
+                      'subscription root type.',
+          ),
+        );
+      }
+    }
   }
 
   void _checkInterfaces(

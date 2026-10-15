@@ -235,9 +235,24 @@ type Mutation {
     });
 
     test('the schema carries the roots and the options', () {
-      final built = b.build(
-        query: query,
-        subscription: mutation,
+      // Its own builder: a subscribe field breaks every build that lacks
+      // the subscription root.
+      final c = ExecutableSchemaBuilder<Object?>();
+      final ticks = c.object<Object?>(
+        'Ticks',
+        fields: (t) => [
+          t
+              .field('tick', c.int)
+              .subscribe((parent, args, context, info) => Stream.value(1)),
+        ],
+      );
+      final root = c.object<Object?>(
+        'Query',
+        fields: (t) => [t.field('ok', c.boolean).pure((_) => true)],
+      );
+      final built = c.build(
+        query: root,
+        subscription: ticks,
         options: const BuildOptions(
           description: 'The API.',
           includesDeferAndStream: true,
@@ -246,7 +261,7 @@ type Mutation {
       final schema = built.schema.schema;
       expect(schema.queryTypeName, 'Query');
       expect(schema.mutationTypeName, isNull);
-      expect(schema.subscriptionTypeName, 'Mutation');
+      expect(schema.subscriptionTypeName, 'Ticks');
       expect(schema.description, 'The API.');
       expect(schema.includesDeferAndStream, isTrue);
     });

@@ -145,6 +145,47 @@ final class FieldStub<P, R, C> {
     );
   }
 
+  /// Completes a subscription root field whose events are the field's
+  /// values: each item of the stream [source] returns is completed as the
+  /// value of the field (spec 10).
+  ///
+  /// [source] may answer with a future of the stream. Global and field
+  /// middleware do not wrap it; they wrap the per-event resolution.
+  FieldDef<P, C> subscribe(
+    FutureOr<Stream<R>> Function(
+      P parent,
+      Arguments args,
+      C context,
+      FieldInfo info,
+    )
+    source,
+  ) => subscribeWith<R>(source, (event, args, context, info) => event);
+
+  /// Completes a subscription root field whose events of type `E` are turned
+  /// into the field's value by [resolve] (spec 10).
+  ///
+  /// [source] may answer with a future of the stream. [resolve] is the
+  /// field's resolver: global and field middleware wrap it, once per event.
+  FieldDef<P, C> subscribeWith<E>(
+    FutureOr<Stream<E>> Function(
+      P parent,
+      Arguments args,
+      C context,
+      FieldInfo info,
+    )
+    source,
+    FutureOr<R> Function(E event, Arguments args, C context, FieldInfo info)
+    resolve,
+  ) => _define(
+    SubscribeLane(
+      (parent, arguments, context, info) =>
+          source(parent as P, arguments, context as C, info),
+      (event, arguments, context, info) =>
+          resolve(event as E, arguments, context as C, info),
+    ),
+    _args,
+  );
+
   /// Completes an interface field that has no resolver: every implementing
   /// object declares it.
   FieldDef<P, C> declareOnly() => _define(const DeclaredOnlyLane(), _args);

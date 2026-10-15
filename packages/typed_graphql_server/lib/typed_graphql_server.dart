@@ -40,3 +40,4 @@ export 'src/execution/field_site.dart';
 export 'src/execution/graphql_exception.dart';
 export 'src/execution/introspection_policy.dart';
 export 'src/execution/response_path.dart';
+export 'src/execution/subscription_result.dart';
