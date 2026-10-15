@@ -518,4 +518,8 @@ enum DiagnosticCode(
   /// `GQL501`: a missing, unknown or mistyped key, or a malformed path or Dart
   /// reference, in the code generator's configuration.
   invalidConfig('GQL501'),
+
+  /// `GQL502`: a schema file the code generator cannot read as a schema: not
+  /// JSON, or JSON that is not an object.
+  invalidSchemaInput('GQL502'),
 }

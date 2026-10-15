@@ -8,3 +8,6 @@
 - The README says the package is not usable yet.
 - `CodegenConfig.parse` reads `typed_graphql.yaml` (R7.1) into a
   `ConfigResult`; its problems are `GQL500` (YAML syntax) and `GQL501`.
+- `SchemaLoader.load` reads the schema file (SDL, or an introspection result
+  from a `.json` path) into a `ValidSchema`; a file that is not JSON or not a
+  JSON object is `GQL502`.
