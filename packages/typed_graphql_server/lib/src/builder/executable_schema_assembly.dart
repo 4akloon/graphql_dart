@@ -55,6 +55,7 @@ final class ExecutableSchemaAssembly<C> {
     return ExecutableSchema(
       ValidSchema.assumeValid(schema),
       SchemaBindingsAssembler().assemble(definitions, possibleTypes),
+      planCacheSize: options.planCacheSize,
     );
   }
 

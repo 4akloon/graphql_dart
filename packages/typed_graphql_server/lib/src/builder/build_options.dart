@@ -12,7 +12,8 @@ final class BuildOptions {
     this.directives = const [],
     this.includesDeferAndStream = false,
     this.description,
-  });
+    this.planCacheSize = 1000,
+  }) : assert(planCacheSize >= 0, 'a cache size is not negative');
 
   /// The directive definitions the schema declares besides the specified
   /// ones.
@@ -23,4 +24,8 @@ final class BuildOptions {
 
   /// The schema's description, null when it has none.
   final String? description;
+
+  /// How many operation plans the schema keeps (least recently used first
+  /// out); zero keeps none.
+  final int planCacheSize;
 }

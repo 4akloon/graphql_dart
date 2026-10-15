@@ -36,3 +36,4 @@
   types, as graphql-js does.
 - `pure` on a field that was given `args` is an `ArgumentError`.
 - `GraphQLException`: an error a resolver, scalar or input object `decode` throws on purpose; its message and extensions reach the client unmasked.
+- `BuildOptions.planCacheSize` (default 1000): operation plans (field collection per condition key, constant arguments coerced once) are cached per `ExecutableSchema`, least recently used first out.
