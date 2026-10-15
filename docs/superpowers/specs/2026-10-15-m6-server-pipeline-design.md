@@ -23,6 +23,11 @@ into three sub-stages, each independently mergeable, each with its plan:
 | M6b | `GraphQLServer`, `RequestInfo`, `ServerRequest`, `ServerResponse`, `ServerOutcome`, the document cache, `ServerExtension` and its phases, `ServerProfile`, `ServerLimits` (depth, aliases, directives, tokens, document length) and the cost limit, CSRF prevention, error masking and the error hook in the pipeline; `GQL400`-`GQL403`; the Server guide | R5.1–R5.4 (limits, introspection policy, masking, CSRF), R5.14, R5.15 | `2026-10-15-m6b-request-pipeline.md` |
 | M6c | Automatic persisted queries (`PersistedQueryStore`, `MemoryPersistedQueryStore`), trusted documents (`TrustedDocuments`, read from M10's manifest); `GQL410`-`GQL415`; the Persisted Documents guide; the stage's last documents | R5.4 (APQ, trusted documents) | `2026-10-15-m6c-persisted-documents.md` |
 
+Status (2026-10-15): M6a is done and M6b Tasks 1-10 are done on branch
+`m6-final`. M6b Tasks 11-13 and all of M6c are planned: the controller wrote
+and verified them in a scratch copy, and their plans carry the verified code
+(section 18).
+
 Out of scope: request batching (R5.12, LATER), response cache and tracing
 (LATER), HTTP, uploads, graphql-ws and graphql-sse (M7), `@defer` and
 `@stream` delivery (M14).
@@ -163,9 +168,12 @@ One request, in order; each refusal ends it with a `SingleResponse`:
    is `GQL400` ("Must provide query string."); the length check again (a
    text from a store); the cache (section 5). A refusal is
    `DocumentRejected(errors)` and becomes `requestError`.
-4. **Operation.** The operation is looked up by name (one operation and
-   no name, or the named one). When it cannot be found the pipeline goes on
-   and M5's `execute` reports `GQL320`-`GQL322`. A mutation when
+4. **Operation.** The operation is selected with the executor's own
+   `OperationSelection` (September2025 6.1 `GetOperation`: the only
+   operation when no name is given, else the last one with the name), so
+   the checks below judge the operation that runs (section 15 item 22).
+   When none can be selected the pipeline goes on and M5's `execute`
+   reports `GQL320`-`GQL323`. A mutation when
    `RequestInfo.method` is `GET` is `GQL402`, `methodNotAllowed`, headers
    `allow: POST` (GraphQL over HTTP: a `GET` request must not run a
    mutation; only the pipeline knows the operation type, so M6 holds the
@@ -276,10 +284,17 @@ code rules' limit, and returns a copy):
   selected, the pipeline computes `CostAnalysis(schema.schema,
   defaultListSize:).costOf(document, operation, variables:)` with the
   request's raw variables, and refuses an operation whose field cost or
-  type cost is above `maxCost` with `GQL238` ("Operation \"Name\" has a
-  field cost of A and a type cost of B, more than the maximum of C.", the
-  wording of `MaxCostRule`; an anonymous operation is "Anonymous
+  type cost is above `maxCost` with `GQL238` ("The operation \"Name\" has
+  a field cost of A and a type cost of B, more than the maximum of C.", the
+  wording of `MaxCostRule`; an anonymous operation is "The anonymous
   operation").
+- A slicing value that names no size (an explicit null, which overrides the
+  variable's default as in September2025 6.4.1; a non-number; a negative
+  number; neither a value nor a default) sizes the field as if the argument
+  were not given: the argument's default, then `assumedSize`, then
+  `defaultListSize`. Zero is a size. A client cannot lower the cost by
+  sending a value the executor would refuse or treat as absent (section 15
+  item 21; M6b Task 11 changes the core's `ListSizes`).
 - Per request, not in validation: `MaxCostRule` counts a slicing variable
   with its default or `defaultListSize`, so `users(first: $n)` with
   `n = 1000000` would pass it. The request's values are what the server
@@ -333,8 +348,14 @@ body) and Apollo clients use.
   its own text). The text is written to the store only after the core
   step accepted it (it parses and validates), so a store holds only
   executable documents.
+- A stored text is checked against `maxDocumentLength` and hashed again
+  when read; a text that does not match its hash counts as missing
+  (`GQL410`), so a shared store written by someone else cannot change what
+  a hash runs. A store error is an unexpected error (`GQL330`).
 - A malformed extension (not an object, version not `1`, a hash that is
-  not 64 lower-case hex digits) is `GQL413`.
+  not 64 lower-case hex digits) is `GQL413`, with the message "Invalid
+  persisted query: <reason>." A JSON `null` extension is no extension. An
+  empty `query` with a hash is the hash alone (some clients send `""`).
 - Without APQ and trusted documents, a hash with no text is `GQL412`
   (`PersistedQueryNotSupported`, the text Apollo clients match to stop
   sending hashes); with a text the extension is ignored.
@@ -344,10 +365,14 @@ body) and Apollo clients use.
 - `TrustedDocuments(Map<String, String> documents)` (id to text; an id
   that is not the SHA-256 of its text is an `ArgumentError`, a programmer
   error) and `static DecodeResult<TrustedDocuments> decode(JsonValue
-  manifest)` for M10's manifest (format and version checked; a bad entry
-  or an id that does not match its body is a `DecodeFailure` with its
-  path).
-- Hash and no text: the trusted text, or `GQL415` (unknown id).
+  manifest)` for M10's manifest (format and version checked; only `id`
+  and `body` of an entry are read; a bad entry or an id that does not match
+  its body is a `DecodeFailure` with its path, such as
+  `$.operations[0].id: expected the SHA-256 of the body`).
+- Hash and no text: the trusted text, or `GQL415` (unknown id: "No
+  trusted document has the id \"<hash>\"."; the hash is 64 hex digits, so
+  echoing it is safe). No text and no hash goes on to the core step
+  (`GQL400`).
 - A text (with or without a hash): accepted only if its SHA-256 is a
   trusted id (and, with a hash, equal to it: `GQL411`); otherwise
   `GQL414` ("Only trusted documents are allowed."). Any other text is
@@ -519,6 +544,39 @@ Hostile-input tests (one file per concern under
     errors), not `NoIntrospectionRule` (a validation refusal), so
     `__typename` keeps working and one cached validation serves both
     policies.
+21. **The M4 cost semantics change** (core, `ListSizes`): a slicing value
+    that names no size no longer counts as 0 or as its literal; it sizes
+    the field as if the argument were absent (section 9). It is a breaking
+    entry in the core changelog and changes `CostAnalysis` and
+    `MaxCostRule` results for such documents.
+22. The operation the pipeline checks is selected by M5's
+    `OperationSelection` (the last operation with the name), not by its own
+    lookup: with caller-supplied rules that drop `UniqueOperationNames`, a
+    first-match lookup let a client name two operations alike so that the
+    `GET` and cost checks judged one and the executor ran the other.
+23. A `DocumentRejected` with no error (a bug in an extension) is reported
+    as the masked `GQL330`, `internalError`: a request error must carry an
+    error.
+24. Extension hooks are trusted server code. A `DocumentAccepted` an
+    `onDocument` hook builds runs without validation by the server, and an
+    `onExecute` hook that rewrites the operation name or variables is not
+    costed again (the `onExecute` doc says so). The cached rejection lists
+    are unmodifiable, so a hook cannot change what later requests see.
+25. `GraphQLServer.handle` catches `on Object` at the outermost boundary,
+    as M5's executor does around a resolver, so an `Error` thrown by user
+    code (the context factory, an extension, a store) still gives a
+    response. CLAUDE.md says "never catch `Error`"; this boundary is the
+    exception (section 17 item 13).
+26. CSRF prevention trims a preflight header's value: a value of only
+    whitespace does not pass (stricter than Apollo Server, which accepts
+    any non-empty value).
+27. The `ServerLimits` checks (positive limits, a non-negative
+    `defaultListSize`) are `const` asserts, active only in debug builds,
+    because the profile constants must be `const`. In a release build a
+    negative `defaultListSize` reaches `CostAnalysis`, whose `RangeError` the
+    pipeline reports as `GQL330` per request (section 17 item 15).
+28. A stored APQ text is hashed again on read (section 11), at the cost of
+    one SHA-256 per hash-only request, so the store is not a trust boundary.
 
 ## 16. Left for M7
 
@@ -562,3 +620,45 @@ Each has the recommendation this stage follows until the owner decides.
     (recommended: nothing is silent) or the store is skipped.
 12. **`documentId`.** Not read in M6 (recommended: decide with the M11
     client) or read now as an alias of the persisted hash.
+13. **Catching `Error` at the boundary.** `handle` catches `on Object`
+    (recommended: a server must answer whatever user code throws, as M5's
+    executor does; amend CLAUDE.md to name the two boundaries) or lets an
+    `Error` escape `handle`.
+14. **Values that name no size.** Size the field as if the argument were
+    absent (recommended and planned in M6b Task 11: a client cannot lower
+    the cost) or refuse such a request at the cost step.
+15. **Release-mode limit checks.** Keep the `const` asserts (recommended
+    for now) and add a runtime `ArgumentError` for bad limits in the
+    `GraphQLServer` factory in a follow-up, or leave them debug-only. Not
+    planned in M6.
+16. **Extension trust.** Hooks are trusted server code (recommended:
+    documented; a hook that needs a check calls `next`) or the server
+    re-validates a hook-built document and re-costs a rewritten request.
+17. **APQ hashing on read.** Hash every stored text again (recommended: a
+    shared store is not trusted) or trust the store.
+
+## 18. Notes for the implementers
+
+- **Order.** M6b Tasks 11, 12, 13, then M6c Tasks 1-6, in one worktree on
+  `m6-final`. They share `pipeline_assembly.dart`, `graphql_server.dart`,
+  `server_fixture.dart`, the changelogs and the stage documents, so they
+  cannot run in parallel. Only M6c Task 2 (the store files) is independent
+  of the M6b tasks, and it is too small to be worth a second worktree.
+- **Provenance.** Every remaining task is one verified commit of the
+  controller's scratch copy (made with `git archive` of `m6-final` at
+  `62173b7`, outside the repository). The plans paste the full new files
+  and the exact diffs, so a task applies to the tree the task before it
+  leaves. A hunk that does not apply means the tree drifted: apply it with
+  `git apply --3way` or stop and report.
+- **Shared interfaces** (M6b, used unchanged by M6c): `PipelineAssembly`
+  (where the built-in extensions are placed), `ExtensionChain`,
+  `PipelineErrors.coded`, `DocumentHash`, `DocumentLength.violation`,
+  `DocumentRequest.withText`, `DocumentAccepted`/`DocumentRejected`, and
+  the test fixture `ServerFixture`.
+- **Verification already done** in the scratch copy after the last task:
+  format, analyze, the root suite (353), the core suite (1514), the server
+  suite (1155) and the server's `dart doc` (0 warnings). Still to run: the
+  `--compiler exe` suites and `pub publish --dry-run` (in the final review),
+  and Chrome (left to CI).
+- **After the tasks:** the final whole-branch review of `m6-final`, one fix
+  round and a scoped re-review, then the owner's merge.
