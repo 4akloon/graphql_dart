@@ -528,8 +528,10 @@ enum DiagnosticCode(
   anonymousOperation('GQL503'),
 
   /// `GQL504`: a construct the code generator does not support yet: `@defer`,
-  /// `@stream`, an introspection field (`__schema`, `__type`), or a spread or
-  /// inline fragment that makes the root of a subscription polymorphic.
+  /// `@stream`, an introspection field (`__schema`, `__type`), or a
+  /// subscription root that spreads (directly or inside an inline fragment) a
+  /// fragment which plans as a sealed base class; it would need `__typename`,
+  /// which a subscription cannot select. A plain inline fragment is fine.
   unsupportedInDocument('GQL504'),
 
   /// `GQL505`: the configuration maps a scalar the schema does not have as a
