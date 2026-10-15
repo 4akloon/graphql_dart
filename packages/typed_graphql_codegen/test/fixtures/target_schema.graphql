@@ -1,0 +1,48 @@
+"A user role."
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER @deprecated(reason: "Use EDITOR.")
+}
+
+scalar DateTime
+
+scalar Cursor
+
+input UserFilter {
+  role: Role
+  name: String = "x"
+  ids: [ID!]!
+  nested: UserFilter
+}
+
+input SearchBy @oneOf {
+  name: String
+  id: ID
+}
+
+interface Node {
+  id: ID!
+}
+
+type User implements Node {
+  id: ID!
+  name: String!
+  role: Role!
+  createdAt: DateTime
+  cursor: Cursor
+  friends(first: Int): [User!]!
+}
+
+type Bot implements Node {
+  id: ID!
+  model: String
+}
+
+union SearchResult = User | Bot
+
+type Query {
+  user(id: ID!): User
+  node(id: ID!): Node
+  search(by: SearchBy!, filter: UserFilter): [SearchResult!]!
+}

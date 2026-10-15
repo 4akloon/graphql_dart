@@ -130,15 +130,22 @@ void main() {
   });
 
   // Under `--compiler exe` the resolved executable is the test binary.
-  test('the executable passes the exit code to the process', () async {
-    final result = Process.runSync(Platform.resolvedExecutable, [
-      'run',
-      '${Directory.current.path}/bin/typed_graphql_codegen.dart',
-      'check',
-      '--config',
-      '${project.directory.path}/typed_graphql.yaml',
-    ]);
-    expect(result.exitCode, 1);
-    expect(result.stderr, contains('GQL509'));
-  }, skip: _isDartTool ? false : 'the tests do not run on the dart tool');
+  test(
+    'the executable passes the exit code to the process',
+    () async {
+      // `dart run` compiles the entry point first: bound the wait, so a
+      // loaded machine fails the test instead of hanging the suite.
+      final result = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        '${Directory.current.path}/bin/typed_graphql_codegen.dart',
+        'check',
+        '--config',
+        '${project.directory.path}/typed_graphql.yaml',
+      ]).timeout(const Duration(minutes: 4));
+      expect(result.exitCode, 1);
+      expect(result.stderr, contains('GQL509'));
+    },
+    timeout: const Timeout(Duration(minutes: 5)),
+    skip: _isDartTool ? false : 'the tests do not run on the dart tool',
+  );
 }

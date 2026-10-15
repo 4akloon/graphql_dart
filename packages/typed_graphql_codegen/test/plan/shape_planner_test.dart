@@ -30,9 +30,10 @@ void main() {
   }
 
   test('the target GetUser plans its classes in order', () {
-    final target = Directory('../../.superpowers/m10-target');
-    final schema = File('${target.path}/schema.graphql').readAsStringSync();
-    final document = File('${target.path}/user.graphql').readAsStringSync();
+    final schema = File('test/fixtures/target_schema.graphql')
+        .readAsStringSync();
+    final document = File('test/goldens/operations/input/lib/user.graphql')
+        .readAsStringSync();
     expect(
       plan(document, schema: schema),
       r'''
