@@ -72,6 +72,8 @@ final class ExecutionPort {
         maxDepth: options.maxDepth,
         maxSteps: options.maxSteps,
         introspection: options.introspection,
+        cancelSignal: options.cancelSignal,
+        timeout: options.timeout,
       );
 
   /// [payload] for a schema whose context is not read.
