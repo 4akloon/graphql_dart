@@ -526,6 +526,11 @@ enum DiagnosticCode(
   /// `encode` throws, or an input object has no `encode`).
   unencodableDefaultValue('GQL302'),
 
+  /// `GQL303`: reported when the executable schema builder finds a field
+  /// with a `subscribe` source outside the subscription root type, or a field
+  /// of the subscription root type without one.
+  misplacedSubscriptionField('GQL303'),
+
   /// `GQL310`: reported when a variable value is invalid, or a required
   /// variable is missing, as `ExecutableSchema.execute` coerces the variable
   /// values. It is a `GraphQLError`'s `extensions.code` in a
@@ -574,6 +579,9 @@ enum DiagnosticCode(
   /// response of `ExecutableSchema.execute`.
   unsupportedOperationType('GQL323'),
 
+  /// `GQL324`: reported when `subscribe` is called with a query or a mutation.
+  subscriptionRequired('GQL324'),
+
   /// `GQL330`: reported when a resolver, codec or decode function threw
   /// an unexpected error; the message is masked. It is a
   /// `GraphQLError`'s `extensions.code` in a response of
@@ -616,6 +624,14 @@ enum DiagnosticCode(
   /// It is a `GraphQLError`'s `extensions.code` in a response of
   /// `ExecutableSchema.execute`.
   maxExecutionStepsExceeded('GQL337'),
+
+  /// `GQL338`: reported when a query contained `__schema` or `__type` and
+  /// introspection is disabled for the execution.
+  introspectionNotAllowed('GQL338'),
+
+  /// `GQL340`: reported when the source stream of a subscription emitted an
+  /// error; the response stream ends with it.
+  subscriptionSourceFailed('GQL340'),
 
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
   /// the YAML parser's.
