@@ -1,8 +1,11 @@
 # M10 Client code generation: stage design
 
 Status: written for the owner's review 2026-10-15 (the open questions are at
-the end). Every decision below was checked by implementing the four plans on
-the branch `m10-final`, one commit per plan task, with every suite green on
+the end) and updated after the implementation: the final diagnostic numbering
+(`GQL500`-`GQL511`, section 9), the deviations and decisions taken while
+implementing and by the review rulings (section 16) and open questions 7-12
+(section 17). Every decision below was checked by implementing the four plans
+on the branch `m10-final`, one commit per plan task, with every suite green on
 the VM. Refines section 6 "Client" of
 [the architecture](2026-10-13-typed-graphql-design.md) and never overrides it
 silently; deviations are listed in section 16. Requirements: R0.2, R0.3,
@@ -16,10 +19,10 @@ plans**, each merged after the one before it and each leaving the tree green:
 
 | Plan | Content |
 |---|---|
-| **M10a** Front end | The dependencies; `CodegenConfig` read from `typed_graphql.yaml` (R7.1); `SchemaLoader` (SDL or an introspection result, validated); `ProjectDocuments`, the project's documents as one fragment graph with every diagnostic at `file:line:col` (R7.2); the codegen validation rules; `ClientGenerator.check`; `GQL500`–`GQL505` |
-| **M10b** Runtime and schema types | `Optional<T>` in the core (`protocol/`); the generated-code contract in `typed_graphql_client` (`GraphQLOperation`, `OperationDocument`, `DataCodec` and its kinds, `DataContext`, `DataObject`, `DataEquality`); the emitter base (`DartWriter`, `DartNames`, `Imports`); enums (R7.6), input objects with `@oneOf` (R7.7), scalar mapping (R7.8); the schema-types library; the golden harness and the analysis test (R7.10) |
-| **M10c** Operations and fragments | The selection planner (field collection, variants, fragment accessors, conditions); data, fragment and polymorphic classes (R7.3–R7.5); variables classes (R7.7); operation classes with their metadata (R7.9: minified document with `__typename`, name, sha256); the persisted-operations manifest; the naming checks (`GQL506`–`GQL508`); goldens |
-| **M10d** CLI and documentation | `bin/typed_graphql_codegen.dart` with `generate` and `check`, schema from an introspection URL, output writing; the Client Code Generation guide, the example, the README, `docs/discovery.md`, `llms.txt`, `CLAUDE.md`, the handoff |
+| **M10a** Front end | The dependencies; `CodegenConfig` read from `typed_graphql.yaml` (R7.1); `SchemaLoader` (SDL or an introspection result, validated); `ProjectDocuments`, the project's documents as one fragment graph with every diagnostic at `file:line:col` (R7.2); the codegen validation rules; `ClientGenerator.check`; `GQL500`–`GQL506` |
+| **M10b** Runtime and schema types | `Optional<T>` in the core (`protocol/`); the generated-code contract in `typed_graphql_client` (`GraphQLOperation`, `OperationDocument`, `DataCodec` and its kinds, `DataContext`, `DataObject`, `DataEquality`); the emitter base (`DartWriter`, `DartNames`, `Imports`); enums (R7.6), input objects with `@oneOf` (R7.7), scalar mapping (R7.8); the schema-types library; the name checks (`GQL507`, `GQL508`); the golden harness and the analysis test (R7.10) |
+| **M10c** Operations and fragments | The selection planner (field collection, variants, fragment accessors, conditions); data, fragment and polymorphic classes (R7.3–R7.5); variables classes (R7.7); operation classes with their metadata (R7.9: minified document with `__typename`, name, sha256); the persisted-operations manifest; the naming checks of operations and fragments (`GQL507`), the subscription-root and introspection checks (`GQL504`), the class limit (`GQL511`); `JsonMerger` in the client; goldens |
+| **M10d** CLI and documentation | `bin/typed_graphql_codegen.dart` with `generate` and `check`, schema from an introspection URL, output writing (`GQL509`, `GQL510`); the Client Code Generation guide, the example, the README, `docs/discovery.md`, `llms.txt`, `CLAUDE.md`, the handoff |
 
 Out of scope: `@defer` / `@stream` in client documents (R7.13, M14: reported
 as unsupported, section 9), cache selection metadata (R7.11, M12; the planner
@@ -39,14 +42,21 @@ test data builders (R7.14, later), fragment arguments (roadmap "Later").
   is text keyed by path. The CLI (M10d) and the `build_runner` builder (M9)
   are two thin readers and writers around it, so R7.10's "the CLI and
   `build_runner` produce identical files" holds by construction. A test
-  checks that no library under `lib/src/` outside `cli/` imports `dart:io`.
+  checks that no library under `lib/src/` outside `cli/` imports `dart:io`,
+  and that the barrel reaches no `dart:io`: the CLI classes are not exported
+  (`bin/` and the tests import `src/cli/`), so M9's builder and any non-VM
+  user can import the engine.
 - **No `analyzer`, no `dart_style`** (R6.5; `dart_style` depends on
   `analyzer`). The emitter lays the code out itself (section 7).
 - **Generated code imports** the core and `typed_graphql_client`, both with
   a prefix (`as graphql`, `as client`), so a schema type named `Field`,
   `Source` or `Optional` never collides with a runtime name; the only
   reserved names are those of `dart:core` the generated code uses
-  (`GQL507`, section 9).
+  (`GQL508`, section 9). The schema-types library and the libraries of
+  spread fragments are imported without a prefix (their names are checked
+  project-wide, `GQL507`/`GQL508`); custom scalar libraries as `scalar_<n>`.
+  `client` and `graphql` are reserved member names, so a field cannot shadow
+  a prefix.
 - **`Optional<T>` lives in the core** because the server (R4.4, M5) and the
   client (R7.7) share it: a sealed `Optional<T>` = `Present<T>(value)` |
   `Absent<T>()`, value equality, `const Optional.absent()` and
@@ -114,7 +124,12 @@ comment), with `maxTokens` off (each file was already counted). The core
 `NoUnusedFragmentsRule` (a fragment may exist only for the application's own
 reads) and `LoneAnonymousOperationRule` (operations must be named anyway),
 plus `NamedOperationsRule` (`GQL503`) and `UnsupportedDirectivesRule`
-(`GQL504`, `@defer` and `@stream` until M14). Each diagnostic's span and
+(`GQL504`, `@defer` and `@stream` until M14), `UnsupportedIntrospectionRule`
+(`GQL504` at a `__schema` or `__type` field: the generator has no classes for
+the introspection types yet; `__typename` stays supported) and
+`SubscriptionRootRule` (`GQL504`, section 6). A file with no tokens (empty,
+only whitespace, commas or comments) adds nothing; a project of only such
+files is `GQL506` as for no files. Each diagnostic's span and
 related spans are translated through the map, so every message carries the
 file's name, line and column (`lib/user.graphql:3:5: error GQL205: ...`).
 Uniqueness of operation and fragment names is therefore project-wide, which
@@ -136,32 +151,50 @@ with an explicit work stack (no recursion over the document):
   .userCard` is the fragment's own class, decoded from the same JSON object.
 - **Applicability.** On an object type every inline fragment and spread
   applies (validation guarantees the overlap). On an interface or union `P`,
-  a condition `C` that covers every possible type of `P` applies to the
-  base; any other condition narrows to the possible types of both.
+  a condition `C` applies to the base only when `C` is `P` itself or an
+  interface `P` implements; any other condition narrows to the possible
+  types of both, even when it covers every possible type of `P` today
+  (deviation 8: robust to a union member or implementer added later). A
+  selection on an abstract type without narrowings is a plain class.
 - **Variants** (R7.5). A shape on an abstract type is a sealed class: the
   base fields (and accessors) are getters of the sealed class; each concrete
   type that some narrowing condition reaches is one variant with the base
   fields merged with every narrowing that applies to it; the mandatory
   `…Unknown` variant holds `typename` and the base fields, and is chosen
   for every other `__typename`, known to the schema or not.
-- **Merged sub-shapes.** When a variant re-selects a base field with more
-  subfields, the variant's class for that field `implements` the base's
-  class (same library, so `final` classes allow it), so the variant's getter
-  is a subtype of the base's getter. The same holds for the fragment
-  accessor holder.
+- **Merged sub-shapes.** The base declares a field (or the fragment
+  accessor holder) only when every variant selects it with the same nodes,
+  so its class is the same in every variant. When a variant re-selects a
+  field with more subfields or more spreads, the field is not on the base
+  and every variant, `…Unknown` included, has its own class for it
+  (deviation 7: a class with `==` may not be implemented,
+  `avoid_implementing_value_types`).
+- **Class sharing and the limit.** Each operation and fragment is planned
+  once. A nested class whose named type, list of selection nodes (by
+  identity) and conditions equal those of a class planned before reuses
+  that class's name. Planning stops at 10000 classes per operation or
+  fragment with `GQL511` at its name, so a document whose unshared variant
+  fields would give R^depth classes ends fast.
 - **Nullability.** A field's Dart type follows its schema type; a field
   under `@skip` or `@include` (on itself or on an enclosing inline fragment)
   is nullable, and absent in the JSON means null. A conditional fragment
   spread is a nullable accessor whose condition is evaluated at decode time
   from the operation's variables (`DataContext`, section 8), with the
-  variable's default when it was not given.
+  variable's default when it was not given (the data class passes the
+  operation's Boolean variable defaults to `DataContext`, read by
+  `flag(name)`; a fragment's standalone `decode` has no defaults, the
+  operation passes its own).
 - **`__typename`.** The operation's document gets an unaliased `__typename`
-  at the end of every field's selection set that lacks one (an
-  `AstTransformer`), so every polymorphic object can be told apart. A
-  fragment on an abstract type spread at the root of a query or mutation
-  also adds it to the root; at the root of a subscription that is
-  `GQL504` (a subscription root may not select an introspection field).
-  `__typename` the user selected is the field `typename`.
+  at the end of every field's selection set that lacks an unconditional
+  one, so every polymorphic object can be told apart; a `__typename` under
+  `@include` or `@skip` does not count, and is itself a nullable member. The
+  root gets it only when a spread (direct or inside an inline fragment) of a
+  fragment that plans as a sealed base sits at the root of a query or
+  mutation; at the root of a subscription that case is `GQL504` at the
+  spread (a subscription root may not select an introspection field), and
+  an inline fragment alone is fine. An anonymous subscription is only
+  `GQL503`. `__typename` the user selected unconditionally is the field
+  `typename`.
 
 ## 7. Generated code (M10b, M10c)
 
@@ -197,15 +230,23 @@ another leading underscore becomes `$` (`_id` → `$id`), and a Dart reserved
 word or a member every class has (`hashCode`, `toString`, `toJson`,
 `fragments`, ...) gets a `$` suffix (`default$`); GraphQL names cannot
 contain `$`, so these never collide with another field. Two declarations
-that still end with one name are `GQL506`, at the second selection, with
-the first as related.
+that still end with one name are `GQL507`, at the second selection, with
+the first as related; so are two enum values or input fields that map to one
+Dart member, and two documents that would write one file. A name that hides
+a `dart:core` type the code uses is `GQL508`. Names are never changed to
+avoid a collision.
 
 **Data classes** (R7.3). `final class` (or a `sealed` base with `final`
 variants), `const` constructor with named parameters, `final` fields,
 `==`, `hashCode` (lists compared by `DataEquality`), `toString`, and
 `toJson()` that writes the response names, the `__typename` the document
 asked for and the accessors' fields, so `decode(toJson())` gives an equal
-value. Each top-level class (operation data, fragment) has
+value; when a class spreads fragments, `toJson` merges their JSON with
+`client.JsonMerger` (objects by key recursively, lists by index; a later
+`null` never replaces a value), since a class and a fragment may select one
+response name with different subfields. Each class declares its own private
+codecs, so a class is self-contained. Each top-level class (operation data,
+fragment) has
 `static DecodeResult<X> decode(JsonObject json, {JsonObject variables})`,
 which never throws (R0.3), and `static const DataCodec<X> codec` for the
 libraries that spread it.
@@ -215,7 +256,10 @@ architecture names: `sealed class Status implements DataEnum` with
 `factory Status.parse(String raw)`, `enum StatusKnown implements Status`
 (one value per GraphQL value, lowerCamelCase, `$` for reserved words, the
 GraphQL name in `raw`, `@Deprecated` from `@deprecated`) and
-`final class StatusUnknown(raw) implements Status`. A `switch` over a
+`final class StatusUnknown(raw) implements Status`. `parse` loops over
+`StatusKnown.values`: a `switch` naming a deprecated value trips
+`deprecated_member_use_from_same_package`; `@Deprecated` goes only on enum
+values, and a deprecated field says so in its doc comment. A `switch` over a
 `Status` is exhaustive and still compiles when the server adds a value.
 
 **Input objects and variables** (R7.7). A `final class` per input object
@@ -227,7 +271,8 @@ the spec tells them apart. A `@oneOf` input object is a sealed class with
 one variant per field (`SearchByName(String name)`), so exactly one field
 is set by construction. `GetUserVariables` follows the same rules over the
 operation's variable definitions and is omitted when there are none.
-`toJson()` writes only present values.
+`toJson()` writes only present values. Input objects also get a reader, so
+their codecs are symmetric and the goldens check a round trip.
 
 **Scalars** (R7.8). `String`, `ID` → `String`; `Int` → `int`; `Float` →
 `double`; `Boolean` → `bool`, through the core's codecs. A custom scalar in
@@ -269,13 +314,20 @@ What generated code compiles against; M11 builds the client on it:
 | `GQL501` | `invalidConfig` | a missing, unknown or mistyped key or reference in the configuration |
 | `GQL502` | `invalidSchemaInput` | the schema file is not a schema: not JSON, no `__schema`, or unreadable |
 | `GQL503` | `anonymousOperation` | an operation without a name |
-| `GQL504` | `unsupportedInDocument` | `@defer`, `@stream`, or an abstract fragment at a subscription root |
+| `GQL504` | `unsupportedInDocument` | `@defer`, `@stream`, a `__schema` or `__type` field, or a spread of a fragment that plans as a sealed base at a subscription root |
 | `GQL505` | `unknownScalarMapping` | `scalars:` names a scalar the schema does not have |
-| `GQL506` | `generatedNameCollision` | two generated declarations, or two members of one class, with one Dart name |
-| `GQL507` | `reservedTypeName` | a generated type name that is a `dart:core` name the code uses |
-| `GQL508` | `noDocuments` | no file matches `documents` (a warning) |
-| `GQL509` | `outputOutdated` | `check`: a generated file differs from what `generate` would write |
-| `GQL510` | `inputUnreadable` | the CLI cannot read a file or fetch the schema URL |
+| `GQL506` | `noDocuments` | no file matches `documents`, or every match is empty (a warning) |
+| `GQL507` | `generatedNameCollision` | two generated declarations, two members of one class (enum values and input fields included) or two generated files with one Dart name or path |
+| `GQL508` | `reservedTypeName` | a generated type name that is a `dart:core` name the code uses |
+| `GQL509` | `outputOutdated` | `check`: a generated file is missing or differs from what `generate` would write |
+| `GQL510` | `inputUnreadable` | the CLI cannot read or write a file, list the documents or fetch the schema URL |
+| `GQL511` | `tooManyGeneratedClasses` | an operation or fragment would generate more than 10000 classes |
+
+The ids are final and public API once released: the first draft of this
+table numbered `noDocuments` `GQL508` and the name codes `GQL506`/`GQL507`;
+`GQL511` was added by the M10c review and lands after `GQL509`/`GQL510` in
+time, but the catalog stays in id order. Name problems are limited like
+every other run (`DiagnosticSink`, `GQL000` after 100 errors).
 
 Syntax, schema and validation problems keep their core codes (`GQL0xx`,
 `GQL1xx`, `GQL2xx`).
@@ -290,7 +342,9 @@ Syntax, schema and validation problems keep their core codes (`GQL0xx`,
   file; validation keeps its step budget (`GQL230`). The planner's work is
   linear in the document with each spread fragment planned once per
   spreading shape (a fragment's own class is planned once, its accessors
-  never re-plan it); variants are bounded by the possible types.
+  never re-plan it); variants are bounded by the possible types, equal
+  nested classes are shared, and an operation or fragment stops at 10000
+  classes (`GQL511`).
 - No recursion over documents or shapes: the planner and the emitter use
   explicit stacks. Generated decoders nest one call per selection level,
   bounded by the document's depth (128).
@@ -309,7 +363,9 @@ Syntax, schema and validation problems keep their core codes (`GQL0xx`,
 depends on the core and the client by path, with this repository's
 `analysis_options.yaml` plus `strict-casts`, runs `dart analyze
 --fatal-infos` there, and runs a decode / `toJson` round trip program
-against each case's sample responses.
+against each case's sample responses. It is tagged `analysis` and skips itself
+with a reason when `Platform.resolvedExecutable` is not the `dart` tool
+(under `--compiler exe`); the JIT run covers it.
 
 ## 12. CLI (M10d)
 
@@ -321,7 +377,29 @@ changed and prints every diagnostic as `path:line:col: severity code:
 message` followed by the source excerpt. `check` does the same without
 writing and reports each file that would change (`GQL509`). Exit codes: 0
 done (warnings allowed), 1 diagnostics with errors, 64 usage. The CLI never
-deletes a file.
+deletes a file; generated files whose document was removed are ignored by
+both commands.
+
+What the CLI does with hostile input, all decided by the M10d review:
+
+- **Files.** Documents are listed with `followLinks: false` (a symbolic link
+  is not followed); an invalid glob is `GQL501`, a listing failure
+  `GQL510`. Output is written to `<path>.tmp` in the same folder and renamed
+  (atomic); an unwritable output, or an output `check` cannot read (a
+  directory, not UTF-8), is `GQL510` and the other files are still handled.
+  No I/O error leaves the CLI as an exception.
+- **HTTP.** The fetch does not follow redirects: a 3xx is `GQL510` naming
+  the status and the `Location` (without user information and query), to
+  put in `schema`. The body is capped at 64 MiB, counted while reading. A
+  request that cannot be built, a timeout (30 s), a refused connection and a
+  body that is not UTF-8 each have their own `GQL510` message; a 200 that is
+  not JSON is `GQL502`. Plain `http` is accepted (documented).
+- **Secrets.** `${NAME}` that is unset or empty, or a header value that is
+  not ASCII or holds a control character, is `GQL501` and nothing is sent.
+  Every text echoed from the response (a body excerpt, `errors[0].message`)
+  and every printed URL (the diagnostic path `<url>.json` included) has the
+  expanded header values replaced by `***`, URL user information and query
+  removed, and control characters escaped.
 
 ## 13. Documentation (R11.1–R11.3)
 
@@ -386,6 +464,51 @@ golden cases.
 6. Every operation and fragment of the project is validated together;
    `NoUnusedFragmentsRule` and `LoneAnonymousOperationRule` are not run
    (section 5).
+7. **Variants drop a re-selected field from the base.** The architecture
+   lets a variant's class for a re-selected field `implements` the base's
+   class; that trips `avoid_implementing_value_types` (the classes override
+   `==`). A base getter exists only for a field every variant selects with
+   the same nodes; otherwise every variant (`…Unknown` included) has its own
+   class and code that reads the field through the base must switch on the
+   variant (section 6, open question 8).
+8. **Applicability on an abstract parent.** A type condition applies to the
+   base only when it is the parent itself or an interface the parent
+   implements; every other condition narrows to concrete types, even when it
+   covers every possible type today (section 6, open question 9).
+
+Decisions taken during the implementation and by the review rulings, which
+refine the architecture without overriding it:
+
+9. `Optional` lives in the core's `protocol/` (open question 1) and the
+   generated-code contract in `typed_graphql_client` (open question 11).
+10. Enum `parse` loops over `XKnown.values` (section 7).
+11. Each generated class declares its own private codecs (section 7).
+12. `DataContext` carries the operation's Boolean variable defaults
+    (`flag(name)`, section 6).
+13. Input objects get a reader too, so their codecs are symmetric
+    (section 7).
+14. The schema-types library and fragment libraries are imported without a
+    prefix; names are checked project-wide (section 2).
+15. Member collisions (enum values, input fields) and file collisions are
+    `GQL507`, like type-name collisions (section 7).
+16. Nested classes with the same type, selection nodes and conditions are
+    shared, and planning stops at 10000 classes with `GQL511` (section 6).
+17. A `__typename` under `@include` / `@skip` is a nullable member and never
+    stands in for the one the generator adds (section 6).
+18. `__schema` and `__type` in a document are `GQL504` until the generator
+    has classes for the introspection types (section 5).
+19. The `GQL504` subscription-root rule covers only a spread of a fragment
+    that plans as a sealed base; an inline fragment alone is fine, and an
+    anonymous subscription is only `GQL503` (section 6).
+20. `toJson` merges a class and its fragments with `client.JsonMerger`
+    (deep, by key and index; a later `null` keeps the earlier value)
+    (section 7).
+21. The CLI classes are kept out of the engine barrel (section 2).
+22. The CLI does not follow redirects, caps the schema body at 64 MiB,
+    redacts secrets in everything it prints, lists documents with
+    `followLinks: false` and writes atomically through `<path>.tmp`
+    (section 12).
+23. An empty or comment-only document adds nothing (section 5).
 
 ## 17. Open questions for the owner
 
@@ -395,7 +518,7 @@ golden cases.
    client code disagree.
 2. **Nested class names.** Recommendation: parent name plus capitalised
    response name (`GetUserDataUserFriends`), collisions reported
-   (`GQL506`) rather than renamed; the alternative is Apollo Kotlin's
+   (`GQL507`) rather than renamed; the alternative is Apollo Kotlin's
    singularised type names, which guess.
 3. **Enum shape.** Recommendation: `enum StatusKnown implements Status`
    (deviation 1) rather than the architecture's wrapper class.
@@ -408,3 +531,31 @@ golden cases.
    could make them plain `T?` for teams that never rely on it.
 6. **Environment in headers.** Recommendation: `${NAME}` in a header
    value only, read by the CLI, so tokens stay out of the configuration.
+7. **Diagnostic numbering.** The draft table numbered `noDocuments`
+   `GQL508` and the name codes `GQL506`/`GQL507`; the implemented catalog
+   is `GQL505` unknownScalarMapping, `GQL506` noDocuments (warning),
+   `GQL507` generatedNameCollision, `GQL508` reservedTypeName, `GQL509`
+   outputOutdated, `GQL510` inputUnreadable, `GQL511`
+   tooManyGeneratedClasses. Recommendation: keep it (section 9); the ids
+   are public API once released, and M5 appends its own codes in the
+   `GQL3xx` range, so merging the catalogs is textual only.
+8. **Variants: drop from the base** (deviation 7). Recommendation: keep it;
+   the cost is that a field re-selected by a variant is read through a
+   switch on the variant.
+9. **Applicability on an abstract parent** (deviation 8). Recommendation:
+   keep it, so adding a union member or an implementer never changes which
+   class a field is declared on.
+10. **A selection on an abstract type without narrowings** is a plain
+    class, with no sealed base and no `…Unknown` variant, since there is
+    nothing to tell apart. Recommendation: keep it.
+11. **Runtime code ahead of M11.** The generated-code contract lives in
+    `typed_graphql_client` from M10 on, and the package says it holds only
+    that contract until M11. Recommendation: keep it; M11 builds the client
+    on the same types.
+12. **`__typename` in the document.** It is added to every field selection
+    set that lacks an unconditional one (not to fragment definitions or
+    inline fragments, which the field around them covers), and to the
+    operation root only for a spread of a fragment that plans as a sealed
+    base; at a subscription root that case is `GQL504`. Recommendation:
+    keep it; the alternative, adding `__typename` everywhere, changes every
+    document's text and hash for no reader.
