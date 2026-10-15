@@ -31,6 +31,20 @@ final class SchemaBindings {
     inputObjects: inputObjects,
   );
 
+  /// The same tables with the introspection [fields] (every object's, the
+  /// introspection types' included) and [introspectionLeaves] added to the
+  /// scalar and enum definitions.
+  SchemaBindings withIntrospection(
+    Map<String, Map<String, FieldDef<Object?, Object?>>> fields,
+    Map<String, NamedTypeDef> introspectionLeaves,
+  ) => SchemaBindings(
+    objects: objects,
+    fields: fields,
+    abstractTypes: abstractTypes,
+    leaves: {...leaves, ...introspectionLeaves},
+    inputObjects: inputObjects,
+  );
+
   /// The object types.
   final Map<String, ObjectTypeDef<Object?>> objects;
 

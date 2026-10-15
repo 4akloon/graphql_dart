@@ -437,6 +437,12 @@ variants; null propagation is a returned sentinel, not an exception, and
 `ErrorReporter` applies `ErrorBehavior`, masking (`GQL330`) and `onError`.
 `ExecutionOptions` holds every per-call setting, `maxDepth` and `maxSteps`
 bound the work (`GQL336`, `GQL337`).
+`introspection/` (M5c): `IntrospectionBindings` adds the `__Schema`, `__Type`, ...
+field tables (pure lanes over the core model; a list or non-null `__Type` is an
+`IntrospectedType` wrapper) and the query root's `__schema`/`__type` to the
+bindings after middleware; `EntryFields` gives the planner their `SchemaField`s,
+only on the query root; `ExecutionOptions.introspection` (`IntrospectionPolicy`)
+turns them into `GQL338` field errors.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine

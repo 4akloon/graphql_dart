@@ -6,10 +6,12 @@ import '../builder/arguments.dart';
 import '../builder/field_def.dart';
 import '../builder/field_lane.dart';
 import '../coercion/coercion_result.dart';
+import '../introspection/entry_fields.dart';
 import '../plan/field_plan.dart';
 import 'completion_site.dart';
 import 'execution_run.dart';
 import 'field_info.dart';
+import 'introspection_policy.dart';
 import 'response_path.dart';
 
 /// Resolves one field (September2025 6.4 "Executing Fields"): answers the
@@ -42,6 +44,10 @@ final class FieldExecution {
     if (field == null) {
       return _metaField(plan, site);
     }
+    if (_run.options.introspection == IntrospectionPolicy.disabled &&
+        const EntryFields().isEntry(plan.fieldName)) {
+      return _refused(field.type, site);
+    }
     final definition =
         _run.bindings.fields[plan.parentType.name]?[plan.fieldName];
     if (definition == null) {
@@ -55,22 +61,29 @@ final class FieldExecution {
     return _resolve(parent, definition, field.type, site);
   }
 
+  // Only `__typename` has no schema field; the planner drops any other
+  // name that is not defined.
   FutureOr<JsonValue?> _metaField(FieldPlan plan, CompletionSite site) {
     if (plan.fieldName == '__typename') {
       return JsonString(plan.parentType.name);
     }
     _run.reporter.fieldError(
       DiagnosticCode.unexpectedError,
-      'The introspection field "${plan.fieldName}" is not available.',
+      'The meta field "${plan.fieldName}" is not available.',
       site,
     );
-    return _run.settle(_metaFieldType(plan.fieldName), null);
+    return const JsonNull();
   }
 
-  // `__schema` is non-null, `__type` nullable (September2025 4.1.4).
-  TypeRef _metaFieldType(String fieldName) => fieldName == '__schema'
-      ? const NonNullType(NamedType(Name('__Schema')))
-      : const NamedType(Name('__Type'));
+  FutureOr<JsonValue?> _refused(TypeRef type, CompletionSite site) {
+    _run.reporter.fieldError(
+      DiagnosticCode.introspectionNotAllowed,
+      'GraphQL introspection has been disabled, but the requested query '
+      'contained the field "${site.plan.fieldName}".',
+      site,
+    );
+    return _run.settle(type, null);
+  }
 
   FutureOr<JsonValue?> _resolve(
     Object? parent,

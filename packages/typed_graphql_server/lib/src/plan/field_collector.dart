@@ -42,7 +42,8 @@ final class FieldCollector {
     }
     return PlanNode(runtimeType, [
       for (final group in groups.values)
-        if (group.isDefinedOn(runtimeType)) group.build(context, runtimeType),
+        if (group.isDefinedOn(context, runtimeType))
+          group.build(context, runtimeType),
     ]);
   }
 

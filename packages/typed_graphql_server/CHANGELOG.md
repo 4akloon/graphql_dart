@@ -70,3 +70,9 @@
   iterable) is a field error, never a thrown `execute`. A codec's
   `ArgumentError` is `GQL332` with its message; a `RangeError` is masked. A
   too-deep field runs no resolver, and a too-deep list reports `GQL336` once.
+- Introspection: `__schema` and `__type(name:)` on the query root answer what
+  `Schema.toIntrospection(IntrospectionQuery.full)` writes, through internal
+  bindings for the `__Schema`, `__Type`, `__Field`, `__InputValue`,
+  `__EnumValue` and `__Directive` objects registered by `build`.
+  `ExecutionOptions.introspection` takes `IntrospectionPolicy`: `disabled`
+  makes `__schema` and `__type` a `GQL338` field error; `__typename` still works.

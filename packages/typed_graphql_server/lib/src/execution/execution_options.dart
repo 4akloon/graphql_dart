@@ -3,6 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import 'error_behavior.dart';
 import 'error_hook.dart';
+import 'introspection_policy.dart';
 
 /// The settings of one call of `ExecutableSchema.execute`.
 ///
@@ -24,6 +25,7 @@ final class ExecutionOptions {
     this.maxCoercionErrors = 50,
     this.maxDepth = 256,
     this.maxSteps = 10000000,
+    this.introspection = IntrospectionPolicy.enabled,
   });
 
   /// The parent value of the root fields; the root type's Dart type must
@@ -57,4 +59,7 @@ final class ExecutionOptions {
   /// The most values the execution completes; past it the execution halts
   /// (`GQL337`).
   final int maxSteps;
+
+  /// Whether `__schema` and `__type` are answered.
+  final IntrospectionPolicy introspection;
 }

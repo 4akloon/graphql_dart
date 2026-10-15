@@ -314,8 +314,13 @@ type Mutation {
       expect(namesOf('SearchResult'), ['Account', 'Team']);
     });
 
-    test('keep the leaves and the input objects', () {
-      expect(bindings.leaves.keys, ['Url', 'Role']);
+    test('keep the leaves, then the introspection enums, and the inputs', () {
+      expect(bindings.leaves.keys, [
+        'Url',
+        'Role',
+        '__TypeKind',
+        '__DirectiveLocation',
+      ]);
       expect(bindings.inputObjects.keys, ['Filter', 'Lookup']);
     });
   });

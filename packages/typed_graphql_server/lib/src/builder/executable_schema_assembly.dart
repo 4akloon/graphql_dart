@@ -1,6 +1,7 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../execution/executable_schema.dart';
+import '../introspection/introspection_bindings.dart';
 import 'build_options.dart';
 import 'builder_checks.dart';
 import 'field_middleware_composer.dart';
@@ -57,9 +58,14 @@ final class ExecutableSchemaAssembly<C> {
       definitions,
       possibleTypes,
     );
+    // After the middleware: introspection is not user code.
+    final composed = FieldMiddlewareComposer<C>(
+      schema,
+      options,
+    ).compose(bindings);
     return ExecutableSchema(
       ValidSchema.assumeValid(schema),
-      FieldMiddlewareComposer<C>(schema, options).compose(bindings),
+      IntrospectionBindings(schema).addTo(composed),
       planCacheSize: options.planCacheSize,
     );
   }

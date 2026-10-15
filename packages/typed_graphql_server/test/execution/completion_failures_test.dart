@@ -249,12 +249,4 @@ void main() {
       expect(counter.calls, 1);
     });
   });
-
-  group('introspection placeholder', () {
-    test('a non-null __schema propagates its error', () async {
-      final json = await f.json('{ __schema { queryType { name } } }');
-      expect(json['data'], isNull);
-      expect(errorsOf(json), hasLength(1));
-    });
-  });
 }
