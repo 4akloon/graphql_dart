@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:typed_graphql_codegen/typed_graphql_codegen.dart';
+import 'package:typed_graphql_codegen/src/cli/codegen_command.dart';
 
 /// A temporary project copied from the `operations` golden input, and the
 /// way to run the command line in it.

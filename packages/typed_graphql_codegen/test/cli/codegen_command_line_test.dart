@@ -2,7 +2,7 @@
 library;
 
 import 'package:test/test.dart';
-import 'package:typed_graphql_codegen/typed_graphql_codegen.dart';
+import 'package:typed_graphql_codegen/src/cli/codegen_command_line.dart';
 
 import '../support/cli_project.dart';
 

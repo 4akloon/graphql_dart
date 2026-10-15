@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:typed_graphql_codegen/typed_graphql_codegen.dart';
+import 'package:typed_graphql_codegen/src/cli/codegen_command.dart';
 
 void main(List<String> arguments) {
   exitCode = CodegenCommand(
