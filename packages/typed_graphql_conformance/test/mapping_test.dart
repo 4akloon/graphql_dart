@@ -91,6 +91,16 @@ void main() {
       ],
     ),
     (
+      path: 'mapping/execution.csv',
+      prefix: '',
+      covered: const [
+        'execution/__tests__/executor-test.ts',
+        'execution/__tests__/resolve-test.ts',
+        'execution/__tests__/schema-test.ts',
+        'execution/__tests__/sync-test.ts',
+      ],
+    ),
+    (
       path: 'mapping/validation.csv',
       prefix: '',
       covered: [

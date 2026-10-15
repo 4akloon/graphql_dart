@@ -21,6 +21,14 @@ final class FieldAccumulator {
     this.isDeferred = this.isDeferred && isDeferred;
   }
 
+  /// Whether the field exists on [parentType] (or is a meta field).
+  /// September2025 section 6.4 (Executing Fields) skips a field without a
+  /// definition, which only a document that was not validated can name.
+  bool isDefinedOn(ObjectType parentType) {
+    final name = _nodes.first.name.value;
+    return name.startsWith('__') || parentType.fieldNamed(name) != null;
+  }
+
   /// The plan of the key for [parentType].
   FieldPlan build(PlanContext context, ObjectType parentType) {
     final first = _nodes.first;

@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   typed_graphql: any
+  typed_graphql_server: any
 
 dev_dependencies:
   test: ^1.31.0

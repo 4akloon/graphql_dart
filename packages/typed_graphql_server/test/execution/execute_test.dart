@@ -56,6 +56,21 @@ void main() {
       );
     });
 
+    test(
+      'a field the type does not define is left out of the response',
+      () async {
+        expect(
+          await f.json('{ hello nope: missing pet { name gone } }'),
+          equals({
+            'data': {
+              'hello': 'world',
+              'pet': {'name': 'rex'},
+            },
+          }),
+        );
+      },
+    );
+
     test('aliases are the response keys', () async {
       expect(
         await f.json('{ a: hello b: hello }'),
