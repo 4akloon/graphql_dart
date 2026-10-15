@@ -87,3 +87,11 @@
 - The README's quick start, the guide's "Command line" section and the
   `example/` project with its generated code checked in
   (`test/example_test.dart`).
+- Generated member names that would shadow a type or annotation the code uses
+  (`int`, `bool`, `double`, `num`, `override`) get a `$` suffix; angle
+  brackets in generated doc comments are backticked; a description with a
+  lone carriage return is split into comment lines instead of ending the
+  comment.
+- The generated files are written through a temporary file in their own
+  folder; a `documents` glob whose brace alternatives reach outside the
+  project is rejected (`GQL501`).
