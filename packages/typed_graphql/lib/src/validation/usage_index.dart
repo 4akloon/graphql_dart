@@ -6,12 +6,13 @@ import '../language/ast/value.dart';
 import '../language/ast/variable_definition.dart';
 import '../language/visitor/ast_visitor.dart';
 import '../language/visitor/visit_action.dart';
+import 'fragment_spread_collector.dart';
 import 'type_info.dart';
 import 'variable_usage.dart';
 
-/// The variable usages and fragment spreads of each executable definition,
-/// recorded during the one walk of a run, and the closures of operations
-/// over them.
+/// The variable usages of each executable definition, recorded during the
+/// one walk of a run, and the closures of operations over them and over the
+/// fragments they spread.
 ///
 /// graphql-js walks each fragment again when a rule asks for an
 /// operation's variables; recording them in the walk does the same work
@@ -32,7 +33,6 @@ final class UsageIndex extends AstVisitor {
   final Map<OperationDefinition, List<FragmentDefinition>> _fragments = {};
   final Map<OperationDefinition, List<VariableUsage>> _closures = {};
   List<VariableUsage>? _currentUsages;
-  List<FragmentSpread>? _currentSpreads;
   bool _isComplete = false;
 
   @override
@@ -40,7 +40,6 @@ final class UsageIndex extends AstVisitor {
     switch (node) {
       case final ExecutableDefinition definition:
         _currentUsages = _usages[definition] = [];
-        _currentSpreads = _spreads[definition] = [];
       // The variable a definition declares is not a usage.
       case VariableDefinition():
         return VisitAction.skip;
@@ -53,8 +52,6 @@ final class UsageIndex extends AstVisitor {
             defaultValue: _typeInfo.defaultValue,
           ),
         );
-      case final FragmentSpread spread:
-        _currentSpreads?.add(spread);
       case _:
         break;
     }
@@ -66,7 +63,6 @@ final class UsageIndex extends AstVisitor {
     switch (node) {
       case ExecutableDefinition():
         _currentUsages = null;
-        _currentSpreads = null;
       case Document():
         _isComplete = true;
       case _:
@@ -105,7 +101,7 @@ final class UsageIndex extends AstVisitor {
     final names = <String>{};
     final pending = <ExecutableDefinition>[operation];
     while (pending.isNotEmpty) {
-      final spreads = _spreads[pending.removeLast()] ?? const [];
+      final spreads = _spreadsOf(pending.removeLast());
       if (!_spend(spreads.length + 1)) {
         break;
       }
@@ -119,6 +115,16 @@ final class UsageIndex extends AstVisitor {
     }
     return fragments;
   }
+
+  // In graphql-js's order (getRecursivelyReferencedFragments): the spreads
+  // of a selection set, then those of its nested sets, last first.
+  List<FragmentSpread> _spreadsOf(ExecutableDefinition definition) =>
+      _spreads[definition] ??= const FragmentSpreadCollector().collect(
+        switch (definition) {
+          OperationDefinition(:final selectionSet) => selectionSet,
+          FragmentDefinition(:final selectionSet) => selectionSet,
+        },
+      );
 
   void _checkComplete() {
     if (!_isComplete) {

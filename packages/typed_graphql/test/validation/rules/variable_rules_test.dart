@@ -246,4 +246,21 @@ input One @oneOf { x: Int, y: String }
     ).validate(checked.schema, document).diagnostics;
     expect(diagnostics, isEmpty);
   });
+
+  test('the fragments of an operation are read in graphql-js order: the '
+      'spreads of a set before those of its nested sets', () {
+    final nested = Checked('type Query { name: String friend: Query }');
+    expect(
+      nested.errors(
+        r'query Q { friend { ...B } ...A } '
+        r'fragment A on Query { name @include(if: $a) } '
+        r'fragment B on Query { name @include(if: $b) }',
+        [const NoUndefinedVariablesRule()],
+      ),
+      [
+        r'1:74 GQL227 Variable "$a" is not defined by operation "Q".',
+        r'1:120 GQL227 Variable "$b" is not defined by operation "Q".',
+      ],
+    );
+  });
 }
