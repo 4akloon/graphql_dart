@@ -35,3 +35,4 @@
 - An interface counts only the objects that list it themselves as possible
   types, as graphql-js does.
 - `pure` on a field that was given `args` is an `ArgumentError`.
+- `GraphQLException`: an error a resolver, scalar or input object `decode` throws on purpose; its message and extensions reach the client unmasked.

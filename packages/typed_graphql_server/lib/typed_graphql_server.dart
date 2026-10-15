@@ -31,3 +31,4 @@ export 'src/builder/schema_build_error.dart';
 export 'src/builder/union_type_def.dart';
 export 'src/execution/executable_schema.dart';
 export 'src/execution/field_info.dart';
+export 'src/execution/graphql_exception.dart';
