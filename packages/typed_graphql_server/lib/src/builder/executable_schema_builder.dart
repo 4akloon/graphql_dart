@@ -1,11 +1,14 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../execution/executable_schema.dart';
 import 'arg.dart';
 import 'arguments.dart';
+import 'build_options.dart';
 import 'built_in_scalar_definitions.dart';
 import 'definition_registry.dart';
 import 'enum_type_def.dart';
 import 'enum_value_mapping.dart';
+import 'executable_schema_assembly.dart';
 import 'field_def.dart';
 import 'fields_builder.dart';
 import 'input_list_ref.dart';
@@ -55,7 +58,7 @@ final class ExecutableSchemaBuilder<C>() with BuiltInScalarDefinitions {
   /// Declares the enum [name] over the Dart enum [values].
   ///
   /// [mapping] gives the names, descriptions and deprecations of the values
-  /// (a value's name defaults to [Enum.name]); the parameters of the three
+  /// (a value's name defaults to `Enum.name`); the parameters of the three
   /// callbacks are grouped in one object to keep the signature short.
   EnumTypeDef<E> enumType<E extends Enum>(
     String name,
@@ -176,4 +179,25 @@ final class ExecutableSchemaBuilder<C>() with BuiltInScalarDefinitions {
       description: description,
     ),
   );
+
+  /// Builds the schema from the definitions made so far, rooted at [query],
+  /// [mutation] and [subscription].
+  ///
+  /// Every definition made through this builder is part of the schema, in
+  /// creation order. The builder's own checks (`GQL300`-`GQL302`) and the
+  /// core validator run; any problem throws a `SchemaBuildError` with all
+  /// of them. Each call assembles anew: a definition made after a build does
+  /// not change the schema already built.
+  ExecutableSchema<C> build({
+    required ObjectTypeDef<Object?> query,
+    ObjectTypeDef<Object?>? mutation,
+    ObjectTypeDef<Object?>? subscription,
+    BuildOptions options = const BuildOptions(),
+  }) => ExecutableSchemaAssembly<C>(
+    definitions: definitions,
+    query: query,
+    mutation: mutation,
+    subscription: subscription,
+    options: options,
+  ).assemble();
 }

@@ -4,11 +4,11 @@ import 'enum_value_def.dart';
 /// descriptions and deprecations.
 ///
 /// Passed to `ExecutableSchemaBuilder.enumType`; the defaults are
-/// [Enum.name] and no description or deprecation.
+/// `Enum.name` and no description or deprecation.
 ///
 /// {@category builder}
 final class const EnumValueMapping<E extends Enum>({
-  /// The schema name of a value; null means [Enum.name].
+  /// The schema name of a value; null means `Enum.name`.
   final String Function(E value)? nameOf,
 
   /// The description of a value, null for none.

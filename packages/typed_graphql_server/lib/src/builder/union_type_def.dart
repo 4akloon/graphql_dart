@@ -25,6 +25,17 @@ final class UnionTypeDef<P> extends NamedTypeDef implements OutputRef<P> {
   /// member that accepts it).
   final ObjectTypeDef<Object?> Function(P value)? resolveType;
 
+  /// Whether [resolveType] is given.
+  bool get hasResolveType => resolveType != null;
+
+  /// [resolveType] taking any value: the cast to [P] is made here, where
+  /// [P] is known, because reading [resolveType] through a supertype
+  /// instance fails its function-type check. Null without [resolveType].
+  ObjectTypeDef<Object?> Function(Object? value)? get untypedResolveType {
+    final resolve = resolveType;
+    return resolve == null ? null : (value) => resolve(value as P);
+  }
+
   @override
   final TypeRef typeRef;
 

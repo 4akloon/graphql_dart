@@ -46,6 +46,21 @@ final class ObjectTypeDef<P> extends NamedTypeDef implements OutputRef<P> {
   /// given, else `value is P`.
   bool accepts(Object? value) => options.isTypeOf?.call(value) ?? value is P;
 
+  /// The Dart type [P] as written, for messages.
+  String get dartTypeName => '$P';
+
+  /// Whether [P] is a subtype of the Dart type of [interface] (`GQL300`).
+  bool isDartSubtypeOfInterface(InterfaceTypeDef<Object?> interface) =>
+      interface.isSupertypeOf<P>();
+
+  /// Whether [P] is a subtype of the Dart type of [other].
+  bool isDartSubtypeOf(ObjectTypeDef<Object?> other) =>
+      other._isDartSupertypeOf<P>();
+
+  // Dart has no contravariant type parameter: the test needs the type of the
+  // other object as `P`, so it runs inside that object.
+  bool _isDartSupertypeOf<X>() => <X>[] is List<P>;
+
   @override
   final TypeRef typeRef;
 
