@@ -1,0 +1,12 @@
+dartdoc:
+  categories:
+    builder:
+      markdown: doc/schema_builder.md
+      displayName: Schema Builder
+    execution:
+      markdown: doc/execution.md
+      displayName: Execution
+  categoryOrder:
+    - builder
+    - execution
+  showUndocumentedCategories: true

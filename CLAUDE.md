@@ -42,7 +42,10 @@ guide. M4b (limits and cost) delivers the opt-in limit rules (depth, aliases,
 directives, introspection: `GQL232`-`GQL236`), `recommendedRules`, the IBM
 cost directives (`includesCostDirectives`, `GQL156`-`GQL161`), `CostAnalysis`,
 `SlicingArgumentsRule` and `MaxCostRule` (`GQL237`, `GQL238`), the operation
-fuzzers and the guide sections on limits and cost.
+fuzzers and the guide sections on limits and cost. M5a (typed schema
+builder) delivers `ExecutableSchemaBuilder`, the typed refs, fields and
+arguments, `build` and `SchemaBuildError` (`GQL300`-`GQL302`) in
+`typed_graphql_server`, and the Schema Builder guide; execution is M5b.
 
 ## Documents
 
@@ -387,6 +390,23 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   prints a cost. `OperationCost` holds the field cost and type cost.
   `MaxCostRule` (`GQL238`) and `SlicingArgumentsRule` (`GQL237`) are
   opt-in rules.
+
+**Server** (`packages/typed_graphql_server/lib/src/`; M5). Imports the core
+only through its barrel. One folder per concern, with no import order
+(`builder/` and `execution/` import each other): `builder/` (M5a), then
+`coercion/`, `plan/`, `introspection/`, `subscription/`, `lookahead/`,
+`authorization/` and `cancellation/` in later sub-stages. The package is
+transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
+or web framework, only `dart:async`, `dart:collection`, `dart:core`,
+`dart:math`, `meta` and the core (`test/quality/imports_test.dart`), and the
+builder never instantiates resolvers or services: closures get them from the
+context `C`. `ExecutableSchemaBuilder<C>` makes `OutputRef`/`InputRef`/
+`LeafRef` types and definitions in creation order; a field is
+`t.field(name, ref).pure|resolve|resolveWith|declareOnly` (two steps, so the
+result type is fixed before the closure); methods take at most five
+parameters, so options travel in `ObjectOptions`, `EnumValueMapping` and
+`BuildOptions`. `build` runs `GQL300`-`GQL302` and the core validator and
+throws `SchemaBuildError`. Its guides are in `packages/typed_graphql_server/doc/`.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
