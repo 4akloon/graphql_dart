@@ -279,3 +279,6 @@
   code uses).
 - The catalog adds `GQL511` (an operation or fragment that would generate
   too many classes).
+- `IntrospectionListing`: which types and directives introspection lists for
+  a schema, and in which order (the order `Schema.toIntrospection` writes);
+  the server's introspection resolvers share it.

@@ -1,11 +1,7 @@
-import '../../language/ast/type_ref.dart';
 import '../../protocol/json_value.dart';
-import '../build/built_ins.dart';
-import '../model/input_value.dart';
 import '../model/schema_directive.dart';
-import '../model/schema_type.dart';
-import '../relations/type_comparator.dart';
 import '../schema.dart';
+import 'introspection_listing.dart';
 import 'introspection_query.dart';
 import 'type_writer.dart';
 
@@ -28,6 +24,7 @@ final class IntrospectionWriter(
   this;
 
   final TypeWriter _types = TypeWriter(schema, query);
+  final IntrospectionListing _listing = IntrospectionListing(schema);
 
   /// `{"__schema": {...}}`.
   ///
@@ -50,10 +47,10 @@ final class IntrospectionWriter(
       'mutationType': _root(schema.mutationTypeName),
       'subscriptionType': _root(schema.subscriptionTypeName),
       'types': JsonArray([
-        for (final type in _listedTypes()) _types.type(type),
+        for (final type in _listing.types) _types.type(type),
       ]),
       'directives': JsonArray([
-        for (final directive in _listedDirectives()) _directive(directive),
+        for (final directive in _listing.directives) _directive(directive),
       ]),
     }),
   });
@@ -65,67 +62,6 @@ final class IntrospectionWriter(
     }),
     null => const JsonNull(),
   };
-
-  List<SchemaType> _listedTypes() {
-    const builtIns = BuiltIns();
-    final referenced = _referencedTypeNames();
-    return [
-      ...schema.types,
-      for (final scalar in builtIns.scalars)
-        if (identical(schema.typeNamed(scalar.name), scalar) &&
-            referenced.contains(scalar.name))
-          scalar,
-      for (final type in builtIns.introspectionTypes)
-        if (identical(schema.typeNamed(type.name), type)) type,
-    ];
-  }
-
-  // Only for lookups, never iterated.
-  Set<String> _referencedTypeNames() {
-    final references = <TypeRef>[
-      for (final type in schema.types) ..._typeReferences(type),
-      for (final directive in _listedDirectives())
-        for (final argument in directive.arguments) argument.type,
-    ];
-    const comparator = TypeComparator();
-    return {
-      // The introspection types reference both.
-      'String',
-      'Boolean',
-      for (final reference in references) comparator.namedTypeName(reference),
-    };
-  }
-
-  List<TypeRef> _typeReferences(SchemaType type) => switch (type) {
-    ObjectType(:final fields) || InterfaceType(:final fields) => [
-      for (final field in fields) ...[
-        field.type,
-        ..._inputTypes(field.arguments),
-      ],
-    ],
-    InputObjectType(:final fields) => _inputTypes(fields),
-    ScalarType() || UnionType() || EnumType() => const [],
-  };
-
-  List<TypeRef> _inputTypes(List<InputValue> values) => [
-    for (final value in values) value.type,
-  ];
-
-  List<SchemaDirective> _listedDirectives() {
-    const builtIns = BuiltIns();
-    return [
-      ...schema.directives,
-      for (final directive in [
-        ...builtIns.directives,
-        builtIns.defer,
-        builtIns.stream,
-        builtIns.cost,
-        builtIns.listSize,
-      ])
-        if (identical(schema.directiveNamed(directive.name), directive))
-          directive,
-    ];
-  }
 
   JsonObject _directive(SchemaDirective directive) => JsonObject({
     'name': JsonString(directive.name),
