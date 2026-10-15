@@ -71,3 +71,7 @@
   needs `__typename` at the root of an operation (and is a `GQL504` in a
   subscription); name problems are limited like every other run; `GQL507`
   names the two classes of a variant for a type called `Unknown`.
+- `dart run typed_graphql_codegen generate` writes the generated files and
+  `check` fails when one is missing or out of date (`GQL509`); a file the
+  command cannot read is `GQL510`. `--config` names the configuration file.
+  `generate` never deletes a file. `CodegenCommand` runs both in process.
