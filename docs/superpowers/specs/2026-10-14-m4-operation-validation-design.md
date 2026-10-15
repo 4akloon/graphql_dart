@@ -500,6 +500,10 @@ list and Documentation section, the package CHANGELOG, `CLAUDE.md` (a
 13. Limit counts, cost and introspection depth are memoised per fragment, so
     they are linear where graphql-js's `MaxIntrospectionDepthRule` is
     exponential (sections 10 and 11).
+14. "Did you mean" suggestions are skipped for an input longer than 256
+    UTF-16 code units (`Suggestions.maxInputLength`): graphql-js measures
+    any length, which lets one hostile name make every error cost its
+    length.
 
 ## 15. Open questions for the owner
 

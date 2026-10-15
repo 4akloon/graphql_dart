@@ -10,11 +10,21 @@ final class const Suggestions() {
   /// The most names [didYouMean] lists.
   static const int maxSuggestions = 5;
 
+  /// The longest input [listFor] looks for suggestions of, in UTF-16 code
+  /// units; a longer one has none. graphql-js has no such limit, but a name
+  /// that long is not a typo of a name of a schema, and measuring it would
+  /// let a hostile document make every error cost its length.
+  static const int maxInputLength = 256;
+
   static final RegExp _digit = RegExp('[0-9]');
 
   /// The [options] close to [input], closest first and then in natural
-  /// order (graphql-js's `suggestionList`).
+  /// order (graphql-js's `suggestionList`); none for an input longer than
+  /// [maxInputLength].
   List<String> listFor(String input, Iterable<String> options) {
+    if (input.length > maxInputLength) {
+      return const [];
+    }
     final distance = LexicalDistance(input);
     final threshold = (input.length * 0.4).floor() + 1;
     final distances = <String, int>{

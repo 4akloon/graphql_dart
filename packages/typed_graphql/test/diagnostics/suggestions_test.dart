@@ -7,6 +7,21 @@ void main() {
   const suggestions = Suggestions();
 
   group('listFor', () {
+    test('suggests nothing for an input longer than the limit', () {
+      final name = 'a' * Suggestions.maxInputLength;
+      expect(suggestions.listFor(name, [name.substring(1)]), [
+        name.substring(1),
+      ]);
+      expect(suggestions.listFor('${name}a', [name]), isEmpty);
+    });
+
+    test('counts code units: a character outside the BMP is two', () {
+      expect(suggestions.listFor('\u{1F600}', ['x']), isEmpty);
+      expect(suggestions.listFor('a\u{1F600}', ['a\u{1F601}']), [
+        'a\u{1F601}',
+      ]);
+    });
+
     test('returns results when input is empty', () {
       expect(suggestions.listFor('', ['a']), ['a']);
     });

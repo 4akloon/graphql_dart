@@ -1,21 +1,25 @@
 /// graphql-js's `LexicalDistance`: the Damerau-Levenshtein distance of an
 /// option from one input, ignoring case, used to suggest names.
 ///
-/// A case change alone counts as one edit. The rows are reused between
-/// options, and an option whose distance exceeds the threshold is dropped
-/// as soon as a whole row exceeds it, so a long input against short
-/// options costs little.
+/// A case change alone counts as one edit. Lengths and edits count UTF-16
+/// code units, as graphql-js's string indexes do, so a character outside
+/// the Basic Multilingual Plane is two. The rows are made when the first
+/// option needs them and reused between options, and an option whose
+/// distance exceeds the threshold is dropped as soon as a whole row exceeds
+/// it, so a long input against short options costs little.
 final class LexicalDistance {
   /// Prepares to measure options against [input].
-  LexicalDistance(this.input)
-    : _inputLowerCase = input.toLowerCase(),
-      _rows = List.generate(3, (_) => List.filled(input.length + 1, 0));
+  LexicalDistance(this.input) : _inputLowerCase = input.toLowerCase();
 
   /// The text the options are compared with.
   final String input;
 
   final String _inputLowerCase;
-  final List<List<int>> _rows;
+  // Late: an input no option is near never needs the rows.
+  late final List<List<int>> _rows = List.generate(
+    3,
+    (_) => List.filled(input.length + 1, 0),
+  );
 
   /// The distance of [option] from [input]; null when it exceeds
   /// [threshold].
