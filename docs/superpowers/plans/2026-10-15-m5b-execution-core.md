@@ -12,6 +12,8 @@
 
 **Base:** the M5a plan (`2026-10-15-m5a-typed-builder.md`) applied, on branch `m5-final` at `8d59203`. The plan was verified by applying its tasks in order, one commit per task, with the green check after each and the server and core suites on exe at the end.
 
+`Optional<…>` now comes from the core (`package:typed_graphql`), since merge 6e5bd05; the plan's text and code stay as committed.
+
 ## Global Constraints
 
 - `CLAUDE.md` is binding. The code rules apply to tests too:

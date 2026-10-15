@@ -447,7 +447,7 @@ member is read.
   context, the `FieldInfo` (and so the look-ahead) and the requirements.
   A deny is a field error (`GQL352`, default message `Not authorized to
   access Type.field.`); an authorizer exception is masked.
-- `ExecutableSchema.authorizer` is set by `build(authorizer:)`; a schema
+- `ExecutableSchema.authorizer` is set by `BuildOptions.authorizer`; a schema
   with guarded fields and no authorizer is a build error (`GQL304`).
 - `AuthorizationCoverage(executableSchema).uncovered`: the coordinates
   (`Type.field`) of fields with no authorization on the field or its type,
@@ -711,7 +711,9 @@ depends on the other). These constraints keep that possible:
 36. `SelectedField.arguments` reads an argument whose value fails coercion
     as absent. Reading a required one then throws, which the resolver's
     error masking turns into `GQL330`; the executor reports the real
-    coercion error when that field runs, so no problem is silent.
+    coercion error when that field runs, so no problem is silent. Reading
+    `arguments` in look-ahead runs the user `decode`; what it throws there is
+    dropped, and `onError` sees it only when the field itself runs.
 37. Look-ahead hides every meta field (a name starting with `__`), not only
     `__typename`.
 38. The executor races the pending result against cancellation once, at the

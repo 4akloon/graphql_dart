@@ -1,5 +1,7 @@
 # M5a Typed Schema Builder Implementation Plan
 
+> **Erratum.** Superseded by merge 6e5bd05: the server's `Optional` was removed; `Arg.optional` uses the core's `Optional` from `package:typed_graphql`. The file `builder/optional.dart`, its export line and its `import 'optional.dart'` lines no longer exist.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Start `typed_graphql_server` with the typed schema builder (R4.1, R4.2, R0.2, R0.3): `ExecutableSchemaBuilder<C>` and its typed refs (`OutputRef`, `InputRef`, `LeafRef`), scalars, enums, typed arguments and input objects (`Arg`, `Arguments`, `Optional`, `@oneOf`), object types with two-step typed fields (`t.field(name, ref).pure|resolve|resolveWith|declareOnly`), interfaces and unions with inheritance and `resolveType` / `isTypeOf`, and `build`, which runs the builder checks `GQL300`-`GQL302` and the core `SchemaValidator` and returns an `ExecutableSchema<C>` or throws `SchemaBuildError`. Compile-failure fixtures prove that a wrong resolver type does not compile. The Schema Builder guide, the server documentation suite, CHANGELOG, README, `llms.txt` and `CLAUDE.md` describe it.
@@ -298,6 +300,8 @@ git commit -q -m "feat(typed_graphql): add the M5a diagnostic codes and export S
 ```
 
 ### Task 2: Refs, scalars, enums and `Optional`
+
+> **Erratum.** Superseded by merge 6e5bd05: the server's `Optional` was removed; `Arg.optional` uses the core's `Optional` from `package:typed_graphql`. The file `builder/optional.dart`, its export line and its `import 'optional.dart'` lines no longer exist.
 
 Create the package's type references (`NamedTypeDef`, `OutputRef`, `InputRef`, `LeafRef` and their nullable and list forms), custom scalars over a `ScalarCodec`, Dart-enum-backed enum types with `EnumValueMapping`, `Optional` (`Present` / `Absent`), the built-in scalar getters, the `DefinitionRegistry` and the `ExecutableSchemaBuilder<C>` entry point. Add the server's external-imports quality test.
 
