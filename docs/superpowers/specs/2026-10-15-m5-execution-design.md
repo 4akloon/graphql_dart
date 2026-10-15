@@ -295,13 +295,20 @@ fits the stack on every platform up to `JsonReader.maxSupportedDepth`,
 
 ## 6. The executor (M5b; R4.2, R4.9, R4.10)
 
-- `execute(ValidDocument document, {required C context, operationName,
-  JsonObject? variables, Object? rootValue, ExecutionOptions options})`
+- `execute(ValidDocument document, {required C context, String?
+  operationName, JsonObject? variables, ExecutionOptions options})`
   returns `FutureOr<ResponsePayload>`: an `ExecutionResult`, or a
   `RequestErrorResult` for request errors (no operation, unknown name,
   unsupported operation type, variable coercion). A `ValidDocument` of
   another schema is an `ArgumentError`, and so is a `rootValue` the root
   type's Dart type does not accept.
+- `ExecutionOptions` (const) holds everything else, per call: `rootValue`,
+  `source`, `errorBehavior`, `maskErrors`, `onError`,
+  `includesSuggestions`, `maxCoercionErrors` (50), `maxDepth` (256),
+  `maxSteps` (10 000 000), and later `introspection` (M5c),
+  `cancelSignal` and `timeout` (M5d). The code rules allow five
+  parameters, and a pipeline (M6) builds one options value per request
+  from its configuration and the request.
 - `FutureOr` everywhere: a field whose resolver returns a value completes
   synchronously, so a query with only synchronous resolvers returns an
   `ExecutionResult`, not a `Future` (tested). Sibling fields are started in
@@ -330,8 +337,9 @@ fits the stack on every platform up to `JsonReader.maxSupportedDepth`,
 
 - A resolver's synchronous throw or failed future is caught with
   `on Object catch` and becomes a `GraphQLError` with `path` and
-  `locations` (from the plan's field nodes and the document's `Source`
-  when the parser had one).
+  `locations` (the field nodes' offsets in `options.source`, the text
+  the document was parsed from, as `DocumentValidator.validate` takes it;
+  `ValidDocument` does not keep it, and the core stays unchanged).
 - `GraphQLException(message, {extensions})` (an `Exception` in the server
   package) reaches the client as is.
 - Any other error is masked by default (`maskErrors: true`):
@@ -607,7 +615,7 @@ outcome differs by a deviation of section 18 are `adapted`.
 
 ## 20. Documentation (R11.1–R11.3)
 
-- Guides in `packages/typed_graphql_server/doc/`: `schema-builder.md`
+- Guides in `packages/typed_graphql_server/doc/`: `schema_builder.md`
   (M5a), `execution.md` (M5b: coercion, plans, errors, masking,
   middleware), sections added to them in M5c (introspection,
   subscriptions) and M5d (look-ahead, authorization, cancellation);
