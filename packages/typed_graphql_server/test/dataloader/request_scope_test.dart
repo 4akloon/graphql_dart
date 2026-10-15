@@ -45,7 +45,7 @@ void main() {
             user,
             BatchLoader<String, String>((keys) async {
               log.batches.add((user, keys));
-              await Future<void>.delayed(const Duration(milliseconds: 2));
+              await Future<void>.delayed(Duration.zero);
               if (user == badUser) throw StateError('batch of $user failed');
               return {for (final key in keys) key: 'value of $key'};
             }),
@@ -128,8 +128,11 @@ void main() {
             server.handle(requestFor(badUser)),
           server.handle(requestFor('good')),
         ]);
-        // Give a stray error time to surface in the zone.
-        await Future<void>.delayed(const Duration(milliseconds: 20));
+        // Give a stray error time to surface in the zone: a few turns of the
+        // event loop, after the microtasks that deliver it.
+        for (var turn = 0; turn < 5; turn++) {
+          await Future<void>.delayed(Duration.zero);
+        }
       },
       (error, stackTrace) => uncaught.add(error),
     );

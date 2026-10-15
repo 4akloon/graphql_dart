@@ -82,17 +82,20 @@ void main() {
   });
 
   group('a fragment fan-out document', () {
-    test('is costed and served within two seconds', () async {
-      final text = hostile.fanOut(30);
-      final watch = Stopwatch()..start();
-      final response = await server.handle(fixture.request(text));
-      watch.stop();
-      printOnFailure('fan-out of 30 fragments took ${watch.elapsed}');
-      expect(
-        (response as SingleResponse).outcome,
-        isNot(ServerOutcome.internalError),
-      );
-      expect(watch.elapsed, lessThan(const Duration(seconds: 2)));
-    });
+    // Expanded naively the document has 2^30 spreads, so a regression to an
+    // exponential walk ends in the test's deadline, not in a wall-clock bound.
+    test(
+      'is costed and served',
+      () async {
+        final response = await server.handle(
+          fixture.request(hostile.fanOut(30)),
+        );
+        expect(
+          (response as SingleResponse).outcome,
+          isNot(ServerOutcome.internalError),
+        );
+      },
+      timeout: const Timeout(Duration(seconds: 30)),
+    );
   });
 }

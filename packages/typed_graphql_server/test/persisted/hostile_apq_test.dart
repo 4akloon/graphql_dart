@@ -81,6 +81,42 @@ void main() {
         )
         .handle(fixture.request(null, extensions: fixture.persisted(hash)));
     expect(fixture.messageOf(response), isNot(contains('store is down')));
+    expect(fixture.codeOf(response), 'GQL330');
+    expect(response.outcome, ServerOutcome.internalError);
+  });
+
+  test('a store write failure is masked in production', () async {
+    final response = await fixture
+        .server(
+          profile: ServerProfile.production,
+          persistedQueries: const WriteFailingStore(),
+        )
+        .handle(fixture.request(text, extensions: fixture.persisted(hash)));
+    expect(fixture.codeOf(response), 'GQL330');
+    expect(response.outcome, ServerOutcome.internalError);
+    expect(fixture.messageOf(response), 'Unexpected error.');
+  });
+
+  test('a store write failure shows its error in development', () async {
+    final response = await fixture
+        .server(persistedQueries: const WriteFailingStore())
+        .handle(fixture.request(text, extensions: fixture.persisted(hash)));
+    expect(response.outcome, ServerOutcome.internalError);
+    expect(fixture.messageOf(response), contains('store is down'));
+  });
+
+  test('a store write failure reaches the error hook', () async {
+    final seen = <Object>[];
+    await fixture
+        .server(
+          persistedQueries: const WriteFailingStore(),
+          onError: (error, stackTrace, reported) {
+            seen.add(error);
+            return null;
+          },
+        )
+        .handle(fixture.request(text, extensions: fixture.persisted(hash)));
+    expect(seen, hasLength(1));
   });
 
   group('a malformed extension is GQL413:', () {

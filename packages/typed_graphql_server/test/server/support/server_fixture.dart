@@ -56,8 +56,9 @@ final class ServerFixture {
         t
             .field('tag', b.string)
             .resolve((parent, args, context, info) => context.tag),
+        // Never answers: a timeout test needs no real wait for the resolver.
         t.field('slow', b.string).resolve((parent, args, context, info) async {
-          await Future<void>.delayed(const Duration(milliseconds: 300));
+          await Completer<void>().future;
           return 'slow';
         }),
         t.field('self', query).pure((_) => const Object()),

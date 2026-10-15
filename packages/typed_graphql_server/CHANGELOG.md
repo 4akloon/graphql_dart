@@ -207,3 +207,7 @@
   resolver must cap a slicing argument, that extension hooks are trusted
   server code, which errors become a response only in `handle`, and that the
   pipeline does not bound a hanging context factory, store or hook.
+- Tests: a server built without `profile:` is checked to be a production
+  server, a failing store write is checked to be answered as `GQL330`, and
+  the wall-clock assertion and most real sleeps of the pipeline tests are
+  gone.
