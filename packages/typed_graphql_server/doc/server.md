@@ -163,6 +163,13 @@ does not expose a server; `ServerProfile.development` is chosen explicitly.
 | `limits` | `ServerLimits.development` | `ServerLimits.production` |
 | `timeout` | none | none |
 
+`production` sets the limits of `ServerLimits.production` (document length,
+tokens, depth, aliases, directives, cost) but no `timeout`: add one with
+`withTimeout`. What a profile guards is only what `GraphQLServer` does with
+it, so `GraphQLServer(schema:, contextFactory:)` with no `profile` is a
+production server: introspection is off, errors are masked, CSRF prevention
+and the limits are on.
+
 Each setting has a `with*` method that returns a copy:
 `withIntrospection`, `withSuggestions`, `withErrorMasking`,
 `withCsrfPrevention` (null turns it off), `withLimits` and `withTimeout`
@@ -223,7 +230,7 @@ runs.
 
 | Limit | Applied by | `development` | `production` |
 |---|---|---|---|
-| `maxDocumentLength` | the server, before hashing (`GQL401`) | 100 000 | 100 000 |
+| `maxDocumentLength` | the server, before hashing (`GQL401`; also for a trusted document's own text) | 100 000 | 100 000 |
 | `maxTokens` | the parser (`GQL006`) | 15 000 | 15 000 |
 | `maxDepth` | `MaxDepthRule` (`GQL232`) | none | 15 |
 | `maxAliases` | `MaxAliasesRule` (`GQL233`) | none | 15 |
@@ -296,6 +303,23 @@ It prints:
 {"errors":[{"message":"The anonymous operation has a field cost of 1111 and a type cost of 11111, more than the maximum of 10000.","locations":[{"line":1,"column":1}],"extensions":{"code":"GQL238"}}]}
 ```
 
+The checks of the `ServerLimits` constructor are `assert`s, so they run in
+debug and test builds only (a constant constructor cannot throw). In a
+release build a bad value is not reported at construction, and the server
+reacts as follows. A zero or negative `maxDocumentLength`, `maxTokens` or
+`maxCost`, or a NaN `maxCost`, refuses every request (it fails closed). A
+zero or negative `maxDepth`, `maxAliases` or `maxDirectives` is a
+`RangeError` when the `GraphQLServer` is built. A negative `defaultListSize`
+turns every request into a `GQL330` error. Nothing a request sends can change
+a limit.
+
+The cost limit counts a list field with a slicing argument from the value the
+client sent. A value that names no size (`first: $n` with `n: null`, or a
+negative number) counts as not given, so the field costs `assumedSize` or
+`defaultListSize`, while the resolver may still return every row. A resolver
+that takes a slicing argument must cap it itself (`first ?? 10`, at most a
+maximum), or a client can ask for everything at the price of ten.
+
 To change one limit, pass a whole `ServerLimits`:
 `ServerProfile.production.withLimits(const ServerLimits(maxDepth: 10, maxCost: 50000))`
 keeps the length and token defaults and turns the alias and directive
@@ -363,13 +387,16 @@ for a server no browser can reach.
 ## The document cache
 
 The server keeps the outcome of parsing and validating a text in an LRU
-cache of `documentCacheSize` entries (1000 by default, 0 turns it off). The
-key is the SHA-256 of the text, computed by the server, never a hash a
-client sent. A rejected document is cached too, so a repeated bad request
-costs a hash and a lookup. The same text gives the same `ValidDocument`
-object, so the executor's plan cache hits as well. A text longer than
-`maxDocumentLength` is refused before it is hashed, so every entry is
-bounded.
+cache of `documentCacheSize` entries (1000 by default, 0 turns it off) whose
+texts add up to at most `documentCacheMaxLength` characters (16 000 000 by
+default): the least recently used documents are dropped to stay under both
+bounds, and a text longer than the second is never kept. The key is the text
+itself, not its hash, so a text with a lone surrogate (which hashes like the
+same text with U+FFFD) cannot take another text's entry. A rejected document
+is cached too, so a repeated bad request costs a lookup. The same text gives
+the same `ValidDocument` object, so the executor's plan cache hits as well. A
+text longer than `maxDocumentLength` is refused before it is parsed or
+cached, so every entry is bounded.
 
 ## Extensions
 
@@ -394,6 +421,12 @@ the Persisted Documents guide), so no list order runs a step before a
 security check, and a user's `onDocument` sees the text a hash names only
 after it returns from `next`. Per-field interception is field middleware, set when the schema is
 built (see the Execution guide).
+
+Extension hooks are trusted server code. A `DocumentAccepted` a hook builds is
+executed as it is, not validated again; the method check and the cost limit
+judge the request as it reaches the execution phase, so an `onExecute` that
+rewrites the operation name or the variables is not costed again and must
+stay within the limits itself.
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';
@@ -475,6 +508,16 @@ host logs in one place) and answers `internalError` with `GQL330`, its
 message masked as "Unexpected error." when the profile masks errors and the
 error's `toString()` when it does not. A hook that throws gives the masked
 error.
+
+These errors become a response only in `GraphQLServer.handle`, the outermost
+boundary. An `onRequest` hook is inside it, so it sees the error thrown by
+the context factory or an inner hook as a thrown error from `next`, not as a
+response.
+
+`profile.timeout` and the `CancelSignal` of a request apply inside the
+executor only. The pipeline does not bound a context factory, a persisted
+query store or a hook that hangs: the transport must race `handle` against
+its own deadline.
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';

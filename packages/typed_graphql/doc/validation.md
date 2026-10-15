@@ -325,7 +325,9 @@ Its model, in short (the doc comment of `CostAnalysis` is the contract):
   (10 unless set). A value that names no size (`null`, a negative number, a
   variable value that is not a number, a variable with neither a value nor
   a default) counts as not given, so a client cannot lower the cost. A
-  list field without `@listSize` has `defaultListSize`. With `sizedFields`
+  list field without `@listSize` has `defaultListSize`. The cost is what the
+  schema declares, not what a resolver returns: a resolver that takes a
+  slicing argument must cap a missing or invalid value itself. With `sizedFields`
   the field has size 1 and the listed child fields get the size.
 - The field cost of a selection set is the sum of each field's raw cost plus
   its size times the field cost of its own selections. The type cost is the

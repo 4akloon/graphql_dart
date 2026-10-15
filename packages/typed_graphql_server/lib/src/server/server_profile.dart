@@ -27,7 +27,9 @@ final class ServerProfile {
   );
 
   /// Closed for production: introspection and suggestions off, errors
-  /// masked, every limit set. `GraphQLServer` defaults to it.
+  /// masked, CSRF prevention on, and the limits of [ServerLimits.production]
+  /// (document length, tokens, depth, aliases, directives and cost). It sets
+  /// no [timeout]: add one with [withTimeout]. `GraphQLServer` defaults to it.
   static const ServerProfile production = ServerProfile(
     introspection: .disabled,
     includesSuggestions: false,

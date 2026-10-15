@@ -127,7 +127,9 @@ it goes to `onError` and is masked as `GQL330` by the profile.
 A request names one by its hash alone, or sends its exact text; any other
 text is refused with `GQL414` before it is parsed, a change of whitespace
 included, and an unknown hash is `GQL415`. A text sent with a hash that is
-not its own is `GQL411`.
+not its own is `GQL411`. What runs is always the manifest's own text, never
+the client's, and a trusted text longer than `maxDocumentLength` is refused
+with `GQL401` like any other.
 
 `TrustedDocuments.decode` reads the persisted-operations manifest that
 `typed_graphql_codegen` writes for the client (`persisted_queries.json`,

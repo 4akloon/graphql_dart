@@ -4,7 +4,7 @@
 ![Role](https://img.shields.io/badge/role-server-blue)
 ![Part of](https://img.shields.io/badge/part%20of-typed__graphql-purple)
 
-**A fully typed GraphQL server for Dart: a typed schema builder, the execution engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws and graphql-sse handlers.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
+**A fully typed GraphQL server for Dart: a typed schema builder, the execution engine, subscriptions, DataLoader and a transport-agnostic request pipeline.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
 > **Status: under construction.** Stage M5 is complete. The typed schema
 > builder (M5a), query execution (M5b), introspection and subscriptions (M5c),

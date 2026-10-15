@@ -1,11 +1,14 @@
 /// A fully typed GraphQL server for Dart: a typed schema builder, the execution
-/// engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws
-/// and graphql-sse handlers.
+/// engine, subscriptions, DataLoader and a transport-agnostic request
+/// pipeline.
 ///
-/// Under construction: stage M5 is complete (the typed schema builder,
-/// execution, introspection, subscriptions, look-ahead, authorization and
-/// cancellation) and DataLoader (`BatchLoader`, `GroupedLoader`) work; the
-/// request pipeline and the transports follow. See the package README.
+/// Under construction: stages M5 and M6 are complete. The typed schema
+/// builder, execution, introspection, subscriptions, look-ahead,
+/// authorization and cancellation work, and so do DataLoader (`BatchLoader`,
+/// `GroupedLoader`) and the request pipeline (`GraphQLServer`: document
+/// cache, limits and cost limit, CSRF prevention, extensions, error masking,
+/// automatic persisted queries and trusted documents). The transports (HTTP,
+/// graphql-ws, graphql-sse) come with M7. See the package README.
 library;
 
 export 'src/authorization/authorization.dart';

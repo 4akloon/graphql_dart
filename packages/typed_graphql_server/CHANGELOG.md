@@ -200,3 +200,10 @@
   `CsrfPrevention.withHeaders(headers)`, which copies the list;
   `requestHeaders` is unmodifiable.
 - Automatic persisted queries do not write a text the store already holds.
+- Documentation: the barrel, the package description and the README say what
+  works today (the transports come with M7); the Server guide states what
+  `ServerProfile.production` sets (no timeout), that the `ServerLimits` checks
+  are `assert`s and how each bad value behaves in a release build, that a
+  resolver must cap a slicing argument, that extension hooks are trusted
+  server code, which errors become a response only in `handle`, and that the
+  pipeline does not bound a hanging context factory, store or hook.
