@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:test/test.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 import '../server/support/server_fixture.dart';
+import 'support/failing_store.dart';
 
 void main() {
   final fixture = ServerFixture();
@@ -137,16 +136,4 @@ void main() {
       expect(response.outcome, ServerOutcome.executed);
     });
   });
-}
-
-/// A store whose every call fails, as a broken shared store would.
-final class FailingStore implements PersistedQueryStore {
-  const FailingStore();
-
-  @override
-  FutureOr<String?> read(String hash) => throw StateError('store is down');
-
-  @override
-  FutureOr<void> write(String hash, String text) =>
-      throw StateError('store is down');
 }
