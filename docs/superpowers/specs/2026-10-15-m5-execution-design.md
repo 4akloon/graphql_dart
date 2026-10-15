@@ -815,3 +815,27 @@ the list is also in `.superpowers/m5-open-questions.md`.
 9. **When codes are added.** In one core commit at the start of each
    sub-stage (recommended: core changes stay in their own commits) or in
    the server commit that first reports each, as `CLAUDE.md` says.
+
+Found while building M5 (each is implemented as recommended):
+
+10. **`GQL301` rule.** Reported for an abstract type without `resolveType`
+    when two possible types have overlapping Dart types, unless both have
+    an explicit `isTypeOf`; only the first such pair per abstract type
+    (recommended) or a warning, or no report when either has `isTypeOf`
+    (looser: declaration order then decides).
+11. **`Arg.optional` and nullability.** `Arg.optional` keeps the ref's
+    nullability, so `Arg.optional('x', b.string)` is a required `String!`
+    and `Optional` only tells absent from present (recommended; the guides
+    show `b.string.nullable`) or `Arg.optional` makes the ref nullable.
+12. **`resolveType` / `isTypeOf` take only the value.** Synchronous and
+    without the context (recommended: the type follows from the Dart
+    value, usually a sealed `switch`) or `FutureOr<ObjectTypeDef>
+    Function(P, C)`, a future per abstract value.
+13. **Look-ahead and the step budget.** A look-ahead walk charges the
+    run's `maxSteps` counter and a refused charge is a `GQL337` error of
+    the reading field (recommended: one budget bounds all work of a run;
+    section 18 item 43) or a separate look-ahead budget.
+14. **The cancel reason.** `GQL350`'s message is always "Execution was
+    cancelled." and the reason stays in `CancelSignal.reason`
+    (recommended: a reason may hold internal detail; section 18 item 34)
+    or the reason's text becomes the message, as graphql-js does.
