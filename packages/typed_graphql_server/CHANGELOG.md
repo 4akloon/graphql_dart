@@ -177,3 +177,8 @@
   `GraphQLServer`.
 - `PersistedQueryStore`, where a server keeps automatic persisted queries,
   and `MemoryPersistedQueryStore`, a bounded in-memory LRU.
+- `GraphQLServer(persistedQueries:)` turns on automatic persisted queries:
+  a hash alone runs a stored text (`GQL410` when it is not stored), a text
+  with its hash is checked (`GQL411`) and stored once it validates, a
+  malformed `extensions.persistedQuery` is `GQL413`. Without a store a hash
+  alone is `GQL412`. A stored text is hashed again when read.

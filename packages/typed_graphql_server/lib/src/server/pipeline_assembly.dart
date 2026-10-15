@@ -3,6 +3,9 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../execution/error_hook.dart';
 import '../execution/executable_schema.dart';
+import '../persisted/automatic_persisted_queries.dart';
+import '../persisted/persisted_queries_unsupported.dart';
+import '../persisted/persisted_query_store.dart';
 import '../plan/operation_selection.dart';
 import 'context_factory.dart';
 import 'cost_limit.dart';
@@ -22,7 +25,7 @@ import 'server_extension.dart';
 import 'server_profile.dart';
 
 /// Builds the handlers of a server from its settings, once: the extension
-/// chains around the core steps. M6c adds its steps to [handler].
+/// chains around the core steps.
 @internal
 final class PipelineAssembly<C> {
   /// Creates the assembly; the arguments are those of `GraphQLServer`.
@@ -34,6 +37,7 @@ final class PipelineAssembly<C> {
     required this.onError,
     required this.documentCacheSize,
     required this.extensions,
+    required this.persistedQueries,
   }) : errors = PipelineErrors(
          maskErrors: profile.maskErrors,
          onError: onError,
@@ -60,6 +64,9 @@ final class PipelineAssembly<C> {
   /// The user's extensions, outermost first.
   final List<ServerExtension<C>> extensions;
 
+  /// The store of automatic persisted queries; null keeps none.
+  final PersistedQueryStore? persistedQueries;
+
   /// Makes the refusals and the unexpected-error responses.
   final PipelineErrors errors;
 
@@ -67,12 +74,12 @@ final class PipelineAssembly<C> {
   RequestHandler handler() {
     final length = DocumentLength(profile.limits.maxDocumentLength, errors);
     // The user's extensions are outermost, then the built-in ones in a fixed
-    // order, so no list order puts a step before a security check. M6c adds
-    // the trusted-document and APQ extensions here.
+    // order, so no list order puts a step before a security check.
     final chain = ExtensionChain<C>([
       ...extensions,
       if (profile.csrfPrevention case final csrf?)
         CsrfExtension<C>(csrf, errors),
+      _persistedDocuments(length),
     ]);
     final executionStep = ExecutionStep<C>(schema, profile, onError);
     final request = RequestStep<C>(
@@ -87,6 +94,12 @@ final class PipelineAssembly<C> {
     );
     return chain.request(request.run);
   }
+
+  ServerExtension<C> _persistedDocuments(DocumentLength length) =>
+      switch (persistedQueries) {
+        final store? => AutomaticPersistedQueries<C>(store, length, errors),
+        null => PersistedQueriesUnsupported<C>(errors),
+      };
 
   DocumentHandler _documentStep(DocumentLength length) => DocumentStep(
     DocumentCache(documentCacheSize),

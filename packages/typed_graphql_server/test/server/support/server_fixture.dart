@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 
 import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
@@ -92,6 +95,7 @@ final class ServerFixture {
     ErrorHook? onError,
     int documentCacheSize = 1000,
     List<ServerExtension<Ctx>> extensions = const [],
+    PersistedQueryStore? persistedQueries,
   }) => GraphQLServer<Ctx>(
     schema: schema,
     contextFactory: contextFactory ?? (_) => const Ctx('default'),
@@ -100,6 +104,7 @@ final class ServerFixture {
     onError: onError,
     documentCacheSize: documentCacheSize,
     extensions: extensions,
+    persistedQueries: persistedQueries,
   );
 
   ServerRequest request(
@@ -109,11 +114,13 @@ final class ServerFixture {
     JsonObject? variables,
     CancelSignal? cancelSignal,
     Map<String, String> headers = const {'content-type': 'application/json'},
+    JsonObject? extensions,
   }) => ServerRequest(
     params: GraphQLRequest(
       query: query,
       operationName: operationName,
       variables: variables,
+      extensions: extensions,
     ),
     info: RequestInfo(
       method: method,
@@ -122,6 +129,17 @@ final class ServerFixture {
     ),
     cancelSignal: cancelSignal,
   );
+
+  /// The lower-case hex SHA-256 of [text], as clients name a document.
+  String hashOf(String text) => sha256.convert(utf8.encode(text)).toString();
+
+  /// The `extensions` of a request naming the persisted query [hash].
+  JsonObject persisted(String hash) => JsonObject({
+    'persistedQuery': JsonObject({
+      'version': JsonNumber(1),
+      'sha256Hash': JsonString(hash),
+    }),
+  });
 
   /// A query nested [depth] levels deep: `{ self { self { hello } } }`.
   String nested(int depth) => '${'{ self ' * depth}{ hello }${' }' * depth}';

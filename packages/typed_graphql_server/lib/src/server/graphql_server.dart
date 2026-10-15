@@ -3,6 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 import '../execution/error_hook.dart';
 import '../execution/executable_schema.dart';
 import '../execution/graphql_exception.dart';
+import '../persisted/persisted_query_store.dart';
 import 'context_factory.dart';
 import 'pipeline_assembly.dart';
 import 'pipeline_errors.dart';
@@ -36,6 +37,10 @@ final class GraphQLServer<C> {
   /// [extensions] hook into the three phases of a request; the first is the
   /// outermost and sees even the requests the built-in checks (CSRF
   /// prevention) refuse.
+  ///
+  /// [persistedQueries] turns on automatic persisted queries (R5.4): a
+  /// request may send only the SHA-256 of a document the store holds. Without
+  /// a store, a request that sends only a hash is refused with `GQL412`.
   factory GraphQLServer({
     required ExecutableSchema<C> schema,
     required ContextFactory<C> contextFactory,
@@ -44,6 +49,7 @@ final class GraphQLServer<C> {
     ErrorHook? onError,
     int documentCacheSize = 1000,
     List<ServerExtension<C>> extensions = const [],
+    PersistedQueryStore? persistedQueries,
   }) {
     final assembly = PipelineAssembly<C>(
       schema: schema,
@@ -53,6 +59,7 @@ final class GraphQLServer<C> {
       onError: onError,
       documentCacheSize: documentCacheSize,
       extensions: extensions,
+      persistedQueries: persistedQueries,
     );
     return GraphQLServer._(assembly.errors, assembly.handler());
   }
