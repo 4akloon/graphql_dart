@@ -18,6 +18,7 @@ import '../ast/type_system_definition.dart';
 import '../ast/type_system_extension.dart';
 import '../ast/value.dart';
 import '../ast/variable_definition.dart';
+import 'body_absorbing_definition.dart';
 import 'executable_printer.dart';
 import 'extension_printer.dart';
 import 'minifier.dart';
@@ -67,7 +68,7 @@ final class Printer {
   }
 
   String _canonical(Node node) => switch (node) {
-    Document(:final definitions) => definitions.map(_definition).join('\n\n'),
+    Document(:final definitions) => _document(definitions),
     Definition() => _definition(node),
     SelectionSet() => _executable.selectionSet(node),
     Selection() => _executable.selection(node),
@@ -103,8 +104,31 @@ final class Printer {
           '@${name.value}(${argumentName.value}:)',
       };
 
-  String _definition(Definition definition) => switch (definition) {
-    ExecutableDefinition() => _executable.definition(definition),
+  /// Definitions separated by a blank line. After a type or extension
+  /// printed with no body, `{` would open its body (as in graphql-js's
+  /// parser), so the query keyword stays; graphql-js's own `print` and
+  /// `stripIgnoredCharacters` print text that does not parse back there.
+  String _document(List<Definition> definitions) {
+    final parts = <String>[];
+    for (final (index, definition) in definitions.indexed) {
+      final isAfterOpenBody =
+          index > 0 &&
+          const BodyAbsorbingDefinition().isFollowedByBody(
+            definitions[index - 1],
+          );
+      parts.add(_definition(definition, isShorthandAllowed: !isAfterOpenBody));
+    }
+    return parts.join('\n\n');
+  }
+
+  String _definition(
+    Definition definition, {
+    bool isShorthandAllowed = true,
+  }) => switch (definition) {
+    ExecutableDefinition() => _executable.definition(
+      definition,
+      isShorthandAllowed: isShorthandAllowed,
+    ),
     TypeSystemDefinition() => _typeSystem.definition(definition),
     TypeSystemExtension() => _extensions.extension(definition),
     _ => throw ArgumentError.value(

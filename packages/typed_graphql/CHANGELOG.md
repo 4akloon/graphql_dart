@@ -288,3 +288,6 @@
 - `DiagnosticCode`: `GQL400`-`GQL403` (`queryRequired`, `documentTooLong`,
   `mutationRequiresPost`, `csrfRequestBlocked`), reported by the server's
   request pipeline.
+- Fix: `Printer` keeps the `query` keyword of an anonymous query that follows
+  a body-less type or extension, so that the text parses back (this differs
+  from graphql-js's `print` and `stripIgnoredCharacters`).

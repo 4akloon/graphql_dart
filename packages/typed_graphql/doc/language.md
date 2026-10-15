@@ -223,6 +223,12 @@ query hashes: a space only between two tokens that are not punctuators, or
 before `...`, and block strings in their shortest form. Parsing the output of either
 form gives a tree that `isEquivalentTo` the original.
 
+One output differs from graphql-js, in both forms: an anonymous query that
+graphql-js prints as the shorthand `{ ... }` keeps its `query` keyword when it
+follows an object, interface, input or enum type (or an extension of one, or
+`extend schema`) that has no body. A `{` there would open that definition's
+body, so graphql-js's text for `enum on query { ...enum }` does not parse back.
+
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';
 
