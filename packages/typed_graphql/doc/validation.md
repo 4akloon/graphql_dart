@@ -191,6 +191,11 @@ the fields that must merge. The run charges that work to a budget
 one `GQL230` error instead of keeping the server busy. `maxErrors` stops
 the run after that many errors with one `GQL000`.
 
+One shape of valid document can still spend the budget: a fragment that
+repeats a response name beside spreads of the next fragment, level after
+level (about 18 levels), ends with `GQL230`. Fragments spread under fields
+that appear once are merged in linear steps.
+
 ## Limits
 
 A document the specification accepts can still be too expensive to
@@ -300,7 +305,10 @@ With the flag, `SchemaValidator` also checks how the directives are used:
 | `GQL160` | a sized field is not a list field of the return type |
 | `GQL161` | `assumedSize` is combined with slicing arguments that must be given and have no default |
 
-The analysis works without the flag too: every weight is then its default.
+The analysis works without the flag too: a `@cost` or `@listSize` written in
+the schema's SDL counts whenever the schema has its definition
+(`schema.directiveNamed` finds it), and without one every weight is its
+default.
 Its model, in short (the doc comment of `CostAnalysis` is the contract):
 
 - A type weighs its `@cost` weight, else 1 for an object and 0 for a scalar
