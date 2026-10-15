@@ -175,3 +175,5 @@
   count with the request's values.
 - The Server guide and the example now serve a request with
   `GraphQLServer`.
+- `PersistedQueryStore`, where a server keeps automatic persisted queries,
+  and `MemoryPersistedQueryStore`, a bounded in-memory LRU.

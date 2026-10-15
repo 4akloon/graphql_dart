@@ -21,6 +21,9 @@ dartdoc:
     lookahead:
       markdown: doc/lookahead.md
       displayName: Look-ahead
+    persisted:
+      markdown: doc/persisted_documents.md
+      displayName: Persisted Documents
     server:
       markdown: doc/server.md
       displayName: Server
@@ -35,6 +38,7 @@ dartdoc:
     - execution
     - introspection
     - lookahead
+    - persisted
     - server
     - subscription
   showUndocumentedCategories: true
