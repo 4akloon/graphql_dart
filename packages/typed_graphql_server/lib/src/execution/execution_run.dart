@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../lookahead/look_ahead_budget.dart';
 import '../plan/operation_plan.dart';
 import 'error_behavior.dart';
 import 'error_reporter.dart';
@@ -68,6 +69,12 @@ final class ExecutionRun {
 
   /// Counts steps and depth.
   late final ExecutionLimits limits = ExecutionLimits(options, reporter);
+
+  /// What a look-ahead may spend: the steps `maxSteps` still allows.
+  late final LookAheadBudget lookAheadBudget = LookAheadBudget(
+    limits.spend,
+    limits.stepsExceededMessage,
+  );
 
   /// Runs the fields of a selection.
   late final SelectionExecutor selection = SelectionExecutor(this);

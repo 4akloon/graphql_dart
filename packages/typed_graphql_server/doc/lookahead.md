@@ -102,7 +102,10 @@ removes its only field, and `__typename` never shows.
 ## Abstract types
 
 Under a field of an interface or union type, `fields` holds what every
-possible type collects, merged by response key in possible-type order.
+possible type collects, in possible-type order. Fields are merged when they
+have the same response key, the same field name and the same arguments as
+written: object types that cannot overlap may give one alias to different
+fields, and those stay apart as two `SelectedField`s.
 `forType(name)` narrows the view to one object type: the fields that apply to
 it, including those from `... on Name` fragments. An unknown name, or a type
 that cannot occur there, gives an empty selection.
@@ -116,7 +119,21 @@ fields with the same arguments have the same fingerprint, whatever the order,
 the aliases or the fragments of their requests. Use it as a cache or
 DataLoader key, so that a batch is shared only between requests that want the
 same data. It is built with an explicit stack, so a deep selection cannot
-overflow the stack.
+overflow the stack. Entries that read the same collapse to one, so aliases
+that repeat a fragment do not multiply the text.
+
+## The cost of a look-ahead
+
+A selection can fan out: aliases that each spread a fragment that does the
+same make a text that doubles at every level. A look-ahead is therefore
+bounded by the same step counter as `ExecutionOptions.maxSteps`: collecting a
+selection, and building a fingerprint (by the size of its text), spend steps
+of the run. When they would not fit, the read throws a `GraphQLException`
+with the code `GQL337` and the message of the executor's step limit, before
+it does the work; thrown in a resolver, that is the error of the field, and
+the rest of the execution goes on. Fields over the same field nodes are read
+once, so a selection whose aliases use the same arguments costs time in
+proportion to the request, not to its expansion.
 
 `ColumnWhitelist` turns a selection into database columns. It maps field
 names to columns, adds the `always` columns (a key, say), ignores the fields

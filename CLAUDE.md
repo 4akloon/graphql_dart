@@ -463,8 +463,8 @@ order, pausing the source meanwhile; a source that fails after listening is the
 last result (`GQL340`), one that fails at start is a `SubscriptionRejected`.
 `subscription/` holds only the public `SubscriptionResult` family.
 `lookahead/` (M5d): `FieldInfo.selection` is a `FieldSelection` built on first
-read from the field's `FieldPlan`s and the run's variables
-(`FieldInfo.selectionReader` is `@internal`); `SelectionNodes` flattens
+read from the field's `FieldPlan` and the run (`FieldInfo.plan` and `run` are
+`@internal`, so an unread selection allocates nothing); `SelectionNodes` flattens
 fragments and applies `@skip`/`@include`, `forType` narrows an abstract type,
 every name starting with `__` is hidden. A `SelectedField` reads its
 `arguments` on first use (a failing argument reads absent; the executor

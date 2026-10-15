@@ -247,28 +247,6 @@ void main() {
       expect(identical(info.selection, info.selection), isTrue);
     });
 
-    test('is not built until it is read', () async {
-      final info = await f.infoOf('user', '{ user { name } }');
-      var reads = 0;
-      final copy = FieldInfo(
-        fieldName: info.fieldName,
-        parentType: info.parentType,
-        returnType: info.returnType,
-        path: info.path,
-        fieldNodes: info.fieldNodes,
-        operation: info.operation,
-        variables: info.variables,
-        schema: info.schema,
-        selectionReader: () {
-          reads++;
-          return FieldSelection.empty;
-        },
-      );
-      final before = reads;
-      final same = identical(copy.selection, copy.selection);
-      expect([before, reads, same], [0, 1, true]);
-    });
-
     test('is empty when the call was not made by an execution', () async {
       final info = await f.infoOf('user', '{ user { name } }');
       final copy = FieldInfo(

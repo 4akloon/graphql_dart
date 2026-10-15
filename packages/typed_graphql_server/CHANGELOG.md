@@ -104,6 +104,12 @@
   names to sorted, de-duplicated columns. `isDeferred` arrives with
   incremental delivery.
 - The Look-ahead guide and its dartdoc category `lookahead`.
+- Look-ahead walks are bounded: a selection over an interface with many
+  implementations costs its distinct nodes, not their product per level, a
+  fingerprint reads fields over the same nodes once and lists identical
+  entries once, and every walk spends the run's `maxSteps` budget (a read that
+  would not fit throws `GQL337` as that field's error). Fields that share a
+  response key but differ in name or arguments across object types stay apart.
 - Authorization: `Authorization.requires` and `Authorization.public` rules on a
   field (`.withAuthorization`) or an object type (`ObjectOptions.authorization`),
   an `Authorizer<C>` in `BuildOptions.authorizer` that answers `Allow` or `Deny`

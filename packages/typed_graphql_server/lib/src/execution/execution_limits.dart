@@ -24,13 +24,27 @@ final class ExecutionLimits {
     if (_steps > _options.maxSteps) {
       _reporter.halt(
         DiagnosticCode.maxExecutionStepsExceeded,
-        'Execution exceeds the limit of ${_options.maxSteps} completed '
-        'values.',
+        stepsExceededMessage,
         site,
       );
       return false;
     }
     return admitsDepth(site);
+  }
+
+  /// The text of the error for a run past `maxSteps`.
+  String get stepsExceededMessage =>
+      'Execution exceeds the limit of ${_options.maxSteps} completed values.';
+
+  /// Spends [steps] on a look-ahead and says whether they fit under
+  /// `maxSteps`. A refusal spends nothing and ends nothing: the look-ahead
+  /// throws, which fails its field only.
+  bool spend(int steps) {
+    if (_reporter.log.isHalted || _steps + steps > _options.maxSteps) {
+      return false;
+    }
+    _steps += steps;
+    return true;
   }
 
   /// Whether the place [site] is within `maxDepth`; a refusal is already

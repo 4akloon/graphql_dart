@@ -3,6 +3,8 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../cancellation/cancel_signal.dart';
 import '../lookahead/field_selection.dart';
+import '../plan/field_plan.dart';
+import 'execution_run.dart';
 import 'response_path.dart';
 
 /// What a resolver knows about the call it answers.
@@ -20,7 +22,8 @@ final class FieldInfo {
     required this.variables,
     required this.schema,
     this.rootValue,
-    this.selectionReader,
+    this.plan,
+    this.run,
     CancelSignal? cancelSignal,
   }) : _runSignal = cancelSignal;
 
@@ -52,20 +55,36 @@ final class FieldInfo {
   /// The root value of the execution.
   final Object? rootValue;
 
-  /// Builds [selection] when it is first read; the executor sets it.
+  /// The plan of the field, which [selection] reads; the executor sets it.
   @internal
-  final FieldSelection Function()? selectionReader;
+  final FieldPlan? plan;
+
+  /// The execution that made the call, whose variables, tables and step
+  /// budget [selection] reads; the executor sets it.
+  @internal
+  final ExecutionRun? run;
 
   /// The fields the request selected under this field (R4.18), for a
   /// resolver that loads only what is asked for.
   ///
   /// Built when first read, so a resolver that never reads it pays nothing
-  /// but the reader's closure; empty for a call made outside an execution.
-  // `late`: the reader runs on first read, not when the call starts.
-  late final FieldSelection selection =
-      selectionReader?.call() ?? FieldSelection.empty;
+  /// (the call keeps its plan and run, no more); empty for a call made
+  /// outside an execution. Reading it and walking it spend the run's step
+  /// budget, see [FieldSelection].
+  // `late`: the selection is built on first read, not when the call starts.
+  late final FieldSelection selection = _selectionOf(plan, run);
 
   final CancelSignal? _runSignal;
+
+  static FieldSelection _selectionOf(FieldPlan? plan, ExecutionRun? run) =>
+      plan == null || run == null
+      ? FieldSelection.empty
+      : FieldSelection.under(
+          [plan],
+          run.variables,
+          run.bindings.fields,
+          run.lookAheadBudget,
+        );
 
   /// Fires when the execution is cancelled or times out (R4.20): a resolver
   /// doing long work checks `isCancelled` or awaits `whenCancelled` to stop.

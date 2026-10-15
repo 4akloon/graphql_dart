@@ -19,11 +19,15 @@ final class CanonicalJson {
         case JsonArray(:final items):
           _push(pending, ['[', ..._separated(items), ']']);
         case JsonObject(:final fields):
-          final keys = fields.keys.toList()..sort();
+          final entries = fields.entries.toList()
+            ..sort((a, b) => a.key.compareTo(b.key));
           _push(pending, [
             '{',
             ..._separated([
-              for (final key in keys) ...['${JsonString(key)}:', fields[key]!],
+              for (final entry in entries) ...[
+                '${JsonString(entry.key)}:',
+                entry.value,
+              ],
             ], pairs: true),
             '}',
           ]);

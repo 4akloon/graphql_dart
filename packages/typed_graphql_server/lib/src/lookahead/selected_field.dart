@@ -6,6 +6,8 @@ import '../builder/field_def.dart';
 import '../coercion/coercion_result.dart';
 import '../plan/field_plan.dart';
 import 'field_selection.dart';
+import 'identity_key.dart';
+import 'look_ahead_budget.dart';
 
 /// One field of a [FieldSelection]: what the request asked for under one
 /// response key.
@@ -20,13 +22,25 @@ final class SelectedField {
     List<FieldPlan> plans,
     Map<String, Object?> variables,
     Map<String, Map<String, FieldDef<Object?, Object?>>> definitions,
+    LookAheadBudget budget,
   ) : _plans = plans,
       _variables = variables,
-      _definitions = definitions;
+      _definitions = definitions,
+      _budget = budget;
 
   final List<FieldPlan> _plans;
   final Map<String, Object?> _variables;
   final Map<String, Map<String, FieldDef<Object?, Object?>>> _definitions;
+  final LookAheadBudget _budget;
+
+  /// Which request fields this one stands for: equal for two selected
+  /// fields over the same field nodes and parent types, whatever object
+  /// they were reached through. A walk remembers what it did per key.
+  @internal
+  // `late`: only the walks that dedupe pay for it.
+  late final IdentityKey key = IdentityKey([
+    for (final plan in _plans) ...[plan.parentType.name, ...plan.nodes, '|'],
+  ]);
 
   /// The field's name in the schema, never the alias.
   String get name => _plans.first.fieldName;
@@ -61,6 +75,7 @@ final class SelectedField {
     _plans,
     _variables,
     _definitions,
+    _budget,
   );
 
   Arguments _readArguments() {
