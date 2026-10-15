@@ -130,6 +130,16 @@ void main() {
     });
   });
 
+  test('a subscription is authorized once, not for every event', () async {
+    final result = await fixture.built.subscribe(
+      fixture.validDocument('subscription { tick }'),
+      context: const Caller({'admin'}),
+    );
+    final responses = await (result as SubscriptionStarted).results.toList();
+    expect(responses, hasLength(3));
+    expect(authorizer.calls, ['Subscription.tick']);
+  });
+
   group('rules', () {
     test('a type rule guards the fields without one', () async {
       final json = await fixture.run('{ account { id } }');

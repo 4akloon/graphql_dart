@@ -743,6 +743,12 @@ depends on the other). These constraints keep that possible:
 44. `SelectedField`s merge by response key, field name and printed arguments,
     not by response key alone (spec 11): object types that cannot overlap may
     give one alias to different fields, and `FieldsInSetCanMerge` allows it.
+45. A subscription field's authorization guards the source only: the
+    authorizer runs once, at subscribe, not for each event. Authorization is
+    a per-request decision, as for a query; a per-event check would cost one
+    call per event and turn a revoked permission into a stream of GQL352
+    events. A server that must re-check per event does so in the event
+    resolver.
 
 ## 19. Conformance (R0.7, R10.3)
 

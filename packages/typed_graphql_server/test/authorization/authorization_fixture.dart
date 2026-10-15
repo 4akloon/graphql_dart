@@ -142,7 +142,7 @@ final class AuthorizationFixture {
         t
             .field('tick', b.int)
             .withAuthorization(Authorization.requires(['admin']))
-            .subscribe((p, a, c, i) => Stream.value(1)),
+            .subscribe((p, a, c, i) => Stream.fromIterable([1, 2, 3])),
       ],
     );
     return b.build(

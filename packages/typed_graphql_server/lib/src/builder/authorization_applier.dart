@@ -78,9 +78,10 @@ final class AuthorizationApplier<C> {
         }),
       ),
       ResolverLane(:final resolve) => ResolverLane(guard.guard(resolve)),
+      // Once per request, as for a query (spec 18.45).
       SubscribeLane(:final source, :final resolve) => SubscribeLane(
         guard.guard(source),
-        guard.guard(resolve),
+        resolve,
       ),
       final DeclaredOnlyLane lane => lane,
     }, rule);

@@ -216,3 +216,8 @@ closed
 `execute` on a subscription operation runs it once, as a query, with the root
 value as the single event, as graphql-js does. Use `subscribe` to get the
 stream.
+
+## Authorization
+
+A rule on a subscription field is checked once, at subscribe; the events are
+not authorized again.

@@ -131,3 +131,5 @@
   stream nobody listens to; a finished stream stops listening to the run's signal.
 - Documentation: the barrel states that M5 is complete, the Authorization guide
   warns that a redeclared interface field is unguarded without its own rule.
+- A subscription field's authorization runs once, at subscribe, not for each
+  event.

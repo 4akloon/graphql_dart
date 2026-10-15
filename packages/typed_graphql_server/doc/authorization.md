@@ -227,3 +227,9 @@ It prints:
 1
 Fields are guarded by an authorization rule but the build has no authorizer (BuildOptions.authorizer): Query.a, Query.b.
 ```
+
+## Subscriptions
+
+A rule on a subscription field is checked once, when the subscription starts,
+and not for each event. A server that must re-check per event does it in the
+event resolver.
