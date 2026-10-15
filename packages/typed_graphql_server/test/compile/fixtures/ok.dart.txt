@@ -1,0 +1,29 @@
+import 'package:typed_graphql_server/typed_graphql_server.dart';
+
+final class Pet {
+  const Pet(this.name);
+  final String? name;
+}
+
+void main() {
+  final b = ExecutableSchemaBuilder<Object?>();
+  final times = Arg('times', b.int, defaultValue: 1);
+  final pet = b.object<Pet>(
+    'Pet',
+    fields: (t) => [
+      t.field('name', b.string.nullable).pure((Pet p) => p.name),
+      t
+          .field('twice', b.int, args: [times])
+          .resolve((Pet p, Arguments args, Object? ctx, FieldInfo info) {
+            final int value = args.get(times);
+            return value * 2;
+          }),
+    ],
+  );
+  final query = b.object<Object?>(
+    'Query',
+    fields: (t) => [t.field('pet', pet).pure((Object? _) => const Pet('x'))],
+  );
+  b.union<Pet>('PetUnion', members: [pet]);
+  b.build(query: query);
+}

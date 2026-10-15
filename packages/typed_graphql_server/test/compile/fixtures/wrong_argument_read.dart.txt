@@ -1,0 +1,17 @@
+import 'package:typed_graphql_server/typed_graphql_server.dart';
+
+void main() {
+  final b = ExecutableSchemaBuilder<Object?>();
+  final times = Arg('times', b.int);
+  b.object<Object?>(
+    'Query',
+    fields: (t) => [
+      t
+          .field('x', b.string, args: [times])
+          .resolve((Object? p, Arguments args, Object? ctx, FieldInfo info) {
+            final String value = args.get(times);
+            return value;
+          }),
+    ],
+  );
+}
