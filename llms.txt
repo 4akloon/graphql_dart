@@ -4,7 +4,7 @@
 
 ## Packages
 
-- [typed_graphql](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/README.md): under construction; the core, usable today: language, schema, introspection, operation validation, wire protocol and diagnostics
+- [typed_graphql](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/README.md): under construction; the core, usable today: language, schema, introspection, operation validation with opt-in limits and cost analysis, wire protocol and diagnostics
 - [typed_graphql_builder](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_builder/README.md): skeleton; build_runner builders, not usable yet (M9)
 - [typed_graphql_client](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_client/README.md): skeleton; client runtime and normalized cache, not usable yet (M11, M12)
 - [typed_graphql_codegen](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_codegen/README.md): skeleton; code generator and its CLI, not usable yet (M8, M10)
@@ -20,7 +20,7 @@
 - [Schema](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/schema.md): build a schema from SDL, read, validate, extend and print it; resolve coordinates
 - [Scalars and codecs](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/scalars.md): the built-in scalar codecs and your own
 - [Introspection](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/introspection.md): the introspection query, a schema's answer, and a schema built from an answer
-- [Operation validation](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/validation.md): validate a document against a schema; the rules and their codes; custom rules; work limits
+- [Operation validation](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/doc/validation.md): validate a document against a schema; the rules and their codes; custom rules; work limits; limit rules and cost analysis
 - [Example](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql/example/example.dart): a runnable program: report syntax errors, print a document, build a schema from SDL, validate a request
 
 ## Reference

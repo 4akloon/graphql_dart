@@ -38,7 +38,11 @@ and the Introspection guide. M4a (operation validation) delivers the rule
 framework, the 30 rules of spec §5 (`GQL200`-`GQL229`), field selection
 merging in linear time, the step budget (`GQL230`), every graphql-js
 validation suite, the hostile-document tests and the Operation Validation
-guide.
+guide. M4b (limits and cost) delivers the opt-in limit rules (depth, aliases,
+directives, introspection: `GQL232`-`GQL236`), `recommendedRules`, the IBM
+cost directives (`includesCostDirectives`, `GQL156`-`GQL161`), `CostAnalysis`,
+`SlicingArgumentsRule` and `MaxCostRule` (`GQL237`, `GQL238`), the operation
+fuzzers and the guide sections on limits and cost.
 
 ## Documents
 
@@ -318,6 +322,11 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   then reports each cycle among the rest once; `DefaultValueCycleRules`
   walks default values depth-first and, created once per run, remembers
   the fields it walked across types.
+- Cost directives (opt-in): `SchemaBuilder(includesCostDirectives: true)`
+  (and `Schema`) adds `@cost` and `@listSize` from the internal
+  `CostDirectiveSdl`, kept apart from `BuiltInSdl` because the IBM draft is
+  not part of the specification. `SchemaValidator` runs `CostDirectiveRules`
+  and `ListSizeRules` (`GQL156`-`GQL161`) only with the flag.
 
 **Validation** (`validation/`; M4). Imports every layer before it.
 - `DocumentValidator` (const: `rules`, `maxErrors`, `includesSuggestions`,
@@ -356,6 +365,22 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   class, `ConflictJudge` judges a pair at its nearest distinct ancestors,
   `ConflictTree` and `ConflictReports` build graphql-js's nested messages
   and order them by the selection set graphql-js finds them in.
+- `limits/` holds the opt-in rules `MaxDepthRule`, `MaxAliasesRule`,
+  `MaxDirectivesRule`, `NoIntrospectionRule` and `MaxIntrospectionDepthRule`
+  (R3.5), none in `specifiedRules`; `DocumentValidator.recommendedRules` is
+  `specifiedRules` plus the last. `SelectionMeasure` is a memoised
+  explicit-stack fold over operations with fragments expanded, one per
+  `MeasuredQuantity` (depth, aliases, directives); `LimitVisitor` reports
+  an operation at most once; `OperationSubject` words the operation in a
+  message.
+- `cost/` (R3.8): `CostAnalysis` is const and makes a `CostWalk` per call,
+  an explicit-stack walk over `CostWeights` (type and field weight caches)
+  with a fragment memo keyed by fragment and `SizedContext`, so fragments
+  cost linear time. `ListSizes` and `ListSizeSetting` read `@listSize`,
+  `ArgumentCost` the weights of arguments and input fields, `CostNumber`
+  prints a cost. `OperationCost` holds the field cost and type cost.
+  `MaxCostRule` (`GQL238`) and `SlicingArgumentsRule` (`GQL237`) are
+  opt-in rules.
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
@@ -460,6 +485,15 @@ Learned in M4a:
 - A work budget is measured, not guessed: about a million steps take a
   second on the VM, so the default `maxSteps` is a million.
 
+Learned in M4b:
+- `avoid_classes_with_only_static_members` rejects a static-only helper:
+  make it a small instance class (const when it holds nothing).
+- A fold over fragments must be memoised per fragment (and per sized
+  context for the cost), or a chain of fragments that each spread the next
+  twice is exponential; a fragment on the stack is a cycle and counts 0.
+- graphql-js test names may be double-quoted in the source; the suite
+  reader handles both quotes.
+
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
 refer to identifiers in `[brackets]`; a boolean property starts with
@@ -550,6 +584,7 @@ README that leaves the package folder is an absolute URL.
 - Hostile-document tests: `packages/typed_graphql/test/validation/hostile_*_test.dart`.
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
   round trip, hostile SDL, introspection round trip, hostile
-  introspection, coordinates); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
+  introspection, coordinates, valid operations, hostile operations and
+  hostile shapes); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
   `TYPED_GRAPHQL_FUZZ_SEED` tune them.
 - CI: `.github/workflows/ci.yml`.

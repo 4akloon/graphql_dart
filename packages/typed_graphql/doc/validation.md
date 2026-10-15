@@ -188,3 +188,198 @@ the fields that must merge. The run charges that work to a budget
 (`maxSteps`, a million by default); a document shaped to exceed it gets
 one `GQL230` error instead of keeping the server busy. `maxErrors` stops
 the run after that many errors with one `GQL000`.
+
+## Limits
+
+A document the specification accepts can still be too expensive to
+serve. These rules bound it; each is opt-in and none is in
+`DocumentValidator.specifiedRules`. Add one to the list of rules, as
+`DocumentValidator(rules: [...DocumentValidator.specifiedRules, ...])`.
+
+| Code | Rule | Counts |
+|---|---|---|
+| `GQL232` | `MaxDepthRule(maxDepth:)` | the deepest field |
+| `GQL233` | `MaxAliasesRule(maxAliases:)` | fields written with an alias |
+| `GQL234` | `MaxDirectivesRule(maxDirectives:)` | applied directives |
+| `GQL235` | `NoIntrospectionRule` | `__schema` and `__type` fields |
+| `GQL236` | `MaxIntrospectionDepthRule` | nested introspection lists |
+
+A top-level field has depth 1, a field in its selection set depth 2. Inline
+fragments and fragment spreads add no depth, and a spread counts as if its
+fragment were written there. Aliases and directives are counted with the
+fragments expanded: every spread counts what its fragment holds again. The
+directives counted are those on the operation, its variable definitions,
+fields, inline fragments and spreads. Each operation is measured once, in
+time linear in the document however often its fragments are spread. The
+messages say "more than" the limit for aliases and directives, and give the
+depth and "more than the maximum" for depth.
+
+`NoIntrospectionRule` reports every field whose type is an introspection
+type; `__typename` stays allowed. Switching introspection off is not a best
+practice, so use it only when you need it. `MaxIntrospectionDepthRule`
+ports graphql-js's rule: below a `__schema` or `__type` field, no path may
+pass through three of the list fields `fields`, `interfaces`,
+`possibleTypes` and `inputFields`.
+
+`DocumentValidator.recommendedRules` is `specifiedRules` plus
+`MaxIntrospectionDepthRule`, as graphql-js's `recommendedRules`. It is not
+the default of `rules`; whether it becomes the default is an open decision.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  final schema = switch (const SchemaBuilder().fromSdl(
+    const Parser()
+        .parse(Source('type Query { me: Query name: String }'))
+        .requireDocument(),
+  )) {
+    BuildSuccess(:final schema) => schema,
+    BuildFailure() => throw StateError('the schema is valid'),
+  };
+  final valid = switch (const SchemaValidator().validate(schema)) {
+    final ValidSchema valid => valid,
+    InvalidSchema() => throw StateError('the schema is valid'),
+  };
+  final source = Source('query Deep { me { me { me { name } } } }');
+  final document = const Parser().parse(source).requireDocument();
+  const validator = DocumentValidator(
+    rules: [...DocumentValidator.specifiedRules, MaxDepthRule(maxDepth: 3)],
+  );
+  switch (validator.validate(valid, document, source: source)) {
+    case ValidDocument():
+      print('valid');
+    case InvalidDocument(:final diagnostics):
+      for (final diagnostic in diagnostics) {
+        print(
+          '${diagnostic.span?.location} ${diagnostic.code.id} '
+          '${diagnostic.message}',
+        );
+      }
+  }
+}
+```
+
+It prints:
+
+```text
+1:1 GQL232 The operation "Deep" has a depth of 4, more than the maximum of 3.
+```
+
+## Cost
+
+`CostAnalysis` computes the static cost of an operation by the
+[IBM GraphQL cost directives draft](https://ibm.github.io/graphql-specs/cost-spec.html),
+and `MaxCostRule` limits it. The draft is not part of the specification, so
+its two directives are an opt-in of the schema:
+`SchemaBuilder(includesCostDirectives: true)` (also a flag of `Schema`)
+adds their definitions.
+
+```text
+directive @cost(weight: String!) on ARGUMENT_DEFINITION | ENUM
+  | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | OBJECT | SCALAR
+directive @listSize(
+  assumedSize: Int
+  slicingArguments: [String!]
+  sizedFields: [String!]
+  requireOneSlicingArgument: Boolean = true
+) on FIELD_DEFINITION
+```
+
+With the flag, `SchemaValidator` also checks how the directives are used:
+
+| Code | Reported when |
+|---|---|
+| `GQL156` | a `@cost` weight is not a number |
+| `GQL157` | `@cost` is on an interface field or on its argument |
+| `GQL158` | `@listSize` is on a field that is not a list and has no `sizedFields` |
+| `GQL159` | a slicing argument is not an `Int` argument of the field |
+| `GQL160` | a sized field is not a list field of the return type |
+| `GQL161` | `assumedSize` is combined with slicing arguments that must be given and have no default |
+
+The analysis works without the flag too: every weight is then its default.
+Its model, in short (the doc comment of `CostAnalysis` is the contract):
+
+- A type weighs its `@cost` weight, else 1 for an object and 0 for a scalar
+  or an enum; an interface or a union weighs as its heaviest possible type;
+  an input object weighs 0.
+- A field weighs its `@cost` weight, else the weight of its named type.
+  Each argument given adds its own `@cost` weight, else the weight of its
+  type, plus the same for every input field written in its value.
+  Directives on the field add their arguments the same way. The raw cost of
+  a field is never below 0.
+- A list field has a size: the largest slicing argument given (a literal, or
+  a variable's value or default), else the largest default of a slicing
+  argument, else `assumedSize`, else `defaultListSize` (10 unless set). A
+  list field without `@listSize` has `defaultListSize`. With `sizedFields`
+  the field has size 1 and the listed child fields get the size.
+- The field cost of a selection set is the sum of each field's raw cost plus
+  its size times the field cost of its own selections. The type cost is the
+  sum of each field's size times its type weight plus the type cost of its
+  selections, and the root type's weight is added. Fragments add up in the
+  set that spreads them, an upper bound, in time linear in the document.
+- `__typename`, `__schema` and `__type` cost 0.
+
+`costOf(document, operation, variables:)` takes the coerced variable values
+for slicing arguments. `MaxCostRule` runs during validation, where there are
+none, so a variable counts with its default in the operation, else
+`defaultListSize`. The rule reports an operation when either cost is more
+than `maxCost` (`GQL238`).
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void main() {
+  final schema = switch (const SchemaBuilder(
+    includesCostDirectives: true,
+  ).fromSdl(
+    const Parser()
+        .parse(
+          Source('''
+type Query {
+  users(first: Int): [User]
+    @listSize(slicingArguments: ["first"], requireOneSlicingArgument: false)
+}
+
+type User @cost(weight: "2") {
+  name: String
+}
+'''),
+        )
+        .requireDocument(),
+  )) {
+    BuildSuccess(:final schema) => schema,
+    BuildFailure() => throw StateError('the schema is valid'),
+  };
+  final valid = switch (const SchemaValidator().validate(schema)) {
+    final ValidSchema valid => valid,
+    InvalidSchema() => throw StateError('the schema is valid'),
+  };
+  final source = Source('query Users { users(first: 5) { name } }');
+  final document = const Parser().parse(source).requireDocument();
+  final operation = document.definitions.whereType<OperationDefinition>().first;
+  print(CostAnalysis(schema).costOf(document, operation));
+
+  const validator = DocumentValidator(rules: [MaxCostRule(maxCost: 8)]);
+  switch (validator.validate(valid, document, source: source)) {
+    case ValidDocument():
+      print('valid');
+    case InvalidDocument(:final diagnostics):
+      for (final diagnostic in diagnostics) {
+        print('${diagnostic.code.id} ${diagnostic.message}');
+      }
+  }
+}
+```
+
+It prints:
+
+```text
+OperationCost(fieldCost: 2, typeCost: 11)
+GQL238 The operation "Users" has a field cost of 2 and a type cost of 11, more than the maximum of 8.
+```
+
+`SlicingArgumentsRule` (`GQL237`) is the draft's operation rule: a field
+whose `@listSize` has `slicingArguments` and keeps
+`requireOneSlicingArgument` must be given exactly one of them. An argument
+counts when its value is not the `null` literal; a variable counts.
