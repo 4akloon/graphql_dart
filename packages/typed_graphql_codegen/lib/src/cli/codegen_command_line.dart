@@ -21,7 +21,7 @@ final class const CodegenCommandLine() {
       '  check     Fail when a generated file is missing or out of date.\n\n'
       '${_parser.usage}';
 
-  ArgParser get _parser => ArgParser()
+  static final ArgParser _parser = ArgParser()
     ..addOption(
       'config',
       abbr: 'c',
@@ -45,6 +45,9 @@ final class const CodegenCommandLine() {
         (rest.single != 'generate' && rest.single != 'check')) {
       return CommandLineUsageError('Unknown command "${rest.join(' ')}".');
     }
-    return CommandLineRun(rest.single == 'check', results.option('config')!);
+    return CommandLineRun(
+      rest.single == 'check',
+      results.option('config') ?? defaultConfigPath,
+    );
   }
 }

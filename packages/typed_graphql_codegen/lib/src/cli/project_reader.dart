@@ -38,66 +38,115 @@ final class ProjectReader {
 
   /// Reads the project whose configuration is the file [configName].
   Future<ProjectReadResult> read(String configName) async {
-    final configText = _readText(configName);
-    if (configText is! _FileText) {
-      return ProjectReadFailed([(configText as _FileFailed).problem]);
+    switch (_readText(configName)) {
+      case _FileFailed(:final problem):
+        return ProjectReadFailed([problem]);
+      case _FileText(:final text):
+        switch (CodegenConfig.parse(text, path: configName)) {
+          case ConfigFailure(:final diagnostics):
+            return ProjectReadFailed(diagnostics);
+          case ConfigSuccess(:final config):
+            return _readProject(config);
+        }
     }
-    final parsed = CodegenConfig.parse(configText.text, path: configName);
-    if (parsed is ConfigFailure) return ProjectReadFailed(parsed.diagnostics);
-    final config = (parsed as ConfigSuccess).config;
-    final schema = await _readSchema(config);
-    return switch (schema) {
-      _Text(:final file) => _readSources(config, file),
-      _Failed(:final problems) => ProjectReadFailed(problems),
+  }
+
+  Future<ProjectReadResult> _readProject(CodegenConfig config) async {
+    return switch (await _readSchema(config)) {
+      _Text(:final file, :final secrets) => _readSources(config, file, secrets),
+      _Failed(:final problems, :final secrets) => ProjectReadFailed(
+        problems,
+        secrets,
+      ),
     };
   }
 
   Future<_SchemaOutcome> _readSchema(CodegenConfig config) async {
     switch (config.schema) {
       case SchemaFile(:final path):
-        final text = _readText(path);
-        return switch (text) {
-          _FileText() => _Text(ProjectFile(path, text.text)),
-          _FileFailed() => _Failed([text.problem]),
+        return switch (_readText(path)) {
+          _FileText(:final text) => _Text(ProjectFile(path, text), const []),
+          _FileFailed(:final problem) => _Failed([problem], const []),
         };
       case SchemaUrl(:final url):
         final expansion = HeaderExpander(environment).expand(config.headers);
-        if (expansion.problems.isNotEmpty) return _Failed(expansion.problems);
-        return switch (await fetcher.fetch(url, expansion.headers)) {
-          SchemaFetched(:final file) => _Text(file),
-          SchemaFetchFailed(:final diagnostic) => _Failed([diagnostic]),
+        if (expansion.problems.isNotEmpty) {
+          return _Failed(expansion.problems, expansion.secrets);
+        }
+        final fetched = await fetcher.fetch(
+          url,
+          expansion.headers,
+          secrets: expansion.secrets,
+        );
+        return switch (fetched) {
+          SchemaFetched(:final file) => _Text(file, expansion.secrets),
+          SchemaFetchFailed(:final diagnostic) => _Failed(
+            [diagnostic],
+            expansion.secrets,
+          ),
         };
     }
   }
 
-  ProjectReadResult _readSources(CodegenConfig config, ProjectFile schema) {
-    final problems = <Diagnostic>[];
+  ProjectReadResult _readSources(
+    CodegenConfig config,
+    ProjectFile schema,
+    List<String> secrets,
+  ) {
+    final listing = _documentPaths(config, schema.path);
+    final problems = [...listing.problems];
     final documents = <ProjectFile>[];
-    for (final path in _documentPaths(config, schema.path)) {
-      final text = _readText(path);
-      switch (text) {
-        case _FileText():
-          documents.add(ProjectFile(path, text.text));
-        case _FileFailed():
-          problems.add(text.problem);
+    for (final path in listing.paths) {
+      switch (_readText(path)) {
+        case _FileText(:final text):
+          documents.add(ProjectFile(path, text));
+        case _FileFailed(:final problem):
+          problems.add(problem);
       }
     }
-    if (problems.isNotEmpty) return ProjectReadFailed(problems);
-    return ProjectRead(config, schema, documents);
+    if (problems.isNotEmpty) return ProjectReadFailed(problems, secrets);
+    return ProjectRead(config, schema, documents, secrets);
   }
 
-  List<String> _documentPaths(CodegenConfig config, String schemaPath) {
+  // Symbolic links are not followed: a link to a file outside the project
+  // would get around the rule that paths stay inside it.
+  ({List<String> paths, List<Diagnostic> problems}) _documentPaths(
+    CodegenConfig config,
+    String schemaPath,
+  ) {
     final paths = <String>{};
+    final problems = <Diagnostic>[];
     for (final pattern in config.documents) {
-      for (final entity in Glob(pattern).listSync(root: directory)) {
-        if (entity is! File || !entity.path.endsWith('.graphql')) continue;
-        final relative = p.posix.joinAll(
-          p.split(p.relative(entity.path, from: directory)),
+      try {
+        final entities = Glob(pattern).listSync(
+          root: directory,
+          followLinks: false,
         );
-        if (relative != schemaPath) paths.add(relative);
+        for (final entity in entities) {
+          if (entity is! File || !entity.path.endsWith('.graphql')) continue;
+          final relative = p.posix.joinAll(
+            p.split(p.relative(entity.path, from: directory)),
+          );
+          if (relative != schemaPath) paths.add(relative);
+        }
+      } on FormatException catch (error) {
+        problems.add(
+          Diagnostic(
+            .invalidConfig,
+            .error,
+            "The documents pattern '$pattern' is not valid: ${error.message}.",
+          ),
+        );
+      } on FileSystemException catch (error) {
+        problems.add(
+          _unreadable(
+            pattern,
+            error.osError?.message ?? error.message,
+          ),
+        );
       }
     }
-    return paths.toList()..sort();
+    return (paths: paths.toList()..sort(), problems: problems);
   }
 
   _FileOutcome _readText(String path) {
@@ -138,11 +187,13 @@ sealed class _SchemaOutcome {
 }
 
 final class _Text extends _SchemaOutcome {
-  const _Text(this.file);
+  const _Text(this.file, this.secrets);
   final ProjectFile file;
+  final List<String> secrets;
 }
 
 final class _Failed extends _SchemaOutcome {
-  const _Failed(this.problems);
+  const _Failed(this.problems, this.secrets);
   final List<Diagnostic> problems;
+  final List<String> secrets;
 }

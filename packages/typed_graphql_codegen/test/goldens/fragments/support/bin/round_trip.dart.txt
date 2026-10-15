@@ -52,9 +52,14 @@ void main() {
 // A class and the fragments it spreads select `avatar` with different
 // sub-fields: toJson keeps the sub-fields of each.
 void _overlappingSelections() {
-  final JsonObject json = _json(
-    '{"avatar": {"url": "u", "size": 3}}',
-  );
+  _overlapRoundTrips('{"avatar": {"url": "u", "size": 3}}');
+  // A null object stays null: merging the class and its fragments must not
+  // lose it or invent a value.
+  _overlapRoundTrips('{"avatar": null}');
+}
+
+void _overlapRoundTrips(String text) {
+  final JsonObject json = _json(text);
   final DecodeResult<WithAvatars> result = WithAvatars.decode(json);
   if (result is! DecodeSuccess<WithAvatars>) {
     _fail('decode failed: $result');

@@ -3,9 +3,13 @@ library;
 
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 import '../support/cli_project.dart';
+
+final bool _isDartTool =
+    p.basenameWithoutExtension(Platform.resolvedExecutable) == 'dart';
 
 void main() {
   late CliProject project;
@@ -113,6 +117,7 @@ void main() {
     );
   });
 
+  // Under `--compiler exe` the resolved executable is the test binary.
   test('the executable passes the exit code to the process', () async {
     final result = Process.runSync(Platform.resolvedExecutable, [
       'run',
@@ -123,5 +128,5 @@ void main() {
     ]);
     expect(result.exitCode, 1);
     expect(result.stderr, contains('GQL509'));
-  });
+  }, skip: _isDartTool ? false : 'the tests do not run on the dart tool');
 }

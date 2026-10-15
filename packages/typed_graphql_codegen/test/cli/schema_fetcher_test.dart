@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_codegen/src/cli/schema_fetch_result.dart';
 import 'package:typed_graphql_codegen/src/cli/schema_fetcher.dart';
 
 import '../support/cli_project.dart';
@@ -79,10 +80,8 @@ void main() {
       'Bearer secret-token-value',
     );
     expect(requests.single.headers.contentType?.mimeType, 'application/json');
-    expect(
-      requests.single.body,
-      GraphQLRequest(query: IntrospectionQuery.full.text).toJson().toString(),
-    );
+    final body = jsonDecode(requests.single.body) as Map<String, Object?>;
+    expect(body['query'], IntrospectionQuery.full.text);
   });
 
   test('a 401 is GQL510 with the status', () async {
@@ -154,7 +153,7 @@ void main() {
     expect(
       project.err.toString(),
       "error GQL501: The header 'Authorization' uses the environment "
-      "variable 'TOKEN', which is not set.\n",
+      "variable 'TOKEN', which is not set or is empty.\n",
     );
     expect(requests, isEmpty);
   });
@@ -170,5 +169,142 @@ void main() {
       project.out.toString() + project.err.toString(),
       isNot(contains('secret-token-value')),
     );
+  });
+
+  test('a redirect is GQL510 with the target and no query', () async {
+    respond = (response) {
+      response.statusCode = 307;
+      response.headers.set('location', '/moved?token=abc123');
+      response.close();
+    };
+    expect(await project.run(['generate'], environment: environment), 1);
+    expect(
+      project.err.toString(),
+      'error GQL510: Cannot fetch the schema from '
+      "'http://127.0.0.1:${server.port}/graphql': the server redirected "
+      '(HTTP 307) to http://127.0.0.1:${server.port}/moved; set `schema` to '
+      'that URL.\n',
+    );
+    expect(requests, hasLength(1));
+  });
+
+  test('a body past the cap is GQL510', () async {
+    respond = (response) {
+      response.write('x' * 5000);
+      response.close();
+    };
+    final code = await project.run(
+      ['generate'],
+      environment: environment,
+      fetcher: const SchemaFetcher(maxBodyBytes: 1000),
+    );
+    expect(code, 1);
+    expect(
+      project.err.toString(),
+      'error GQL510: Cannot fetch the schema from '
+      "'http://127.0.0.1:${server.port}/graphql': the response is larger "
+      'than 1000 bytes.\n',
+    );
+  });
+
+  test('a body that is not UTF-8 says so', () async {
+    respond = (response) {
+      response.add([0xff, 0xfe, 0xfd]);
+      response.close();
+    };
+    expect(await project.run(['generate'], environment: environment), 1);
+    expect(
+      project.err.toString(),
+      endsWith(': the response is not valid UTF-8.\n'),
+    );
+  });
+
+  test('a 200 that is not JSON is GQL502 at the URL', () async {
+    respond = (response) {
+      response.write('<html>');
+      response.close();
+    };
+    expect(await project.run(['generate'], environment: environment), 1);
+    expect(
+      project.err.toString(),
+      startsWith(
+        'http://127.0.0.1:${server.port}/graphql.json:1:1: error GQL502: ',
+      ),
+    );
+  });
+
+  test('a header the HTTP layer refuses is not a UTF-8 problem', () async {
+    final result = await const SchemaFetcher().fetch(
+      Uri.parse('http://127.0.0.1:${server.port}/graphql'),
+      {'bad name': 'x'},
+    );
+    expect(
+      (result as SchemaFetchFailed).diagnostic.message,
+      startsWith(
+        "Cannot fetch the schema from 'http://127.0.0.1:${server.port}"
+        "/graphql': the request cannot be built: ",
+      ),
+    );
+    expect(requests, isEmpty);
+  });
+
+  test('a body that echoes the header hides it and escapes controls', () async {
+    respond = (response) {
+      response.statusCode = 400;
+      response.write('\u001b[31mBearer secret-token-value\nsecret-token-value');
+      response.close();
+    };
+    expect(await project.run(['generate'], environment: environment), 1);
+    final text = project.err.toString();
+    expect(text, isNot(contains('secret-token-value')));
+    expect(text, isNot(contains('\u001b')));
+    expect(text, contains(r'HTTP 400 Bad Request: \u001b[31m***\u000a***.'));
+  });
+
+  test('an errors message that echoes the header is hidden', () async {
+    respond = (response) {
+      response.write(
+        jsonEncode({
+          'errors': [
+            {'message': 'bad token secret-token-value'},
+          ],
+        }),
+      );
+      response.close();
+    };
+    expect(await project.run(['generate'], environment: environment), 1);
+    expect(project.err.toString(), isNot(contains('secret-token-value')));
+    expect(project.err.toString(), contains('bad token ***'));
+  });
+
+  test('a token in the URL is never printed', () async {
+    project
+        .file('typed_graphql.yaml')
+        .writeAsStringSync(
+          'schema: http://user:pw1@127.0.0.1:${server.port}/graphql'
+          '?key=urltoken\n${keptSettings(project)}',
+        );
+    respond = (response) {
+      response.statusCode = 403;
+      response.write('denied urltoken pw1');
+      response.close();
+    };
+    expect(await project.run(['generate'], environment: environment), 1);
+    expect(
+      project.err.toString(),
+      'error GQL510: Cannot fetch the schema from '
+      "'http://127.0.0.1:${server.port}/graphql': HTTP 403 Forbidden: "
+      'denied *** ***.\n',
+    );
+  });
+
+  test('a successful fetch names the schema without the query', () async {
+    project
+        .file('typed_graphql.yaml')
+        .writeAsStringSync(
+          'schema: http://127.0.0.1:${server.port}/graphql?key=urltoken\n'
+          '${keptSettings(project)}',
+        );
+    expect(await project.run(['generate'], environment: environment), 0);
   });
 }

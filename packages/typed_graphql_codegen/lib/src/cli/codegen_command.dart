@@ -9,6 +9,7 @@ import 'output_writer.dart';
 import 'project_read_result.dart';
 import 'project_reader.dart';
 import 'schema_fetcher.dart';
+import 'secret_redactor.dart';
 
 /// Runs the code generator's command line, with injected streams and working
 /// directory so tests run it in process.
@@ -71,30 +72,41 @@ final class CodegenCommand {
       environment: environment,
       fetcher: fetcher,
     ).read(p.basename(absolute));
-    if (project is! ProjectRead) {
-      return _report((project as ProjectReadFailed).diagnostics);
+    switch (project) {
+      case ProjectReadFailed(:final diagnostics, :final secrets):
+        return _report(diagnostics, secrets);
+      case ProjectRead():
+        return _generate(project, directory, isCheck: isCheck);
     }
+  }
+
+  int _generate(
+    ProjectRead project,
+    String directory, {
+    required bool isCheck,
+  }) {
     final result = ClientGenerator(
       project.config,
     ).generate(schema: project.schema, documents: project.documents);
-    if (result.hasErrors) return _report(result.diagnostics);
+    final secrets = project.secrets;
+    if (result.hasErrors) return _report(result.diagnostics, secrets);
     final writer = OutputWriter(directory);
     if (isCheck) {
       final outdated = writer.outdated(result.files);
-      final code = _report([...result.diagnostics, ...outdated]);
+      final code = _report([...result.diagnostics, ...outdated], secrets);
       if (outdated.isEmpty) out.writeln('Up to date.');
       return code;
     }
-    final written = writer.write(result.files);
-    final code = _report(result.diagnostics);
+    final (:written, :problems) = writer.write(result.files);
+    final code = _report([...result.diagnostics, ...problems], secrets);
     out.writeln(
       written.isEmpty ? 'Nothing to write.' : 'Wrote ${written.length} files.',
     );
     return code;
   }
 
-  int _report(List<Diagnostic> diagnostics) {
-    const printer = DiagnosticPrinter();
+  int _report(List<Diagnostic> diagnostics, [List<String> secrets = const []]) {
+    final printer = DiagnosticPrinter(SecretRedactor(secrets));
     for (final diagnostic in diagnostics) {
       err.writeln(printer.print(diagnostic));
     }

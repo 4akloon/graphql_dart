@@ -20,6 +20,10 @@ final class ProjectRead(
   /// The schema file.
   final ProjectFile schema,
   List<ProjectFile> documents,
+
+  /// The texts to hide when anything of this project is printed, such as the
+  /// expanded header values.
+  final List<String> secrets,
 ) extends ProjectReadResult {
   /// Creates the result.
   this;
@@ -32,8 +36,11 @@ final class ProjectRead(
 ///
 /// {@category codegen}
 final class ProjectReadFailed(
-  List<Diagnostic> diagnostics,
-) extends ProjectReadResult {
+  List<Diagnostic> diagnostics, [
+
+  /// The texts to hide when the problems are printed.
+  final List<String> secrets = const [],
+]) extends ProjectReadResult {
   /// Creates the result.
   this;
 
