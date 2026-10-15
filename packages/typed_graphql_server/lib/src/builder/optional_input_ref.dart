@@ -3,7 +3,6 @@ import 'package:typed_graphql/typed_graphql.dart';
 import 'input_ref.dart';
 import 'named_type_def.dart';
 import 'nullable_input_ref.dart';
-import 'optional.dart';
 
 /// The input reference of an `Arg.optional`: the schema type of [inner],
 /// whose Dart value tells a given value from an absent one.

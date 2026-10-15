@@ -1,0 +1,19 @@
+fragment AvatarUrl on User {
+  avatar {
+    url
+  }
+}
+
+fragment AvatarSize on User {
+  avatar {
+    size
+  }
+}
+
+fragment WithAvatars on User {
+  avatar {
+    url
+  }
+  ...AvatarUrl
+  ...AvatarSize
+}

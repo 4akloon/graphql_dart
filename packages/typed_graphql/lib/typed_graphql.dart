@@ -62,6 +62,7 @@ export 'src/protocol/graphql_error.dart';
 export 'src/protocol/graphql_request.dart';
 export 'src/protocol/json_reader.dart';
 export 'src/protocol/json_value.dart';
+export 'src/protocol/optional.dart';
 export 'src/protocol/path_segment.dart';
 export 'src/protocol/response_payload.dart';
 export 'src/schema/build/build_result.dart';

@@ -18,8 +18,8 @@
   type, then `pure`, `resolve`, `resolveWith` or `declareOnly`; `deprecated`
   and `withDirectives` modify the stub. A resolver of the wrong type does
   not compile (checked by the compile-failure tests).
-- Typed arguments: `Arg`, `Arg.optional` with `Optional`, `Present` and
-  `Absent`, `Arguments`, `ArgumentsDef` for an arguments class.
+- Typed arguments: `Arg`, `Arg.optional` with the core's `Optional`,
+  `Present` and `Absent`, `Arguments`, `ArgumentsDef` for an arguments class.
 - `ExecutableSchemaBuilder.build` assembles the declared types into a
   validated `ExecutableSchema<C>`; the builder's own checks (`GQL300`-`GQL302`)
   and the core validator report through `SchemaBuildError`. `BuildOptions<C>`

@@ -1,0 +1,13 @@
+query GetStats($role: Role = ADMIN, $flag: Flag = name) {
+  stats(role: $role, flag: $flag) {
+    int
+    bool
+    override
+    _hidden
+    flag
+    matrix {
+      id
+    }
+    summary
+  }
+}

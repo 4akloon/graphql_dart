@@ -1,0 +1,5 @@
+tags:
+  analysis:
+    # Generated code is analyzed in a temporary package; pub get and the
+    # analyzer start processes.
+    timeout: 5x

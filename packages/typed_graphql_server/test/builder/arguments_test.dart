@@ -36,7 +36,7 @@ void main() {
     });
 
     test('an optional argument is absent when missing', () {
-      expect(argumentsOf({}).get(note), const Absent());
+      expect(argumentsOf({}).get(note), const Absent<String>());
     });
 
     test('an optional argument is present when given, even as null', () {

@@ -1,0 +1,132 @@
+import 'dart:io';
+
+import 'package:generated_polymorphic/user_node.graphql.dart';
+import 'package:generated_polymorphic/user_result.graphql.dart';
+import 'package:typed_graphql/typed_graphql.dart';
+
+JsonObject _json(String text) =>
+    (const JsonReader().parse(text) as DecodeSuccess<JsonValue>).value
+        as JsonObject;
+
+final JsonObject _user = _json('''
+{"__typename": "User", "id": "1", "name": "Ada", "owner": {"name": "Zed"},
+ "friends": [{"id": "2", "name": "Bob"}]}
+''');
+final JsonObject _bot = _json('''
+{"__typename": "Bot", "id": "3", "model": null, "owner": null}
+''');
+final JsonObject _robot = _json('''
+{"__typename": "Robot", "id": "4", "owner": null}
+''');
+
+void main() {
+  _nodeCard();
+  _result();
+  _labelled();
+  _owned();
+  _reselect();
+  _missingTypename();
+}
+
+void _nodeCard() {
+  final NodeCard user = _decode(NodeCard.decode, _user);
+  final String userLabel = switch (user) {
+    NodeCardUser(:final name, :final fragments) =>
+      '$name ${fragments.userName.name}',
+    NodeCardBot() => 'bot',
+    NodeCardUnknown() => 'unknown',
+  };
+  _expect(userLabel, 'Ada Ada');
+  _expect(user.typename, 'User');
+  _expect(user.id, '1');
+  final NodeCard bot = _decode(NodeCard.decode, _bot);
+  _expect(bot is NodeCardBot && bot.model == null, true);
+  final NodeCard robot = _decode(NodeCard.decode, _robot);
+  _expect(robot is NodeCardUnknown && robot.typename == 'Robot', true);
+  _expect(robot.id, '4');
+  for (final NodeCard value in [user, bot, robot]) {
+    _roundTrips(NodeCard.decode, value, value.toJson());
+  }
+  _expect(user == bot, false);
+}
+
+void _result() {
+  final Result user = _decode(Result.decode, _user);
+  _expect(user is ResultUser && user.friends.single.id == '2', true);
+  final Result bot = _decode(Result.decode, _bot);
+  _expect(bot is ResultBot && bot.id == '3', true);
+  final Result robot = _decode(Result.decode, _robot);
+  _expect(robot is ResultUnknown && robot.typename == 'Robot', true);
+  for (final Result value in [user, bot, robot]) {
+    _roundTrips(Result.decode, value, value.toJson());
+  }
+}
+
+void _labelled() {
+  final Labelled user = _decode(Labelled.decode, _user);
+  _expect(user.fragments.nodeId.id, '1');
+  final Labelled robot = _decode(Labelled.decode, _robot);
+  _expect(robot.fragments.nodeId.id, '4');
+  _expect(user is LabelledUser && user.name == 'Ada', true);
+  for (final Labelled value in [user, robot]) {
+    _roundTrips(Labelled.decode, value, value.toJson());
+  }
+}
+
+void _owned() {
+  final Owned user = _decode(Owned.decode, _user);
+  _expect(user.owner?.name, 'Zed');
+  final Owned bot = _decode(Owned.decode, _bot);
+  _expect(bot.owner, null);
+  _roundTrips(Owned.decode, user, user.toJson());
+  _roundTrips(Owned.decode, bot, bot.toJson());
+}
+
+void _reselect() {
+  final Reselect user = _decode(Reselect.decode, _user);
+  _expect(user is ReselectUser && user.friends.single.name == 'Bob', true);
+  final Reselect bot = _decode(Reselect.decode, _bot);
+  _expect(bot is ReselectUnknown && bot.typename == 'Bot', true);
+  _roundTrips(Reselect.decode, user, user.toJson());
+  _roundTrips(Reselect.decode, bot, bot.toJson());
+}
+
+void _missingTypename() {
+  final JsonObject json = _json('{"id": "1"}');
+  if (NodeCard.decode(json) is! DecodeFailure) {
+    _fail('a missing __typename was accepted');
+  }
+}
+
+T _decode<T>(
+  DecodeResult<T> Function(JsonObject json) decode,
+  JsonObject json,
+) {
+  final DecodeResult<T> result = decode(json);
+  if (result is! DecodeSuccess<T>) {
+    _fail('decode failed: $result');
+  }
+  return (result as DecodeSuccess<T>).value;
+}
+
+void _roundTrips<T extends Object>(
+  DecodeResult<T> Function(JsonObject json) decode,
+  T value,
+  JsonObject json,
+) {
+  final T again = _decode(decode, json);
+  if (again != value || again.hashCode != value.hashCode) {
+    _fail('decode(toJson()) is $again, not $value');
+  }
+}
+
+void _expect(Object? actual, Object? expected) {
+  if (actual != expected) {
+    _fail('expected $expected, got $actual');
+  }
+}
+
+void _fail(String message) {
+  stderr.writeln(message);
+  exit(1);
+}

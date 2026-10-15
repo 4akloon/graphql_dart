@@ -1,0 +1,201 @@
+import 'dart:io';
+
+import 'package:generated_operations/schema.graphql.dart';
+import 'package:generated_operations/user.graphql.dart';
+import 'package:generated_operations/user_mutations.graphql.dart';
+import 'package:generated_operations/user_subscriptions.graphql.dart';
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_client/typed_graphql_client.dart';
+
+JsonObject _json(String text) =>
+    (const JsonReader().parse(text) as DecodeSuccess<JsonValue>).value
+        as JsonObject;
+
+void main() {
+  _request();
+  _optionals();
+  _getUser();
+  _findNode();
+  _searchAll();
+  _otherOperations();
+  _badMember();
+}
+
+void _request() {
+  const query = GetUserQuery(GetUserVariables(id: '1', full: true));
+  final GraphQLRequest request = query.toRequest();
+  _expect(request.query, GetUserQuery.operationDocument.text);
+  _expect(request.operationName, 'GetUser');
+  _expect(request.variables, _json('{"id": "1", "full": true}'));
+  _expect(GetUserQuery.operationDocument.sha256.length, 64);
+  _expect(const EveryoneQuery().variablesJson, _json('{}'));
+  _expect(const EveryoneQuery().toRequest().operationName, 'Everyone');
+}
+
+void _optionals() {
+  const sent = GetUserVariables(
+    id: '1',
+    full: false,
+    withFriends: Optional.present(null),
+  );
+  _expect(sent.toJson(), _json('{"id": "1", "full": false, "withFriends": null}'));
+  _expect(
+    sent == const GetUserVariables(id: '1', full: false),
+    false,
+  );
+  const search = SearchAllVariables(
+    by: SearchByName('Ada'),
+    tags: Optional.present(['a', 'b']),
+  );
+  _expect(search.toJson(), _json('{"by": {"name": "Ada"}, "tags": ["a", "b"]}'));
+  _expect(
+    search ==
+        const SearchAllVariables(
+          by: SearchByName('Ada'),
+          tags: Optional.present(['a', 'b']),
+        ),
+    true,
+  );
+}
+
+void _getUser() {
+  const withUser = GetUserVariables(
+    id: '1',
+    full: true,
+    withFriends: Optional.present(true),
+  );
+  final GetUserData full = _decode(
+    const GetUserQuery(withUser),
+    _json('''
+{"user": {"id": "1", "name": "Ada", "role": "ADMIN",
+  "createdAt": "2026-10-15T00:00:00.000Z", "cursor": "c",
+  "friends": [{"id": "2", "name": "Bob", "__typename": "User"}],
+  "__typename": "User"}}
+'''),
+  );
+  _expect(full.user?.fragments.userCard?.name, 'Ada');
+  _expect(full.user?.friends?.single.name, 'Bob');
+  _expect(full.user?.role, RoleKnown.admin);
+  _roundTrips(const GetUserQuery(withUser), full);
+  const hidden = GetUserVariables(id: '1', full: false);
+  final GetUserData lean = _decode(
+    const GetUserQuery(hidden),
+    _json('{"user": {"role": "VIEWER", "createdAt": null, "cursor": null}}'),
+  );
+  _expect(lean.user?.fragments.userCard, null);
+  _expect(lean.user?.friends, null);
+  _roundTrips(const GetUserQuery(hidden), lean);
+  final GetUserData none = _decode(
+    const GetUserQuery(hidden),
+    _json('{"user": null}'),
+  );
+  _expect(none.user, null);
+  _roundTrips(const GetUserQuery(hidden), none);
+}
+
+void _findNode() {
+  const query = FindNodeQuery(FindNodeVariables(id: '1'));
+  final FindNodeData user = _decode(
+    query,
+    _json('{"node": {"__typename": "User", "id": "1", "name": "Ada"}}'),
+  );
+  _expect(
+    switch (user.node) {
+      FindNodeDataNodeUser(:final name, :final fragments) =>
+        '$name ${fragments.userCard.id}',
+      FindNodeDataNodeBot() || FindNodeDataNodeUnknown() || null => 'other',
+    },
+    'Ada 1',
+  );
+  final FindNodeData bot = _decode(
+    query,
+    _json('{"node": {"__typename": "Bot", "id": "2", "model": null}}'),
+  );
+  _expect(bot.node is FindNodeDataNodeBot, true);
+  final FindNodeData robot = _decode(
+    query,
+    _json('{"node": {"__typename": "Robot", "id": "3"}}'),
+  );
+  _expect(robot.node is FindNodeDataNodeUnknown, true);
+  for (final FindNodeData data in [user, bot, robot]) {
+    _roundTrips(query, data);
+  }
+}
+
+void _searchAll() {
+  const query = SearchAllMutation(SearchAllVariables(by: SearchByName('A')));
+  final SearchAllData data = _decode(
+    query,
+    _json('''
+{"search": [{"__typename": "User", "id": "1", "name": "Ada"},
+  {"__typename": "Bot", "id": "2", "model": "m"},
+  {"__typename": "Other"}]}
+'''),
+  );
+  _expect(data.search.length, 3);
+  _expect(data.search.last is SearchAllDataSearchUnknown, true);
+  _roundTrips(query, data);
+  _expect(query.toRequest().variables, _json('{"by": {"name": "A"}}'));
+  _expect(query.document.type, OperationType.mutation);
+}
+
+void _otherOperations() {
+  const rename = RenameUserMutation(RenameUserVariables(id: '1', name: 'Z'));
+  final RenameUserData renamed = _decode(
+    rename,
+    _json('{"renameUser": {"id": "1", "name": "Z"}}'),
+  );
+  _expect(renamed.renameUser?.fragments.userCard.name, 'Z');
+  _roundTrips(rename, renamed);
+  const changed = UserChangedSubscription(UserChangedVariables(id: '1'));
+  final UserChangedData event = _decode(
+    changed,
+    _json('{"userChanged": {"id": "1", "name": "Ada"}}'),
+  );
+  _expect(event.userChanged?.name, 'Ada');
+  _roundTrips(changed, event);
+  _expect(changed.document.type, OperationType.subscription);
+  final EveryoneData everyone = _decode(
+    const EveryoneQuery(),
+    _json('{"node": {"id": "9"}}'),
+  );
+  _roundTrips(const EveryoneQuery(), everyone);
+}
+
+void _badMember() {
+  const query = GetUserQuery(GetUserVariables(id: '1', full: false));
+  final DecodeResult<GetUserData> result = query.decodeData(
+    _json('{"user": {"role": 7, "createdAt": null, "cursor": null}}'),
+  );
+  if (result is! DecodeFailure) {
+    _fail('a bad role was accepted');
+  } else {
+    _expect('${result.path}', '[user, role]');
+  }
+}
+
+T _decode<T extends Object>(GraphQLOperation<T> operation, JsonObject data) {
+  final DecodeResult<T> result = operation.decodeData(data);
+  if (result is! DecodeSuccess<T>) {
+    _fail('decode failed: $result');
+  }
+  return (result as DecodeSuccess<T>).value;
+}
+
+void _roundTrips<T extends Object>(GraphQLOperation<T> operation, T value) {
+  final T again = _decode(operation, (value as DataObject).toJson());
+  if (again != value || again.hashCode != value.hashCode) {
+    _fail('decode(toJson()) is $again, not $value');
+  }
+}
+
+void _expect(Object? actual, Object? expected) {
+  if (actual != expected) {
+    _fail('expected $expected, got $actual');
+  }
+}
+
+void _fail(String message) {
+  stderr.writeln(message);
+  exit(1);
+}

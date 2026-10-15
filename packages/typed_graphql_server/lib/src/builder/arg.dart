@@ -1,7 +1,6 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
 import 'input_ref.dart';
-import 'optional.dart';
 import 'optional_input_ref.dart';
 
 /// A typed argument of a field, or a field of an input object (R4.3).
@@ -22,11 +21,11 @@ final class Arg<T> {
 
   Arg._optional(
     this.name,
-    this.type, {
+    this.type,
+    this._absentValue, {
     this.description,
     this.deprecationReason,
-  }) : defaultValue = null,
-       _absentValue = const Absent() as T;
+  }) : defaultValue = null;
 
   /// Declares an argument whose absence differs from `null`: its value is
   /// [Present] when the request gave one and [Absent] when it did not (R4.4).
@@ -38,6 +37,7 @@ final class Arg<T> {
   }) => Arg<Optional<T>>._optional(
     name,
     OptionalInputRef(type),
+    Optional<T>.absent(),
     description: description,
     deprecationReason: deprecationReason,
   );

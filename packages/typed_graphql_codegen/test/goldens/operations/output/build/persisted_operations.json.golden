@@ -1,0 +1,48 @@
+{
+  "format": "apollo-persisted-query-manifest",
+  "version": 1,
+  "operations": [
+    {
+      "id": "5b5057baca5f3def257f426d2cc1dae2068ddc332af9eea24882bb95be829e61",
+      "name": "Everyone",
+      "type": "query",
+      "body": "query Everyone{node(id:\"1\"){id __typename}}"
+    },
+    {
+      "id": "7a6b96aae12daef4bcd220864fe9f9d5e3f606c6cde72b347b4c985a3939b1e0",
+      "name": "FindNode",
+      "type": "query",
+      "body": "query FindNode($id:ID!){node(id:$id){id ...on User{name ...UserCard}...on Bot{model}__typename}}fragment UserCard on User{id name}"
+    },
+    {
+      "id": "130d1b0f2357cd5e194b7ea4e431a802b93cf8ca9b1eccf000514436908f72ba",
+      "name": "GetStats",
+      "type": "query",
+      "body": "query GetStats($role:Role=ADMIN$flag:Flag=name){stats(role:$role flag:$flag){int bool override _hidden flag matrix{id __typename}summary __typename}}"
+    },
+    {
+      "id": "198ab8e735cf86b04b66c1094135e3e63cfae5a89e4b793ae58982ff95891f8e",
+      "name": "GetUser",
+      "type": "query",
+      "body": "query GetUser($id:ID!$withFriends:Boolean=false$full:Boolean!){user(id:$id){...UserCard@include(if:$full)role createdAt cursor friends(first:2)@include(if:$withFriends){id name __typename}__typename}}fragment UserCard on User{id name}"
+    },
+    {
+      "id": "99b64c8c80d6d3ed8be8cababb9cdafc092f7b125db944902fe6d172681f3020",
+      "name": "RenameUser",
+      "type": "mutation",
+      "body": "mutation RenameUser($id:ID!$name:String!){renameUser(id:$id name:$name){...UserCard __typename}}fragment UserCard on User{id name}"
+    },
+    {
+      "id": "b004d7118cec818f35b49f580a3891bfda5ae2d8168e1e1cea48eb1ed2e8e246",
+      "name": "SearchAll",
+      "type": "mutation",
+      "body": "mutation SearchAll($by:SearchBy!$filter:UserFilter$tags:[String!]){search(by:$by filter:$filter tags:$tags){...on User{id name}...on Bot{id model}__typename}}"
+    },
+    {
+      "id": "7a4a1e850c31f8be22e726ba1e15417b48ca868176bc43c36a64fa305be990b2",
+      "name": "UserChanged",
+      "type": "subscription",
+      "body": "subscription UserChanged($id:ID!){userChanged(id:$id){id name __typename}}"
+    }
+  ]
+}

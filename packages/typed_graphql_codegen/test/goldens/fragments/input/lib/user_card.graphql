@@ -1,0 +1,13 @@
+fragment UserCard on User {
+  __typename
+  _id: id
+  default: name
+  role
+  createdAt
+  cursor
+  friends(first: 2) {
+    id
+    ...UserName
+  }
+  ...UserName @include(if: $full)
+}

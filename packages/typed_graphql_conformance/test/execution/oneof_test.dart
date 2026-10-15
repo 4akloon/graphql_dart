@@ -1,4 +1,5 @@
 import 'package:test/test.dart';
+import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 import '../support/execution_port.dart';

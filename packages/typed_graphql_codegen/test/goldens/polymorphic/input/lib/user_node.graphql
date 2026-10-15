@@ -1,0 +1,37 @@
+fragment NodeCard on Node {
+  id
+  ... on User {
+    name
+    ...UserName
+  }
+  ... on Bot {
+    model
+  }
+}
+
+fragment UserName on User {
+  name
+}
+
+fragment Reselect on Node {
+  id
+  ... on User {
+    id
+    friends(first: 1) {
+      name
+    }
+  }
+}
+
+fragment Owned on Node {
+  id
+  owner {
+    name
+  }
+  ... on User {
+    name
+  }
+  ... on Bot {
+    model
+  }
+}

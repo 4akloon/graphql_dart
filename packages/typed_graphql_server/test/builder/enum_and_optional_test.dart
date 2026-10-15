@@ -80,14 +80,14 @@ void main() {
     });
 
     test('Absent equals Absent and nothing else', () {
-      expect(const Absent(), const Absent());
-      expect(const Absent().hashCode, const Absent().hashCode);
-      expect(const Absent(), isNot(const Present<Object?>(null)));
+      expect(const Absent<int>(), const Absent<int>());
+      expect(const Absent<int>().hashCode, const Absent<int>().hashCode);
+      expect(const Absent<int>(), isNot(const Present<Object?>(null)));
     });
 
     test('Absent fits every Optional', () {
       const Optional<String> value = Absent();
-      expect(value, isA<Absent>());
+      expect(value, isA<Absent<String>>());
     });
   });
 }

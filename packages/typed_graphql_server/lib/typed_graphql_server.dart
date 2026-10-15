@@ -24,7 +24,6 @@ export 'src/builder/leaf_ref.dart';
 export 'src/builder/named_type_def.dart';
 export 'src/builder/object_options.dart';
 export 'src/builder/object_type_def.dart';
-export 'src/builder/optional.dart';
 export 'src/builder/output_ref.dart';
 export 'src/builder/scalar_type_def.dart';
 export 'src/builder/schema_build_error.dart';

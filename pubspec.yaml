@@ -16,5 +16,6 @@ workspace:
   - packages/typed_graphql_shelf
   - packages/typed_graphql_client
   - packages/typed_graphql_codegen
+  - packages/typed_graphql_codegen/example
   - packages/typed_graphql_builder
   - packages/typed_graphql_conformance

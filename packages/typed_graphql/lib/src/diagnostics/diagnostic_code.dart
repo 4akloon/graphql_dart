@@ -616,4 +616,65 @@ enum DiagnosticCode(
   /// It is a `GraphQLError`'s `extensions.code` in a response of
   /// `ExecutableSchema.execute`.
   maxExecutionStepsExceeded('GQL337'),
+
+  /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
+  /// the YAML parser's.
+  configSyntax('GQL500'),
+
+  /// `GQL501`: a missing, unknown or mistyped key, or a malformed path, glob
+  /// or Dart reference, in the code generator's configuration; also a schema
+  /// URL header whose `${NAME}` variable is not set or is empty, or whose
+  /// expanded value is not ASCII.
+  invalidConfig('GQL501'),
+
+  /// `GQL502`: a schema file the code generator cannot read as a schema: not
+  /// JSON, or JSON that is not an object.
+  invalidSchemaInput('GQL502'),
+
+  /// `GQL503`: an operation without a name in a document the code generator
+  /// reads; its classes are named after the operation.
+  anonymousOperation('GQL503'),
+
+  /// `GQL504`: a construct the code generator does not support yet: `@defer`,
+  /// `@stream`, an introspection field (`__schema`, `__type`), or a
+  /// subscription root that spreads a fragment which plans as a sealed base
+  /// class, directly, inside an inline fragment or through other fragment
+  /// spreads; it would need `__typename`, which a subscription cannot select.
+  /// A plain inline fragment is fine.
+  unsupportedInDocument('GQL504'),
+
+  /// `GQL505`: the configuration maps a scalar the schema does not have as a
+  /// custom scalar: unknown, not a scalar, or built in.
+  unknownScalarMapping('GQL505'),
+
+  /// `GQL506`: no document matches the configuration's `documents`; reported
+  /// as a warning.
+  noDocuments('GQL506'),
+
+  /// `GQL507`: the code generator would declare one Dart name twice, such as
+  /// an enum `Role` and an input object `RoleKnown`, two members of one
+  /// generated class, or two generated files at one path; reported at the
+  /// second declaration, related to the first.
+  generatedNameCollision('GQL507'),
+
+  /// `GQL508`: a name the code generator would declare hides a Dart type the
+  /// generated code uses, such as `List` or a `dart:core` type a scalar is
+  /// mapped to.
+  reservedTypeName('GQL508'),
+
+  /// `GQL509`: `check` found a generated file that is missing or differs from
+  /// what `generate` would write; reported without a span.
+  outputOutdated('GQL509'),
+
+  /// `GQL510`: the command line cannot read a file it needs (the
+  /// configuration, the schema or a document), list the documents glob, fetch
+  /// the schema URL (a network failure, a timeout, a redirect, a body over
+  /// 64 MiB, a non-success status or an unreadable body), or write a generated
+  /// file; reported without a span.
+  inputUnreadable('GQL510'),
+
+  /// `GQL511`: an operation or fragment whose selections would make the code
+  /// generator declare more classes than its fixed limit (10000); reported at
+  /// the operation or fragment name.
+  tooManyGeneratedClasses('GQL511'),
 }

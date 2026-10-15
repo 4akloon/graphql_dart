@@ -1,0 +1,8 @@
+dartdoc:
+  categories:
+    operations:
+      markdown: doc/operations.md
+      displayName: Generated Operations
+  categoryOrder:
+    - operations
+  showUndocumentedCategories: true

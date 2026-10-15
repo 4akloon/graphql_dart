@@ -1,0 +1,26 @@
+fragment Result on SearchResult {
+  __typename
+  ... on User {
+    id
+    friends(first: 1) {
+      id
+    }
+  }
+  ... on Bot {
+    id
+  }
+}
+
+fragment Labelled on Node {
+  ...NodeId
+  ... on User {
+    name
+  }
+  ... on Bot {
+    model
+  }
+}
+
+fragment NodeId on Node {
+  id
+}

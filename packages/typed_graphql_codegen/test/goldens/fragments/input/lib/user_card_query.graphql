@@ -1,0 +1,5 @@
+query CardQuery($full: Boolean!) {
+  user(id: "1") {
+    ...UserCard
+  }
+}
