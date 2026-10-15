@@ -88,4 +88,35 @@ void main() {
     await server.handle(fixture.request('{ nothing }'));
     expect(reached, isFalse);
   });
+
+  group('the timeout the hook sees', () {
+    final profile = ServerProfile.production.withTimeout(
+      const Duration(seconds: 5),
+    );
+
+    Future<Duration?> timeoutSeenFor(String query) async {
+      Duration? seen;
+      final server = fixture.server(
+        profile: profile,
+        extensions: [
+          HookExtension(
+            execute: (request, next) {
+              seen = request.options.timeout;
+              return next(request);
+            },
+          ),
+        ],
+      );
+      await server.handle(fixture.request(query));
+      return seen;
+    }
+
+    test('a query has the profile timeout', () async {
+      expect(await timeoutSeenFor('{ hello }'), const Duration(seconds: 5));
+    });
+
+    test('a subscription has none', () async {
+      expect(await timeoutSeenFor('subscription { ticks }'), isNull);
+    });
+  });
 }

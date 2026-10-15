@@ -172,7 +172,10 @@ void main() {
         ],
       );
       await server.handle(fixture.request('{ hello }'));
-      expect(hashes.single, hasLength(64));
+      expect(
+        hashes.single,
+        '001c3174e099bd72b729d0c0a529ba9f5a740c446e2a6e1d71b283cb84ec3065',
+      );
     });
   });
 
@@ -210,6 +213,99 @@ void main() {
       final response = await server.handle(fixture.request('{ hello }'));
       expect(fixture.codeOf(response), 'GQL330');
       expect(fixture.messageOf(response), 'Unexpected error.');
+      expect(seen.single, isA<StateError>());
+    });
+  });
+
+  group('the trust placed in hooks', () {
+    test('a hook-built DocumentAccepted is executed as is', () async {
+      final server = fixture.server(
+        extensions: [
+          HookExtension(
+            document: (request, next) async {
+              final accepted =
+                  await next(request.withText('{ tag }')) as DocumentAccepted;
+              return DocumentAccepted(
+                accepted.document,
+                accepted.source,
+                'chosen-by-the-hook',
+              );
+            },
+          ),
+        ],
+      );
+      final response = await server.handle(fixture.request('{ hello }'));
+      expect(fixture.json(response)['data'], {'tag': 'default'});
+    });
+
+    test('a rejection by onDocument builds no context', () async {
+      var built = 0;
+      final server = fixture.server(
+        contextFactory: (_) {
+          built++;
+          return const Ctx('x');
+        },
+        extensions: [
+          HookExtension(
+            document: (request, next) async =>
+                DocumentRejected([GraphQLError('No')]),
+          ),
+        ],
+      );
+      await server.handle(fixture.request('{ hello }'));
+      expect(built, 0);
+    });
+
+    test('a rejection without errors is a masked GQL330', () async {
+      final server = fixture.server(
+        profile: ServerProfile.production,
+        extensions: [
+          HookExtension(
+            document: (request, next) async => const DocumentRejected([]),
+          ),
+        ],
+      );
+      final response = await server.handle(fixture.request('{ hello }'));
+      expect(fixture.codeOf(response), 'GQL330');
+      expect(fixture.messageOf(response), 'Unexpected error.');
+      expect((response as SingleResponse).outcome, ServerOutcome.internalError);
+    });
+  });
+
+  group('failures of a hook', () {
+    test('a failed future is GQL330', () async {
+      final server = fixture.server(
+        profile: ServerProfile.production,
+        extensions: [
+          HookExtension(
+            document: (request, next) async {
+              throw StateError('secret');
+            },
+          ),
+        ],
+      );
+      final response = await server.handle(fixture.request('{ hello }'));
+      expect(fixture.codeOf(response), 'GQL330');
+    });
+
+    test('a throwing onExecute is GQL330 and onError sees it', () async {
+      final seen = <Object>[];
+      final server = fixture.server(
+        profile: ServerProfile.production,
+        onError: (error, stackTrace, reported) {
+          seen.add(error);
+          return null;
+        },
+        extensions: [
+          HookExtension(
+            execute: (request, next) async {
+              throw StateError('secret');
+            },
+          ),
+        ],
+      );
+      final response = await server.handle(fixture.request('{ hello }'));
+      expect(fixture.codeOf(response), 'GQL330');
       expect(seen.single, isA<StateError>());
     });
   });

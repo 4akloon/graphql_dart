@@ -27,19 +27,21 @@ class DocumentCompiler {
   DocumentResult compile(String text, String hash) {
     final source = Source(text);
     return switch (parser.parse(source)) {
-      ParseFailure(:final diagnostics) => DocumentRejected(
-        const DiagnosticErrors().of(diagnostics),
-      ),
+      ParseFailure(:final diagnostics) => _rejected(diagnostics),
       ParseSuccess(:final document) => switch (validator.validate(
         schema,
         document,
         source: source,
       )) {
         final ValidDocument valid => DocumentAccepted(valid, source, hash),
-        InvalidDocument(:final diagnostics) => DocumentRejected(
-          const DiagnosticErrors().of(diagnostics),
-        ),
+        InvalidDocument(:final diagnostics) => _rejected(diagnostics),
       },
     };
   }
+
+  // Unmodifiable: the cache hands the same list to every request, and an
+  // extension must not be able to change what later requests see.
+  DocumentRejected _rejected(List<Diagnostic> diagnostics) => DocumentRejected(
+    List.unmodifiable(const DiagnosticErrors().of(diagnostics)),
+  );
 }

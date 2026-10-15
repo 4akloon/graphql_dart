@@ -4,20 +4,10 @@ import '../execution/error_hook.dart';
 import '../execution/executable_schema.dart';
 import '../execution/graphql_exception.dart';
 import 'context_factory.dart';
-import 'cost_limit.dart';
-import 'csrf_extension.dart';
-import 'document_cache.dart';
-import 'document_compiler.dart';
-import 'document_handler.dart';
-import 'document_length.dart';
-import 'document_step.dart';
-import 'execution_step.dart';
-import 'extension_chain.dart';
+import 'pipeline_assembly.dart';
 import 'pipeline_errors.dart';
 import 'request_handler.dart';
-import 'request_step.dart';
 import 'server_extension.dart';
-import 'server_limits.dart';
 import 'server_profile.dart';
 import 'server_request.dart';
 import 'server_response.dart';
@@ -55,89 +45,22 @@ final class GraphQLServer<C> {
     int documentCacheSize = 1000,
     List<ServerExtension<C>> extensions = const [],
   }) {
-    final errors = _pipelineErrors(profile, onError);
-    final length = DocumentLength(profile.limits.maxDocumentLength, errors);
-    // The user's extensions are outermost, then the built-in ones in a fixed
-    // order, so no list order puts a step before a security check. M6c adds
-    // the trusted-document and APQ extensions here.
-    final chain = ExtensionChain<C>([
-      ...extensions,
-      if (profile.csrfPrevention case final csrf?)
-        CsrfExtension<C>(csrf, errors),
-    ]);
-    final executionStep = ExecutionStep<C>(schema, profile, onError);
-    final request = RequestStep<C>(
-      length: length,
-      documentPhase: chain.document(
-        _documentStep(
-          schema.schema,
-          profile,
-          validationRules,
-          documentCacheSize,
-          errors,
-        ),
-      ),
+    final assembly = PipelineAssembly<C>(
+      schema: schema,
       contextFactory: contextFactory,
-      executionStep: executionStep,
-      executionPhase: chain.execution(executionStep.run),
-      errors: errors,
-      costLimit: _costLimit(schema.schema, profile.limits),
+      profile: profile,
+      validationRules: validationRules,
+      onError: onError,
+      documentCacheSize: documentCacheSize,
+      extensions: extensions,
     );
-    return GraphQLServer._(errors, chain.request(request.run));
+    return GraphQLServer._(assembly.errors, assembly.handler());
   }
 
   GraphQLServer._(this._errors, this._request);
 
   final PipelineErrors _errors;
   final RequestHandler _request;
-
-  static PipelineErrors _pipelineErrors(
-    ServerProfile profile,
-    ErrorHook? onError,
-  ) => PipelineErrors(maskErrors: profile.maskErrors, onError: onError);
-
-  static DocumentCompiler _compiler(
-    ValidSchema schema,
-    ServerProfile profile,
-    List<ValidationRule> validationRules,
-  ) => DocumentCompiler(
-    Parser(options: ParserOptions(maxTokens: profile.limits.maxTokens)),
-    DocumentValidator(
-      rules: [...validationRules, ..._limitRules(profile.limits)],
-      includesSuggestions: profile.includesSuggestions,
-    ),
-    schema,
-  );
-
-  static DocumentHandler _documentStep(
-    ValidSchema schema,
-    ServerProfile profile,
-    List<ValidationRule> validationRules,
-    int cacheSize,
-    PipelineErrors errors,
-  ) => DocumentStep(
-    DocumentCache(cacheSize),
-    _compiler(schema, profile, validationRules),
-    DocumentLength(profile.limits.maxDocumentLength, errors),
-    errors,
-  ).run;
-
-  static CostLimit? _costLimit(ValidSchema schema, ServerLimits limits) =>
-      switch (limits.maxCost) {
-        final maxCost? => CostLimit(
-          CostAnalysis(schema.schema, defaultListSize: limits.defaultListSize),
-          maxCost,
-        ),
-        null => null,
-      };
-
-  static List<ValidationRule> _limitRules(ServerLimits limits) => [
-    if (limits.maxDepth case final maxDepth?) MaxDepthRule(maxDepth: maxDepth),
-    if (limits.maxAliases case final maxAliases?)
-      MaxAliasesRule(maxAliases: maxAliases),
-    if (limits.maxDirectives case final maxDirectives?)
-      MaxDirectivesRule(maxDirectives: maxDirectives),
-  ];
 
   /// Serves [request]. It never throws: a failure is a response.
   ///

@@ -47,4 +47,11 @@ void main() {
       ),
     ]);
   });
+
+  test('the errors of a rejection cannot be changed', () {
+    expect(
+      () => errorsOf('{ b }').add(GraphQLError('injected')),
+      throwsUnsupportedError,
+    );
+  });
 }

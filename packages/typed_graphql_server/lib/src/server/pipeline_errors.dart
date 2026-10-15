@@ -32,11 +32,18 @@ final class PipelineErrors {
     headers: headers,
   );
 
-  /// A request error carrying [errors].
-  SingleResponse rejected(List<GraphQLError> errors) => SingleResponse(
-    RequestErrorResult(errors: errors),
-    outcome: ServerOutcome.requestError,
-  );
+  /// A request error carrying [errors]. An empty list is a bug in the hook
+  /// that built it (a response must carry an error): it is reported as an
+  /// unexpected error.
+  SingleResponse rejected(List<GraphQLError> errors) => errors.isEmpty
+      ? internal(
+          StateError('A rejection must carry at least one error.'),
+          StackTrace.current,
+        )
+      : SingleResponse(
+          RequestErrorResult(errors: errors),
+          outcome: ServerOutcome.requestError,
+        );
 
   /// A request error with the message and extensions of [exception].
   SingleResponse exception(GraphQLException exception) => rejected([
@@ -72,9 +79,7 @@ final class PipelineErrors {
     GraphQLError reported,
   ) {
     final hook = onError;
-    if (hook == null) {
-      return reported;
-    }
+    if (hook == null) return reported;
     try {
       return hook(error, stackTrace, reported) ?? reported;
     } on Object {

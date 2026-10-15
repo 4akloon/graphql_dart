@@ -23,8 +23,9 @@ final class DocumentAccepted extends DocumentResult {
   /// The text, for locations in later messages.
   final Source source;
 
-  /// The SHA-256 of the text, as lower-case hex: the cache key the server
-  /// computed, never a value a client sent.
+  /// The SHA-256 of the text, as lower-case hex: the cache key when the
+  /// server compiled the text, never a value a client sent; a hook that builds
+  /// its own result chooses it.
   final String hash;
 }
 
@@ -33,7 +34,8 @@ final class DocumentAccepted extends DocumentResult {
 ///
 /// {@category server}
 final class DocumentRejected extends DocumentResult {
-  /// Creates a result holding the [errors], which must not be empty.
+  /// Creates a result holding the [errors], which must not be empty (an empty
+  /// list ends the request as an unexpected error).
   const DocumentRejected(this.errors);
 
   /// The errors the response carries.
