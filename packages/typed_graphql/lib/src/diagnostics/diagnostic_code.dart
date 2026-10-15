@@ -538,4 +538,14 @@ enum DiagnosticCode(
   /// `GQL506`: no document matches the configuration's `documents`; reported
   /// as a warning.
   noDocuments('GQL506'),
+
+  /// `GQL507`: the code generator would declare one Dart name twice, such as
+  /// an enum `Role` and an input object `RoleKnown`; reported at the second
+  /// declaration, related to the first.
+  generatedNameCollision('GQL507'),
+
+  /// `GQL508`: a name the code generator would declare hides a Dart type the
+  /// generated code uses, such as `List` or a `dart:core` type a scalar is
+  /// mapped to.
+  reservedTypeName('GQL508'),
 }

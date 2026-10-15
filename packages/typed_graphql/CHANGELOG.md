@@ -269,3 +269,6 @@
 - The catalog has the code generator's codes `GQL500`-`GQL506`: configuration
   syntax and content, schema input, anonymous operations, unsupported
   constructs, unknown scalar mappings and no documents (a warning).
+- The catalog adds `GQL507` (a Dart name the code generator would declare
+  twice) and `GQL508` (a generated name that hides a Dart type the generated
+  code uses).
