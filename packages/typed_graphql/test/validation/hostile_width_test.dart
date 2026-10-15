@@ -104,4 +104,35 @@ type Node { name: String child: Node size(n: Int): Int }
     ) as InvalidDocument;
     expect(result.diagnostics.single.code, DiagnosticCode.documentTooComplex);
   });
+
+  test('20000 fragments that each spread the first one are cut off, not '
+      'reported one by one', () {
+    const count = 20000;
+    final fragments = List.generate(
+      count,
+      (index) =>
+          'fragment F$index on Node { name ...F0 '
+          '${index + 1 < count ? '...F${index + 1}' : ''} }',
+    ).join(' ');
+    final result = timed('{ node { ...F0 } } $fragments');
+    expect(result, isA<InvalidDocument>());
+    expect(
+      result.diagnostics.map((diagnostic) => diagnostic.code),
+      contains(DiagnosticCode.noFragmentCycles),
+    );
+  });
+
+  test('1000 fragments that all spread each other are checked by the '
+      'default rules in time', () {
+    const count = 1000;
+    final fragments = List.generate(count, (index) {
+      final spreads = [
+        for (var other = 0; other < count; other++)
+          if (other != index) '...F$other',
+      ];
+      return 'fragment F$index on Node { name ${spreads.join(' ')} }';
+    }).join(' ');
+    final result = timed('{ node { ...F0 } } $fragments');
+    expect(result, isA<InvalidDocument>());
+  });
 }

@@ -54,6 +54,9 @@ final class _NoFragmentCycles(final ValidationContext context)
   }
 
   void _search(FragmentDefinition root) {
+    if (context.isAborted) {
+      return;
+    }
     final frames = <_Frame>[];
     _open(root, frames);
     while (frames.isNotEmpty) {
@@ -66,7 +69,9 @@ final class _NoFragmentCycles(final ValidationContext context)
         }
         continue;
       }
-      if (!_follow(frame.spreads[frame.nextIndex++], frames)) {
+      // A full sink ignores reports: stop, as the budget does.
+      if (context.isAborted ||
+          !_follow(frame.spreads[frame.nextIndex++], frames)) {
         frames.clear();
         _spreadPath.clear();
         _pathIndexByName.clear();
@@ -82,6 +87,10 @@ final class _NoFragmentCycles(final ValidationContext context)
     final spreadName = spread.name.value;
     _spreadPath.add(spread);
     if (_pathIndexByName[spreadName] case final cycleStart?) {
+      // The message and the path copy cost the cycle's length.
+      if (!context.spend(_spreadPath.length - cycleStart)) {
+        return false;
+      }
       _reportCycle(spreadName, _spreadPath.sublist(cycleStart));
     } else if (context.fragmentNamed(spreadName) case final target?) {
       // The path stays while the target's frame is open.
