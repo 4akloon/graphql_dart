@@ -140,7 +140,8 @@ compiles fixtures that must fail (`test/compile/`, see section 3.10).
     `.subscribeWith<E>(source, resolve)` for subscription root fields
     (M5c adds them; M5a declares neither).
   - `.declareOnly()` on an interface field: no resolver, every
-    implementing object must declare the field.
+    implementing object must declare the field (the core validator
+    reports one that does not).
 - The executor calls resolvers through wrappers created where `P`, `R`
   and `C` are known, so the cast of the parent is one checked `as P` in
   the wrapper.
@@ -179,7 +180,7 @@ compiles fixtures that must fail (`test/compile/`, see section 3.10).
   resolveType})`. An object type that lists the interface inherits every
   interface field it does not declare, resolver included; this needs the
   object's `P` to be a subtype of the interface's `P`, checked at build
-  with `<A>[] is List<B>` (`GQL301`), because Dart has no contravariant
+  with `<A>[] is List<B>` (`GQL300`), because Dart has no contravariant
   type parameter to check it at compile time.
 - `b.union<P>(name, {required List<ObjectTypeDef<P>> members,
   resolveType, description})`: covariance checks the members at compile
@@ -189,7 +190,7 @@ compiles fixtures that must fail (`test/compile/`, see section 3.10).
   possible type whose `isTypeOf` (default `value is P`) accepts the
   value, in possible-type order. When two possible types' Dart types
   overlap and the abstract type has no `resolveType` and neither has an
-  explicit `isTypeOf`, the default would guess: a build error (`GQL302`).
+  explicit `isTypeOf`, the default would guess: a build error (`GQL301`).
 
 ### 3.8 Building (R4.6)
 
@@ -204,7 +205,7 @@ planCacheSize})`:
    each definition a core `SchemaType`, arguments and input fields
    `InputValue`s with default values as core `Value` literals (encoded
    with the codec, the enum map or the input object's `encode`).
-3. The builder's own checks run (`GQL300`–`GQL306`), then the core
+3. The builder's own checks run (`GQL300`–`GQL304`), then the core
    `SchemaValidator`.
 4. Any error throws `SchemaBuildError(diagnostics)` with every diagnostic
    (a programmer error: the schema is code). Its `toString` lists them.
@@ -430,7 +431,7 @@ member is read.
   A deny is a field error (`GQL352`, default message `Not authorized to
   access Type.field.`); an authorizer exception is masked.
 - `ExecutableSchema.authorizer` is set by `build(authorizer:)`; a schema
-  with guarded fields and no authorizer is a build error (`GQL306`).
+  with guarded fields and no authorizer is a build error (`GQL304`).
 - `AuthorizationCoverage(executableSchema).uncovered`: the coordinates
   (`Type.field`) of fields with no authorization on the field or its type,
   introspection excluded, sorted; meant for `expect(...uncovered,
@@ -474,13 +475,11 @@ sub-stage that reports them (section 18):
 
 | Id | Name | Sub-stage | When |
 |---|---|---|---|
-| GQL300 | `duplicateTypeName` | M5a | two definitions created through one builder share a name |
-| GQL301 | `incompatibleImplementation` | M5a | an object's Dart type is not a subtype of an interface's Dart type it lists |
-| GQL302 | `ambiguousTypeResolution` | M5a | possible types of an abstract type have overlapping Dart types and no `resolveType` / `isTypeOf` decides |
-| GQL303 | `unencodableDefaultValue` | M5a | a default value cannot be written as a literal |
-| GQL304 | `missingFieldImplementation` | M5a | an object does not declare a `declareOnly()` interface field |
-| GQL305 | `misplacedSubscriptionField` | M5c | a `subscribe` field outside the subscription root, or a root field without one |
-| GQL306 | `missingAuthorizer` | M5d | guarded fields and no `authorizer` |
+| GQL300 | `incompatibleImplementation` | M5a | an object's Dart type is not a subtype of an interface's Dart type it lists |
+| GQL301 | `ambiguousTypeResolution` | M5a | possible types of an abstract type have overlapping Dart types and no `resolveType` / `isTypeOf` decides |
+| GQL302 | `unencodableDefaultValue` | M5a | a default value cannot be written as a literal |
+| GQL303 | `misplacedSubscriptionField` | M5c | a `subscribe` field outside the subscription root, or a root field without one |
+| GQL304 | `missingAuthorizer` | M5d | guarded fields and no `authorizer` |
 | GQL310 | `invalidVariableValue` | M5b | a variable value is invalid or a required one is missing |
 | GQL311 | `invalidVariableDefault` | M5b | a variable's default cannot be coerced (custom scalar literal) |
 | GQL312 | `tooManyVariableErrors` | M5b | `maxCoercionErrors` reached |
@@ -499,7 +498,7 @@ sub-stage that reports them (section 18):
 | GQL335 | `unexpectedValue` | M5b | a value of the wrong Dart shape reached completion (e.g. a non-`Iterable` for a list) |
 | GQL336 | `maxExecutionDepthExceeded` | M5b | `maxDepth` exceeded |
 | GQL337 | `maxExecutionStepsExceeded` | M5b | `maxSteps` exceeded |
-| GQL338 | `introspectionDisabled` | M5c | `__schema` or `__type` with `IntrospectionPolicy.disabled` |
+| GQL338 | `introspectionNotAllowed` | M5c | `__schema` or `__type` with `IntrospectionPolicy.disabled` |
 | GQL340 | `subscriptionSourceFailed` | M5c | the source stream emitted an error |
 | GQL350 | `executionCancelled` | M5d | the cancel signal fired |
 | GQL351 | `executionTimedOut` | M5d | the timeout elapsed |
