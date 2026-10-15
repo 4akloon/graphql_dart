@@ -1,0 +1,17 @@
+import 'package:typed_graphql/typed_graphql.dart';
+
+/// Reads and writes a `DateTime` as an ISO 8601 string.
+final class const DateTimeCodec() implements ScalarCodec<DateTime> {
+  /// Creates the codec.
+  this;
+
+  @override
+  DecodeResult<DateTime> decode(JsonValue json) => switch (json) {
+    JsonString(:final value) when DateTime.tryParse(value) != null =>
+      DecodeSuccess(DateTime.parse(value)),
+    _ => DecodeFailure('Expected an ISO 8601 date, got: $json'),
+  };
+
+  @override
+  JsonValue encode(DateTime value) => JsonString(value.toIso8601String());
+}

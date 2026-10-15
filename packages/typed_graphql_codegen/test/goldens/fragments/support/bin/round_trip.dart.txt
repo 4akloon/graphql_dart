@@ -1,0 +1,96 @@
+import 'dart:io';
+
+import 'package:generated_fragments/schema.graphql.dart';
+import 'package:generated_fragments/user_card.graphql.dart';
+import 'package:typed_graphql/typed_graphql.dart';
+
+const String _response = '''
+{
+  "__typename": "User",
+  "_id": "1",
+  "default": "Ada",
+  "role": "ADMIN",
+  "createdAt": "2026-10-15T00:00:00.000Z",
+  "cursor": 7,
+  "friends": [
+    {"id": "2", "name": "Bob"},
+    {"id": "3", "name": "Cy"}
+  ],
+  "name": "Ada"
+}
+''';
+
+void main() {
+  final JsonObject json = _json(_response);
+  final UserCard withName = _decode(json, full: true);
+  final UserCard withoutName = _decode(json, full: false);
+  if (withName.fragments.userName?.name != 'Ada') {
+    _fail('the included fragment was not read: ${withName.fragments}');
+  }
+  if (withoutName.fragments.userName != null) {
+    _fail('the excluded fragment was read: ${withoutName.fragments}');
+  }
+  if (withName.friends.first.fragments.userName.name != 'Bob') {
+    _fail('a nested fragment was not read: ${withName.friends}');
+  }
+  if (withName.createdAt != DateTime.utc(2026, 10, 15)) {
+    _fail('createdAt is ${withName.createdAt}');
+  }
+  if (withName.role != RoleKnown.admin || withName.$id != '1') {
+    _fail('typed reads are wrong: $withName');
+  }
+  _roundTrips(withName, full: true);
+  _roundTrips(withoutName, full: false);
+  if (withName == withoutName) {
+    _fail('values that differ in a fragment are equal');
+  }
+  _wrongType(json);
+}
+
+JsonObject _json(String text) =>
+    (const JsonReader().parse(text) as DecodeSuccess<JsonValue>).value
+        as JsonObject;
+
+UserCard _decode(JsonObject json, {required bool full}) {
+  final DecodeResult<UserCard> result = UserCard.decode(
+    json,
+    variables: JsonObject({'full': JsonBool(full)}),
+  );
+  if (result is! DecodeSuccess<UserCard>) {
+    _fail('decode failed: $result');
+  }
+  return (result as DecodeSuccess<UserCard>).value;
+}
+
+void _roundTrips(UserCard card, {required bool full}) {
+  final UserCard again = _decode(card.toJson(), full: full);
+  if (again != card || again.hashCode != card.hashCode) {
+    _fail('decode(toJson()) is $again, not $card');
+  }
+}
+
+void _wrongType(JsonObject json) {
+  final JsonObject wrong = JsonObject({
+    ...json.fields,
+    'friends': JsonArray([
+      JsonObject({'id': const JsonString('2'), 'name': const JsonBool(true)}),
+    ]),
+  });
+  final DecodeResult<UserCard> result = UserCard.decode(wrong);
+  if (result is! DecodeFailure) {
+    _fail('a boolean for a String was accepted: $result');
+  }
+  final List<PathSegment> expected = [
+    const PathKey('friends'),
+    const PathIndex(0),
+    const PathKey('name'),
+  ];
+  if ((result as DecodeFailure).path.toString() != expected.toString()) {
+    _fail('the failure path is ${result.path}');
+  }
+}
+
+void _fail(String message) {
+  stderr.writeln(message);
+  exit(1);
+}

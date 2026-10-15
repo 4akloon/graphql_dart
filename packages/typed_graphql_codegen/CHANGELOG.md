@@ -33,3 +33,8 @@
 - The guide documents generation and the generated schema types (enums, input
   objects, `@oneOf`, scalars, pruning, the file header) and lists `GQL507` and
   `GQL508`.
+- `ClientGenerator.generate` writes a library per document file, at the file's
+  path plus `.dart`: the classes of the file's fragments (a data class with
+  `decode`, `toJson`, value equality and a private codec per field, and a
+  `...Fragments` holder per selection that spreads fragments) and the imports
+  they need. Depends on `package:path`.

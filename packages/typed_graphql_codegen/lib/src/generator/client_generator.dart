@@ -7,6 +7,7 @@ import '../project/project_file.dart';
 import 'client_project.dart';
 import 'client_project_loader.dart';
 import 'client_project_result.dart';
+import 'document_libraries.dart';
 import 'generated_file.dart';
 import 'generated_names.dart';
 import 'generation_result.dart';
@@ -76,8 +77,9 @@ final class const ClientGenerator(final CodegenConfig config) {
   /// reported. With any error the result has no files.
   ///
   /// [schema] is the schema file and [documents] the files the configuration's
-  /// `documents` globs matched; nothing is written. For now the only file is
-  /// the schema-types library at [CodegenConfig.schemaTypes].
+  /// `documents` globs matched; nothing is written. The files
+  /// are the schema-types library at [CodegenConfig.schemaTypes], then a
+  /// library per document file, at its path plus `.dart`, sorted by path.
   GenerationResult generate({
     required ProjectFile schema,
     required List<ProjectFile> documents,
@@ -117,11 +119,11 @@ final class const ClientGenerator(final CodegenConfig config) {
     if (names.diagnostics.isNotEmpty) {
       return GenerationResult(const [], [...warnings, ...names.diagnostics]);
     }
-    final text = SchemaTypesEmitter(
-      TypeMapper(project.schema.schema, config.scalars),
-    ).emit(types, source: schemaPath);
+    final mapper = TypeMapper(project.schema.schema, config.scalars);
+    final text = SchemaTypesEmitter(mapper).emit(types, source: schemaPath);
     return GenerationResult([
       GeneratedFile(config.schemaTypes, text),
+      ...DocumentLibraries(project, mapper, config.schemaTypes).generate(),
     ], warnings);
   }
 }
