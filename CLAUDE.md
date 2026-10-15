@@ -375,10 +375,14 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `MeasuredQuantity` (depth, aliases, directives); `LimitVisitor` reports
   an operation at most once; `OperationSubject` words the operation in a
   message.
-- `cost/` (R3.8): `CostAnalysis` is const and makes a `CostWalk` per call,
-  an explicit-stack walk over `CostWeights` (type and field weight caches)
-  with a fragment memo keyed by fragment and `SizedContext`, so fragments
-  cost linear time. `ListSizes` and `ListSizeSetting` read `@listSize`,
+- `cost/` (R3.8): `CostAnalysis` is const and makes a `CostRun` per call;
+  `MaxCostRule` makes one per run (fragment map and `CostWeights` built
+  once, the walk charged to the step budget through `spend`). A `CostWalk`
+  per operation is an explicit-stack walk over `CostWeights` (type and
+  field weight caches; `@cost` and `@listSize` count only when the schema
+  has the directive) with a fragment memo keyed by fragment and
+  `SizedContext`: polynomial in the fragments times the contexts, not
+  linear. `ListSizes` and `ListSizeSetting` read `@listSize`,
   `ArgumentCost` the weights of arguments and input fields, `CostNumber`
   prints a cost. `OperationCost` holds the field cost and type cost.
   `MaxCostRule` (`GQL238`) and `SlicingArgumentsRule` (`GQL237`) are

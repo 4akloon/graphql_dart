@@ -409,4 +409,45 @@ type Query { a(l: [In]): Int }
       );
     });
   });
+
+  group('cost directives the schema does not have', () {
+    const applied = '''
+type Query { a: B @cost(weight: "7") list: [B] @listSize(assumedSize: 3) }
+type B @cost(weight: "5") { name: String }
+''';
+    OperationCost costOf(String sdl, {bool includesCostDirectives = false}) {
+      final schema = Built(
+        sdl,
+        builder: SchemaBuilder(includesCostDirectives: includesCostDirectives),
+      ).schema;
+      final document = const Parser()
+          .parse(Source('{ a { name } list { name } }'))
+          .requireDocument();
+      return CostAnalysis(schema).costOf(
+        document,
+        document.definitions.whereType<OperationDefinition>().first,
+      );
+    }
+
+    test('are ignored when the schema only applies them', () {
+      // a 1 + list 1 + 10 * 0 (default size, no weights); types 1 + 1 + 10.
+      expect(costOf(applied), const OperationCost(2, 12));
+    });
+
+    test('count when the schema has the built-in definitions', () {
+      // a 7 + list 5 + 3 * 0 = 12; types 1 + 5 + 3 * 5.
+      expect(
+        costOf(applied, includesCostDirectives: true),
+        const OperationCost(12, 21),
+      );
+    });
+
+    test('count when the schema declares them itself', () {
+      const declared =
+          'directive @cost(weight: String!) on FIELD_DEFINITION | OBJECT '
+          'directive @listSize(assumedSize: Int) on FIELD_DEFINITION '
+          '$applied';
+      expect(costOf(declared), const OperationCost(12, 21));
+    });
+  });
 }

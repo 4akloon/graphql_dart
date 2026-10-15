@@ -320,7 +320,10 @@ Its model, in short (the doc comment of `CostAnalysis` is the contract):
   its size times the field cost of its own selections. The type cost is the
   sum of each field's size times its type weight plus the type cost of its
   selections, and the root type's weight is added. Fragments add up in the
-  set that spreads them, an upper bound, in time linear in the document.
+  set that spreads them, an upper bound. Each fragment is walked once for
+  each distinct sizing context it is spread in, so the time is polynomial in
+  the fragments times those contexts (a `sizedFields` list creates one), and
+  the walk is charged to the step budget.
 - `__typename`, `__schema` and `__type` cost 0.
 
 `costOf(document, operation, variables:)` takes the coerced variable values

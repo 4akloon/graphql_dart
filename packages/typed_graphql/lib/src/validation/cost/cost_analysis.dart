@@ -8,7 +8,9 @@ import 'operation_cost.dart';
 /// Computes the static cost of an operation by the IBM cost directives draft
 /// (`@cost` and `@listSize`; R3.8).
 ///
-/// The schema need not include the cost directives: without them every
+/// The schema need not include the cost directives: a `@cost` or
+/// `@listSize` counts only when the schema has the directive's definition
+/// (`includesCostDirectives`, or one written in SDL); without it every
 /// weight is its default. A weight that is not a number counts as the
 /// default too (the schema check reports it).
 ///

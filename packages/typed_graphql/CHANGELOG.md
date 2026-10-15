@@ -260,7 +260,7 @@
 - `DocumentValidator.recommendedRules`: the specified rules and `MaxIntrospectionDepthRule`; it is the default rules of `DocumentValidator`.
 - `includesCostDirectives` on `SchemaBuilder` and `Schema`: the IBM draft's `@cost` and `@listSize` as opt-in built-in directives.
 - With `includesCostDirectives`, `SchemaValidator` checks the IBM draft's rules for `@cost` and `@listSize` (`GQL156`-`GQL161`).
-- `CostAnalysis` computes an operation's field cost and type cost by the IBM cost directives draft, fragments expanded, in linear time.
+- `CostAnalysis` computes an operation's field cost and type cost by the IBM cost directives draft, fragments expanded, in time polynomial in the fragments times the sizing contexts they are spread in (a `@listSize` with `sizedFields` creates one); a directive counts only when the schema has its definition.
 - `SlicingArgumentsRule` (`GQL237`): a field with `@listSize(slicingArguments:)` is given exactly one slicing argument.
 - `MaxCostRule` (`GQL238`) limits an operation's field cost and type cost.
 - The Operation Validation guide covers the limit rules and cost analysis.

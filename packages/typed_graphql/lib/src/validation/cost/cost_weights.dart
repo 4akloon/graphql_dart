@@ -14,7 +14,9 @@ import 'list_size_setting.dart';
 ///
 /// Elements compare by identity, so a map keyed by element is a cache. A
 /// weight that is not a finite number is the element's default weight: the
-/// schema check reports it.
+/// schema check reports it. A directive counts only when the schema has its
+/// definition (the built-in one under `includesCostDirectives`, or one
+/// written in SDL), so an undeclared `@cost` is ignored.
 final class CostWeights(
   /// The schema whose elements are weighed.
   final Schema schema,
@@ -24,6 +26,8 @@ final class CostWeights(
 
   final Map<Object, double> _weights = {};
   final Map<SchemaField, ListSizeSetting?> _settings = {};
+  late final bool _hasCost = schema.directiveNamed('cost') != null;
+  late final bool _hasListSize = schema.directiveNamed('listSize') != null;
 
   /// The weight of [type].
   double ofType(SchemaType type) {
@@ -55,6 +59,9 @@ final class CostWeights(
 
   /// The `@listSize` of [field]; null when it has none.
   ListSizeSetting? listSizeOf(SchemaField field) {
+    if (!_hasListSize) {
+      return null;
+    }
     if (_settings.containsKey(field)) {
       return _settings[field];
     }
@@ -83,6 +90,9 @@ final class CostWeights(
   }
 
   double? _declared(List<AppliedDirective> directives) {
+    if (!_hasCost) {
+      return null;
+    }
     for (final directive in directives) {
       if (directive.name == 'cost') {
         final weight = switch (directive.argument('weight')) {

@@ -413,9 +413,13 @@ directive @listSize(assumedSize: Int, slicingArguments: [String!], sizedFields: 
   - fragments and inline fragments add their selections (an upper bound);
     meta-fields and unknown fields cost 0 and their selections are not counted;
   - the costs of a fragment's selections are memoised per (fragment, sized
-    context), so the analysis is linear in the document even when fragments
-    expand 2^60 times; it uses explicit stacks; weights are parsed once per
-    call and an unparsable weight counts as the default.
+    context), so the analysis is polynomial in the fragments times the contexts
+    (a `sizedFields` list creates one) even when fragments expand 2^60 times;
+    it uses explicit stacks and charges each selection walked to the step
+    budget; weights are parsed once per run (`CostRun`) and an unparsable
+    weight counts as the default; `@cost` and `@listSize` count only when the
+    schema has the directive (the built-in one under `includesCostDirectives`,
+    or one declared in SDL).
 - **`SlicingArgumentsRule`** (`GQL237`): with `requireOneSlicingArgument` (the
   default), a field with slicing arguments must be given exactly one of them,
   not as a `null` literal: `Field "users" must be given exactly one of its
@@ -502,10 +506,13 @@ list and Documentation section, the package CHANGELOG, `CLAUDE.md` (a
     walked (section 3).
 12. `OverlappingFieldsCanBeMergedRule` checks a fragment where an earlier
     root expanded it, not again on its own (section 6): the conflicts are the
-    same, found once.
-13. Limit counts, cost and introspection depth are memoised per fragment, so
-    they are linear where graphql-js's `MaxIntrospectionDepthRule` is
-    exponential (sections 10 and 11).
+    same, found once. A fragment on a cycle is not expanded below itself, so
+    in a document with fragment cycles (invalid anyway, `GQL216`) it may miss
+    a conflict graphql-js finds; it never reports one that is not there.
+13. Limit counts and introspection depth are memoised per fragment, so they
+    are linear where graphql-js's `MaxIntrospectionDepthRule` is exponential;
+    cost is memoised per fragment and sizing context, so it is polynomial in
+    their product (sections 10 and 11).
 14. "Did you mean" suggestions are skipped for an input longer than 256
     UTF-16 code units (`Suggestions.maxInputLength`): graphql-js measures
     any length, which lets one hostile name make every error cost its
