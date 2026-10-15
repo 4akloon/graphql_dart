@@ -37,8 +37,12 @@ final class CostWalk(
   final ListSizes sizes,
 
   /// The fragments of the document by name; the last definition wins.
-  final Map<String, FragmentDefinition> fragments,
-) {
+  final Map<String, FragmentDefinition> fragments, {
+
+  /// Charges steps to a budget; false once it is spent, and then the walk
+  /// ends with a partial cost.
+  final bool Function(int steps)? spend,
+}) {
   /// Creates a walk.
   this;
 
@@ -68,6 +72,9 @@ final class CostWalk(
     while (true) {
       final frame = stack.last;
       if (frame.index < frame.selections.length) {
+        if (!(spend?.call(1) ?? true)) {
+          return (fieldCost: 0.0, typeCost: 0.0);
+        }
         final child = _visit(
           frame.selections[frame.index++],
           frame,

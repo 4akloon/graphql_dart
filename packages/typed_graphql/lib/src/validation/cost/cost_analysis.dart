@@ -1,11 +1,8 @@
 import '../../language/ast/document.dart';
 import '../../language/ast/executable_definition.dart';
-import '../../language/ast/value.dart';
 import '../../protocol/json_value.dart';
 import '../../schema/schema.dart';
-import 'cost_walk.dart';
-import 'cost_weights.dart';
-import 'list_sizes.dart';
+import 'cost_run.dart';
 import 'operation_cost.dart';
 
 /// Computes the static cost of an operation by the IBM cost directives draft
@@ -83,23 +80,10 @@ final class const CostAnalysis(
     Map<String, JsonValue> variables = const {},
   }) {
     RangeError.checkNotNegative(defaultListSize, 'defaultListSize');
-    final weights = CostWeights(schema);
-    final walk = CostWalk(
+    return CostRun(
       schema,
-      weights,
-      ListSizes(weights, defaultListSize, variables, _defaults(operation)),
-      {
-        for (final definition in document.definitions)
-          if (definition case FragmentDefinition(:final name))
-            name.value: definition,
-      },
-    );
-    final (:fieldCost, :typeCost) = walk.cost(operation);
-    return OperationCost(fieldCost, typeCost);
+      document,
+      defaultListSize,
+    ).costOf(operation, variables: variables);
   }
-
-  Map<String, Value> _defaults(OperationDefinition operation) => {
-    for (final definition in operation.variableDefinitions)
-      definition.variable.name.value: ?definition.defaultValue,
-  };
 }

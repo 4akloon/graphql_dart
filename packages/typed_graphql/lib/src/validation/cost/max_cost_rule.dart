@@ -6,6 +6,7 @@ import '../validation_context.dart';
 import '../validation_rule.dart';
 import 'cost_analysis.dart';
 import 'cost_number.dart';
+import 'cost_run.dart';
 
 /// Limits the static cost of an operation (R3.5, R3.8, `GQL238`).
 ///
@@ -34,21 +35,30 @@ final class const MaxCostRule({
       throw ArgumentError.value(maxCost, 'maxCost', 'must not be negative');
     }
     RangeError.checkNotNegative(defaultListSize, 'defaultListSize');
-    return _MaxCost(context, maxCost, defaultListSize);
+    return _MaxCost(
+      context,
+      maxCost,
+      CostRun(
+        context.schema,
+        context.document,
+        defaultListSize,
+        spend: context.spend,
+      ),
+    );
   }
 }
 
 final class _MaxCost(
   final ValidationContext context,
   final double maxCost,
-  final int defaultListSize,
+  final CostRun run,
 ) extends OperationVisitor {
   @override
   void checkOperation(OperationDefinition operation) {
-    final cost = CostAnalysis(
-      context.schema,
-      defaultListSize: defaultListSize,
-    ).costOf(context.document, operation);
+    if (context.isAborted) return;
+    final cost = run.costOf(operation);
+    // A walk the step budget cut short has a partial cost.
+    if (context.isAborted) return;
     // Written as a negated `<=` so that a NaN could never pass the limit.
     if (!(cost.fieldCost <= maxCost && cost.typeCost <= maxCost)) {
       context.report(
