@@ -291,3 +291,9 @@
 - Fix: `Printer` keeps the `query` keyword of an anonymous query that follows
   a body-less type or extension, so that the text parses back (this differs
   from graphql-js's `print` and `stripIgnoredCharacters`).
+- **Breaking:** `CostAnalysis` and `MaxCostRule` count a slicing value that
+  names no size (`null`, a negative number, a variable value that is not a
+  number, a variable with neither a value nor a default) as a slicing
+  argument not given: the argument's default, `assumedSize`, then
+  `defaultListSize`. A negative value counted 0 and a variable without a
+  value skipped the argument's default and `assumedSize`.

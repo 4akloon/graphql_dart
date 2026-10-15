@@ -101,27 +101,31 @@ final class ListSizes(
     _ => _count(value),
   };
 
-  double _variable(String name) {
-    // A whole number past the safe-integer range (or a fraction) is still
-    // the size the caller meant: its double value, not the default.
-    if (variables[name] case JsonNumber(:final value)) {
-      return _finiteSize(value.toDouble());
-    }
-    return _count(variableDefaults[name]) ?? defaultListSize.toDouble();
-  }
+  // The size a variable gives: its value, or its default when it has no
+  // value. Null when it names no size (an explicit null, which overrides the
+  // default as in September2025 6.4.1, a non-number, a negative number, or
+  // neither a value nor a default): the field is then sized as if the
+  // argument were not given, so a client cannot lower the cost (R5.14).
+  double? _variable(String name) => switch (variables[name]) {
+    JsonNumber(:final value) => _size(value.toDouble()),
+    null => _count(variableDefaults[name]),
+    _ => null,
+  };
 
   double? _count(Value? value) => switch (value) {
     IntValue(:final value) => switch (double.tryParse(value)) {
-      final number? => _finiteSize(number),
+      final number? => _size(number),
       null => null,
     },
     _ => null,
   };
 
-  // A 400-digit literal parses to Infinity: sizes stay finite so no product
-  // of costs is NaN (`SaturatingCost`).
-  double _finiteSize(double size) =>
-      min<double>(double.maxFinite, max<double>(0, size));
+  // A negative number names no size. A whole number past the safe-integer
+  // range (or a fraction) is still the size the caller meant; a 400-digit
+  // literal parses to Infinity, so sizes stay finite and no product of costs
+  // is NaN (`SaturatingCost`).
+  double? _size(double size) =>
+      size < 0 ? null : min<double>(double.maxFinite, size);
 
   // Loops, not recursion: a wrapper chain can be deep.
   TypeRef _unwrapNonNull(TypeRef type) {

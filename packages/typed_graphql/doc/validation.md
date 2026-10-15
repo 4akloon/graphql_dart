@@ -320,8 +320,11 @@ Its model, in short (the doc comment of `CostAnalysis` is the contract):
   Directives on the field add their arguments the same way. The raw cost of
   a field is never below 0.
 - A list field has a size: the largest slicing argument given (a literal, or
-  a variable's value or default), else the largest default of a slicing
-  argument, else `assumedSize`, else `defaultListSize` (10 unless set). A
+  a variable's value or, without a value, its default), else the largest
+  default of a slicing argument, else `assumedSize`, else `defaultListSize`
+  (10 unless set). A value that names no size (`null`, a negative number, a
+  variable value that is not a number, a variable with neither a value nor
+  a default) counts as not given, so a client cannot lower the cost. A
   list field without `@listSize` has `defaultListSize`. With `sizedFields`
   the field has size 1 and the listed child fields get the size.
 - The field cost of a selection set is the sum of each field's raw cost plus
@@ -336,8 +339,8 @@ Its model, in short (the doc comment of `CostAnalysis` is the contract):
 
 `costOf(document, operation, variables:)` takes the coerced variable values
 for slicing arguments. `MaxCostRule` runs during validation, where there are
-none, so a variable counts with its default in the operation, else
-`defaultListSize`. The rule reports an operation when either cost is more
+none, so a variable counts with its default in the operation, else as a
+slicing argument not given. The rule reports an operation when either cost is more
 than `maxCost` (`GQL238`).
 
 ```dart
