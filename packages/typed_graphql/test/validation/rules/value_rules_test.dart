@@ -85,7 +85,7 @@ type Query { f(arg: In): Int any(arg: Any): Int }
         ),
       ]);
       return DocumentValidator(
-        rules: [...valueRules, UniqueInputFieldNamesRule()],
+        rules: const [...valueRules, UniqueInputFieldNamesRule()],
         maxErrors: maxErrors,
       ).validate(checked.schema, document).diagnostics;
     }

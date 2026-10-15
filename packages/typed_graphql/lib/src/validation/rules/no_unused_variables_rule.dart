@@ -23,12 +23,19 @@ final class _NoUnusedVariables(final ValidationContext context)
     extends OperationVisitor {
   @override
   void checkOperation(OperationDefinition operation) {
+    // Every report after the error limit or the budget is ignored.
+    if (context.isAborted) {
+      return;
+    }
     final used = {
       for (final usage in context.recursiveVariableUsages(operation))
         usage.node.name.value,
     };
     final operationName = operation.name?.value;
     for (final definition in operation.variableDefinitions) {
+      if (context.isAborted) {
+        return;
+      }
       final name = definition.variable.name.value;
       if (used.contains(name)) {
         continue;

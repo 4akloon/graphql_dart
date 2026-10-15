@@ -69,7 +69,7 @@ union U = T | V
     final field = _pick(fields);
     final alias = _pick(['', '', 'p: ', 'q: ']);
     final arguments = switch (field.name) {
-      'k' => _pick(['', '(a: 1)', '(a: 2)', '(a: \$v)']),
+      'k' => _pick(['', '(a: 1)', '(a: 2)', r'(a: $v)']),
       'm' => _pick([
         '',
         '(a: 1 b: {p: 1 q: 2})',
@@ -81,9 +81,12 @@ union U = T | V
       _ => '',
     };
     final named = _named(field.type);
-    if (named == null || named.isLeafType)
+    if (named == null || named.isLeafType) {
       return '$alias${field.name}$arguments';
-    if (depth <= 0) return '$alias${field.name}$arguments { __typename }';
+    }
+    if (depth <= 0) {
+      return '$alias${field.name}$arguments { __typename }';
+    }
     return '$alias${field.name}$arguments '
         '{ ${_set(named.name, depth - 1, fragment)} }';
   }

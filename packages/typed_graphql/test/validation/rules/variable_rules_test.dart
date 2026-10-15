@@ -252,7 +252,7 @@ input One @oneOf { x: Int, y: String }
     final nested = Checked('type Query { name: String friend: Query }');
     expect(
       nested.errors(
-        r'query Q { friend { ...B } ...A } '
+        'query Q { friend { ...B } ...A } '
         r'fragment A on Query { name @include(if: $a) } '
         r'fragment B on Query { name @include(if: $b) }',
         [const NoUndefinedVariablesRule()],

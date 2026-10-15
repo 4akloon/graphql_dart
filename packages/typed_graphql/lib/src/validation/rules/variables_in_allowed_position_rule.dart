@@ -32,12 +32,19 @@ final class _VariablesInAllowedPosition(final ValidationContext context)
     extends OperationVisitor {
   @override
   void checkOperation(OperationDefinition operation) {
+    // Every report after the error limit or the budget is ignored.
+    if (context.isAborted) {
+      return;
+    }
     // The last definition of a repeated name wins, as graphql-js's map.
     final definitions = {
       for (final definition in operation.variableDefinitions)
         definition.variable.name.value: definition,
     };
     for (final usage in context.recursiveVariableUsages(operation)) {
+      if (context.isAborted) {
+        return;
+      }
       final definition = definitions[usage.node.name.value];
       final position = usage.type;
       if (definition != null && position != null) {
