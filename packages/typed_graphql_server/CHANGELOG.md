@@ -168,3 +168,8 @@
 - CSRF prevention (`GQL403`) runs in the request phase when the profile has a
   `CsrfPrevention`: a request without a content type a browser cannot send
   cross-site and without a preflight header is refused before any other step.
+- The cost limit (`ServerLimits.maxCost`, `defaultListSize`) runs for each
+  request after the operation is selected and before the context is built: a
+  request whose field cost or type cost is over the limit is refused with
+  `GQL238` and `MaxCostRule`'s message. Slicing arguments given as variables
+  count with the request's values.

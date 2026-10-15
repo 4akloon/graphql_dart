@@ -4,9 +4,11 @@ import '../execution/error_hook.dart';
 import '../execution/executable_schema.dart';
 import '../execution/graphql_exception.dart';
 import 'context_factory.dart';
+import 'cost_limit.dart';
 import 'csrf_extension.dart';
 import 'document_cache.dart';
 import 'document_compiler.dart';
+import 'document_handler.dart';
 import 'document_length.dart';
 import 'document_step.dart';
 import 'execution_step.dart';
@@ -53,14 +55,11 @@ final class GraphQLServer<C> {
     int documentCacheSize = 1000,
     List<ServerExtension<C>> extensions = const [],
   }) {
-    final errors = PipelineErrors(
-      maskErrors: profile.maskErrors,
-      onError: onError,
-    );
+    final errors = _pipelineErrors(profile, onError);
     final length = DocumentLength(profile.limits.maxDocumentLength, errors);
-    // The user's extensions come first (outermost), then the built-in ones
-    // in a fixed order, so no list order puts an unchecked step before a
-    // security check. M6c adds the trusted-document and APQ extensions here.
+    // The user's extensions are outermost, then the built-in ones in a fixed
+    // order, so no list order puts a step before a security check. M6c adds
+    // the trusted-document and APQ extensions here.
     final chain = ExtensionChain<C>([
       ...extensions,
       if (profile.csrfPrevention case final csrf?)
@@ -70,17 +69,19 @@ final class GraphQLServer<C> {
     final request = RequestStep<C>(
       length: length,
       documentPhase: chain.document(
-        DocumentStep(
-          DocumentCache(documentCacheSize),
-          _compiler(schema.schema, profile, validationRules),
-          length,
+        _documentStep(
+          schema.schema,
+          profile,
+          validationRules,
+          documentCacheSize,
           errors,
-        ).run,
+        ),
       ),
       contextFactory: contextFactory,
       executionStep: executionStep,
       executionPhase: chain.execution(executionStep.run),
       errors: errors,
+      costLimit: _costLimit(schema.schema, profile.limits),
     );
     return GraphQLServer._(errors, chain.request(request.run));
   }
@@ -89,6 +90,11 @@ final class GraphQLServer<C> {
 
   final PipelineErrors _errors;
   final RequestHandler _request;
+
+  static PipelineErrors _pipelineErrors(
+    ServerProfile profile,
+    ErrorHook? onError,
+  ) => PipelineErrors(maskErrors: profile.maskErrors, onError: onError);
 
   static DocumentCompiler _compiler(
     ValidSchema schema,
@@ -102,6 +108,28 @@ final class GraphQLServer<C> {
     ),
     schema,
   );
+
+  static DocumentHandler _documentStep(
+    ValidSchema schema,
+    ServerProfile profile,
+    List<ValidationRule> validationRules,
+    int cacheSize,
+    PipelineErrors errors,
+  ) => DocumentStep(
+    DocumentCache(cacheSize),
+    _compiler(schema, profile, validationRules),
+    DocumentLength(profile.limits.maxDocumentLength, errors),
+    errors,
+  ).run;
+
+  static CostLimit? _costLimit(ValidSchema schema, ServerLimits limits) =>
+      switch (limits.maxCost) {
+        final maxCost? => CostLimit(
+          CostAnalysis(schema.schema, defaultListSize: limits.defaultListSize),
+          maxCost,
+        ),
+        null => null,
+      };
 
   static List<ValidationRule> _limitRules(ServerLimits limits) => [
     if (limits.maxDepth case final maxDepth?) MaxDepthRule(maxDepth: maxDepth),

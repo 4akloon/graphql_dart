@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import 'context_factory.dart';
+import 'cost_limit.dart';
 import 'document_handler.dart';
 import 'document_length.dart';
 import 'document_request.dart';
@@ -29,6 +30,7 @@ final class RequestStep<C> {
     required this.executionStep,
     required this.executionPhase,
     required this.errors,
+    this.costLimit,
   });
 
   /// The length check of the request's query.
@@ -49,6 +51,9 @@ final class RequestStep<C> {
   /// Makes the refusals.
   final PipelineErrors errors;
 
+  /// The cost limit, null when the profile has none.
+  final CostLimit? costLimit;
+
   /// Serves [request]; may throw, the caller turns that into a response.
   Future<ServerResponse> run(ServerRequest request) async {
     final text = request.params.query;
@@ -66,10 +71,12 @@ final class RequestStep<C> {
     DocumentAccepted accepted,
     ServerRequest request,
   ) async {
-    final type = const OperationLookup().typeOf(
-      accepted.document.document,
+    final document = accepted.document.document;
+    final operation = const OperationLookup().operationOf(
+      document,
       request.params.operationName,
     );
+    final type = operation?.operation;
     if (type == OperationType.mutation &&
         request.info.method.toUpperCase() == 'GET') {
       return errors.refusal(
@@ -78,6 +85,9 @@ final class RequestStep<C> {
         outcome: ServerOutcome.methodNotAllowed,
         headers: const {'allow': 'POST'},
       );
+    }
+    if (_costRefusal(accepted, operation, request) case final refusal?) {
+      return refusal;
     }
     final context = await contextFactory(request.info);
     return executionPhase(
@@ -93,5 +103,22 @@ final class RequestStep<C> {
         ),
       ),
     );
+  }
+
+  // No operation selected: the executor reports it.
+  SingleResponse? _costRefusal(
+    DocumentAccepted accepted,
+    OperationDefinition? operation,
+    ServerRequest request,
+  ) {
+    final violation = operation == null
+        ? null
+        : costLimit?.violation(
+            accepted.document.document,
+            accepted.source,
+            operation,
+            request,
+          );
+    return violation == null ? null : errors.rejected([violation]);
   }
 }
