@@ -129,6 +129,8 @@ final class ExecutionPort {
     ExecutableSchema<Object?> schema,
     String text, {
     Object? rootValue,
+    JsonObject? variables,
+    bool includesSuggestions = true,
   }) async {
     final source = Source(text);
     final parsed = const Parser(
@@ -137,11 +139,12 @@ final class ExecutionPort {
     if (parsed is ParseFailure) {
       return problems(parsed.diagnostics, prefix: 'Syntax Error: ');
     }
-    final validated = const DocumentValidator().validate(
-      schema.schema,
-      (parsed as ParseSuccess).document,
-      source: source,
-    );
+    final validated =
+        DocumentValidator(includesSuggestions: includesSuggestions).validate(
+          schema.schema,
+          (parsed as ParseSuccess).document,
+          source: source,
+        );
     if (validated is InvalidDocument) {
       return problems(validated.diagnostics);
     }
@@ -149,9 +152,11 @@ final class ExecutionPort {
       await schema.execute(
         validated as ValidDocument,
         context: null,
+        variables: variables,
         options: ExecutionOptions(
           rootValue: rootValue,
           source: source,
+          includesSuggestions: includesSuggestions,
           maskErrors: false,
         ),
       ),
@@ -168,9 +173,10 @@ final class ExecutionPort {
       for (final diagnostic in diagnostics)
         {
           'message': '$prefix${diagnostic.message}',
-          if (diagnostic.span case final span?)
+          if (diagnostic.span != null)
             'locations': [
-              {'line': span.location.line, 'column': span.location.column},
+              for (final place in [?diagnostic.span, ...diagnostic.related])
+                {'line': place.location.line, 'column': place.location.column},
             ],
         },
     ],
