@@ -51,6 +51,10 @@ final class ConflictJudge(
         return null;
       }
       if (index == first.length - 1 && reason != null) {
+        // `_position` walks the trails of the two top fields.
+        if (!context.spend(first[0].trail.length + second[0].trail.length)) {
+          return null;
+        }
         final reverse = _reason(other, one, isExclusive: isExclusive) ?? '';
         return FieldConflict(
           first,
