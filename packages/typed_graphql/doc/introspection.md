@@ -43,7 +43,9 @@ answer to a narrower query is smaller. A union lists every member as a
 possible type, even one that is not an object type, so the validator still
 sees it on the client; a member named twice (`union U = A | A`) is written
 twice, as declared, whereas `Schema.possibleTypes` lists each object type
-once. Introspect a validated schema: a reference to a type
+once. `IntrospectionListing(schema)` gives the order in which the answer lists
+`types` and `directives`, for a server that writes its own introspection
+resolvers. Introspect a validated schema: a reference to a type
 the schema does not have is an `ArgumentError`.
 
 ```dart

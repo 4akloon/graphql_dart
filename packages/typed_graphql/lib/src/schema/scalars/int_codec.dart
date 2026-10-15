@@ -1,4 +1,5 @@
 import '../../protocol/decode_result.dart';
+import '../../protocol/json_inspector.dart';
 import '../../protocol/json_value.dart';
 import 'scalar_codec.dart';
 
@@ -22,13 +23,15 @@ final class const IntCodec() implements ScalarCodec<int> {
   @override
   DecodeResult<int> decode(JsonValue json) => switch (json) {
     JsonNumber(:final value) when value % 1 != 0 => DecodeFailure(
-      'Int cannot represent non-integer value: $json',
+      'Int cannot represent non-integer value: ${const JsonInspector().inspect(json)}',
     ),
     JsonNumber(:final value) when value < min || value > max => DecodeFailure(
-      'Int cannot represent non 32-bit signed integer value: $json',
+      'Int cannot represent non 32-bit signed integer value: ${const JsonInspector().inspect(json)}',
     ),
     JsonNumber(:final value) => DecodeSuccess(value.toInt()),
-    _ => DecodeFailure('Int cannot represent non-integer value: $json'),
+    _ => DecodeFailure(
+      'Int cannot represent non-integer value: ${const JsonInspector().inspect(json)}',
+    ),
   };
 
   @override

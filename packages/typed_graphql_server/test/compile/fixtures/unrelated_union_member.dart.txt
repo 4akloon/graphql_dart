@@ -1,0 +1,14 @@
+import 'package:typed_graphql_server/typed_graphql_server.dart';
+
+sealed class Animal {}
+
+final class Cat extends Animal {}
+
+final class Rock {}
+
+void main() {
+  final b = ExecutableSchemaBuilder<Object?>();
+  final cat = b.object<Cat>('Cat', fields: (t) => []);
+  final rock = b.object<Rock>('Rock', fields: (t) => []);
+  b.union<Animal>('Thing', members: [cat, rock]);
+}

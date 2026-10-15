@@ -1,0 +1,93 @@
+import 'package:meta/meta.dart';
+
+import '../authorization/authorization.dart';
+import '../builder/arguments.dart';
+import '../builder/field_def.dart';
+import '../coercion/coercion_result.dart';
+import '../plan/field_plan.dart';
+import 'field_selection.dart';
+import 'identity_key.dart';
+import 'look_ahead_budget.dart';
+
+/// One field of a [FieldSelection]: what the request asked for under one
+/// response key.
+///
+/// {@category lookahead}
+final class SelectedField {
+  /// Creates the field of [plans], the plans of one response key (one per
+  /// object type that collected it), read with the coerced [variables] and
+  /// the field tables [definitions].
+  @internal
+  SelectedField(
+    List<FieldPlan> plans,
+    Map<String, Object?> variables,
+    Map<String, Map<String, FieldDef<Object?, Object?>>> definitions,
+    LookAheadBudget budget,
+  ) : _plans = plans,
+      _variables = variables,
+      _definitions = definitions,
+      _budget = budget;
+
+  final List<FieldPlan> _plans;
+  final Map<String, Object?> _variables;
+  final Map<String, Map<String, FieldDef<Object?, Object?>>> _definitions;
+  final LookAheadBudget _budget;
+
+  /// Which request fields this one stands for: equal for two selected
+  /// fields over the same field nodes and parent types, whatever object
+  /// they were reached through. A walk remembers what it did per key.
+  @internal
+  // `late`: only the walks that dedupe pay for it.
+  late final IdentityKey key = IdentityKey([
+    for (final plan in _plans) ...[plan.parentType.name, ...plan.nodes, '|'],
+  ]);
+
+  /// The field's name in the schema, never the alias.
+  String get name => _plans.first.fieldName;
+
+  /// The key of the field in the response: the alias, else [name].
+  String get responseKey => _plans.first.responseKey;
+
+  /// The alias the request gave, null when it gave none.
+  String? get alias => responseKey == name ? null : responseKey;
+
+  /// The authorization rule that applies to the field (its own, else its
+  /// object type's), null when it has none or the field is introspection.
+  Authorization? get authorization {
+    final plan = _plans.first;
+    return _definitions[plan.parentType.name]?[plan.fieldName]?.authorization;
+  }
+
+  /// The field's arguments with the request's variables substituted and the
+  /// defaults applied, coerced when first read.
+  ///
+  /// An argument whose value fails coercion reads as absent: the executor
+  /// reports the problem when the field runs, so nothing is lost. Reading
+  /// a required argument that way throws, as reading any missing one does.
+  // `late`: the arguments are coerced on first read, so a look-ahead that
+  // never asks for them does not pay for them.
+  late final Arguments arguments = _readArguments();
+
+  /// The sub-selection of the field: empty for a leaf. For a field of an
+  /// abstract type it holds the fields every possible type collects.
+  // `late` for the same reason: the children are collected on first read.
+  late final FieldSelection selection = FieldSelection.under(
+    _plans,
+    _variables,
+    _definitions,
+    _budget,
+  );
+
+  Arguments _readArguments() {
+    final plan = _plans.first;
+    final declared =
+        _definitions[plan.parentType.name]?[plan.fieldName]?.args ?? const [];
+    return switch (plan.argumentsFor(_variables)) {
+      CoercionSuccess(:final value) => Arguments(
+        declared,
+        value as Map<String, Object?>,
+      ),
+      CoercionFailure() => Arguments(declared, const <String, Object?>{}),
+    };
+  }
+}

@@ -1,0 +1,14 @@
+import 'package:typed_graphql_server/typed_graphql_server.dart';
+
+final class Pet {
+  const Pet(this.age);
+  final int age;
+}
+
+void main() {
+  final b = ExecutableSchemaBuilder<Object?>();
+  b.object<Pet>(
+    'Pet',
+    fields: (t) => [t.field('name', b.string).pure((Pet p) => p.age)],
+  );
+}

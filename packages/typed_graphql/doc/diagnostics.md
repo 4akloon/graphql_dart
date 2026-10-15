@@ -110,7 +110,7 @@ digit is the area:
 | `GQL0xx` | lexer and syntax |
 | `GQL1xx` | type system: building, validating and introspecting a schema |
 | `GQL2xx` | operation validation |
-| `GQL3xx` | coercion and execution |
+| `GQL3xx` | coercion, execution and the executable schema builder |
 | `GQL4xx` | transports and protocols |
 | `GQL5xx` | code generation |
 

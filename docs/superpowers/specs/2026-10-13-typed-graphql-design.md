@@ -288,7 +288,7 @@ final schema = b.build(query: queryType, mutation: mutationType); // ExecutableS
   offers string paths (`has('posts.comments')`, children and arguments
   accessors); typed handles (`has(user.posts)`) only if the builder yields them at
   no extra cost. The field-to-column (SQL) mapping lives at the call site, never
-  in the schema; the library offers only a small whitelist helper from requested
+  in the schema; the library offers only a small allowlist helper from requested
   field names to columns. There is no built-in preload (the parent loaded a
   relation, the child reads it): the pattern is documented. Generated selection
   classes come with codegen (M8).

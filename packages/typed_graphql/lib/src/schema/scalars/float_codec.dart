@@ -1,4 +1,5 @@
 import '../../protocol/decode_result.dart';
+import '../../protocol/json_inspector.dart';
 import '../../protocol/json_value.dart';
 import 'scalar_codec.dart';
 
@@ -13,7 +14,9 @@ final class const FloatCodec() implements ScalarCodec<double> {
   @override
   DecodeResult<double> decode(JsonValue json) => switch (json) {
     JsonNumber(:final value) => DecodeSuccess(value.toDouble()),
-    _ => DecodeFailure('Float cannot represent non numeric value: $json'),
+    _ => DecodeFailure(
+      'Float cannot represent non numeric value: ${const JsonInspector().inspect(json)}',
+    ),
   };
 
   @override

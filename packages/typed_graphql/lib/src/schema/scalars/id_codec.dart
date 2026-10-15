@@ -1,4 +1,5 @@
 import '../../protocol/decode_result.dart';
+import '../../protocol/json_inspector.dart';
 import '../../protocol/json_value.dart';
 import 'scalar_codec.dart';
 
@@ -15,7 +16,9 @@ final class const IdCodec() implements ScalarCodec<String> {
   DecodeResult<String> decode(JsonValue json) => switch (json) {
     JsonString(:final value) => DecodeSuccess(value),
     JsonNumber(:final asInt?) => DecodeSuccess('$asInt'),
-    _ => DecodeFailure('ID cannot represent value: $json'),
+    _ => DecodeFailure(
+      'ID cannot represent value: ${const JsonInspector().inspect(json)}',
+    ),
   };
 
   @override

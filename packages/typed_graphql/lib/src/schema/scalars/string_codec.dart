@@ -1,4 +1,5 @@
 import '../../protocol/decode_result.dart';
+import '../../protocol/json_inspector.dart';
 import '../../protocol/json_value.dart';
 import 'scalar_codec.dart';
 
@@ -12,7 +13,9 @@ final class const StringCodec() implements ScalarCodec<String> {
   @override
   DecodeResult<String> decode(JsonValue json) => switch (json) {
     JsonString(:final value) => DecodeSuccess(value),
-    _ => DecodeFailure('String cannot represent a non string value: $json'),
+    _ => DecodeFailure(
+      'String cannot represent a non string value: ${const JsonInspector().inspect(json)}',
+    ),
   };
 
   @override

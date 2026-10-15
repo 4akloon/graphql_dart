@@ -1,4 +1,5 @@
 import '../../protocol/decode_result.dart';
+import '../../protocol/json_inspector.dart';
 import '../../protocol/json_value.dart';
 import 'scalar_codec.dart';
 
@@ -12,7 +13,9 @@ final class const BooleanCodec() implements ScalarCodec<bool> {
   @override
   DecodeResult<bool> decode(JsonValue json) => switch (json) {
     JsonBool(:final value) => DecodeSuccess(value),
-    _ => DecodeFailure('Boolean cannot represent a non boolean value: $json'),
+    _ => DecodeFailure(
+      'Boolean cannot represent a non boolean value: ${const JsonInspector().inspect(json)}',
+    ),
   };
 
   @override
