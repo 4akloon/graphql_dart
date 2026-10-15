@@ -272,3 +272,5 @@
 - The catalog adds `GQL507` (a Dart name the code generator would declare
   twice) and `GQL508` (a generated name that hides a Dart type the generated
   code uses).
+- The catalog adds `GQL511` (an operation or fragment that would generate
+  too many classes).

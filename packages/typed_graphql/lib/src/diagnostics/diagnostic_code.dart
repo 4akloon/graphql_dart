@@ -528,8 +528,8 @@ enum DiagnosticCode(
   anonymousOperation('GQL503'),
 
   /// `GQL504`: a construct the code generator does not support yet: `@defer`,
-  /// `@stream`, or a fragment on an abstract type spread at the root of a
-  /// subscription.
+  /// `@stream`, an introspection field (`__schema`, `__type`), or a spread or
+  /// inline fragment that makes the root of a subscription polymorphic.
   unsupportedInDocument('GQL504'),
 
   /// `GQL505`: the configuration maps a scalar the schema does not have as a
@@ -541,12 +541,18 @@ enum DiagnosticCode(
   noDocuments('GQL506'),
 
   /// `GQL507`: the code generator would declare one Dart name twice, such as
-  /// an enum `Role` and an input object `RoleKnown`; reported at the second
-  /// declaration, related to the first.
+  /// an enum `Role` and an input object `RoleKnown`, two members of one
+  /// generated class, or two generated files at one path; reported at the
+  /// second declaration, related to the first.
   generatedNameCollision('GQL507'),
 
   /// `GQL508`: a name the code generator would declare hides a Dart type the
   /// generated code uses, such as `List` or a `dart:core` type a scalar is
   /// mapped to.
   reservedTypeName('GQL508'),
+
+  /// `GQL511`: an operation or fragment whose selections would make the code
+  /// generator declare more classes than its fixed limit (10000); reported at
+  /// the operation or fragment name.
+  tooManyGeneratedClasses('GQL511'),
 }
