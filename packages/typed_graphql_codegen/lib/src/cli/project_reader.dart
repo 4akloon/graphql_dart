@@ -122,17 +122,8 @@ final class ProjectReader {
           root: directory,
           followLinks: false,
         );
-        for (final entity in entities) {
-          if (entity is! File || !entity.path.endsWith('.graphql')) continue;
-          final parts = p.split(p.relative(entity.path, from: directory));
-          if (parts.first == '..') {
-            // A brace alternative such as `{..,lib}` passes the path rule,
-            // which only checks whole segments.
-            problems.add(_leavesProject(pattern));
-            break;
-          }
-          final relative = p.posix.joinAll(parts);
-          if (relative != schemaPath) paths.add(relative);
+        if (!_collect(entities, schemaPath, paths)) {
+          problems.add(_leavesProject(pattern));
         }
       } on FormatException catch (error) {
         problems.add(
@@ -152,6 +143,25 @@ final class ProjectReader {
       }
     }
     return (paths: paths.toList()..sort(), problems: problems);
+  }
+
+  /// Adds the documents among [entities] to [paths]; false when one lies
+  /// outside the project.
+  bool _collect(
+    List<FileSystemEntity> entities,
+    String schemaPath,
+    Set<String> paths,
+  ) {
+    for (final entity in entities) {
+      if (entity is! File || !entity.path.endsWith('.graphql')) continue;
+      final parts = p.split(p.relative(entity.path, from: directory));
+      // A brace alternative such as `{..,lib}` passes the path rule, which
+      // only checks whole segments.
+      if (parts.first == '..') return false;
+      final relative = p.posix.joinAll(parts);
+      if (relative != schemaPath) paths.add(relative);
+    }
+    return true;
   }
 
   Diagnostic _leavesProject(String pattern) => Diagnostic(
