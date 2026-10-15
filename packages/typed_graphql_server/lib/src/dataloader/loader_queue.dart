@@ -49,6 +49,10 @@ final class LoaderQueue<K, R> {
     }
     final queued = _pending[key];
     if (queued != null) {
+      // A clear while the key was pending dropped it from the cache.
+      if (cachesValues) {
+        _cache[key] = queued.future;
+      }
       return queued.future;
     }
     if (_pending.isEmpty) {
@@ -59,10 +63,10 @@ final class LoaderQueue<K, R> {
     final future = completer.future;
     if (cachesValues) {
       _cache[key] = future;
-      // A failure is not cached, and this listener also keeps the future from
-      // being an uncaught error when no caller listens.
-      future.then<void>((_) {}, onError: (Object _) => _evict(key, future));
     }
+    // A failure is not cached, and this listener also keeps the future from
+    // being an uncaught error when no caller listens, cached or not.
+    future.then<void>((_) {}, onError: (Object _) => _evict(key, future));
     return future;
   }
 
@@ -111,15 +115,17 @@ final class LoaderQueue<K, R> {
     );
   }
 
+  // Each key completes exactly once, whatever the returned map or `missing`
+  // does, so no caller waits forever.
   void _complete(Completer<R> completer, K key, Map<K, R> values) {
-    if (values.containsKey(key)) {
-      completer.complete(values[key] as R);
-      return;
-    }
     try {
-      completer.complete(missing(key));
+      completer.complete(
+        values.containsKey(key) ? values[key] as R : missing(key),
+      );
     } on Object catch (error, stackTrace) {
-      completer.completeError(error, stackTrace);
+      if (!completer.isCompleted) {
+        completer.completeError(error, stackTrace);
+      }
     }
   }
 }

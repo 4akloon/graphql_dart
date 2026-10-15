@@ -20,7 +20,8 @@ import 'loader_queue.dart';
 /// {@category dataloader}
 final class GroupedLoader<K, V> {
   /// Creates a loader that fetches keys with [load], at most `maxBatchSize`
-  /// per call (no limit when null).
+  /// per call (no limit when null). With `cachesValues` off nothing is reused
+  /// across batches.
   ///
   /// [load] gets the distinct keys of a batch in the order they were asked
   /// and returns a map; a key it leaves out has an empty list. Throws an

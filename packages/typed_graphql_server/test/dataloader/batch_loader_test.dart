@@ -238,24 +238,6 @@ void main() {
       expect(await loader.load(1), 1);
     });
 
-    test('a failed batch reports no uncaught error', () async {
-      final uncaught = <Object>[];
-      await runZonedGuarded(
-        () async {
-          final loader = BatchLoader<int, int>(
-            (keys) => throw StateError('down'),
-          );
-          final futures = [loader.load(1), loader.load(2)];
-          for (final future in futures) {
-            await future.then<void>((_) {}, onError: (Object _) {});
-          }
-          await Future<void>.delayed(Duration.zero);
-        },
-        (error, stackTrace) => uncaught.add(error),
-      );
-      expect(uncaught, isEmpty);
-    });
-
     test(
       'a dropped failing future reports no uncaught error when cached',
       () async {

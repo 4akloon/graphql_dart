@@ -120,7 +120,8 @@ call the function again.
   nothing. It never replaces a value that is already cached.
 - `clear(key)` and `clearAll()` forget cached values. Call them after a
   mutation that changed what the loader would return. Futures already handed
-  out still complete.
+  out still complete. A `load` of a key that is still pending after the clear
+  joins the pending batch and caches it again.
 - `cachesValues: false` turns the cache off; keys asked in the same batch are
   still sent once.
 
@@ -256,7 +257,10 @@ the same error. A failure is not cached: the next `load` of those keys calls
 the function again. The loader listens to every future it creates, so a failed
 batch never becomes an uncaught error by itself; the future you get back is
 yours to await, and a resolver that returns it reports the failure as a field
-error.
+error, with or without `cachesValues`. If the returned map cannot be read for
+one key (a lookup that throws, a value of the wrong type), only that key fails
+and the others complete. The function runs in the zone of the first `load` of
+its batch.
 
 ```dart
 import 'package:typed_graphql_server/typed_graphql_server.dart';

@@ -22,7 +22,11 @@ import 'missing_value_exception.dart';
 /// {@category dataloader}
 final class BatchLoader<K, V> {
   /// Creates a loader that fetches keys with [load], at most `maxBatchSize`
-  /// per call (no limit when null).
+  /// per call (no limit when null; a larger batch is split into several
+  /// calls). With `cachesValues` off nothing is reused across batches.
+  ///
+  /// The function runs in the zone of the first [BatchLoader.load] of its
+  /// batch.
   ///
   /// [load] gets the distinct keys of a batch in the order they were asked
   /// and returns a map; a key it leaves out completes with `null` when [V] is
