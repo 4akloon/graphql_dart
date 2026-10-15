@@ -662,6 +662,37 @@ depends on the other). These constraints keep that possible:
 25. Enum values are Dart enum values, with no internal values: the tests
     with a "bad" complex internal value or a string given for an enum
     cannot be written (`enum_type_test.dart`).
+26. Introspection follows the September2025 edition, which lacks graphql-js
+    17's working-draft parts: directive deprecation
+    (`__Schema.directives(includeDeprecated:)`, `__Directive.isDeprecated`)
+    and the `DIRECTIVE_DEFINITION` and `FRAGMENT_VARIABLE_DEFINITION`
+    locations are not in the results (`introspection_test.dart`).
+27. `@deprecated` on a directive definition is refused (`GQL118`), so the two
+    graphql-js tests about deprecated directives are `skipped`
+    (`introspection_deprecation_test.dart`).
+28. An `Arg` has no explicit `null` default: a null default means "no
+    default", so introspection says `defaultValue: null` where graphql-js
+    says `'null'` (`introspection_test.dart`).
+29. `@defer` and `@stream` in a subscription are ignored, not refused, until
+    M14, so graphql-js's two "returns errors with @defer / @stream" tests are
+    `skipped` (`subscribe_publish_test.dart`).
+30. A subscription that cannot start is a `SubscriptionRejected` value, never
+    a throw: a non-subscription operation is `GQL324` ("Expected
+    subscription operation."), a root field that is skipped or undefined is
+    `GQL322` ("The subscription selects no root field."), and these request
+    errors carry no `locations` (`subscribe_initialization_test.dart`).
+31. A source stream that errors only after it has been listened to cannot be
+    seen at start: it becomes the final `GQL340` result of the stream, which
+    then closes, where graphql-js rejects `next()` (item 10)
+    (`subscribe_publish_test.dart`).
+32. The source subscription is paused while an event executes, so events are
+    executed one at a time and in order, and a source error or its end waits
+    for the event in flight (`subscribe_publish_test.dart`).
+33. `execute` needs a root value that the root type accepts, introspection
+    queries included: a root typed `Object?` or `void` takes `null`, any
+    other root takes a value of its Dart type. A guide shows how to declare a
+    root that needs none (`introspection_test.dart`,
+    `union_interface_test.dart`).
 
 ## 19. Conformance (R0.7, R10.3)
 
