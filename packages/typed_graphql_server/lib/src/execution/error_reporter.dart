@@ -5,6 +5,7 @@ import 'completion_site.dart';
 import 'error_log.dart';
 import 'execution_options.dart';
 import 'graphql_exception.dart';
+import 'masked_message.dart';
 import 'response_path.dart';
 
 /// Makes the errors of an execution (spec 7): the library's own, with their
@@ -76,7 +77,7 @@ final class ErrorReporter {
         extensions: extensions,
       ),
       _ => GraphQLError(
-        options.maskErrors ? _masked : error.toString(),
+        options.maskErrors ? const MaskedMessage().text : error.toString(),
         extensions: _codeOf(DiagnosticCode.subscriptionSourceFailed),
       ),
     };
@@ -99,15 +100,13 @@ final class ErrorReporter {
       return hook(error, stackTrace, reported) ?? reported;
     } on Object {
       return GraphQLError(
-        _masked,
+        const MaskedMessage().text,
         locations: reported.locations,
         path: reported.path,
         extensions: _codeOf(DiagnosticCode.unexpectedError),
       );
     }
   }
-
-  static const String _masked = 'Unexpected error.';
 
   GraphQLError _reportedFor(
     Object error,
@@ -122,7 +121,7 @@ final class ErrorReporter {
     ),
     _ => _coded(
       DiagnosticCode.unexpectedError,
-      options.maskErrors ? _masked : error.toString(),
+      options.maskErrors ? const MaskedMessage().text : error.toString(),
       path,
       nodes,
     ),

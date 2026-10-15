@@ -9,6 +9,9 @@ dartdoc:
     cancellation:
       markdown: doc/cancellation.md
       displayName: Cancellation
+    dataloader:
+      markdown: doc/dataloader.md
+      displayName: DataLoader
     execution:
       markdown: doc/execution.md
       displayName: Execution
@@ -18,6 +21,12 @@ dartdoc:
     lookahead:
       markdown: doc/lookahead.md
       displayName: Look-ahead
+    persisted:
+      markdown: doc/persisted_documents.md
+      displayName: Persisted Documents
+    server:
+      markdown: doc/server.md
+      displayName: Server
     subscription:
       markdown: doc/subscriptions.md
       displayName: Subscriptions
@@ -25,8 +34,11 @@ dartdoc:
     - authorization
     - builder
     - cancellation
+    - dataloader
     - execution
     - introspection
     - lookahead
+    - persisted
+    - server
     - subscription
   showUndocumentedCategories: true

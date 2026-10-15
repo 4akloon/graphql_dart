@@ -4,7 +4,7 @@
 ![Role](https://img.shields.io/badge/role-server-blue)
 ![Part of](https://img.shields.io/badge/part%20of-typed__graphql-purple)
 
-**A fully typed GraphQL server for Dart: a typed schema builder, the execution engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws and graphql-sse handlers.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
+**A fully typed GraphQL server for Dart: a typed schema builder, the execution engine, subscriptions, DataLoader and a transport-agnostic request pipeline.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
 > **Status: under construction.** Stage M5 is complete. The typed schema
 > builder (M5a), query execution (M5b), introspection and subscriptions (M5c),
@@ -14,8 +14,14 @@
 > masking and field middleware, answer introspection queries, run a
 > subscription over a stream of events, read which fields a request selected
 > under a field, guard fields with an authorizer and stop a request with a
-> cancel signal or a timeout. DataLoader and the request pipeline come in M6,
-> the HTTP, graphql-ws and graphql-sse handlers in M7. See the
+> cancel signal or a timeout. DataLoader (M6a) works too: `BatchLoader` and
+> `GroupedLoader` batch and cache the loads of one request. The request
+> pipeline (M6b) works: `GraphQLServer` serves a transport-agnostic request
+> with a document cache, the limits and the cost limit of a production or
+> development profile, CSRF prevention, extensions and error masking, and
+> with automatic persisted queries or trusted documents (M6c); with it stage
+> M6 is complete. The HTTP, graphql-ws and graphql-sse handlers come in M7.
+> See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
 ## Contents
@@ -48,8 +54,8 @@ dependencies:
   [Execution](doc/execution.md#executing-a-request)).
 - **You do not need it when** you only call a GraphQL server: that is the
   client package, not usable yet. Today it also has no HTTP or
-  WebSocket handler: you call `ExecutableSchema.execute` or `subscribe`
-  yourself with a parsed and validated document (the handlers are M6 and M7).
+  WebSocket handler: you decode the request yourself and call
+  `GraphQLServer.handle` (the handlers are M7).
 - **What it replaces**: resolvers written against `Map<String, dynamic>`, where
   a wrong result type or a misspelled argument name fails at run time in the
   middle of a request. Here the wrong type does not compile, and every error
@@ -61,9 +67,10 @@ dependencies:
 
 ## A quick tour
 
-Declare the schema, validate a request, execute it. Every resolver here is
-synchronous; a resolver may also return a `Future`. The same program is in
-[example/example.dart](example/example.dart).
+Declare the schema, then serve a request with `GraphQLServer`: it parses and
+validates the document, applies the limits of its profile and executes. Every
+resolver here is synchronous; a resolver may also return a `Future`. The same
+program is in [example/example.dart](example/example.dart).
 
 ```dart
 import 'dart:io';
@@ -104,23 +111,31 @@ Future<void> main() async {
   );
   final schema = b.build(query: query);
 
-  // Parse and validate a request against the schema: a problem is a
-  // diagnostic, never an exception.
-  final source = Source('{ books(limit: 2) { title pages } }');
-  final document = const Parser().parse(source).requireDocument();
-  final checked = const DocumentValidator().validate(
-    schema.schema,
-    document,
-    source: source,
+  // Serve it: the server parses and validates the document (cached),
+  // applies the limits of its profile (production unless you pick one),
+  // builds the context and executes. It knows nothing of HTTP.
+  final server = GraphQLServer<Object?>(
+    schema: schema,
+    contextFactory: (request) => null,
   );
-  if (checked case final ValidDocument valid) {
-    // Execute it: the response is a value that writes itself as JSON.
-    final response = await schema.execute(
-      valid,
-      context: null,
-      options: ExecutionOptions(source: source),
-    );
-    stdout.writeln(response.toJson());
+  final response = await server.handle(
+    ServerRequest(
+      params: const GraphQLRequest(
+        query: '{ books(limit: 2) { title pages } }',
+      ),
+      info: RequestInfo(
+        method: 'POST',
+        uri: Uri.parse('http://localhost/graphql'),
+        headers: {'content-type': 'application/json'},
+      ),
+    ),
+  );
+
+  // The response is a value: an outcome a transport maps to a status, and
+  // a body that writes itself as JSON.
+  if (response case SingleResponse(:final outcome, :final body)) {
+    stdout.writeln(outcome.name);
+    stdout.writeln(body);
   }
 }
 ```
@@ -128,11 +143,17 @@ Future<void> main() async {
 It prints:
 
 ```text
+executed
 {"data":{"books":[{"title":"Dune","pages":412},{"title":"Emma","pages":null}]}}
 ```
 
 ## Guides
 
+- [Server](doc/server.md): `GraphQLServer`, requests, responses and outcomes,
+  profiles, limits and the cost limit, CSRF prevention, the document cache,
+  extensions, errors and masking.
+- [Persisted Documents](doc/persisted_documents.md): automatic persisted
+  queries and their store, trusted documents from the codegen manifest.
 - [Schema Builder](doc/schema_builder.md): refs, objects, fields, arguments,
   scalars, enums, input objects, interfaces and unions, building the schema.
 - [Execution](doc/execution.md): executing a request, variables, request errors
@@ -142,6 +163,8 @@ It prints:
   answer as the core, `IntrospectionPolicy`, root types without a root value.
 - [Subscriptions](doc/subscriptions.md): source streams, one event at a time,
   rejected and failed subscriptions.
+- [DataLoader](doc/dataloader.md): batching and caching loads per request with
+  `BatchLoader` and `GroupedLoader`, missing keys, `maxBatchSize`.
 - [Look-ahead](doc/lookahead.md): the fields a request selected under a field,
   `fingerprint` as a DataLoader key, `ColumnAllowlist`.
 - [Authorization](doc/authorization.md): rules on fields and types, the

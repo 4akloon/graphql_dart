@@ -508,7 +508,8 @@ enum DiagnosticCode(
   slicingArgumentsRequired('GQL237'),
 
   /// `GQL238`: an operation whose field cost or type cost is more than the
-  /// maximum `MaxCostRule` allows.
+  /// maximum `MaxCostRule` allows. `GraphQLServer` also reports it, once per
+  /// request, with the request's variables.
   maxCostExceeded('GQL238'),
 
   /// `GQL300`: an object type or an interface type built with
@@ -589,7 +590,9 @@ enum DiagnosticCode(
   /// `GQL330`: reported when a resolver, codec or decode function threw
   /// an unexpected error; the message is masked. It is a
   /// `GraphQLError`'s `extensions.code` in a response of
-  /// `ExecutableSchema.execute`.
+  /// `ExecutableSchema.execute`. `GraphQLServer` also reports it for an
+  /// unexpected error of its own pipeline (the context factory, an extension
+  /// or a store).
   unexpectedError('GQL330'),
 
   /// `GQL331`: reported when a resolver returned null for a non-null
@@ -654,6 +657,65 @@ enum DiagnosticCode(
   /// `GraphQLError`'s `extensions.code` in a response of
   /// `ExecutableSchema.execute`.
   notAuthorized('GQL352'),
+
+  /// `GQL400`: reported when a request has no document text and no persisted
+  /// document resolved one ("Must provide query string."). It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  queryRequired('GQL400'),
+
+  /// `GQL401`: reported when the document text is longer than the server's
+  /// `maxDocumentLength`; it is refused before it is hashed or parsed. It is
+  /// a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  documentTooLong('GQL401'),
+
+  /// `GQL402`: reported when a request whose method is not `POST` selects a
+  /// mutation; only a `POST` request may run one. It is a `GraphQLError`'s `extensions.code`
+  /// in a response of `GraphQLServer.handle`.
+  mutationRequiresPost('GQL402'),
+
+  /// `GQL403`: reported when CSRF prevention refused the request. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  csrfRequestBlocked('GQL403'),
+
+  /// `GQL410`: reported when a request names a persisted query by its hash
+  /// alone and the server's store does not hold it; the message is
+  /// "PersistedQueryNotFound", which tells a client to send the text with
+  /// the hash. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  persistedQueryNotFound('GQL410'),
+
+  /// `GQL411`: reported when a request sends a document text with a
+  /// persisted query hash that is not the SHA-256 of that text; nothing is
+  /// stored. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  persistedQueryHashMismatch('GQL411'),
+
+  /// `GQL412`: reported when a request names a persisted query by its hash
+  /// alone and the server keeps neither persisted queries nor trusted
+  /// documents; the message is "PersistedQueryNotSupported", which tells a
+  /// client to stop sending hashes. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLServer.handle`.
+  persistedQueryNotSupported('GQL412'),
+
+  /// `GQL413`: reported when `extensions.persistedQuery` of a request is not
+  /// an object with `version` 1 and a `sha256Hash` of 64 lower-case
+  /// hexadecimal digits. It is a `GraphQLError`'s `extensions.code` in a
+  /// response of `GraphQLServer.handle`.
+  invalidPersistedQuery('GQL413'),
+
+  /// `GQL414`: reported when a server that accepts only trusted documents
+  /// receives a document text that is not one of them. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  untrustedDocument('GQL414'),
+
+  /// `GQL415`: reported when a request names a trusted document by a hash
+  /// that names none. It is a `GraphQLError`'s `extensions.code` in a
+  /// response of `GraphQLServer.handle`.
+  unknownTrustedDocument('GQL415'),
 
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
   /// the YAML parser's.

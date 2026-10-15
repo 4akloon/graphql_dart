@@ -285,6 +285,20 @@
   code uses).
 - The catalog adds `GQL511` (an operation or fragment that would generate
   too many classes).
+- `DiagnosticCode`: `GQL400`-`GQL403` (`queryRequired`, `documentTooLong`,
+  `mutationRequiresPost`, `csrfRequestBlocked`), reported by the server's
+  request pipeline.
 - Fix: `Printer` keeps the `query` keyword of an anonymous query that follows
   a body-less type or extension, so that the text parses back (this differs
   from graphql-js's `print` and `stripIgnoredCharacters`).
+- **Breaking:** `CostAnalysis` and `MaxCostRule` count a slicing value that
+  names no size (`null`, a negative number, a variable value that is not a
+  number, a variable with neither a value nor a default) as a slicing
+  argument not given: the argument's default, `assumedSize`, then
+  `defaultListSize`. A negative value counted 0 and a variable without a
+  value skipped the argument's default and `assumedSize`.
+- `DiagnosticCode`: `GQL410`-`GQL415` (`persistedQueryNotFound`,
+  `persistedQueryHashMismatch`, `persistedQueryNotSupported`,
+  `invalidPersistedQuery`, `untrustedDocument`, `unknownTrustedDocument`),
+  reported by the server for persisted queries and trusted documents.
+- Documentation: `GQL402` also covers `HEAD`; the cost guide says a resolver must cap a slicing argument itself.

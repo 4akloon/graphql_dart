@@ -2,6 +2,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../builder/arguments.dart';
 import '../execution/graphql_exception.dart';
+import '../execution/masked_message.dart';
 import 'coercion_environment.dart';
 import 'coercion_problems.dart';
 import 'input_path.dart';
@@ -40,7 +41,7 @@ final class InputObjectDecoder {
       problems.add(exception.message, path, extensions: exception.extensions);
     } on Object catch (error, stackTrace) {
       problems.add(
-        'Unexpected error.',
+        const MaskedMessage().text,
         path,
         code: DiagnosticCode.inputDecodeFailed,
         thrown: (error: error, stackTrace: stackTrace),

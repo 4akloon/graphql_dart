@@ -25,6 +25,33 @@ void main() {
       );
     });
 
+    test('allows dart:convert', () {
+      expect(
+        rule.check('lib/src/server/a.dart', "import 'dart:convert';\n"),
+        isEmpty,
+      );
+    });
+
+    test('allows package:crypto/crypto.dart', () {
+      expect(
+        rule.check(
+          'lib/src/server/a.dart',
+          "import 'package:crypto/crypto.dart';\n",
+        ),
+        isEmpty,
+      );
+    });
+
+    test('rejects another crypto library', () {
+      expect(
+        rule.check(
+          'lib/src/server/a.dart',
+          "import 'package:crypto/src/sha256.dart';\n",
+        ),
+        hasLength(1),
+      );
+    });
+
     test('rejects dart:io', () {
       expect(
         rule.check('lib/src/builder/a.dart', "import 'dart:io';\n"),

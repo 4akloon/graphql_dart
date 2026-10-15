@@ -139,3 +139,76 @@
   `FieldDef.middleware` and `CancelSignal.listenerCount` are `@internal`.
 - A run that halted (for example `GQL337`) and is then cancelled answers with
   the halt error, not `GQL350`.
+- `BatchLoader` batches and caches loads by key within a request (dispatch
+  after the microtask queue drains, `maxBatchSize`, `prime`, `clear`);
+  `MissingValueException` for a key the batch function left out. The DataLoader
+  guide and its dartdoc category `dataloader`.
+- `GroupedLoader` loads the list of children of a key (posts by author id) in
+  one batch, with the cache and failure behaviour of `BatchLoader`; a missing
+  key is an empty list and the lists it hands out are unmodifiable.
+- `RequestInfo`, `ServerRequest`, `ServerResponse` (`SingleResponse`,
+  `StreamResponse`), `ServerOutcome` and `ContextFactory`: the values the
+  request pipeline takes and returns. Header names are lower-case.
+- `ServerProfile` (`development`, `production`, one `with*` method per
+  protection), `ServerLimits` and `CsrfPrevention`: the protections of a
+  server as values that compare by value.
+- `GraphQLServer<C>`: `handle(ServerRequest)` runs the request pipeline
+  (document length, `GQL400`/`GQL401`, the document cache, the operation
+  lookup, `GQL402` for a mutation over `GET`, the context factory, execution
+  or subscription with the options of the `ServerProfile`) and never throws;
+  unexpected errors go to `onError` and are masked (`GQL330`) per the profile.
+- `ServerExtension<C>`: three hooks (`onRequest`, `onDocument`, `onExecute`),
+  each with a default that calls `next`, passed to `GraphQLServer.extensions`
+  (the first is the outermost and sees even the requests CSRF prevention
+  refuses). `RequestHandler`, `DocumentHandler` and `ExecutionHandler<C>` are
+  the `next` types; `DocumentRequest` (`withText`), the sealed
+  `DocumentResult` (`DocumentAccepted` with the hash the server computed,
+  `DocumentRejected`) and `ExecutionRequest<C>` (`withContext`,
+  `withOptions`) are what the hooks take and return.
+- CSRF prevention (`GQL403`) runs in the request phase when the profile has a
+  `CsrfPrevention`: a request without a content type a browser cannot send
+  cross-site and without a preflight header is refused before any other step.
+- The cost limit (`ServerLimits.maxCost`, `defaultListSize`) runs for each
+  request after the operation is selected and before the context is built: a
+  request whose field cost or type cost is over the limit is refused with
+  `GQL238` and `MaxCostRule`'s message. Slicing arguments given as variables
+  count with the request's values.
+- The Server guide and the example now serve a request with
+  `GraphQLServer`.
+- `PersistedQueryStore`, where a server keeps automatic persisted queries,
+  and `MemoryPersistedQueryStore`, a bounded in-memory LRU.
+- `GraphQLServer(persistedQueries:)` turns on automatic persisted queries:
+  a hash alone runs a stored text (`GQL410` when it is not stored), a text
+  with its hash is checked (`GQL411`) and stored once it validates, a
+  malformed `extensions.persistedQuery` is `GQL413`. Without a store a hash
+  alone is `GQL412`. A stored text is hashed again when read.
+- `TrustedDocuments` (built from a map or decoded from the manifest
+  `typed_graphql_codegen` writes) and `GraphQLServer(trustedDocuments:)`: a
+  hash runs its trusted text (`GQL415` when none), a text runs only when it
+  is trusted to the character (`GQL414`). Combined with `persistedQueries`
+  it is an `ArgumentError`.
+- The document cache is keyed by the text itself and bounded by the total
+  length of the cached texts too: `GraphQLServer(documentCacheMaxLength:)`
+  (default 4,000,000 characters) drops the least recently used documents to
+  stay under it and never keeps a longer text.
+- A mutation is refused with `GQL402` unless the method is `POST` (compared
+  ignoring case): `GET`, `HEAD`, `PUT`, `DELETE`, `PATCH` and an empty method
+  are refused.
+- A trusted document runs the manifest's text, not the client's, so a text
+  with a lone surrogate (which hashes like the same text with U+FFFD) cannot
+  run or poison the cache entry of the trusted one.
+- **Breaking:** `CsrfPrevention(requestHeaders:)` became
+  `CsrfPrevention.withHeaders(headers)`, which copies the list;
+  `requestHeaders` is unmodifiable.
+- Automatic persisted queries do not write a text the store already holds.
+- Documentation: the barrel, the package description and the README say what
+  works today (the transports come with M7); the Server guide states what
+  `ServerProfile.production` sets (no timeout), that the `ServerLimits` checks
+  are `assert`s and how each bad value behaves in a release build, that a
+  resolver must cap a slicing argument, that extension hooks are trusted
+  server code, which errors become a response only in `handle`, and that the
+  pipeline does not bound a hanging context factory, store or hook.
+- Tests: a server built without `profile:` is checked to be a production
+  server, a failing store write is checked to be answered as `GQL330`, and
+  the wall-clock assertion and most real sleeps of the pipeline tests are
+  gone.

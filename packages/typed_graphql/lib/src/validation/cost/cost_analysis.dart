@@ -32,13 +32,16 @@ import 'operation_cost.dart';
 ///   the cost only down to 0.
 /// - The **list size** of a field whose type is a list (ignoring non-null)
 ///   is the largest slicing argument given: an `Int` literal, or a
-///   variable's value in `variables`, else its default in the operation,
-///   else `defaultListSize`; a `null` is ignored. With none given, it is
-///   the largest default value of a slicing argument, else `assumedSize`,
-///   else `defaultListSize`. A list field without `@listSize` has
-///   `defaultListSize`; any other field has 1. When `@listSize` has
-///   `sizedFields`, the field itself has size 1 and the size above is the
-///   size of each child, fragments included, whose name is listed.
+///   variable's value in `variables`, else (without a value) its default in
+///   the operation. A value that names no size (`null`, a negative number,
+///   a variable value that is not a number, a variable with neither a value
+///   nor a default) is not given, so a client cannot lower the cost. With
+///   none given, it is the largest default value of a slicing argument,
+///   else `assumedSize`, else `defaultListSize`. A list field without
+///   `@listSize` has `defaultListSize`; any other field has 1. When
+///   `@listSize` has `sizedFields`, the field itself has size 1 and the size
+///   above is the size of each child, fragments included, whose name is
+///   listed.
 /// - The **field cost** of a selection set is the sum over its fields of
 ///   the raw cost plus the size times the field cost of the field's own
 ///   selection set. Inline fragments and spreads add the cost of their

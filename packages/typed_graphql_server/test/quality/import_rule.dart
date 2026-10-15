@@ -2,8 +2,9 @@
 /// one library under `lib/`.
 ///
 /// The server runs on the VM, AOT, dart2js and dart2wasm, so it imports pure
-/// Dart, `meta`, the core's barrel and its own files, never `src/` of the
-/// core and never a web framework.
+/// Dart, `dart:convert`, `meta`, `package:crypto/crypto.dart` (SHA-256 of
+/// documents), the core's barrel and its own files, never `src/` of the core
+/// and never a web framework.
 final class ImportRule {
   /// Creates the rule.
   const ImportRule();
@@ -12,9 +13,12 @@ final class ImportRule {
   static const Set<String> _pureDart = {
     'dart:async',
     'dart:collection',
+    'dart:convert',
     'dart:core',
     'dart:math',
   };
+
+  static const String _crypto = 'package:crypto/crypto.dart';
 
   static const String _coreBarrel = 'package:typed_graphql/typed_graphql.dart';
 
@@ -35,12 +39,14 @@ final class ImportRule {
           ? null
           : '$filePath imports $target: the server is platform independent';
     }
-    if (target.startsWith('package:meta/') || target == _coreBarrel) {
+    if (target.startsWith('package:meta/') ||
+        target == _coreBarrel ||
+        target == _crypto) {
       return null;
     }
     if (target.startsWith('package:')) {
-      return '$filePath imports $target: only meta and the core barrel '
-          '($_coreBarrel) are allowed';
+      return '$filePath imports $target: only meta, crypto and the core '
+          'barrel ($_coreBarrel) are allowed';
     }
     return null;
   }

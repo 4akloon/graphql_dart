@@ -1,10 +1,14 @@
 /// A fully typed GraphQL server for Dart: a typed schema builder, the execution
-/// engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws
-/// and graphql-sse handlers.
+/// engine, subscriptions, DataLoader and a transport-agnostic request
+/// pipeline.
 ///
-/// Under construction: stage M5 is complete (the typed schema builder,
-/// execution, introspection, subscriptions, look-ahead, authorization and
-/// cancellation); transports follow. See the package README.
+/// Under construction: stages M5 and M6 are complete. The typed schema
+/// builder, execution, introspection, subscriptions, look-ahead,
+/// authorization and cancellation work, and so do DataLoader (`BatchLoader`,
+/// `GroupedLoader`) and the request pipeline (`GraphQLServer`: document
+/// cache, limits and cost limit, CSRF prevention, extensions, error masking,
+/// automatic persisted queries and trusted documents). The transports (HTTP,
+/// graphql-ws, graphql-sse) come with M7. See the package README.
 library;
 
 export 'src/authorization/authorization.dart';
@@ -35,6 +39,9 @@ export 'src/builder/scalar_type_def.dart';
 export 'src/builder/schema_build_error.dart';
 export 'src/builder/union_type_def.dart';
 export 'src/cancellation/cancel_signal.dart';
+export 'src/dataloader/batch_loader.dart';
+export 'src/dataloader/grouped_loader.dart';
+export 'src/dataloader/missing_value_exception.dart';
 export 'src/execution/directive_middleware.dart';
 export 'src/execution/error_behavior.dart';
 export 'src/execution/error_hook.dart';
@@ -50,4 +57,23 @@ export 'src/introspection/introspection_policy.dart';
 export 'src/lookahead/column_allowlist.dart';
 export 'src/lookahead/field_selection.dart';
 export 'src/lookahead/selected_field.dart';
+export 'src/persisted/memory_persisted_query_store.dart';
+export 'src/persisted/persisted_query_store.dart';
+export 'src/persisted/trusted_documents.dart';
+export 'src/server/context_factory.dart';
+export 'src/server/csrf_prevention.dart';
+export 'src/server/document_handler.dart';
+export 'src/server/document_request.dart';
+export 'src/server/document_result.dart';
+export 'src/server/execution_handler.dart';
+export 'src/server/execution_request.dart';
+export 'src/server/graphql_server.dart';
+export 'src/server/request_handler.dart';
+export 'src/server/request_info.dart';
+export 'src/server/server_extension.dart';
+export 'src/server/server_limits.dart';
+export 'src/server/server_outcome.dart';
+export 'src/server/server_profile.dart';
+export 'src/server/server_request.dart';
+export 'src/server/server_response.dart';
 export 'src/subscription/subscription_result.dart';

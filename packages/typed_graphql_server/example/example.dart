@@ -36,22 +36,30 @@ Future<void> main() async {
   );
   final schema = b.build(query: query);
 
-  // Parse and validate a request against the schema: a problem is a
-  // diagnostic, never an exception.
-  final source = Source('{ books(limit: 2) { title pages } }');
-  final document = const Parser().parse(source).requireDocument();
-  final checked = const DocumentValidator().validate(
-    schema.schema,
-    document,
-    source: source,
+  // Serve it: the server parses and validates the document (cached),
+  // applies the limits of its profile (production unless you pick one),
+  // builds the context and executes. It knows nothing of HTTP.
+  final server = GraphQLServer<Object?>(
+    schema: schema,
+    contextFactory: (request) => null,
   );
-  if (checked case final ValidDocument valid) {
-    // Execute it: the response is a value that writes itself as JSON.
-    final response = await schema.execute(
-      valid,
-      context: null,
-      options: ExecutionOptions(source: source),
-    );
-    stdout.writeln(response.toJson());
+  final response = await server.handle(
+    ServerRequest(
+      params: const GraphQLRequest(
+        query: '{ books(limit: 2) { title pages } }',
+      ),
+      info: RequestInfo(
+        method: 'POST',
+        uri: Uri.parse('http://localhost/graphql'),
+        headers: {'content-type': 'application/json'},
+      ),
+    ),
+  );
+
+  // The response is a value: an outcome a transport maps to a status, and
+  // a body that writes itself as JSON.
+  if (response case SingleResponse(:final outcome, :final body)) {
+    stdout.writeln(outcome.name);
+    stdout.writeln(body);
   }
 }
