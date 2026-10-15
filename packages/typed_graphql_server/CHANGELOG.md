@@ -149,3 +149,6 @@
 - `RequestInfo`, `ServerRequest`, `ServerResponse` (`SingleResponse`,
   `StreamResponse`), `ServerOutcome` and `ContextFactory`: the values the
   request pipeline takes and returns. Header names are lower-case.
+- `ServerProfile` (`development`, `production`, one `with*` method per
+  protection), `ServerLimits` and `CsrfPrevention`: the protections of a
+  server as values that compare by value.
