@@ -1,6 +1,5 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
-import 'dart_names.dart';
 import 'dart_string_literal.dart';
 import 'dart_writer.dart';
 import 'imports.dart';
@@ -170,19 +169,20 @@ final class RegularInputEmitter {
   }
 
   void _writeEquality(String name, List<InputField> fields, DartWriter writer) {
-    final String other = const DartNames().freeName('other', <String>[
-      for (final InputField field in fields) field.dartName,
-    ]);
+    // The parameter keeps the name `other` (avoid_renaming_method_parameters);
+    // a field of that name is read through `this`.
+    String own(InputField field) =>
+        field.dartName == 'other' ? 'this.other' : field.dartName;
     writer
       ..line('@override')
-      ..arrowJoined('bool operator ==(Object $other)', <String>[
-        '$other is $name',
+      ..arrowJoined('bool operator ==(Object other)', <String>[
+        'other is $name',
         for (final InputField field in fields)
           if (field.holdsList)
-            'const client.DataEquality().equals($other.${field.dartName}, '
-                '${field.dartName})'
+            'const client.DataEquality().equals(other.${field.dartName}, '
+                '${own(field)})'
           else
-            '$other.${field.dartName} == ${field.dartName}',
+            'other.${field.dartName} == ${own(field)}',
       ], '&&')
       ..line()
       ..line('@override');

@@ -11,6 +11,8 @@ export 'src/config/dart_reference.dart';
 export 'src/config/scalar_mapping.dart';
 export 'src/config/schema_location.dart';
 export 'src/generator/client_generator.dart';
+export 'src/generator/generated_file.dart';
+export 'src/generator/generation_result.dart';
 export 'src/project/project_file.dart';
 export 'src/schema/schema_load_result.dart';
 export 'src/schema/schema_loader.dart';

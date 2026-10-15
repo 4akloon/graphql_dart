@@ -1,11 +1,18 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../config/codegen_config.dart';
+import '../emit/schema_types_emitter.dart';
+import '../emit/type_mapper.dart';
 import '../project/project_file.dart';
+import 'client_project.dart';
 import 'client_project_loader.dart';
 import 'client_project_result.dart';
+import 'generated_file.dart';
+import 'generated_names.dart';
+import 'generation_result.dart';
 import 'rules/named_operations_rule.dart';
 import 'rules/unsupported_directives_rule.dart';
+import 'schema_type_usage.dart';
 
 /// Generates typed Dart client code from a schema and `.graphql` documents.
 ///
@@ -56,13 +63,22 @@ final class const ClientGenerator(final CodegenConfig config) {
   /// Checks the schema and the documents as `generate` will read them;
   /// returns every diagnostic, warnings included, in report order.
   ///
+  /// This is `generate(...).diagnostics`: it includes the name checks.
+  List<Diagnostic> check({
+    required ProjectFile schema,
+    required List<ProjectFile> documents,
+  }) => generate(schema: schema, documents: documents).diagnostics;
+
+  /// Generates the files of the project.
+  ///
   /// When the schema cannot be loaded, the documents are only parsed: their
   /// syntax errors come after the schema's, and no validation error is
-  /// reported.
+  /// reported. With any error the result has no files.
   ///
   /// [schema] is the schema file and [documents] the files the configuration's
-  /// `documents` globs matched; nothing is written.
-  List<Diagnostic> check({
+  /// `documents` globs matched; nothing is written. For now the only file is
+  /// the schema-types library at [CodegenConfig.schemaTypes].
+  GenerationResult generate({
     required ProjectFile schema,
     required List<ProjectFile> documents,
   }) {
@@ -71,8 +87,41 @@ final class const ClientGenerator(final CodegenConfig config) {
       rules,
     ).load(schema: schema, documents: documents);
     return switch (result) {
-      ClientProjectLoaded(:final warnings) => warnings,
-      ClientProjectFailed(:final diagnostics) => diagnostics,
+      ClientProjectFailed(:final diagnostics) => GenerationResult(
+        const [],
+        diagnostics,
+      ),
+      ClientProjectLoaded(:final project, :final warnings) => _generate(
+        project,
+        schema.path,
+        warnings,
+      ),
     };
+  }
+
+  GenerationResult _generate(
+    ClientProject project,
+    String schemaPath,
+    List<Diagnostic> warnings,
+  ) {
+    final types = SchemaTypeUsage(
+      project.schema.schema,
+    ).of(project.document.document);
+    final names = GeneratedNames(
+      mappedCoreTypes: [
+        for (final mapping in config.scalars.values)
+          if (mapping.type.library == null) mapping.type.name,
+      ],
+    );
+    types.forEach(names.registerSchemaType);
+    if (names.diagnostics.isNotEmpty) {
+      return GenerationResult(const [], [...warnings, ...names.diagnostics]);
+    }
+    final text = SchemaTypesEmitter(
+      TypeMapper(project.schema.schema, config.scalars),
+    ).emit(types, source: schemaPath);
+    return GenerationResult([
+      GeneratedFile(config.schemaTypes, text),
+    ], warnings);
   }
 }

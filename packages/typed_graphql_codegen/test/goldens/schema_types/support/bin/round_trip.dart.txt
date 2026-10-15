@@ -1,0 +1,42 @@
+import 'dart:io';
+
+import 'package:generated_schema_types/schema.graphql.dart';
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_client/typed_graphql_client.dart';
+
+const DataContext _context = DataContext();
+
+void main() {
+  final filter = UserFilter(
+    ids: const ['1', '2'],
+    role: const Optional.present(RoleKnown.admin),
+    name: const Optional.present(null),
+    since: Optional.present(DateTime.utc(2026, 10, 15)),
+  );
+  const paging = Paging(
+    other: 'x',
+    default$: Optional.present(3),
+    after: Optional.present(JsonString('c1')),
+  );
+  _check('UserFilter', UserFilter.codec, filter);
+  _check('Paging', Paging.codec, paging);
+  _check('SearchBy', SearchBy.codec, const SearchByName('Ada'));
+  _check('SearchBy', SearchBy.codec, const SearchById('7'));
+  _check('Role', Role.codec, RoleKnown.editor);
+  _check('Role', Role.codec, const RoleUnknown('NEW'));
+  if (!paging.toString().contains(r'default$: ')) {
+    _fail('Paging.toString is $paging');
+  }
+}
+
+void _check<T>(String name, DataCodec<T> codec, T value) {
+  final T read = codec.read(codec.write(value), _context);
+  if (read != value) {
+    _fail('$name did not round trip: $value became $read');
+  }
+}
+
+void _fail(String message) {
+  stderr.writeln(message);
+  exit(1);
+}

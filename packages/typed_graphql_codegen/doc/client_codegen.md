@@ -124,6 +124,8 @@ and are never reused.
 | `GQL504` | error | A document uses `@defer` or `@stream`, which the generator does not support yet. |
 | `GQL505` | error | The configuration maps a scalar that the schema does not declare as a custom scalar: it is unknown, is not a scalar, or is built in. |
 | `GQL506` | warning | No document matches `documents`. |
+| `GQL507` | error | The generator would declare one Dart name twice, such as an enum `Role` and an input object `RoleKnown` (the enum also declares `RoleKnown` and `RoleUnknown`). |
+| `GQL508` | error | A name the generator would declare hides a Dart type the generated code uses, such as `List`, or a `dart:core` type a scalar is mapped to. |
 
 The problems of the schema and of the documents keep the codes of the core:
 the schema's `GQL1xx` and the operation rules' `GQL2xx`.

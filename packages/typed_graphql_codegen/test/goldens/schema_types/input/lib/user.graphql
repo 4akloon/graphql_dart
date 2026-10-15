@@ -1,0 +1,23 @@
+query GetUser($id: ID!, $withFriends: Boolean = false, $full: Boolean!) {
+  user(id: $id) {
+    ...UserCard @include(if: $full)
+    role
+    createdAt
+    cursor
+    friends(first: 2) @include(if: $withFriends) {
+      id
+      name
+    }
+  }
+}
+
+fragment UserCard on User {
+  id
+  name
+}
+
+query Search($by: SearchBy!, $filter: UserFilter, $paging: Paging) {
+  search(by: $by, filter: $filter, paging: $paging) {
+    __typename
+  }
+}

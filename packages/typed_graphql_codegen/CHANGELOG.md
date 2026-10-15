@@ -21,3 +21,12 @@
 - The Client Code Generation guide covers the configuration keys, checking a
   project and the codes `GQL500`-`GQL506`; the `codegen` dartdoc category.
 - A `.graphql` file with no tokens adds nothing instead of failing the project; stricter checks of `schema`, paths and `headers` (all `GQL501`).
+- `ClientGenerator.generate` returns a `GenerationResult` (`GeneratedFile`s and
+  diagnostics) and writes the schema-types library at `schema_types`: the
+  enums and input objects the documents use, with `@oneOf` inputs as sealed
+  classes; `check` is `generate(...).diagnostics`.
+- `GQL507` (a Dart name declared twice) and `GQL508` (a generated name that
+  hides a Dart type the generated code uses) are reported before any file is
+  written.
+- Golden cases in `test/goldens/` and an analysis test that analyzes and runs
+  the generated code in a temporary package (tag `analysis`).

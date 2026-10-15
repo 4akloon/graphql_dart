@@ -35,7 +35,7 @@ final class const InputField({
     final DartType type = mapper.of(input.type, imports);
     return InputField(
       graphQLName: input.name,
-      dartName: _name(input.name),
+      dartName: dartNameOf(input.name),
       value: type,
       isOptional: input.type is! NonNullType || input.defaultValue != null,
       doc: _doc(input),
@@ -50,7 +50,7 @@ final class const InputField({
     Imports imports,
   ) => InputField(
     graphQLName: input.name,
-    dartName: _name(input.name),
+    dartName: dartNameOf(input.name),
     value: mapper.ofNonNull(input.type, imports),
     isOptional: false,
     doc: _doc(input),
@@ -76,7 +76,8 @@ final class const InputField({
 
   static final RegExp _list = RegExp(r'(^|[^\w$.])List<');
 
-  static String _name(String name) => const DartNames().memberName(
+  /// The Dart member name of the input field named [name].
+  static String dartNameOf(String name) => const DartNames().memberName(
     name,
     reservedMembers: DartNames.objectMembers,
   );

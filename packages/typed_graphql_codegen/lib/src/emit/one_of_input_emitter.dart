@@ -161,12 +161,14 @@ final class OneOfInputEmitter {
   }
 
   void _writeEquality(String variant, String name, DartWriter writer) {
-    final String other = _names.freeName('other', <String>[name]);
+    // The parameter keeps the name `other` (avoid_renaming_method_parameters);
+    // a field of that name is read through `this`.
+    final String own = name == 'other' ? 'this.other' : name;
     writer
       ..line('@override')
       ..arrow(
-        'bool operator ==(Object $other)',
-        '$other is $variant && $other.$name == $name',
+        'bool operator ==(Object other)',
+        'other is $variant && other.$name == $own',
       )
       ..line()
       ..line('@override')

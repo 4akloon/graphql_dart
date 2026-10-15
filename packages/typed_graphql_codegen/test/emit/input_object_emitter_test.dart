@@ -303,11 +303,11 @@ final class Odd implements client.DataObject {
   });
 
   @override
-  bool operator ==(Object other$) =>
-      other$ is Odd &&
-      other$.default$ == default$ &&
-      other$.$id == $id &&
-      const client.DataEquality().equals(other$.other, other);
+  bool operator ==(Object other) =>
+      other is Odd &&
+      other.default$ == default$ &&
+      other.$id == $id &&
+      const client.DataEquality().equals(other.other, this.other);
 
   @override
   int get hashCode => Object.hashAll([
