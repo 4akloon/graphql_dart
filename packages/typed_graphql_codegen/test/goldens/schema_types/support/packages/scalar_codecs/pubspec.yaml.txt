@@ -1,0 +1,6 @@
+name: scalar_codecs
+publish_to: none
+environment:
+  sdk: ^3.13.0
+dependencies:
+  typed_graphql: ^0.0.1

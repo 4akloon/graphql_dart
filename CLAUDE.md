@@ -42,7 +42,15 @@ guide. M4b (limits and cost) delivers the opt-in limit rules (depth, aliases,
 directives, introspection: `GQL232`-`GQL236`), `recommendedRules`, the IBM
 cost directives (`includesCostDirectives`, `GQL156`-`GQL161`), `CostAnalysis`,
 `SlicingArgumentsRule` and `MaxCostRule` (`GQL237`, `GQL238`), the operation
-fuzzers and the guide sections on limits and cost.
+fuzzers and the guide sections on limits and cost. M10 (client code
+generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+file or a URL, the project's documents as one fragment graph, the planner and
+emitters that generate the schema-types library and a library per document
+(operations, variables, data, fragments, sealed polymorphic classes, the
+minified document with its SHA-256, the persisted-operations manifest), the
+codes `GQL500`-`GQL511`, the `generate` and `check` command line, `Optional`
+in the core, the generated-code contract in `typed_graphql_client`, the goldens
+and the Client Code Generation guide.
 
 ## Documents
 
@@ -388,6 +396,70 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
   `MaxCostRule` (`GQL238`) and `SlicingArgumentsRule` (`GQL237`) are
   opt-in rules.
 
+**Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
+`args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine
+reads no file: it takes `ProjectFile`s (path and text) and returns diagnostics
+and `GeneratedFile`s.
+- `config/`: `CodegenConfig.parse` reads `typed_graphql.yaml` into the sealed
+  `ConfigResult` (`GQL500` YAML syntax, `GQL501` a missing, unknown or mistyped
+  key or a malformed path or Dart reference); `SchemaLocation` (file or URL),
+  `ScalarMapping` and `DartReference` (`<library>#<Name>`). `headers` stay as
+  written; `${NAME}` is expanded by the CLI.
+- `schema/`: `SchemaLoader` builds a `ValidSchema` from SDL or, for a `.json`
+  path, an introspection result (`GQL502`).
+- `documents/`: `ProjectDocuments` parses every file and validates them as one
+  fragment graph; `ProjectSourceMap` maps a node of the merged graph back to
+  its file, line and column.
+- `generator/`: `ClientGenerator(config)` has `rules` (the specified rules
+  minus the unused-fragment and lone-anonymous ones, plus `GQL503` named
+  operations, `GQL504` unsupported `@defer`/`@stream`/`__schema`/`__type` and
+  a subscription whose root fragment becomes a sealed class), `check` and
+  `generate` (`GenerationResult`: diagnostics and files; an error means no
+  files). `GQL506` (no document, a warning) comes from `ClientProjectLoader`,
+  not from a rule. It also checks the scalar mappings
+  (`GQL505`), the names (`GQL507` a Dart name declared twice, also members
+  and paths; `GQL508` a name that hides a Dart type the code uses) and the
+  size (`GQL511`, 10000 classes per operation or fragment).
+- `plan/`: the planner turns a validated selection into `PlannedClass`es
+  without emitting text. `FieldCollector` merges the fields of a selection
+  with the fragments and conditions that apply; `Applicability` decides, per
+  possible type, whether an inline or spread fragment applies; `ShapePlanner`
+  builds the data classes, and the variant rules: a selection on an abstract
+  type that tells types apart is a sealed base, a final class per type and
+  an unknown one; a base declares a field only when its class is the same in
+  every variant, and a field a variant re-selects with more is dropped from
+  the base.
+- `emit/`: `DartWriter` (indentation, fenced doc comments, wrapped calls),
+  `DartNames` (Dart members and classes from GraphQL names), `Imports`,
+  `TypeMapper` (GraphQL type to Dart type and codec), and one emitter per
+  kind of class (enum, input and `@oneOf` input, operation, variables, data,
+  polymorphic base, fragment holder). Each class declares its own private
+  codecs; output is deterministic and sorted.
+- `cli/` (the only `dart:io` user, not exported from the barrel; `bin/` runs
+  `CodegenCommand`): `ProjectReader` (async; reads the files, `SchemaFetcher`
+  posts the introspection query to a URL, `HeaderExpander` expands
+  `${NAME}`), `OutputWriter` (writes only changed files, never deletes;
+  `outdated` is `GQL509`), `DiagnosticPrinter`. `GQL510` is an unreadable
+  input; exit codes 0, 1, 64.
+- Tests: `test/goldens/<case>/{input,output,support}` hold the inputs and the
+  expected generated files (`UPDATE_GOLDENS=1 dart test test/golden_test.dart`
+  rewrites them); `generated_code_test.dart` analyzes and runs the goldens in
+  a temporary package (tag `analysis`, skipped under `--compiler exe`);
+  `test/example_test.dart` generates `example/` again and compares it byte for
+  byte. `example/` is a workspace member with its own `pubspec.yaml`
+  (`publish_to: none`) because the generated code imports the client.
+
+**Client contract** (`typed_graphql_client/lib/src/operation/`; M10). What
+generated code imports. `GraphQLOperation` (query, mutation, subscription)
+carries an `OperationDocument` (text, sha256) and `decodeData`. A data class
+reads itself through a `DataCodec<T>` constant composed of `ObjectDataCodec`,
+`ListDataCodec`, `NullableDataCodec`, `ScalarDataCodec`, `EnumDataCodec`
+(a `DataEnum` is a known or unknown value) and `JsonDataCodec` (an unmapped
+scalar); `read` throws `DataFormatException`, `decode` turns it into a
+`DecodeFailure`. `DataContext.flag` answers `@include`/`@skip` variables,
+`DataEquality` compares lists and `Optional`s by value, and `JsonMerger`
+merges what a class and its fragments write for one object.
+
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
 `ArgumentError`, `RangeError`, `StateError`.
@@ -595,4 +667,8 @@ README that leaves the package folder is an absolute URL.
   introspection, coordinates, valid operations, hostile operations and
   hostile shapes); `TYPED_GRAPHQL_FUZZ_ITERATIONS` and
   `TYPED_GRAPHQL_FUZZ_SEED` tune them.
+- Codegen goldens: `packages/typed_graphql_codegen/test/goldens/`, with the
+  runner `test/golden_test.dart` and the case loader
+  `test/support/golden_case.dart`; the checked-in example project is
+  `packages/typed_graphql_codegen/example/`.
 - CI: `.github/workflows/ci.yml`.

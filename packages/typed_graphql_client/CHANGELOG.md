@@ -6,3 +6,11 @@
 - `repository` points at the package folder; pub.dev is expected to rewrite
   relative README links from it (to confirm at M16).
 - The README says the package is not usable yet.
+- The contract generated code compiles against: `GraphQLQuery`,
+  `GraphQLMutation`, `GraphQLSubscription` (sealed `GraphQLOperation`),
+  `OperationDocument`, `DataCodec` with the scalar, enum, object, nullable,
+  list and JSON kinds, `DataContext`, `DataEquality`, `DataEnum`,
+  `DataObject` and `DataFormatException`; the Generated Operations guide.
+- `JsonMerger` merges the JSON of a class and its fragments deeply (objects by
+  key, arrays by index), so generated `toJson` keeps every field of
+  overlapping nested selections; a null never replaces a value.

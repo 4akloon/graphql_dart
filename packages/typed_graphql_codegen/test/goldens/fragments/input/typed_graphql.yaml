@@ -1,0 +1,5 @@
+schema: schema.graphql
+scalars:
+  DateTime:
+    type: DateTime
+    codec: package:scalar_codecs/scalar_codecs.dart#DateTimeCodec

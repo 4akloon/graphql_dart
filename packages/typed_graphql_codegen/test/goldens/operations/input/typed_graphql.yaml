@@ -1,0 +1,6 @@
+schema: schema.graphql
+persisted_operations: build/persisted_operations.json
+scalars:
+  DateTime:
+    type: DateTime
+    codec: package:scalar_codecs/scalar_codecs.dart#DateTimeCodec

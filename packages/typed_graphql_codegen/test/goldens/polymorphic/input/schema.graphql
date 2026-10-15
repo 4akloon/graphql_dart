@@ -1,0 +1,25 @@
+interface Node {
+  id: ID!
+  owner: User
+}
+
+type User implements Node {
+  id: ID!
+  "The display name."
+  name: String!
+  owner: User
+  friends(first: Int): [User!]!
+}
+
+type Bot implements Node {
+  id: ID!
+  model: String
+  owner: User
+}
+
+union SearchResult = User | Bot
+
+type Query {
+  node(id: ID!): Node
+  search: [SearchResult!]!
+}

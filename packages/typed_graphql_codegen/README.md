@@ -4,15 +4,36 @@
 ![Role](https://img.shields.io/badge/role-codegen-blue)
 ![Part of](https://img.shields.io/badge/part%20of-typed__graphql-purple)
 
-**The typed_graphql code generator and its CLI: Dart client code from .graphql operations and SDL-first server code, without the analyzer.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
+**Generate typed Dart client code from a GraphQL schema and `.graphql` operations, from the command line or in code, with every problem reported at its file, line and column.** It reads `typed_graphql.yaml`, loads the schema from a file or a URL, validates the documents and writes the library of the enums and input objects the operations use and, per document, the classes of its operations, variables, data and fragments, with the minified document, its SHA-256 and the persisted-operations manifest. Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
-> **Status: skeleton.** The package exists so the workspace, CI and the
-> code rules cover it from the start. Its code arrives in stages M8 and M10 of the
-> [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md); nothing is exported yet.
+> **Status: under construction.** The client generator and its command line
+> work; the classes need `typed_graphql_client`, which holds only the contract
+> the generated code compiles against until M11. The SDL-first server
+> generator (M8) and the `build_runner` builder (M9) are not built yet (see the
+> [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)).
 
-**Not usable yet.** This package exports nothing; the part of typed_graphql that works today is the core package, [typed_graphql](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql).
+Quick start. Write `typed_graphql.yaml` next to your `pubspec.yaml`:
 
-Planned: the client generator and its CLI (M10), then the SDL-first server generator (M8). It does not depend on `analyzer`.
+```yaml
+schema: schema.graphql
+documents: lib/**.graphql
+```
+
+Add the package to your project (`dart pub add --dev typed_graphql_codegen`),
+then run it; `check` exits with 1 when a generated file is out of date:
+
+```sh
+dart run typed_graphql_codegen generate
+dart run typed_graphql_codegen check
+```
+
+It does not depend on `analyzer`. The
+[Client Code Generation guide](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_codegen/doc/client_codegen.md)
+lists the configuration keys, the command line and its exit codes, describes
+the generated enums, input objects, scalars, operations and fragments, and
+lists the codes `GQL500` to `GQL511`. The
+[example](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_codegen/example)
+is a small project with its generated code checked in.
 
 ## License
 

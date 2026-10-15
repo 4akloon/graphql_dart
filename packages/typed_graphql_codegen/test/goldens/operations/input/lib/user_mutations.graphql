@@ -1,0 +1,22 @@
+mutation SearchAll(
+  $by: SearchBy!
+  $filter: UserFilter
+  $tags: [String!]
+) {
+  search(by: $by, filter: $filter, tags: $tags) {
+    ... on User {
+      id
+      name
+    }
+    ... on Bot {
+      id
+      model
+    }
+  }
+}
+
+mutation RenameUser($id: ID!, $name: String!) {
+  renameUser(id: $id, name: $name) {
+    ...UserCard
+  }
+}

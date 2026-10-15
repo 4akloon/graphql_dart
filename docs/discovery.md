@@ -41,7 +41,7 @@ adds its row (or turns it to "yes") together with its README line and its
 | limit GraphQL query depth or cost dart | M4 | yes |
 | execute a GraphQL query dart | M5 | no |
 | GraphQL server dart | M7 | no |
-| generate a typed GraphQL client dart | M10 | no |
+| generate a typed GraphQL client dart | M10 | yes |
 
 ## Metadata
 

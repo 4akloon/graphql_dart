@@ -1,0 +1,11 @@
+query FindNode($id: ID!) {
+  node(id: $id) {
+    ...NodeCard
+    ...Owned
+    ...Reselect
+    ...Labelled
+  }
+  search {
+    ...Result
+  }
+}

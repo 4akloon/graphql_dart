@@ -1,0 +1,12 @@
+name: typed_graphql_codegen_example
+description: A project whose generated client code is checked in, for typed_graphql_codegen.
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  typed_graphql: ^0.0.1
+  typed_graphql_client: ^0.0.1
+
+resolution: workspace

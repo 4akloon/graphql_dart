@@ -13,6 +13,8 @@
 - `GraphQLError`: the error format of the spec, read and written.
 - `GraphQLRequest` and `ResponsePayload` (`ExecutionResult`,
   `RequestErrorResult`).
+- `Optional`, `Present` and `Absent`: a value that may be absent, which
+  GraphQL tells apart from `null`.
 - The syntax tree: `Node` (`children`, `withChildren`, `isEquivalentTo`),
   `Name`, `Document`, and the `Value` and `TypeRef` families.
 - Executable nodes: `OperationDefinition`, `FragmentDefinition`, the
@@ -264,3 +266,11 @@
 - `SlicingArgumentsRule` (`GQL237`): a field with `@listSize(slicingArguments:)` is given exactly one slicing argument.
 - `MaxCostRule` (`GQL238`) limits an operation's field cost and type cost.
 - The Operation Validation guide covers the limit rules and cost analysis.
+- The catalog has the code generator's codes `GQL500`-`GQL506`: configuration
+  syntax and content, schema input, anonymous operations, unsupported
+  constructs, unknown scalar mappings and no documents (a warning).
+- The catalog adds `GQL507` (a Dart name the code generator would declare
+  twice) and `GQL508` (a generated name that hides a Dart type the generated
+  code uses).
+- The catalog adds `GQL511` (an operation or fragment that would generate
+  too many classes).
