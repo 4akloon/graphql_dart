@@ -44,6 +44,16 @@ void main() {
     expect(data['__type'], isNull);
   });
 
+  test('__type of a built-in scalar the schema does not use is null', () async {
+    final data = await dataOf('{ __type(name: "Float") { name } }');
+    expect(data['__type'], isNull);
+  });
+
+  test('__type still answers for an introspection type', () async {
+    final data = await dataOf('{ __type(name: "__Schema") { name } }');
+    expect(data['__type'], {'name': '__Schema'});
+  });
+
   test('__type takes its name from a variable', () async {
     final json = await fixture.json(
       r'query ($n: String!) { __type(name: $n) { name } }',

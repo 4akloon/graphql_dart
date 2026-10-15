@@ -43,16 +43,22 @@ final class IntrospectionBindings(
     return bindings.withIntrospection(fields, _leaves);
   }
 
+  // `typeNamed` also answers built-ins the schema does not use; as in
+  // graphql-js, `__type` answers only for the types `__schema` lists.
+  // Set on first use: lookups only, never iterated.
+  late final Set<String> _listedNames = {
+    for (final type in IntrospectionListing(schema).types) type.name,
+  };
+
   Map<String, FieldDef<Object?, Object?>> get _entryFields =>
       IntrospectionFields.table([
         IntrospectionFields.pure<Object?>('__schema', (_) => schema),
         IntrospectionFields.withArguments<Object?>(
           '__type',
-          (_, arguments) => switch (schema.typeNamed(
-            arguments['name'] as String,
-          )) {
-            final type? => IntrospectedType.named(type.name),
-            null => null,
+          (_, arguments) => switch (arguments['name'] as String) {
+            final name when _listedNames.contains(name) =>
+              IntrospectedType.named(name),
+            _ => null,
           },
         ),
       ]);
