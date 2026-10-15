@@ -174,7 +174,7 @@ One request, in order; each refusal ends it with a `SingleResponse`:
    the checks below judge the operation that runs (section 15 item 22).
    When none can be selected the pipeline goes on and M5's `execute`
    reports `GQL320`-`GQL323`. A mutation when
-   `RequestInfo.method` is `GET` is `GQL402`, `methodNotAllowed`, headers
+   `RequestInfo.method` is `GET` or `HEAD` (the safe methods) is `GQL402`, `methodNotAllowed`, headers
    `allow: POST` (GraphQL over HTTP: a `GET` request must not run a
    mutation; only the pipeline knows the operation type, so M6 holds the
    rule, section 15 item 11). A subscription over `GET` is allowed (SSE).
@@ -583,6 +583,10 @@ Hostile-input tests (one file per concern under
 - How the WebSocket and SSE handlers describe their requests to the CSRF
   rule (an upgrade request is a `GET` without a content type), and their
   own `Origin` checks.
+- A transport that carries many operations over one connection (WebSocket,
+  `graphql-ws`) has no HTTP method per message: it must pass a method other
+  than `GET` and `HEAD` (`POST`) in the `RequestInfo` of each message, or
+  the mutation guard (section 6 step 4) refuses its mutations.
 - Status codes per media type from `ServerOutcome`; body size limits;
   decoding `GET` parameters and JSON bodies into `GraphQLRequest`.
 - GraphiQL in the development profile.

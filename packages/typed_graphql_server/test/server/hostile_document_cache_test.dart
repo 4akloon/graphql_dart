@@ -68,4 +68,20 @@ void main() {
     }
     expect(rule.runs, 10);
   });
+
+  test('a lone surrogate cannot poison the entry of a U+FFFD text', () async {
+    // utf8.encode turns a lone surrogate into U+FFFD, so both texts hash the
+    // same; the cache must key by the text itself.
+    final server = hostile.server(profile: ServerProfile.development);
+    final poisoned = await server.handle(
+      fixture.request('{ hello } # \ud800'),
+    );
+    expect(fixture.json(poisoned)['errors'], isNotNull);
+    final legitimate = await server.handle(
+      fixture.request('{ hello } # \ufffd'),
+    );
+    expect(fixture.json(legitimate), {
+      'data': {'hello': 'world'},
+    });
+  });
 }

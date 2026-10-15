@@ -34,6 +34,10 @@ final class GraphQLServer<C> {
   /// execution and sees the unexpected errors of the pipeline before they
   /// are masked. [documentCacheSize] is the most compiled documents kept;
   /// 0 keeps none and a negative size is an [ArgumentError].
+  /// [documentCacheMaxLength] is the most characters the kept texts hold
+  /// together (default 16,000,000; negative is an [ArgumentError]): the least recently used documents are
+  /// dropped to stay under it, and a text longer than it is never kept, so
+  /// distinct large texts cannot grow the cache's memory without bound.
   ///
   /// [extensions] hook into the three phases of a request; the first is the
   /// outermost and sees even the requests the built-in checks (CSRF
@@ -54,6 +58,7 @@ final class GraphQLServer<C> {
     List<ValidationRule> validationRules = DocumentValidator.recommendedRules,
     ErrorHook? onError,
     int documentCacheSize = 1000,
+    int documentCacheMaxLength = 16000000,
     List<ServerExtension<C>> extensions = const [],
     PersistedQueryStore? persistedQueries,
     TrustedDocuments? trustedDocuments,
@@ -72,6 +77,7 @@ final class GraphQLServer<C> {
       validationRules: validationRules,
       onError: onError,
       documentCacheSize: documentCacheSize,
+      documentCacheMaxLength: documentCacheMaxLength,
       extensions: extensions,
       persistedQueries: persistedQueries,
       trustedDocuments: trustedDocuments,

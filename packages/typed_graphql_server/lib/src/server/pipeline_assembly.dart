@@ -38,6 +38,7 @@ final class PipelineAssembly<C> {
     required this.validationRules,
     required this.onError,
     required this.documentCacheSize,
+    required this.documentCacheMaxLength,
     required this.extensions,
     required this.persistedQueries,
     required this.trustedDocuments,
@@ -63,6 +64,9 @@ final class PipelineAssembly<C> {
 
   /// The most compiled documents kept.
   final int documentCacheSize;
+
+  /// The most characters the kept documents' texts hold together.
+  final int documentCacheMaxLength;
 
   /// The user's extensions, outermost first.
   final List<ServerExtension<C>> extensions;
@@ -113,7 +117,7 @@ final class PipelineAssembly<C> {
       };
 
   DocumentHandler _documentStep(DocumentLength length) => DocumentStep(
-    DocumentCache(documentCacheSize),
+    DocumentCache(documentCacheSize, maxTotalLength: documentCacheMaxLength),
     _compiler(),
     length,
     errors,

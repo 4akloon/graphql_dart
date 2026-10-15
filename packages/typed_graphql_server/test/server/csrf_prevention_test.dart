@@ -97,12 +97,12 @@ void main() {
   });
 
   test('custom headers replace the defaults', () {
-    const custom = CsrfPrevention(requestHeaders: ['x-my-header']);
+    final custom = CsrfPrevention.withHeaders(['x-my-header']);
     expect(custom.allows(request({'graphql-require-preflight': '1'})), false);
   });
 
   test('a custom header passes whatever its case in the list', () {
-    const custom = CsrfPrevention(requestHeaders: ['X-My-Header']);
+    final custom = CsrfPrevention.withHeaders(['X-My-Header']);
     expect(custom.allows(request({'x-my-header': '1'})), true);
   });
 
@@ -119,42 +119,65 @@ void main() {
   test('equal header lists are equal', () {
     expect(
       csrf,
-      const CsrfPrevention(
-        requestHeaders: [
-          'graphql-require-preflight',
-          'apollo-require-preflight',
-          'x-apollo-operation-name',
-        ],
-      ),
+      CsrfPrevention.withHeaders([
+        'graphql-require-preflight',
+        'apollo-require-preflight',
+        'x-apollo-operation-name',
+      ]),
     );
   });
 
   test('header lists in another order differ', () {
     expect(
-      const CsrfPrevention(requestHeaders: ['x-a', 'x-b']),
-      isNot(const CsrfPrevention(requestHeaders: ['x-b', 'x-a'])),
+      CsrfPrevention.withHeaders(['x-a', 'x-b']),
+      isNot(CsrfPrevention.withHeaders(['x-b', 'x-a'])),
     );
   });
 
   test('header lists equal ignoring case', () {
     expect(
-      const CsrfPrevention(requestHeaders: ['X-A']),
-      const CsrfPrevention(requestHeaders: ['x-a']),
+      CsrfPrevention.withHeaders(['X-A']),
+      CsrfPrevention.withHeaders(['x-a']),
     );
   });
 
   test('with no headers, only a preflighting content type passes', () {
-    const strict = CsrfPrevention(requestHeaders: []);
+    final strict = CsrfPrevention.withHeaders([]);
     expect(strict.allows(request({'content-type': 'application/json'})), true);
     expect(strict.allows(request({'x-apollo-operation-name': 'Q'})), false);
   });
 
   test('with no headers, the refusal names no header', () {
-    const strict = CsrfPrevention(requestHeaders: []);
+    final strict = CsrfPrevention.withHeaders([]);
     expect(strict.refusal, endsWith('multipart/form-data, text/plain.'));
   });
 
   test('different header lists differ', () {
-    expect(csrf, isNot(const CsrfPrevention(requestHeaders: ['x-a'])));
+    expect(csrf, isNot(CsrfPrevention.withHeaders(['x-a'])));
+  });
+
+  group('requestHeaders', () {
+    test('is unmodifiable', () {
+      final custom = CsrfPrevention.withHeaders(['x-a']);
+      expect(() => custom.requestHeaders.add('x-b'), throwsUnsupportedError);
+    });
+
+    test('is a copy: changing the passed list changes nothing', () {
+      final headers = ['x-a'];
+      final custom = CsrfPrevention.withHeaders(headers);
+      headers.clear();
+      expect(custom.requestHeaders, ['x-a']);
+      expect(
+        custom.allows(request({'x-a': '1'}, method: 'GET')),
+        true,
+      );
+    });
+
+    test('the default list is unmodifiable', () {
+      expect(
+        () => const CsrfPrevention().requestHeaders.add('x-b'),
+        throwsUnsupportedError,
+      );
+    });
   });
 }

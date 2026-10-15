@@ -95,6 +95,61 @@ void main() {
       expect(cache.length, 0);
     });
 
+    group('the total length bound', () {
+      String text(String label, int length) =>
+          '{a} # $label'.padRight(length, '-');
+
+      test('evicts the least recently used entries past the bound', () {
+        final cache = DocumentCache(100, maxTotalLength: 100);
+        final compiler = fixture.countingCompiler;
+        for (var index = 0; index < 20; index++) {
+          cache.resultFor(text('t$index', 30), compiler);
+        }
+        expect(cache.totalLength, lessThanOrEqualTo(100));
+        expect(cache.length, 3);
+      });
+
+      test('a text longer than the bound is not cached', () {
+        final cache = DocumentCache(10, maxTotalLength: 100);
+        final compiler = fixture.countingCompiler;
+        final huge = text('huge', 101);
+        cache
+          ..resultFor(huge, compiler)
+          ..resultFor(huge, compiler);
+        expect(compiler.calls, 2);
+        expect(cache.length, 0);
+      });
+
+      test('one huge text does not evict the small entries', () {
+        final cache = DocumentCache(10, maxTotalLength: 100);
+        final compiler = fixture.countingCompiler;
+        cache
+          ..resultFor('{a}', compiler)
+          ..resultFor('{ a }', compiler)
+          ..resultFor(text('huge', 5000), compiler)
+          ..resultFor('{a}', compiler)
+          ..resultFor('{ a }', compiler);
+        expect(compiler.calls, 3);
+        expect(cache.length, 2);
+      });
+
+      test('many large distinct texts stay under the budget', () {
+        final cache = DocumentCache(1000, maxTotalLength: 10000);
+        final compiler = fixture.countingCompiler;
+        for (var index = 0; index < 500; index++) {
+          cache.resultFor(text('t$index', 900), compiler);
+          expect(cache.totalLength, lessThanOrEqualTo(10000));
+        }
+      });
+
+      test('a negative bound is an ArgumentError', () {
+        expect(
+          () => DocumentCache(1, maxTotalLength: -1),
+          throwsArgumentError,
+        );
+      });
+    });
+
     test('a negative capacity is an ArgumentError', () {
       expect(() => DocumentCache(-1), throwsArgumentError);
     });

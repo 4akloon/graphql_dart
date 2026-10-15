@@ -670,7 +670,7 @@ enum DiagnosticCode(
   /// `GraphQLServer.handle`.
   documentTooLong('GQL401'),
 
-  /// `GQL402`: reported when a `GET` request selects a mutation; only a
+  /// `GQL402`: reported when a `GET` or `HEAD` request selects a mutation; only a
   /// `POST` request may run one. It is a `GraphQLError`'s `extensions.code`
   /// in a response of `GraphQLServer.handle`.
   mutationRequiresPost('GQL402'),

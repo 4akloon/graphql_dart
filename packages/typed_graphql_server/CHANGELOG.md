@@ -187,3 +187,16 @@
   hash runs its trusted text (`GQL415` when none), a text runs only when it
   is trusted to the character (`GQL414`). Combined with `persistedQueries`
   it is an `ArgumentError`.
+- The document cache is keyed by the text itself and bounded by the total
+  length of the cached texts too: `GraphQLServer(documentCacheMaxLength:)`
+  (default 16,000,000 characters) drops the least recently used documents to
+  stay under it and never keeps a longer text.
+- A mutation in a `HEAD` request is refused with `GQL402` like one in a `GET`
+  request.
+- A trusted document runs the manifest's text, not the client's, so a text
+  with a lone surrogate (which hashes like the same text with U+FFFD) cannot
+  run or poison the cache entry of the trusted one.
+- **Breaking:** `CsrfPrevention(requestHeaders:)` became
+  `CsrfPrevention.withHeaders(headers)`, which copies the list;
+  `requestHeaders` is unmodifiable.
+- Automatic persisted queries do not write a text the store already holds.

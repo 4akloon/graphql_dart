@@ -87,10 +87,14 @@ to a status code:
 |---|---|
 | `executed` | the operation ran; `data` may be `null` after field errors |
 | `requestError` | the request cannot run: no query, a syntax or validation error, a limit, CSRF, an unknown operation, bad variables, or a `GraphQLException` from the context factory or an extension |
-| `methodNotAllowed` | a mutation in a `GET` request; the headers say `allow: POST` |
+| `methodNotAllowed` | a mutation in a `GET` or `HEAD` request; the headers say `allow: POST` |
 | `internalError` | an unexpected error of server code (the context factory, an extension), masked by the profile |
 
-A `GET` request may run a query or a subscription, never a mutation:
+A `GET` or `HEAD` request (the safe methods) may run a query or a
+subscription, never a mutation. A transport that carries many operations over
+one connection, such as a WebSocket, has no method per message: it must pass a
+method other than `GET` and `HEAD` (`POST`) in the `RequestInfo` of each
+message, or its mutations are refused with `GQL402`:
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';
@@ -352,7 +356,7 @@ executed
 executed
 ```
 
-`withCsrfPrevention(CsrfPrevention(requestHeaders: ['x-my-client']))`
+`withCsrfPrevention(CsrfPrevention.withHeaders(['x-my-client']))`
 replaces the header list; `withCsrfPrevention(null)` turns the check off,
 for a server no browser can reach.
 
@@ -528,7 +532,7 @@ internalError {"errors":[{"message":"Unexpected error.","extensions":{"code":"GQ
 |---|---|
 | `GQL400` | the request has no document text: "Must provide query string." |
 | `GQL401` | the text is longer than `maxDocumentLength` |
-| `GQL402` | a mutation in a `GET` request |
+| `GQL402` | a mutation in a `GET` or `HEAD` request |
 | `GQL403` | CSRF prevention refused the request |
 | `GQL238` | the operation costs more than `maxCost` with the request's variables |
 | `GQL330` | an unexpected error of the context factory, an extension or a persisted query store |

@@ -5,6 +5,21 @@ import 'package:typed_graphql_server/typed_graphql_server.dart';
 import '../server/support/server_fixture.dart';
 import 'support/failing_store.dart';
 
+/// A memory store that counts its writes.
+final class _CountingStore implements PersistedQueryStore {
+  final MemoryPersistedQueryStore _inner = MemoryPersistedQueryStore();
+  int writes = 0;
+
+  @override
+  String? read(String hash) => _inner.read(hash);
+
+  @override
+  void write(String hash, String text) {
+    writes++;
+    _inner.write(hash, text);
+  }
+}
+
 void main() {
   final fixture = ServerFixture();
   const text = '{ hello }';
@@ -24,6 +39,17 @@ void main() {
       expect(fixture.json(response), {
         'data': {'hello': 'world'},
       });
+    });
+
+    test('does not write a text the store already holds', () async {
+      final store = _CountingStore();
+      final server = fixture.server(persistedQueries: store);
+      for (var index = 0; index < 3; index++) {
+        await server.handle(
+          fixture.request(text, extensions: fixture.persisted(hash)),
+        );
+      }
+      expect(store.writes, 1);
     });
 
     test('takes an empty query with a hash as the hash alone', () async {

@@ -6,12 +6,16 @@ import 'request_info.dart';
 ///
 /// {@category server}
 final class CsrfPrevention {
-  /// Creates the rule; [requestHeaders] replace [defaultHeaders].
+  /// Creates the rule with [defaultHeaders].
+  const CsrfPrevention() : requestHeaders = defaultHeaders;
+
+  /// Creates the rule with [headers] in place of [defaultHeaders].
   ///
-  /// [requestHeaders] must not be mutated afterwards: a constant constructor
-  /// cannot copy it. An empty list lets only a request with a content type a
-  /// browser cannot send cross-site pass.
-  const CsrfPrevention({this.requestHeaders = defaultHeaders});
+  /// The list is copied, so changing [headers] afterwards changes nothing. An
+  /// empty list lets only a request with a content type a browser cannot send
+  /// cross-site pass.
+  CsrfPrevention.withHeaders(List<String> headers)
+    : requestHeaders = List.unmodifiable(headers);
 
   /// The headers Apollo Server and GraphQL Yoga accept, so Apollo clients
   /// pass.
@@ -47,7 +51,7 @@ final class CsrfPrevention {
   );
 
   /// The header names, any of which with a non-empty value lets a request
-  /// pass.
+  /// pass; unmodifiable.
   final List<String> requestHeaders;
 
   /// The refusal text for this rule, naming [requestHeaders].

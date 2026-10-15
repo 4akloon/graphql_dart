@@ -153,6 +153,18 @@ void main() {
       expect(response.headers, {'allow': 'POST'});
     });
 
+    test('a mutation with HEAD is refused like GET', () async {
+      final response = await fixture.server().handle(
+        fixture.request('mutation { bump }', method: 'HEAD'),
+      );
+      expect(
+        (response as SingleResponse).outcome,
+        ServerOutcome.methodNotAllowed,
+      );
+      expect(fixture.codeOf(response), 'GQL402');
+      expect(response.headers, {'allow': 'POST'});
+    });
+
     test('a mutation with get in lower case is refused too', () async {
       final response = await fixture.server().handle(
         fixture.request('mutation { bump }', method: 'get'),

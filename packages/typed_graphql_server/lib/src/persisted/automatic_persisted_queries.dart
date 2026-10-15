@@ -82,7 +82,11 @@ final class AutomaticPersistedQueries<C> extends ServerExtension<C> {
       ]);
     }
     final result = await next(request);
-    if (result case DocumentAccepted()) await store.write(hash, text);
+    // A hit on the same text skips the write: a shared store pays a round
+    // trip for every one.
+    if (result case DocumentAccepted() when await store.read(hash) != text) {
+      await store.write(hash, text);
+    }
     return result;
   }
 

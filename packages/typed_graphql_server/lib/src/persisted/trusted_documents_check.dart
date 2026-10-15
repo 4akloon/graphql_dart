@@ -53,13 +53,16 @@ final class TrustedDocumentsCheck<C> extends ServerExtension<C> {
         'provided sha does not match query',
       );
     }
-    if (documents.textOf(textHash) == null) {
-      return _refused(
+    // The manifest's own text runs, not the client's: a text with a lone
+    // surrogate hashes like the same text with U+FFFD, so it can carry the
+    // trusted hash without being the trusted text.
+    return switch (documents.textOf(textHash)) {
+      final trusted? => next(request.withText(trusted)),
+      null => _refused(
         DiagnosticCode.untrustedDocument,
         'Only trusted documents are allowed.',
-      );
-    }
-    return next(request);
+      ),
+    };
   }
 
   Future<DocumentResult> _trusted(

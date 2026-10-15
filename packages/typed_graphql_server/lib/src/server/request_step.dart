@@ -71,6 +71,12 @@ final class RequestStep<C> {
     };
   }
 
+  // RFC 9110 section 9.2.1: GET and HEAD must not change state.
+  bool _isSafeMethod(String method) {
+    final upper = method.toUpperCase();
+    return upper == 'GET' || upper == 'HEAD';
+  }
+
   Future<ServerResponse> _accepted(
     DocumentAccepted accepted,
     ServerRequest request,
@@ -81,8 +87,7 @@ final class RequestStep<C> {
       request.params.operationName,
     );
     final type = operation?.operation;
-    if (type == OperationType.mutation &&
-        request.info.method.toUpperCase() == 'GET') {
+    if (type == OperationType.mutation && _isSafeMethod(request.info.method)) {
       return errors.refusal(
         DiagnosticCode.mutationRequiresPost,
         'A mutation can only be sent with the POST method.',

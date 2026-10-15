@@ -8,6 +8,23 @@ import '../server/support/server_fixture.dart';
 
 // Trusted documents under attack (R5.4): only a trusted text runs, to the
 // character, and nothing a client sends reaches the parser otherwise.
+/// Records the source text of every document the phase accepts.
+final class _SourceRecorder extends ServerExtension<Ctx> {
+  const _SourceRecorder(this.seen);
+
+  final List<String?> seen;
+
+  @override
+  Future<DocumentResult> onDocument(
+    DocumentRequest request,
+    DocumentHandler next,
+  ) async {
+    final result = await next(request);
+    if (result case DocumentAccepted(:final source)) seen.add(source.body);
+    return result;
+  }
+}
+
 void main() {
   final fixture = ServerFixture();
   const text = '{hello}';
@@ -87,5 +104,36 @@ void main() {
       ),
       throwsA(isA<ArgumentError>()),
     );
+  });
+
+  test('a lone surrogate text runs the trusted text, not its own', () async {
+    // Both texts hash to the same SHA-256 because utf8.encode turns a lone
+    // surrogate into U+FFFD; only the manifest's text may run.
+    const manifestText = '{ hello } # \ufffd';
+    const forgedText = '{ hello } # \ud800';
+    final server = fixture.server(
+      trustedDocuments: TrustedDocuments({
+        fixture.hashOf(manifestText): manifestText,
+      }),
+    );
+    final forged = await server.handle(fixture.request(forgedText));
+    final genuine = await server.handle(fixture.request(manifestText));
+    expect(fixture.json(forged), fixture.json(genuine));
+    expect(fixture.json(forged), {
+      'data': {'hello': 'world'},
+    });
+  });
+
+  test('the text that runs is the manifest text', () async {
+    const manifestText = '{ hello } # \ufffd';
+    final seen = <String?>[];
+    final server = fixture.server(
+      trustedDocuments: TrustedDocuments({
+        fixture.hashOf(manifestText): manifestText,
+      }),
+      extensions: [_SourceRecorder(seen)],
+    );
+    await server.handle(fixture.request('{ hello } # \ud800'));
+    expect(seen, ['{ hello } # \ufffd']);
   });
 }
