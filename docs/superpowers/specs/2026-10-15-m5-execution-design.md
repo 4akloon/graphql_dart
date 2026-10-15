@@ -854,3 +854,8 @@ Found while building M5 (each is implemented as recommended):
     cancelled." and the reason stays in `CancelSignal.reason`
     (recommended: a reason may hold internal detail; section 18 item 34)
     or the reason's text becomes the message, as graphql-js does.
+15. **When a guarded subscription is authorized.** Once, at `subscribe`:
+    the rule guards the source, not each event (recommended: one decision
+    per request, as for a query, and no authorizer call per event; section
+    18 item 45) or on every event, a deny becoming a `GQL352` error in that
+    event's result while the stream goes on.

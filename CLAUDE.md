@@ -56,7 +56,7 @@ example. M5c (introspection and subscriptions) delivers the `__schema` and
 source streams and rejected requests (`GQL324`, `GQL340`), the graphql-js
 introspection and subscribe suites, and the Introspection and Subscriptions
 guides. M5d (look-ahead, authorization, cancellation) delivers
-`FieldInfo.selection` (`FieldSelection`, `SelectedField`, `ColumnWhitelist`),
+`FieldInfo.selection` (`FieldSelection`, `SelectedField`, `ColumnAllowlist`),
 `Authorization`, `Authorizer` and `AuthorizationCoverage` (`GQL304`,
 `GQL352`), `CancelSignal` with `ExecutionOptions.cancelSignal` and `timeout`
 (`GQL350`, `GQL351`), the graphql-js cancellation suite, the executor
@@ -438,8 +438,9 @@ throws `SchemaBuildError`. Its guides are in `packages/typed_graphql_server/doc/
 `LiteralCoercion` (substitutes variables); a `CoercionProblem` carries its
 code and the `GraphQLException` extensions. `plan/`: `OperationPlanner` turns
 a document into an `OperationPlan` (fields per `ConditionKey`, constant
-arguments coerced once) kept in `ExecutableSchema.planCache`; request errors
-are never cached. `execution/`: `OperationExecution` runs a plan through
+arguments coerced once, as unmodifiable maps and lists, since a cached plan
+is shared by every request: spec §18 item 46) kept in
+`ExecutableSchema.planCache`; request errors are never cached. `execution/`: `OperationExecution` runs a plan through
 `ExecutionRun`, `SelectionExecutor`/`SerialFields`, `FieldExecution` (the one
 place a resolver lane is called, where middleware composed at build time
 lives) and `ValueCompletion` with its leaf, list, object and abstract
@@ -477,15 +478,17 @@ spends nothing; a new walk must charge it. A `SelectedField` reads its
 `arguments` on first use (a failing argument reads absent; the executor
 reports it) and has its own `selection`. `SelectionFingerprint` (field names
 sorted, arguments as `CanonicalJson` with sorted keys, explicit stacks) is the
-DataLoader key; `ColumnWhitelist` maps field names to sorted columns.
+DataLoader key; `ColumnAllowlist` maps field names to sorted columns.
 `authorization/` (M5d): `Authorization` is sealed (`public`, `requires`); a
 rule is set by `FieldStub.withAuthorization` or `ObjectOptions.authorization`
 (the field's own wins) and applied after middleware composition by
 `builder/AuthorizationApplier` and `FieldGuard`, which wrap the composed lane
 so the `Authorizer<C>` (in `BuildOptions.authorizer`) runs before middleware
-on every lane, a pure field included. A deny is `GQL352`, a missing authorizer
-one `GQL304` listing the coordinates; introspection fields are never guarded;
-a redeclared interface field does not inherit the interface's rule.
+on every lane, a pure field included; a subscription field's rule guards only
+its source, so it is authorized once, at `subscribe` (spec §18 item 45). A
+deny is `GQL352`, a missing authorizer one `GQL304` listing the coordinates;
+introspection fields are never guarded; a redeclared interface field does not
+inherit the interface's rule.
 `AuthorizationCoverage` lists unguarded fields for a test.
 `cancellation/` (M5d): `CancelSignal` is the caller's plain class (no
 platform import); `execution/RunCancellation` links it with the timeout into
