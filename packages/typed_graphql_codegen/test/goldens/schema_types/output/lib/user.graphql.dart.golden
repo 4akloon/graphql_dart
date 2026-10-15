@@ -191,13 +191,15 @@ final class GetUserDataUser implements client.DataObject {
   final GetUserDataUserFragments fragments;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    'role': _roleCodec.write(role),
-    'createdAt': _createdAtCodec.write(createdAt),
-    'cursor': _cursorCodec.write(cursor),
-    'friends': _friendsCodec.write(friends),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({
+      'role': _roleCodec.write(role),
+      'createdAt': _createdAtCodec.write(createdAt),
+      'cursor': _cursorCodec.write(cursor),
+      'friends': _friendsCodec.write(friends),
+    }),
+  ]);
 
   @override
   bool operator ==(Object other) =>

@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -10,7 +11,7 @@ import 'typename_adder.dart';
 /// and every fragment it spreads, minified, with `__typename` added.
 final class OperationText {
   /// Creates the writer for the project's [schema] and [fragments] by name.
-  const OperationText(this.schema, this.fragments);
+  OperationText(this.schema, this.fragments);
 
   /// The schema, which tells abstract types from object types.
   final Schema schema;
@@ -18,8 +19,11 @@ final class OperationText {
   /// The project's fragment definitions, by name.
   final Map<String, FragmentDefinition> fragments;
 
-  RootTypename get _rootTypename =>
-      RootTypename(schema, (name) => fragments[name]);
+  // The operation class and the persisted-operations manifest both ask.
+  final Map<OperationDefinition, String> _texts =
+      HashMap<OperationDefinition, String>.identity();
+
+  RootTypename get _rootTypename => RootTypename(schema, fragments);
 
   /// The SHA-256 of a document [text], in lower-case hexadecimal.
   String hashOf(String text) => sha256.convert(utf8.encode(text)).toString();
@@ -30,7 +34,10 @@ final class OperationText {
   /// The operation's own selection set gets `__typename` when it reads the
   /// type of an abstract selection; a subscription cannot select it and is
   /// left as written.
-  String of(OperationDefinition operation) {
+  String of(OperationDefinition operation) =>
+      _texts.putIfAbsent(operation, () => _write(operation));
+
+  String _write(OperationDefinition operation) {
     const adder = TypenameAdder();
     final OperationDefinition root = _withRootTypename(operation, adder);
     final document = Document([root, ..._spread(operation)]);

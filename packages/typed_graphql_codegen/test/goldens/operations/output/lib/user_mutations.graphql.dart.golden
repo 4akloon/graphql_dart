@@ -414,8 +414,7 @@ final class RenameUserDataRenameUser implements client.DataObject {
   final RenameUserDataRenameUserFragments fragments;
 
   @override
-  graphql.JsonObject toJson() =>
-      graphql.JsonObject({...fragments.toJson().fields});
+  graphql.JsonObject toJson() => fragments.toJson();
 
   @override
   bool operator ==(Object other) =>

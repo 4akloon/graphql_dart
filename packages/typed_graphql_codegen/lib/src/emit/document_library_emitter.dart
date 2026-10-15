@@ -21,12 +21,21 @@ import 'variables_emitter.dart';
 ///
 /// {@category codegen}
 final class DocumentLibraryEmitter {
-  /// Creates the emitter; [planner] plans the classes, [mapper] maps their
-  /// types and [libraryImports] decides the imports.
-  const DocumentLibraryEmitter(this.planner, this.mapper, this.libraryImports);
+  /// Creates the emitter; [planner] plans the classes, [text] writes the
+  /// documents, [mapper] maps their types and [libraryImports] decides the
+  /// imports.
+  const DocumentLibraryEmitter(
+    this.planner,
+    this.text,
+    this.mapper,
+    this.libraryImports,
+  );
 
   /// The class planner.
   final ShapePlanner planner;
+
+  /// The writer of the document texts the operations are sent with.
+  final OperationText text;
 
   /// The mapper of field types.
   final TypeMapper mapper;
@@ -51,7 +60,6 @@ final class DocumentLibraryEmitter {
       for (final (definition, classes) in plans)
         if (definition is OperationDefinition && classes.isNotEmpty) definition,
     ]);
-    final text = OperationText(planner.schema, planner.fragments);
     var isFirst = true;
     for (final (definition, classes) in plans) {
       if (classes.isEmpty) continue;

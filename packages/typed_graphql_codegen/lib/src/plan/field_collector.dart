@@ -61,13 +61,15 @@ final class _Run {
   CollectedSelection result() => CollectedSelection(
     [
       for (final MapEntry(key: responseName, value: group) in groups.entries)
-        FieldGroup(
-          responseName,
-          group.fieldName,
-          group.nodes,
-          isConditional: group.isConditional,
-          definition: group.definition,
-        ),
+        // An unconditional `__typename` makes the conditional one redundant.
+        if (!(selectsTypename && responseName == '__typename'))
+          FieldGroup(
+            responseName,
+            group.fieldName,
+            group.nodes,
+            isConditional: group.isConditional,
+            definition: group.definition,
+          ),
     ],
     uses.values.toList(),
     narrowings,
@@ -126,7 +128,7 @@ final class _Run {
       case TypeConditionMatch.applies:
         return source;
       case TypeConditionMatch.narrows:
-        narrowings.add(Narrowing(name, source: source));
+        narrowings.add(Narrowing(name));
       case TypeConditionMatch.never:
         break;
     }
@@ -136,7 +138,10 @@ final class _Run {
   void _field(Field field, bool isConditional) {
     final fieldName = field.name.value;
     final responseName = field.alias?.value ?? fieldName;
-    if (field.alias == null && fieldName == '__typename') {
+    if (field.alias == null &&
+        fieldName == '__typename' &&
+        (!isConditional || parent is! ObjectType)) {
+      // An abstract parent has `typename` whether or not it was selected.
       selectsTypename = true;
       return;
     }
@@ -166,9 +171,7 @@ final class _Run {
             ? FragmentUse(name, [conditions], spread: spread)
             : existing.merge(conditions);
       case TypeConditionMatch.narrows:
-        narrowings.add(
-          Narrowing(condition, fragmentName: name, conditions: conditions),
-        );
+        narrowings.add(Narrowing(condition));
       case TypeConditionMatch.never:
         break;
     }

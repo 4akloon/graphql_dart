@@ -6,6 +6,7 @@ interface Node { id: ID! }
 type Query implements Node {
   id: ID!
   hello: String
+  node: Node
   user(a: ID, b: ID): User
 }
 type Subscription implements Node {
@@ -16,18 +17,22 @@ type User {
   id: ID!
   name: String
 }
+type Unknown implements Node {
+  id: ID!
+}
 ''');
 
 void main() {
   List<String> check(
     List<ProjectFile> documents, {
     String config = 'schema: schema.graphql\n',
+    ProjectFile schema = _schema,
   }) {
     final parsed = CodegenConfig.parse(config, path: 'typed_graphql.yaml');
     if (parsed is! ConfigSuccess) fail('expected success, got $parsed');
     final diagnostics = ClientGenerator(
       parsed.config,
-    ).check(schema: _schema, documents: documents);
+    ).check(schema: schema, documents: documents);
     return [
       for (final diagnostic in diagnostics)
         [
@@ -140,6 +145,85 @@ void main() {
     });
   });
 
+  group('reserved names', () {
+    test('a fragment named List hides the Dart type', () {
+      expect(
+        check(const [
+          ProjectFile('lib/a.graphql', 'fragment List on User { id }'),
+        ]),
+        [
+          "lib/a.graphql:1:10: error GQL508: The generated name 'List' would "
+              "hide the Dart type 'List' the generated code uses.",
+        ],
+      );
+    });
+
+    test('an operation named List has no class of that name', () {
+      expect(
+        check(const [ProjectFile('lib/a.graphql', 'query List { hello }')]),
+        isEmpty,
+      );
+    });
+  });
+
+  group('variants', () {
+    test('a type named Unknown collides with the unknown class', () {
+      expect(
+        check(const [
+          ProjectFile(
+            'lib/a.graphql',
+            'query Q { node { id ... on Unknown { id } } }',
+          ),
+        ]),
+        [
+          'lib/a.graphql:1:11: error GQL507: The generated name '
+              "'QDataNodeUnknown' is declared twice: by the class for the "
+              "type 'Unknown' in the operation 'Q' and by the class for any "
+              "other type in the operation 'Q'. | also lib/a.graphql:1:11",
+        ],
+      );
+    });
+  });
+
+  group('limits', () {
+    // Every alias reaches all the types that implement `Many`: a class per
+    // type and alias from a few tokens.
+    final schema = ProjectFile('schema.graphql', '''
+interface Many { id: ID! }
+interface Reached { id: ID! }
+${[for (var i = 0; i < 1000; i++) 'type T$i implements Many & Reached { id: ID! }'].join('\n')}
+type Query { many: Many }
+''');
+    final fields = [
+      for (var index = 0; index < 11; index++)
+        'f$index: many { ... on Reached { id } }',
+    ].join(' ');
+
+    test('an operation that needs too many classes is a GQL511', () {
+      expect(
+        check([
+          ProjectFile('lib/a.graphql', 'query Q { $fields }'),
+        ], schema: schema),
+        [
+          'lib/a.graphql:1:7: error GQL511: The code generator would declare '
+              "more than 10000 classes for the operation 'Q'.",
+        ],
+      );
+    });
+
+    test('a fragment that needs too many classes is a GQL511', () {
+      expect(
+        check([
+          ProjectFile('lib/a.graphql', 'fragment F on Query { $fields }'),
+        ], schema: schema),
+        [
+          'lib/a.graphql:1:10: error GQL511: The code generator would declare '
+              "more than 10000 classes for the fragment 'F'.",
+        ],
+      );
+    });
+  });
+
   group('files', () {
     test('a document library at the path of the schema types', () {
       expect(
@@ -158,26 +242,70 @@ void main() {
   group('the subscription root', () {
     const document = ProjectFile('lib/a.graphql', '''
 subscription OnNode { ...NodeCard }
-fragment NodeCard on Node { id }
+fragment NodeCard on Node { id ... on Query { hello } }
 ''');
 
-    test('a fragment on an abstract type is a GQL504 at the spread', () {
+    test('a sealed fragment is a GQL504 at the spread', () {
       expect(check(const [document]), [
         "lib/a.graphql:1:23: error GQL504: The subscription 'OnNode' spreads "
-            "the fragment 'NodeCard' on the abstract type 'Node' at its root, "
-            "where '__typename' cannot be selected.",
+            "'...NodeCard' at its root, which reads the fragment 'NodeCard' on "
+            "the abstract type 'Node'; the root would need '__typename', which "
+            'a subscription cannot select.',
       ]);
     });
 
-    test('an inline fragment on an abstract type is a GQL504 too', () {
+    test('a sealed fragment behind another spread names both', () {
+      expect(
+        check(const [
+          ProjectFile('lib/a.graphql', '''
+subscription OnNode { ...Outer }
+fragment Outer on Subscription { ...NodeCard }
+fragment NodeCard on Node { id ... on Query { hello } }
+'''),
+        ]).single,
+        "lib/a.graphql:1:23: error GQL504: The subscription 'OnNode' spreads "
+        "'...Outer' at its root, which reads the fragment 'NodeCard' on the "
+        "abstract type 'Node'; the root would need '__typename', which a "
+        'subscription cannot select.',
+      );
+    });
+
+    test('a fragment on an abstract type without narrowing is fine', () {
+      expect(
+        check(const [
+          ProjectFile('lib/a.graphql', '''
+subscription OnNode { ...NodeCard }
+fragment NodeCard on Node { id }
+'''),
+        ]),
+        isEmpty,
+      );
+    });
+
+    test('an inline fragment on an abstract type is fine', () {
       expect(
         check(const [
           ProjectFile(
             'lib/a.graphql',
             'subscription OnNode { ... on Node { id } }',
           ),
-        ]).single,
-        contains("has an inline fragment on the abstract type 'Node'"),
+        ]),
+        isEmpty,
+      );
+    });
+
+    test('an anonymous subscription is only a GQL503', () {
+      expect(
+        check(const [
+          ProjectFile('lib/a.graphql', '''
+subscription { ...NodeCard }
+fragment NodeCard on Node { id ... on Query { hello } }
+'''),
+        ]),
+        [
+          'lib/a.graphql:1:1: error GQL503: An operation needs a name: its '
+              'classes are named after it.',
+        ],
       );
     });
 
@@ -186,7 +314,7 @@ fragment NodeCard on Node { id }
         check(const [
           ProjectFile('lib/a.graphql', '''
 query Q { ...NodeCard }
-fragment NodeCard on Node { id }
+fragment NodeCard on Node { id ... on Query { hello } }
 '''),
         ]),
         isEmpty,

@@ -228,11 +228,13 @@ final class HeldUser implements Held {
   final HeldFragments fragments;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    '__typename': const graphql.JsonString('User'),
-    'name': _nameCodec.write(name),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({
+      '__typename': const graphql.JsonString('User'),
+      'name': _nameCodec.write(name),
+    }),
+  ]);
 
   @override
   bool operator ==(Object other) =>
@@ -269,10 +271,10 @@ final class OwnUser implements Own {
   final OwnUserFragments fragments;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    '__typename': const graphql.JsonString('User'),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({'__typename': const graphql.JsonString('User')}),
+  ]);
 
   @override
   bool operator ==(Object other) =>

@@ -61,3 +61,13 @@
   classes for abstract types, `@include` and `@skip`, variables, the
   document text and the persisted-operations manifest, decoding, and the
   `GQL504` subscription case and `GQL507` for members and files.
+- Fixes after the review of the operations and fragments: `toJson` merges the
+  JSON of a class and its fragments deeply (`JsonMerger`); a field of one type
+  and one list of selection nodes shares its class, each definition is planned
+  once and one that needs more than 10000 classes is a `GQL511`; a
+  `__typename` under `@include` or `@skip` is a nullable member and the
+  unconditional one is still added to the document; `__schema` and `__type`
+  are a `GQL504`; only a spread of a fragment that becomes a sealed class
+  needs `__typename` at the root of an operation (and is a `GQL504` in a
+  subscription); name problems are limited like every other run; `GQL507`
+  names the two classes of a variant for a type called `Unknown`.

@@ -231,13 +231,21 @@ final class DataClassEmitter {
     DataClassPlan plan,
     List<DataClassField> fields,
   ) {
-    const ToJsonWriter().write(writer, [
-      if (plan.holderName != null) '...fragments.toJson().fields',
+    final entries = [
       if (plan.variantTypeName case final typeName?)
         "'__typename': const graphql.JsonString("
             '${const DartStringLiteral().of(typeName)})',
       for (final field in fields)
         '${field.keyLiteral}: ${field.codecName}.write(${field.member})',
-    ]);
+    ];
+    if (plan.holderName == null) {
+      const ToJsonWriter().write(writer, entries);
+    } else {
+      const ToJsonWriter().writeMerged(
+        writer,
+        const ['fragments.toJson()'],
+        entries: entries,
+      );
+    }
   }
 }

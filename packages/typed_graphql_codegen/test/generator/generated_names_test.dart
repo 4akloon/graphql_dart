@@ -175,4 +175,16 @@ type Query { a: Int }
       expect(diagnostic.related, hasLength(1));
     });
   });
+
+  test('the problems stop after 100 errors with one GQL000', () {
+    final names = GeneratedNames();
+    for (var index = 0; index < 150; index++) {
+      names
+        ..register('A$index', 'the first', null)
+        ..register('A$index', 'the second', null);
+    }
+    final diagnostics = names.diagnostics;
+    expect(diagnostics, hasLength(101));
+    expect(diagnostics.last.code, DiagnosticCode.diagnosticLimitReached);
+  });
 }

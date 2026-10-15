@@ -16,6 +16,7 @@ import 'persisted_manifest.dart';
 import 'rules/named_operations_rule.dart';
 import 'rules/subscription_root_rule.dart';
 import 'rules/unsupported_directives_rule.dart';
+import 'rules/unsupported_introspection_rule.dart';
 import 'schema_type_usage.dart';
 
 /// Generates typed Dart client code from a schema and `.graphql` documents.
@@ -62,6 +63,7 @@ final class const ClientGenerator(final CodegenConfig config) {
     UniqueInputFieldNamesRule(),
     NamedOperationsRule(),
     UnsupportedDirectivesRule(),
+    UnsupportedIntrospectionRule(),
     SubscriptionRootRule(),
   ];
 
@@ -124,8 +126,9 @@ final class const ClientGenerator(final CodegenConfig config) {
     final libraries = DocumentLibraries(project, mapper, config.schemaTypes);
     _registerFiles(names, project);
     DocumentNameChecker(project, libraries.planner, names).check();
-    if (names.diagnostics.isNotEmpty) {
-      return GenerationResult(const [], [...warnings, ...names.diagnostics]);
+    final problems = names.diagnostics;
+    if (problems.isNotEmpty) {
+      return GenerationResult(const [], [...warnings, ...problems]);
     }
     final text = SchemaTypesEmitter(mapper).emit(types, source: schemaPath);
     final manifest = config.persistedOperations;
@@ -161,10 +164,6 @@ final class const ClientGenerator(final CodegenConfig config) {
         "the document '${file.path}'",
         firstDefinitions[index],
       );
-    }
-    final manifest = config.persistedOperations;
-    if (manifest != null) {
-      names.registerFile(manifest, 'the persisted-operations manifest', null);
     }
   }
 }

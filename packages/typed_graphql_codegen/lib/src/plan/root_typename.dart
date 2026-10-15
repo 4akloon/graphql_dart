@@ -1,26 +1,36 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
-/// Finds out whether the top level of an operation reads an abstract type
-/// (R7.9): then the document selects `__typename` there, which a
-/// subscription's root cannot.
+import 'applicability.dart';
+import 'field_collector.dart';
+import 'selection_source.dart';
+
+/// Finds out whether the top level of an operation spreads a fragment that
+/// plans as a sealed class (R7.9): the class reads the type of the root
+/// object, so the document selects `__typename` there, which a subscription's
+/// root cannot.
+///
+/// The root is an object type, so an inline fragment, or a fragment on an
+/// abstract type without narrowing inside, flattens into the root class and
+/// needs nothing.
 final class RootTypename {
-  /// Creates the finder for [schema]; [fragmentNamed] looks a fragment
-  /// definition up by name.
-  const RootTypename(this.schema, this.fragmentNamed);
+  /// Creates the finder for [schema]; [fragments] are the project's fragment
+  /// definitions by name.
+  const RootTypename(this.schema, this.fragments);
 
   /// The schema, which tells abstract types from object types.
   final Schema schema;
 
-  /// The project's fragment definitions by name.
-  final FragmentDefinition? Function(String name) fragmentNamed;
+  /// The project's fragment definitions, by name.
+  final Map<String, FragmentDefinition> fragments;
 
-  /// Whether the top level of [root] reads an abstract type.
+  /// Whether the top level of [root] spreads a sealed fragment.
   bool isNeededBy(SelectionSet root) => find(root) != null;
 
-  /// The first top-level selection of [root] that reads an abstract type,
-  /// through spread fragments too, with the abstract type's name and, when a
-  /// fragment definition is on it, the fragment's name; null when none does.
-  ({Node selection, String typeName, String? fragmentName})? find(
+  /// The first top-level selection of [root] that leads, through inline
+  /// fragments and spread fragments, to a fragment that plans as a sealed
+  /// class, with that fragment's name and its abstract type's name; null when
+  /// none does.
+  ({Node selection, String typeName, String fragmentName})? find(
     SelectionSet root,
   ) {
     final visited = <String>{};
@@ -37,9 +47,9 @@ final class RootTypename {
     return null;
   }
 
-  // The abstract type [top] reads, through spread fragments; [visited] holds
-  // the fragments already searched in vain.
-  ({String typeName, String? fragmentName})? _search(
+  // The sealed fragment [top] reaches; [visited] holds the fragments already
+  // searched in vain.
+  ({String typeName, String fragmentName})? _search(
     Selection top,
     Set<String> visited,
   ) {
@@ -48,18 +58,16 @@ final class RootTypename {
       switch (pending.removeLast()) {
         case Field():
           continue;
-        case InlineFragment(:final typeCondition, :final selectionSet):
-          final String? typeName = typeCondition?.name.value;
-          if (typeName != null && _isAbstract(typeName)) {
-            return (typeName: typeName, fragmentName: null);
-          }
+        case InlineFragment(:final selectionSet):
           pending.addAll(selectionSet.selections);
         case FragmentSpread(:final name):
-          final FragmentDefinition? fragment = fragmentNamed(name.value);
+          final FragmentDefinition? fragment = fragments[name.value];
           if (fragment == null || !visited.add(name.value)) continue;
-          final String typeName = fragment.typeCondition.name.value;
-          if (_isAbstract(typeName)) {
-            return (typeName: typeName, fragmentName: name.value);
+          if (_isSealed(fragment)) {
+            return (
+              typeName: fragment.typeCondition.name.value,
+              fragmentName: name.value,
+            );
           }
           pending.addAll(fragment.selectionSet.selections);
       }
@@ -67,8 +75,19 @@ final class RootTypename {
     return null;
   }
 
-  bool _isAbstract(String typeName) => switch (schema.typeNamed(typeName)) {
-    InterfaceType() || UnionType() => true,
-    _ => false,
-  };
+  // Whether the planner makes [fragment] a sealed class: its type is
+  // abstract and a narrowing inside reaches an object type.
+  bool _isSealed(FragmentDefinition fragment) {
+    final SchemaType? type = schema.typeNamed(
+      fragment.typeCondition.name.value,
+    );
+    if (type == null) return false;
+    final collected = FieldCollector(
+      schema,
+      fragments,
+    ).collect(type, [SelectionSource(fragment.selectionSet)]);
+    return Applicability(schema)
+        .reachedBy(type, collected.narrowings)
+        .isNotEmpty;
+  }
 }

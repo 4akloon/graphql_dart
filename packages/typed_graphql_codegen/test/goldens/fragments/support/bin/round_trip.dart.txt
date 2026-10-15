@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:generated_fragments/schema.graphql.dart';
+import 'package:generated_fragments/user_avatar.graphql.dart';
 import 'package:generated_fragments/user_card.graphql.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
@@ -45,6 +46,27 @@ void main() {
     _fail('values that differ in a fragment are equal');
   }
   _wrongType(json);
+  _overlappingSelections();
+}
+
+// A class and the fragments it spreads select `avatar` with different
+// sub-fields: toJson keeps the sub-fields of each.
+void _overlappingSelections() {
+  final JsonObject json = _json(
+    '{"avatar": {"url": "u", "size": 3}}',
+  );
+  final DecodeResult<WithAvatars> result = WithAvatars.decode(json);
+  if (result is! DecodeSuccess<WithAvatars>) {
+    _fail('decode failed: $result');
+  }
+  final WithAvatars value = (result as DecodeSuccess<WithAvatars>).value;
+  if (value.toJson() != json) {
+    _fail('toJson lost a sub-field: ${value.toJson()}');
+  }
+  final DecodeResult<WithAvatars> again = WithAvatars.decode(value.toJson());
+  if (again is! DecodeSuccess<WithAvatars> || again.value != value) {
+    _fail('decode(toJson()) is $again, not $value');
+  }
 }
 
 JsonObject _json(String text) =>

@@ -101,33 +101,44 @@ fragment Y on User { name }
     );
   });
 
-  test('a fragment on an abstract type at the root adds __typename', () {
+  test('a sealed fragment at the root adds __typename', () {
     expect(
       textOf(_schema, '''
 query { ...Identified user { id } }
-fragment Identified on Root { id }
+fragment Identified on Root { id ... on Query { user { id } } }
 '''),
       '{...Identified user{id __typename}__typename}'
-      'fragment Identified on Root{id}',
+      'fragment Identified on Root{id ...on Query{user{id __typename}}}',
     );
   });
 
-  test('an inline fragment on an abstract type at the root adds it', () {
+  test('a fragment on an abstract type without narrowing adds nothing', () {
+    expect(
+      textOf(_schema, '''
+query { ...Identified }
+fragment Identified on Root { id }
+'''),
+      '{...Identified}fragment Identified on Root{id}',
+    );
+  });
+
+  test('an inline fragment on an abstract type at the root adds nothing', () {
     expect(
       textOf(_schema, 'query { ... on Root { id } }'),
-      '{...on Root{id}__typename}',
+      '{...on Root{id}}',
     );
   });
 
-  test('an abstract fragment inside a root fragment adds it', () {
+  test('a sealed fragment inside a root fragment adds it', () {
     expect(
       textOf(_schema, '''
 query { ...Outer }
 fragment Outer on Query { ...Identified }
-fragment Identified on Root { id }
+fragment Identified on Root { id ... on Query { id } }
 '''),
       '{...Outer __typename}'
-      'fragment Identified on Root{id}fragment Outer on Query{...Identified}',
+      'fragment Identified on Root{id ...on Query{id}}'
+      'fragment Outer on Query{...Identified}',
     );
   });
 
@@ -145,9 +156,10 @@ fragment Everything on Query { id }
     expect(
       textOf(_schema, '''
 subscription { ...Identified }
-fragment Identified on Root { id }
+fragment Identified on Root { id ... on Subscription { id } }
 '''),
-      'subscription{...Identified}fragment Identified on Root{id}',
+      'subscription{...Identified}'
+      'fragment Identified on Root{id ...on Subscription{id}}',
     );
   });
 
@@ -156,6 +168,26 @@ fragment Identified on Root { id }
       textOf(operationSchema, operationDocument, 'RenameUser'),
       r'mutation RenameUser($id:ID!$name:String!){renameUser(id:$id name:$name)'
       '{...UserCard __typename}}fragment UserCard on User{id name}',
+    );
+  });
+
+  test('a __typename under @include does not stand in for the added one', () {
+    expect(
+      textOf(
+        _schema,
+        r'query ($on: Boolean!) { user { __typename @include(if: $on) id } }',
+      ),
+      r'query($on:Boolean!){user{__typename@include(if:$on)id __typename}}',
+    );
+  });
+
+  test('a __typename under @skip does not stand in for it either', () {
+    expect(
+      textOf(
+        _schema,
+        r'query ($off: Boolean!) { user { __typename @skip(if: $off) id } }',
+      ),
+      r'query($off:Boolean!){user{__typename@skip(if:$off)id __typename}}',
     );
   });
 }

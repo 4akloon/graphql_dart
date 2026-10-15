@@ -2,6 +2,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../emit/input_field.dart';
 import '../plan/class_names.dart';
+import '../plan/data_class_role.dart';
 import '../plan/planned_class.dart';
 import '../plan/planned_field.dart';
 import '../plan/shape_planner.dart';
@@ -32,14 +33,28 @@ final class DocumentNameChecker {
         case OperationDefinition():
           _operation(definition);
         case FragmentDefinition():
-          _plans(
-            "the fragment '${definition.name.value}'",
-            definition.name,
-            planner.planFragment(definition),
-          );
+          _fragment(definition);
         default:
       }
     }
+  }
+
+  void _fragment(FragmentDefinition fragment) {
+    final String declarer = "the fragment '${fragment.name.value}'";
+    final classes = planner.planFragment(fragment);
+    if (planner.exceedsLimit(fragment)) {
+      _tooMany(declarer, fragment.name);
+      return;
+    }
+    _plans(declarer, fragment.name, classes);
+  }
+
+  void _tooMany(String declarer, Node definitionName) {
+    names.reportTooManyClasses(
+      declarer,
+      ShapePlanner.maxClasses,
+      _spanOf(definitionName),
+    );
   }
 
   void _operation(OperationDefinition operation) {
@@ -47,6 +62,10 @@ final class DocumentNameChecker {
     final String declarer = "the operation '$name'";
     final SourceSpan? span = _spanOf(operation.name ?? operation);
     final classes = planner.planOperation(operation);
+    if (planner.exceedsLimit(operation)) {
+      _tooMany(declarer, operation.name ?? operation);
+      return;
+    }
     if (classes.isEmpty) return;
     names.register(
       _classNames.operation(name, operation.operation),
@@ -74,7 +93,7 @@ final class DocumentNameChecker {
     for (final plan in plans) {
       names.register(
         plan.name,
-        declarer,
+        _declarerOf(plan, declarer),
         spans[plan.name] ??
             (switch (plan) {
               DataClassPlan(:final baseName?) => spans[baseName],
@@ -86,6 +105,17 @@ final class DocumentNameChecker {
       names.registerMembers("'${plan.name}'", _membersOf(plan));
     }
   }
+
+  // A variant for the type `Unknown` and the class for any other type of one
+  // selection have one name; saying "the operation" twice would not tell them
+  // apart.
+  String _declarerOf(PlannedClass plan, String declarer) => switch (plan) {
+    DataClassPlan(role: DataClassRole.variant, :final typeName) =>
+      "the class for the type '$typeName' in $declarer",
+    DataClassPlan(role: DataClassRole.unknownVariant) =>
+      'the class for any other type in $declarer',
+    _ => declarer,
+  };
 
   // The span of the first field node each nested class is the class of.
   Map<String, SourceSpan?> _fieldClassSpans(List<PlannedClass> plans) {

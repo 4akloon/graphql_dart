@@ -93,16 +93,18 @@ final class UserCard implements client.DataObject {
   }) => codec.decode(json, client.DataContext(variables));
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    '__typename': _typenameCodec.write(typename),
-    '_id': _$idCodec.write($id),
-    'default': _default$Codec.write(default$),
-    'role': _roleCodec.write(role),
-    'createdAt': _createdAtCodec.write(createdAt),
-    'cursor': _cursorCodec.write(cursor),
-    'friends': _friendsCodec.write(friends),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({
+      '__typename': _typenameCodec.write(typename),
+      '_id': _$idCodec.write($id),
+      'default': _default$Codec.write(default$),
+      'role': _roleCodec.write(role),
+      'createdAt': _createdAtCodec.write(createdAt),
+      'cursor': _cursorCodec.write(cursor),
+      'friends': _friendsCodec.write(friends),
+    }),
+  ]);
 
   @override
   bool operator ==(Object other) =>
@@ -160,10 +162,10 @@ final class UserCardFriends implements client.DataObject {
   final UserCardFriendsFragments fragments;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    'id': _idCodec.write(id),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({'id': _idCodec.write(id)}),
+  ]);
 
   @override
   bool operator ==(Object other) =>

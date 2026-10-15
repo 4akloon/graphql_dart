@@ -110,15 +110,13 @@ void main() {
     expect(selection.narrowings.map((n) => n.typeCondition), ['User']);
   });
 
-  test('a narrowing inline fragment holds its source', () {
+  test('a narrowing inline fragment under @include is recorded', () {
     final selection = collect(
       r'node { ... on User @include(if: $v) { name } }',
       'Node',
       field: 'node',
     );
-    final narrowing = selection.narrowings.single;
-    expect(narrowing.source!.isConditional, isTrue);
-    expect(narrowing.source!.conditions, [const Condition('v', true)]);
+    expect(selection.narrowings.map((n) => n.typeCondition), ['User']);
   });
 
   test('a disjoint condition is dropped', () {
@@ -150,9 +148,7 @@ void main() {
       field: 'node',
       fragments: 'fragment F on User { name }',
     );
-    final narrowing = selection.narrowings.single;
-    expect(narrowing.fragmentName, 'F');
-    expect(narrowing.conditions, [const Condition('w', false)]);
+    expect(selection.narrowings.map((n) => n.typeCondition), ['User']);
     expect(selection.fragments, isEmpty);
   });
 
@@ -264,5 +260,42 @@ void main() {
       fixture.sourceOf('user'),
     ]);
     expect(fieldsOf(selection), ['name:namex1']);
+  });
+
+  group('__typename', () {
+    test('an unconditional one on an object is not a field group', () {
+      final selection = collect('user { __typename id }', 'User');
+      expect(selection.selectsTypename, isTrue);
+      expect(fieldsOf(selection), ['id:idx1']);
+    });
+
+    test('a conditional one on an object is a conditional field', () {
+      final selection = collect(
+        r'user { __typename @include(if: $v) id }',
+        'User',
+      );
+      expect(selection.selectsTypename, isFalse);
+      expect(fieldsOf(selection), ['__typename:__typename?x1', 'id:idx1']);
+      expect(selection.fields.first.isConditional, isTrue);
+    });
+
+    test('an unconditional one beside a conditional one wins', () {
+      final selection = collect(
+        r'user { __typename @include(if: $v) __typename id }',
+        'User',
+      );
+      expect(selection.selectsTypename, isTrue);
+      expect(fieldsOf(selection), ['id:idx1']);
+    });
+
+    test('a conditional one on an abstract type is always read', () {
+      final selection = collect(
+        r'node { __typename @include(if: $v) id }',
+        'Node',
+        field: 'node',
+      );
+      expect(selection.selectsTypename, isTrue);
+      expect(fieldsOf(selection), ['id:idx1']);
+    });
   });
 }

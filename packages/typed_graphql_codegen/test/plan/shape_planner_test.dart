@@ -215,4 +215,30 @@ SDataBorn (nested on User, of SData.born)
   id: ID! <- id''',
     );
   });
+
+  test('a __typename under @include is a nullable field', () {
+    expect(
+      plan(
+        r'query ($on: Boolean!) { user { __typename @include(if: $on) id } }',
+      ),
+      '''
+Data (operationData on Query)
+  user: User <- user -> DataUser
+DataUser (nested on User, of Data.user)
+  typename: String! <- __typename (conditional)
+  id: ID! <- id''',
+    );
+  });
+
+  test('an unconditional __typename is a required field', () {
+    expect(
+      plan('query { user { __typename id } }'),
+      '''
+Data (operationData on Query)
+  user: User <- user -> DataUser
+DataUser (nested on User, of Data.user)
+  typename: String! <- __typename
+  id: ID! <- id''',
+    );
+  });
 }

@@ -3,6 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_codegen/src/generator/rules/named_operations_rule.dart';
 import 'package:typed_graphql_codegen/src/generator/rules/subscription_root_rule.dart';
 import 'package:typed_graphql_codegen/src/generator/rules/unsupported_directives_rule.dart';
+import 'package:typed_graphql_codegen/src/generator/rules/unsupported_introspection_rule.dart';
 import 'package:typed_graphql_codegen/typed_graphql_codegen.dart';
 
 const _schema = ProjectFile('schema.graphql', '''
@@ -114,6 +115,38 @@ void main() {
         [
           'b.graphql:2:7: error GQL504: The code generator does not support '
               "'@defer' yet.",
+        ],
+      );
+    });
+
+    test('__schema is not supported yet', () {
+      expect(
+        check(const [
+          ProjectFile(
+            'a.graphql',
+            'query A {\n  __schema { queryType { name } }\n}\n',
+          ),
+        ]),
+        [
+          'a.graphql:2:3: error GQL504: The document selects the '
+              "introspection field '__schema', which the code generator "
+              'does not support yet.',
+        ],
+      );
+    });
+
+    test('__type is not supported yet', () {
+      expect(
+        check(const [
+          ProjectFile(
+            'a.graphql',
+            'query A {\n  __type(name: "User") { name }\n}\n',
+          ),
+        ]),
+        [
+          'a.graphql:2:3: error GQL504: The document selects the '
+              "introspection field '__type', which the code generator does "
+              'not support yet.',
         ],
       );
     });
@@ -247,6 +280,7 @@ scalars:
             if (!dropped.contains(rule.runtimeType)) rule.runtimeType,
           NamedOperationsRule,
           UnsupportedDirectivesRule,
+          UnsupportedIntrospectionRule,
           SubscriptionRootRule,
         ],
       );

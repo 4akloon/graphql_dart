@@ -126,8 +126,7 @@ final class CardQueryDataUser implements client.DataObject {
   final CardQueryDataUserFragments fragments;
 
   @override
-  graphql.JsonObject toJson() =>
-      graphql.JsonObject({...fragments.toJson().fields});
+  graphql.JsonObject toJson() => fragments.toJson();
 
   @override
   bool operator ==(Object other) =>

@@ -48,9 +48,7 @@ final class FragmentHolderEmitter {
         );
       }
       writer.line();
-      const ToJsonWriter().write(writer, [
-        for (final fragment in fragments) _spread(fragment),
-      ]);
+      _toJson(writer, fragments);
       writer.line();
       const ValueMembers().write(writer, plan.name, [
         for (final fragment in fragments)
@@ -59,9 +57,27 @@ final class FragmentHolderEmitter {
     });
   }
 
-  String _spread(PlannedFragment fragment) => fragment.isConditional
-      ? '...?${fragment.memberName}?.toJson().fields'
-      : '...${fragment.memberName}.toJson().fields';
+  // One fragment writes its JSON as it is; several may select the same
+  // response name, so their JSON is merged deeply.
+  void _toJson(DartWriter writer, List<PlannedFragment> fragments) {
+    if (fragments.length > 1) {
+      const ToJsonWriter().writeMerged(writer, [
+        for (final fragment in fragments) _json(fragment),
+      ]);
+      return;
+    }
+    const ToJsonWriter().write(writer, [
+      for (final fragment in fragments)
+        if (fragment.isConditional)
+          '...?${fragment.memberName}?.toJson().fields'
+        else
+          '...${fragment.memberName}.toJson().fields',
+    ]);
+  }
+
+  String _json(PlannedFragment fragment) => fragment.isConditional
+      ? '${fragment.memberName}?.toJson()'
+      : '${fragment.memberName}.toJson()';
 
   String _read(PlannedFragment fragment) {
     final String read = '${fragment.className}.codec.read(json, context)';

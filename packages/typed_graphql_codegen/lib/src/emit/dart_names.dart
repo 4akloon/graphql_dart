@@ -113,16 +113,6 @@ final class DartNames {
     return result;
   }
 
-  /// [preferred], or the first of it with `$` appended until it is not in
-  /// [taken]: a parameter name that cannot hide a member.
-  String freeName(String preferred, Iterable<String> taken) {
-    int count = 0;
-    while (taken.contains('$preferred${r'$' * count}')) {
-      count++;
-    }
-    return '$preferred${r'$' * count}';
-  }
-
   /// [memberName] with its first character upper-cased, `$` kept.
   String capitalized(String memberName) => _upperFirst(memberName);
 

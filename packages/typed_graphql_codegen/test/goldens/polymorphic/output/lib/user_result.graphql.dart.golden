@@ -275,11 +275,13 @@ final class LabelledUser implements Labelled {
   final LabelledFragments fragments;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    '__typename': const graphql.JsonString('User'),
-    'name': _nameCodec.write(name),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({
+      '__typename': const graphql.JsonString('User'),
+      'name': _nameCodec.write(name),
+    }),
+  ]);
 
   @override
   bool operator ==(Object other) =>
@@ -320,11 +322,13 @@ final class LabelledBot implements Labelled {
   final LabelledFragments fragments;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    '__typename': const graphql.JsonString('Bot'),
-    'model': _modelCodec.write(model),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({
+      '__typename': const graphql.JsonString('Bot'),
+      'model': _modelCodec.write(model),
+    }),
+  ]);
 
   @override
   bool operator ==(Object other) =>
@@ -362,10 +366,10 @@ final class LabelledUnknown implements Labelled {
   final LabelledFragments fragments;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    '__typename': _typenameCodec.write(typename),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({'__typename': _typenameCodec.write(typename)}),
+  ]);
 
   @override
   bool operator ==(Object other) =>

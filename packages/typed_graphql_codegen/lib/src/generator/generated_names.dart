@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../emit/dart_names.dart';
@@ -43,28 +45,32 @@ final class GeneratedNames {
   final List<Diagnostic> _diagnostics = [];
 
   /// The problems found so far, each once: by file, then offset; the ones
-  /// without a place last, in registration order.
+  /// without a place last, in registration order. Like every other run, the
+  /// list stops after [DiagnosticSink.defaultMaxErrors] errors with one
+  /// `GQL000`.
+  ///
+  /// It is computed on each call: read it once.
   List<Diagnostic> get diagnostics {
-    final unique = <Diagnostic>[];
-    for (final diagnostic in _diagnostics) {
-      if (!unique.contains(diagnostic)) unique.add(diagnostic);
+    final indexed = LinkedHashSet<Diagnostic>.of(_diagnostics).indexed.toList()
+      ..sort(_byPlace);
+    final sink = DiagnosticSink();
+    for (final (_, diagnostic) in indexed) {
+      sink.report(diagnostic);
     }
-    final indexed = unique.indexed.toList()
-      ..sort((a, b) {
-        final first = a.$2.span;
-        final second = b.$2.span;
-        if (first == null || second == null) {
-          if (first == second) return a.$1.compareTo(b.$1);
-          return first == null ? 1 : -1;
-        }
-        final byFile = first.source.name.compareTo(second.source.name);
-        if (byFile != 0) return byFile;
-        final byOffset = first.start.compareTo(second.start);
-        return byOffset != 0 ? byOffset : a.$1.compareTo(b.$1);
-      });
-    return List.unmodifiable([
-      for (final (_, diagnostic) in indexed) diagnostic,
-    ]);
+    return sink.diagnostics;
+  }
+
+  static int _byPlace((int, Diagnostic) a, (int, Diagnostic) b) {
+    final first = a.$2.span;
+    final second = b.$2.span;
+    if (first == null || second == null) {
+      if (first == second) return a.$1.compareTo(b.$1);
+      return first == null ? 1 : -1;
+    }
+    final byFile = first.source.name.compareTo(second.source.name);
+    if (byFile != 0) return byFile;
+    final byOffset = first.start.compareTo(second.start);
+    return byOffset != 0 ? byOffset : a.$1.compareTo(b.$1);
   }
 
   /// Records that [declarer] (such as `the enum 'Role'`) declares [name].
@@ -93,6 +99,20 @@ final class GeneratedNames {
         '$declarer.',
         span: span,
         related: [?first.$2],
+      ),
+    );
+  }
+
+  /// Records that [declarer] (such as `the operation 'A'`) would generate
+  /// more than [limit] classes.
+  void reportTooManyClasses(String declarer, int limit, SourceSpan? span) {
+    _diagnostics.add(
+      Diagnostic(
+        .tooManyGeneratedClasses,
+        .error,
+        'The code generator would declare more than $limit classes for '
+        '$declarer.',
+        span: span,
       ),
     );
   }

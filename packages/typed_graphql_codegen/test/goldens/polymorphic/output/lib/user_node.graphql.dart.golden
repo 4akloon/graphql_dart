@@ -75,12 +75,14 @@ final class NodeCardUser implements NodeCard {
   final NodeCardUserFragments fragments;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    '__typename': const graphql.JsonString('User'),
-    'id': _idCodec.write(id),
-    'name': _nameCodec.write(name),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({
+      '__typename': const graphql.JsonString('User'),
+      'id': _idCodec.write(id),
+      'name': _nameCodec.write(name),
+    }),
+  ]);
 
   @override
   bool operator ==(Object other) =>

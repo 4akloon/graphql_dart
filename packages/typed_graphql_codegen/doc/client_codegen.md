@@ -252,13 +252,30 @@ fragment UserCard on User {
 '''),
     ],
   );
+  final declaration = RegExp(r'^(?:final|sealed) class (\w+)', multiLine: true);
   for (final file in generation.files) {
-    if (file.path == 'lib/user.graphql.dart') print(file.text);
+    if (file.path != 'lib/user.graphql.dart') continue;
+    final names = [
+      for (final match in declaration.allMatches(file.text)) match[1],
+    ];
+    print(names.join('\n'));
   }
 }
 ```
 
 It prints:
+
+```text
+GetUserQuery
+GetUserVariables
+GetUserData
+GetUserDataUser
+GetUserDataUserFragments
+UserCard
+```
+
+The library starts with the header and the operation class, whose document is
+what is sent; the full text of the library is:
 
 ```text
 // GENERATED CODE - DO NOT MODIFY BY HAND.
@@ -391,10 +408,10 @@ final class GetUserDataUser implements client.DataObject {
   final GetUserDataUserFragments fragments;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...fragments.toJson().fields,
-    'email': _emailCodec.write(email),
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    fragments.toJson(),
+    graphql.JsonObject({'email': _emailCodec.write(email)}),
+  ]);
 
   @override
   bool operator ==(Object other) =>
@@ -488,7 +505,6 @@ final class UserCard implements client.DataObject {
   String toString() => 'UserCard(id: $id, name: $name)';
 }
 ```
-
 The sections below describe the parts of that output.
 
 ### Names
@@ -593,10 +609,13 @@ fragment it spreads, transitively, sorted by name and minified. It adds
 `__typename` to the selection set of every field that has one, so the client
 can read the type of any object; fragment definitions and inline fragments
 get none, because the field around them has it. The operation's own
-selection set gets it only when a fragment on an interface or a union is
-spread at its top level, as the sealed class that reads it needs. A
-subscription cannot select `__typename` at its root, so a subscription that
-reads an abstract type there (`GQL504`) cannot be generated. The `sha256` is
+selection set gets it only when a fragment that becomes a sealed class (a
+fragment on an interface or a union with an inline fragment or spread on
+other types inside) is spread at its top level, as that class needs to read
+it; inline fragments at the root never need it. A `__typename` under
+`@include` or `@skip` does not count: the unconditional one is added next to
+it. A subscription cannot select `__typename` at its root, so a subscription
+that spreads such a fragment at its top level (`GQL504`) cannot be generated. The `sha256` is
 the SHA-256 of the text in UTF-8, in lowercase hexadecimal: the id of a
 persisted query.
 
@@ -625,9 +644,16 @@ operation, sorted by name, the same values the operation classes carry:
 `GetUserData.decode(json, variables: ...)` reads the `data` of a response and
 never throws: a value of the wrong shape, a missing required field or an
 unreadable scalar is a `DecodeFailure` with a message and the path of the
-value in the response. `toJson` writes the data back, so a value that was
-read writes the JSON it was read from (with `__typename` where the selection
-reads it), and `==` compares by value, lists by content.
+value in the response. `toJson` writes the data back: the fields the value
+holds, under their response names, with `__typename` where the selection
+reads it, and `null` for a conditional field that was absent. A class and the
+fragments it spreads may select the same field with different sub-fields;
+`toJson` merges their JSON deeply (`JsonMerger` of the client), so each
+side's sub-fields are written. `==` compares by value, lists by content.
+
+A fragment's own `decode` has no operation around it: a Boolean variable that
+`variables` lacks counts as false, not as its default in the operation (an
+operation's `decode` passes its own defaults).
 
 ```text
 switch (GetUserData.decode(json, variables: variables)) {
@@ -808,11 +834,12 @@ and are never reused.
 | `GQL501` | error | A configuration key is missing, unknown or mistyped, or a path or Dart reference is malformed. |
 | `GQL502` | error | The schema file is not JSON, or is JSON that is not an object, when it should be an introspection result. |
 | `GQL503` | error | An operation has no name; the generated classes are named after the operation. |
-| `GQL504` | error | A document uses `@defer` or `@stream`, which the generator does not support yet, or a subscription reads an abstract type at its root (a fragment on an interface or a union, or an inline fragment): the sealed class would need `__typename` there, and a subscription cannot select it. |
+| `GQL504` | error | A document uses `@defer` or `@stream`, or selects an introspection field (`__schema`, `__type`), which the generator does not support yet; or a subscription spreads, at its root, a fragment that becomes a sealed class (directly or through other fragments or inline fragments): the sealed class would need `__typename` there, and a subscription cannot select it. |
 | `GQL505` | error | The configuration maps a scalar that the schema does not declare as a custom scalar: it is unknown, is not a scalar, or is built in. |
 | `GQL506` | warning | No document matches `documents`. |
 | `GQL507` | error | The generator would declare one Dart name twice, such as an enum `Role` and an input object `RoleKnown` (the enum also declares `RoleKnown` and `RoleUnknown`), a class of an operation and a fragment, two members of one class (such as the fields `user_name` and `userName`, or two fragments `UserCard` and `userCard`), or two files at one path. |
 | `GQL508` | error | A name the generator would declare hides a Dart type the generated code uses, such as `List`, or a `dart:core` type a scalar is mapped to. |
+| `GQL511` | error | An operation or fragment would generate more than 10000 classes, for instance a selection on an interface that reaches many types, repeated under many aliases. |
 
 The problems of the schema and of the documents keep the codes of the core:
 the schema's `GQL1xx` and the operation rules' `GQL2xx`.

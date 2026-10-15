@@ -1,5 +1,6 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
+import 'narrowing.dart';
 import 'type_condition_match.dart';
 
 /// Decides how a type condition relates to a parent type (spec §6).
@@ -26,7 +27,7 @@ final class const Applicability(
     }
     return switch (parent) {
       ObjectType() =>
-        schema.possibleTypes(target).any((type) => identical(type, parent))
+        _isPossible(target, parent)
             ? TypeConditionMatch.applies
             : TypeConditionMatch.never,
       InterfaceType()
@@ -47,10 +48,30 @@ final class const Applicability(
     if (target == null) {
       return const [];
     }
-    final reached = schema.possibleTypes(target);
     return [
       for (final type in schema.possibleTypes(parent))
-        if (reached.any((other) => identical(other, type))) type,
+        if (_isPossible(target, type)) type,
     ];
   }
+
+  /// The possible types of [parent], in `possibleTypes` order, that any of
+  /// [narrowings] reaches; empty unless [parent] is abstract.
+  List<ObjectType> reachedBy(SchemaType parent, List<Narrowing> narrowings) {
+    if (parent is! InterfaceType && parent is! UnionType) {
+      return const [];
+    }
+    final reached = <ObjectType>{
+      for (final narrowing in narrowings)
+        ...reach(narrowing.typeCondition, parent),
+    };
+    return [
+      for (final type in schema.possibleTypes(parent))
+        if (reached.contains(type)) type,
+    ];
+  }
+
+  // Whether [type] is among the possible types of [target].
+  bool _isPossible(SchemaType target, ObjectType type) => target is ObjectType
+      ? identical(target, type)
+      : schema.isSubType(target, type);
 }

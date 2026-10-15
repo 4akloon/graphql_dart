@@ -37,10 +37,17 @@ final class TypenameAdder extends AstTransformer {
     end: selectionSet.end,
   );
 
+  // A `__typename` under `@include` or `@skip` may be missing from the
+  // response, so it does not stand in for the added one.
   bool _hasTypename(SelectionSet selectionSet) => selectionSet.selections.any(
     (selection) =>
         selection is Field &&
         selection.alias == null &&
-        selection.name.value == '__typename',
+        selection.name.value == '__typename' &&
+        !selection.directives.any(
+          (directive) =>
+              directive.name.value == 'include' ||
+              directive.name.value == 'skip',
+        ),
   );
 }

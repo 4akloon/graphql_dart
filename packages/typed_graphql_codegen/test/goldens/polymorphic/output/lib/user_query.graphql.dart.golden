@@ -143,8 +143,7 @@ final class FindNodeDataNode implements client.DataObject {
   final FindNodeDataNodeFragments fragments;
 
   @override
-  graphql.JsonObject toJson() =>
-      graphql.JsonObject({...fragments.toJson().fields});
+  graphql.JsonObject toJson() => fragments.toJson();
 
   @override
   bool operator ==(Object other) =>
@@ -190,12 +189,12 @@ final class FindNodeDataNodeFragments implements client.DataObject {
   final Labelled labelled;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...nodeCard.toJson().fields,
-    ...owned.toJson().fields,
-    ...reselect.toJson().fields,
-    ...labelled.toJson().fields,
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    nodeCard.toJson(),
+    owned.toJson(),
+    reselect.toJson(),
+    labelled.toJson(),
+  ]);
 
   @override
   bool operator ==(Object other) =>
@@ -233,8 +232,7 @@ final class FindNodeDataSearch implements client.DataObject {
   final FindNodeDataSearchFragments fragments;
 
   @override
-  graphql.JsonObject toJson() =>
-      graphql.JsonObject({...fragments.toJson().fields});
+  graphql.JsonObject toJson() => fragments.toJson();
 
   @override
   bool operator ==(Object other) =>

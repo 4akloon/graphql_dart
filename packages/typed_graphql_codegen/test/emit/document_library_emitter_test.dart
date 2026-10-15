@@ -2,6 +2,7 @@ import 'package:test/test.dart';
 import 'package:typed_graphql_codegen/src/emit/document_library_emitter.dart';
 import 'package:typed_graphql_codegen/src/emit/library_imports.dart';
 import 'package:typed_graphql_codegen/src/emit/type_mapper.dart';
+import 'package:typed_graphql_codegen/src/plan/operation_text.dart';
 import 'package:typed_graphql_codegen/src/plan/shape_planner.dart';
 
 import '../support/plan_fixture.dart';
@@ -23,6 +24,7 @@ void main() {
   final fixture = PlanFixture(_schema, _document);
   final emitter = DocumentLibraryEmitter(
     ShapePlanner(fixture.schema, fixture.fragments),
+    OperationText(fixture.schema, fixture.fragments),
     TypeMapper(fixture.schema, const {}),
     LibraryImports(fixture.schema, 'lib/schema.graphql.dart', const {
       'Outer': 'lib/a/b.graphql.dart',

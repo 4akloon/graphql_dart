@@ -40,10 +40,10 @@ final class QDataUserFragments implements client.DataObject {
   final F2? f2;
 
   @override
-  graphql.JsonObject toJson() => graphql.JsonObject({
-    ...f1.toJson().fields,
-    ...?f2?.toJson().fields,
-  });
+  graphql.JsonObject toJson() => const client.JsonMerger().merge([
+    f1.toJson(),
+    f2?.toJson(),
+  ]);
 
   @override
   bool operator ==(Object other) =>

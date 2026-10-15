@@ -154,7 +154,7 @@ type Query {
     expect(result.files, hasLength(1));
   });
 
-  test('an introspection enum reached through __type is generated', () {
+  test('a document that selects __type is not generated', () {
     final built = const SchemaBuilder().fromSdl(
       const Parser().parse(Source(_schema.text)).requireDocument(),
     ) as BuildSuccess;
@@ -170,13 +170,12 @@ type Query {
         ),
       ],
     );
-    expect(result.hasErrors, isFalse, reason: '${result.diagnostics}');
+    expect(result.files, isEmpty);
     expect(
-      result.files.first.text,
-      allOf(
-        contains(r'sealed class $$TypeKind'),
-        contains(r'enum $$TypeKindKnown'),
-      ),
+      [for (final d in result.diagnostics) d.code],
+      [
+        DiagnosticCode.unsupportedInDocument,
+      ],
     );
   });
 

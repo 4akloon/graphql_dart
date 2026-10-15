@@ -44,8 +44,14 @@ interface Node {
   id: ID!
 }
 
+type Avatar {
+  url: String!
+  size: Int!
+}
+
 type User implements Node {
   id: ID!
+  avatar: Avatar
   "The display name."
   name: String!
   role: Role!

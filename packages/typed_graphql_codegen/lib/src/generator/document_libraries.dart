@@ -32,9 +32,13 @@ final class DocumentLibraries {
   /// The planner of the project's classes.
   final ShapePlanner planner;
 
-  /// The writer of the document texts the operations are sent with.
-  OperationText get operationText =>
-      OperationText(planner.schema, planner.fragments);
+  /// The writer of the document texts the operations are sent with, shared
+  /// by the operation classes and the manifest.
+  // late: its initializer reads [planner], which a field initializer cannot.
+  late final OperationText operationText = OperationText(
+    planner.schema,
+    planner.fragments,
+  );
 
   /// A library per document file, sorted by path.
   List<GeneratedFile> generate() {
@@ -51,6 +55,7 @@ final class DocumentLibraries {
     }
     final emitter = DocumentLibraryEmitter(
       planner,
+      operationText,
       mapper,
       LibraryImports(project.schema.schema, schemaTypesPath, libraryOf),
     );
