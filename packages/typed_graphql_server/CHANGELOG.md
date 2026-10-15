@@ -135,3 +135,5 @@
   event.
 - Coerced arguments are unmodifiable (the argument map, input-object maps and
   lists), so a resolver cannot change the cached arguments of later requests.
+- The `ExecutableSchema` and `FieldDef` constructors, `FieldDef.lane`,
+  `FieldDef.middleware` and `CancelSignal.listenerCount` are `@internal`.

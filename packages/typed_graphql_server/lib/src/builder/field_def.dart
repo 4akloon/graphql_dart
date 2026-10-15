@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../authorization/authorization.dart';
@@ -12,7 +13,9 @@ import 'output_ref.dart';
 ///
 /// {@category builder}
 final class FieldDef<P, C> {
-  /// Declares the field [name] of type [type].
+  /// Declares the field [name] of type [type]; the builder calls it, so it
+  /// is not part of the public API.
+  @internal
   FieldDef({
     required this.name,
     required this.type,
@@ -45,12 +48,15 @@ final class FieldDef<P, C> {
   /// The directives applied to the field, besides `@deprecated`.
   final List<AppliedDirective> directives;
 
-  /// How the field produces its value.
+  /// How the field produces its value; not part of the public API.
+  @internal
   final FieldLane lane;
 
   /// The `FieldMiddleware<C>` values of the field, erased to [Object]: a
   /// definition read as `FieldDef<Object?, Object?>` must not hold a
-  /// `C`-typed function. The build casts them back where `C` is known.
+  /// `C`-typed function. The build casts them back where `C` is known; not
+  /// part of the public API.
+  @internal
   final List<Object> middleware;
 
   /// The authorization rule that applies to the field: its own, else (after

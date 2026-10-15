@@ -29,7 +29,7 @@ final class CancelSignal {
   Future<void> get whenCancelled => _completer.future;
 
   /// How many listeners wait for the signal.
-  @visibleForTesting
+  @internal
   int get listenerCount => _listeners?.length ?? 0;
 
   /// Cancels the signal with an optional [reason]. Only the first call has

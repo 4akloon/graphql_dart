@@ -19,7 +19,9 @@ import 'subscription_execution.dart';
 ///
 /// {@category execution}
 final class ExecutableSchema<C> {
-  /// Creates the schema from a validated [schema] and its [bindings].
+  /// Creates the schema from a validated [schema] and its [bindings]; the
+  /// builder calls it, so it is not part of the public API.
+  @internal
   ExecutableSchema(
     this.schema,
     this.bindings, {
