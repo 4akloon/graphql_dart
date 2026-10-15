@@ -13,6 +13,7 @@ import 'error_reporter.dart';
 import 'execution_options.dart';
 import 'execution_run.dart';
 import 'prepared_operation.dart';
+import 'run_cancellation.dart';
 import 'schema_bindings.dart';
 
 /// The part of a request that `execute` and `subscribe` share (September2025
@@ -118,6 +119,7 @@ final class OperationPreparation {
             variables: values,
             rawVariables: variables,
             options: _options,
+            cancellation: RunCancellation.from(_options),
           ),
         );
     }

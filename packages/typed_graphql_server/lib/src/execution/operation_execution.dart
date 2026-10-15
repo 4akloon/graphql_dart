@@ -4,6 +4,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../plan/plan_cache.dart';
 import 'execution_options.dart';
+import 'execution_run.dart';
 import 'operation_preparation.dart';
 import 'prepared_operation.dart';
 import 'schema_bindings.dart';
@@ -48,7 +49,28 @@ final class OperationExecution {
         );
     return switch (prepared) {
       OperationRefused(:final error) => error,
-      OperationReady(:final run) => run.executeRoot(_options.rootValue),
+      OperationReady(:final run) => _run(run),
     };
+  }
+
+  // The timer and the listener end with the run, whether it finished at once
+  // or later (spec 13).
+  FutureOr<ExecutionResult> _run(ExecutionRun run) {
+    final FutureOr<ExecutionResult> result;
+    try {
+      result = run.executeRoot(_options.rootValue);
+    } on Object {
+      run.cancellation?.dispose();
+      rethrow;
+    }
+    final cancellation = run.cancellation;
+    if (cancellation == null) {
+      return result;
+    }
+    if (result is Future<ExecutionResult>) {
+      return result.whenComplete(cancellation.dispose);
+    }
+    cancellation.dispose();
+    return result;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../cancellation/cancel_signal.dart';
 import '../lookahead/field_selection.dart';
 import 'response_path.dart';
 
@@ -20,7 +21,8 @@ final class FieldInfo {
     required this.schema,
     this.rootValue,
     this.selectionReader,
-  });
+    CancelSignal? cancelSignal,
+  }) : _runSignal = cancelSignal;
 
   /// The field's name in the schema.
   final String fieldName;
@@ -62,6 +64,18 @@ final class FieldInfo {
   // `late`: the reader runs on first read, not when the call starts.
   late final FieldSelection selection =
       selectionReader?.call() ?? FieldSelection.empty;
+
+  final CancelSignal? _runSignal;
+
+  /// Fires when the execution is cancelled or times out (R4.20): a resolver
+  /// doing long work checks `isCancelled` or awaits `whenCancelled` to stop.
+  ///
+  /// It is the run's own signal, linked to the caller's and the timeout.
+  /// Read it; cancelling it cancels the run. A call made outside an
+  /// execution, or by one without a signal or timeout, gets a signal that
+  /// is never cancelled.
+  // `late`: a signal is made only for a resolver that reads it.
+  late final CancelSignal cancelSignal = _runSignal ?? CancelSignal();
 
   /// The name of the object type the field is selected on.
   String get parentTypeName => parentType.name;

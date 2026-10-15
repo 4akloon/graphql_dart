@@ -55,6 +55,12 @@ final class SubscriptionExecution {
   }
 
   FutureOr<SubscriptionResult> _open(ExecutionRun run) {
+    if (run.cancellation case final cancelled? when cancelled.isCancelled) {
+      cancelled.dispose();
+      return SubscriptionRejected(
+        RequestErrorResult(errors: [cancelled.error]),
+      );
+    }
     final root = run.plan.rootFor(run.plan.keyFor(run.variables));
     final fields = root.fields;
     if (root.problem case final problem?) {
@@ -77,6 +83,7 @@ final class SubscriptionExecution {
   // A run that found no source has errors in its log; one that found no
   // root field at all has none, so it says so.
   SubscriptionRejected _rejected(ExecutionRun run) {
+    run.cancellation?.dispose();
     final log = run.reporter.log;
     final errors = switch (log.haltError) {
       final halted? => [halted],

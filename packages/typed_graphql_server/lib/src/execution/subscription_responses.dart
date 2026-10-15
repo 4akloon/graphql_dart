@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import 'execution_run.dart';
+import 'run_cancellation.dart';
 
 /// The response stream of a subscription (September2025 6.2.3.2
 /// "MapSourceToResponseEvent"): every source event is executed as the root
@@ -43,6 +44,13 @@ final class SubscriptionResponses {
   Stream<ExecutionResult> get stream => _controller.stream;
 
   void _listen() {
+    if (_template.cancellation case final cancellation?) {
+      if (cancellation.isCancelled) {
+        _stop(cancellation);
+        return;
+      }
+      cancellation.signal.addListener(() => _stop(cancellation));
+    }
     _subscription = _source.listen(
       _onEvent,
       onError: (Object error, StackTrace stackTrace) =>
@@ -62,6 +70,7 @@ final class SubscriptionResponses {
     final wasCancelled = _isCancelled;
     _isCancelled = true;
     _waiting.clear();
+    _template.cancellation?.dispose();
     if (wasCancelled) {
       return Future<void>.value();
     }
@@ -140,8 +149,24 @@ final class SubscriptionResponses {
 
   void _close() {
     if (!_isCancelled) {
+      _template.cancellation?.dispose();
       _controller.close();
     }
+  }
+
+  // The signal fired or the timeout elapsed: one last result with the
+  // cancellation, then the end; the event in flight is dropped (spec 13).
+  void _stop(RunCancellation cancellation) {
+    if (_isCancelled) {
+      return;
+    }
+    _isCancelled = true;
+    _isBusy = false;
+    _waiting.clear();
+    cancellation.dispose();
+    _controller.add(cancellation.result);
+    _controller.close();
+    _subscription?.cancel().ignore();
   }
 
   // The source failed (or the library did, which cannot be told apart by
@@ -153,6 +178,7 @@ final class SubscriptionResponses {
     }
     _isCancelled = true;
     _waiting.clear();
+    _template.cancellation?.dispose();
     final reported = _template.reporter.sourceFailure(error, stackTrace);
     _controller.add(ExecutionResult(null, errors: [reported]));
     _controller.close();

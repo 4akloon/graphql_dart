@@ -36,6 +36,9 @@ final class FieldExecution {
     int depth,
     int position,
   ) {
+    if (_run.isCancelled) {
+      return null;
+    }
     final site = CompletionSite(
       plan,
       parentPath.key(plan.responseKey, position),
@@ -256,6 +259,7 @@ final class FieldExecution {
       variables: _run.rawVariables,
       schema: _run.schema,
       rootValue: _run.options.rootValue,
+      cancelSignal: _run.cancellation?.signal,
       selectionReader: () => FieldSelection.under(
         [plan],
         _run.variables,

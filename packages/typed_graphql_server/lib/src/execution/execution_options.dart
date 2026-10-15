@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../cancellation/cancel_signal.dart';
 import '../introspection/introspection_policy.dart';
 import 'error_behavior.dart';
 import 'error_hook.dart';
@@ -26,6 +27,8 @@ final class ExecutionOptions {
     this.maxDepth = 256,
     this.maxSteps = 10000000,
     this.introspection = IntrospectionPolicy.enabled,
+    this.cancelSignal,
+    this.timeout,
   });
 
   /// The parent value of the root fields; the root type's Dart type must
@@ -62,4 +65,12 @@ final class ExecutionOptions {
 
   /// Whether `__schema` and `__type` are answered.
   final IntrospectionPolicy introspection;
+
+  /// Stops the execution when cancelled (spec 13). The executor only
+  /// listens to it. One signal serves one request or subscription.
+  final CancelSignal? cancelSignal;
+
+  /// How long the execution (for a subscription, its whole life) may take
+  /// before it is stopped with `GQL351`.
+  final Duration? timeout;
 }

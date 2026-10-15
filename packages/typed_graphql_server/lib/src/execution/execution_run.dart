@@ -12,6 +12,7 @@ import 'leaf_completion.dart';
 import 'list_completion.dart';
 import 'object_completion.dart';
 import 'response_path.dart';
+import 'run_cancellation.dart';
 import 'schema_bindings.dart';
 import 'selection_executor.dart';
 import 'value_completion.dart';
@@ -29,6 +30,7 @@ final class ExecutionRun {
     required this.variables,
     required this.rawVariables,
     required this.options,
+    this.cancellation,
   }) : reporter = ErrorReporter(options);
 
   /// The operation to run.
@@ -51,6 +53,12 @@ final class ExecutionRun {
 
   /// The settings of the call.
   final ExecutionOptions options;
+
+  /// The signal and timer of the call, null when it has neither.
+  final RunCancellation? cancellation;
+
+  /// Whether the call was cancelled or timed out.
+  bool get isCancelled => cancellation?.isCancelled ?? false;
 
   /// Makes and records the errors.
   final ErrorReporter reporter;
@@ -89,12 +97,16 @@ final class ExecutionRun {
     variables: variables,
     rawVariables: rawVariables,
     options: options,
+    cancellation: cancellation,
   );
 
   /// Executes the operation's root selection on [rootValue] and builds the
   /// response (September2025 6.2 "Executing Operations"). A mutation runs
   /// its root fields serially.
   FutureOr<ExecutionResult> executeRoot(Object? rootValue) {
+    if (cancellation case final cancelled? when cancelled.isCancelled) {
+      return cancelled.result;
+    }
     final root = plan.rootFor(plan.keyFor(variables));
     if (root.problem case final problem?) {
       reporter.problem(problem, null, const []);
@@ -103,10 +115,18 @@ final class ExecutionRun {
     final data = plan.operation.operation == OperationType.mutation
         ? selection.executeSerially(rootValue, root, ResponsePath.root, 1)
         : selection.execute(rootValue, root, ResponsePath.root, 1);
-    return data is Future<JsonObject?> ? data.then(_response) : _response(data);
+    if (data is! Future<JsonObject?>) {
+      return _response(data);
+    }
+    final response = data.then(_response);
+    return cancellation?.race(response) ?? response;
   }
 
+  // A call cancelled meanwhile answers with the cancellation only (spec 13).
   ExecutionResult _response(JsonObject? data) {
+    if (cancellation case final cancelled? when cancelled.isCancelled) {
+      return cancelled.result;
+    }
     final log = reporter.log;
     if (log.haltError case final halted?) {
       return ExecutionResult(null, errors: [halted]);

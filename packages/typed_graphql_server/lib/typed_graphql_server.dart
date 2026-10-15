@@ -33,6 +33,7 @@ export 'src/builder/output_ref.dart';
 export 'src/builder/scalar_type_def.dart';
 export 'src/builder/schema_build_error.dart';
 export 'src/builder/union_type_def.dart';
+export 'src/cancellation/cancel_signal.dart';
 export 'src/execution/directive_middleware.dart';
 export 'src/execution/error_behavior.dart';
 export 'src/execution/error_hook.dart';

@@ -6,6 +6,9 @@ dartdoc:
     builder:
       markdown: doc/schema_builder.md
       displayName: Schema Builder
+    cancellation:
+      markdown: doc/cancellation.md
+      displayName: Cancellation
     execution:
       markdown: doc/execution.md
       displayName: Execution
@@ -21,6 +24,7 @@ dartdoc:
   categoryOrder:
     - authorization
     - builder
+    - cancellation
     - execution
     - introspection
     - lookahead

@@ -111,3 +111,12 @@
   on every lane, `GQL304` for a guarded field without an authorizer,
   `SelectedField.authorization`, `AuthorizationCoverage.uncovered` and the
   Authorization guide.
+- Cancellation (R4.20): `CancelSignal` (`cancel`, `isCancelled`, `whenCancelled`,
+  `reason`; no platform import), `ExecutionOptions.cancelSignal` and `timeout`,
+  and `FieldInfo.cancelSignal`, the run's own signal. A cancelled or timed-out
+  run starts no field, completes at once with `data: null` and one `GQL350` or
+  `GQL351` error, and drops later resolver results; a synchronous query with a
+  timeout stays synchronous, and the timer ends with the run. A subscription
+  ends with a final cancellation result, cancels its source and closes; a
+  signal cancelled at `subscribe` is a `SubscriptionRejected`. The Cancellation
+  guide and its dartdoc category `cancellation`.
