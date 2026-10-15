@@ -1,5 +1,6 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../authorization/authorizer.dart';
 import '../execution/directive_middleware.dart';
 import '../execution/field_middleware.dart';
 
@@ -18,6 +19,7 @@ final class BuildOptions<C> {
     this.planCacheSize = 1000,
     this.middleware = const [],
     this.directiveMiddleware = const {},
+    this.authorizer,
   }) : assert(planCacheSize >= 0, 'a cache size is not negative');
 
   /// The directive definitions the schema declares besides the specified
@@ -42,4 +44,9 @@ final class BuildOptions<C> {
   /// directive. A name the schema does not define is an [ArgumentError] when
   /// the schema is built.
   final Map<String, DirectiveMiddleware<C>> directiveMiddleware;
+
+  /// Decides the access to the fields an `Authorization.requires` rule
+  /// guards; a schema with such fields and no authorizer fails to build
+  /// (`GQL304`).
+  final Authorizer<C>? authorizer;
 }

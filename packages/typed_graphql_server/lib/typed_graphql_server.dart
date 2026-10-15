@@ -6,6 +6,11 @@
 /// introspection and subscriptions (M5c) work. See the package README.
 library;
 
+export 'src/authorization/authorization.dart';
+export 'src/authorization/authorization_coverage.dart';
+export 'src/authorization/authorization_decision.dart';
+export 'src/authorization/authorizer.dart';
+export 'src/authorization/field_access.dart';
 export 'src/builder/arg.dart';
 export 'src/builder/arguments.dart';
 export 'src/builder/arguments_def.dart';

@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
 
+import '../authorization/authorization.dart';
 import '../builder/arguments.dart';
 import '../builder/field_def.dart';
 import '../coercion/coercion_result.dart';
@@ -35,6 +36,13 @@ final class SelectedField {
 
   /// The alias the request gave, null when it gave none.
   String? get alias => responseKey == name ? null : responseKey;
+
+  /// The authorization rule that applies to the field (its own, else its
+  /// object type's), null when it has none or the field is introspection.
+  Authorization? get authorization {
+    final plan = _plans.first;
+    return _definitions[plan.parentType.name]?[plan.fieldName]?.authorization;
+  }
 
   /// The field's arguments with the request's variables substituted and the
   /// defaults applied, coerced when first read.

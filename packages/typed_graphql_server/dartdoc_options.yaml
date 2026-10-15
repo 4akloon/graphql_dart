@@ -1,5 +1,8 @@
 dartdoc:
   categories:
+    authorization:
+      markdown: doc/authorization.md
+      displayName: Authorization
     builder:
       markdown: doc/schema_builder.md
       displayName: Schema Builder
@@ -16,6 +19,7 @@ dartdoc:
       markdown: doc/subscriptions.md
       displayName: Subscriptions
   categoryOrder:
+    - authorization
     - builder
     - execution
     - introspection

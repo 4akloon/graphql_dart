@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../authorization/authorization.dart';
 import '../execution/field_info.dart';
 import '../execution/field_middleware.dart';
 import 'arg.dart';
@@ -25,7 +26,7 @@ final class FieldStub<P, R, C> {
     OutputRef<R> type, {
     List<Arg<Object?>> args = const [],
     String? description,
-  }) : this._(name, type, args, description, null, const [], const []);
+  }) : this._(name, type, args, description, null, const [], const [], null);
 
   FieldStub._(
     this.name,
@@ -35,6 +36,7 @@ final class FieldStub<P, R, C> {
     this._deprecationReason,
     this._directives,
     this._middleware,
+    this._authorization,
   );
 
   /// The field's name.
@@ -50,6 +52,7 @@ final class FieldStub<P, R, C> {
   final String? _deprecationReason;
   final List<AppliedDirective> _directives;
   final List<FieldMiddleware<C>> _middleware;
+  final Authorization? _authorization;
 
   /// The same field, deprecated for [reason].
   FieldStub<P, R, C> deprecated(String reason) => FieldStub._(
@@ -60,14 +63,24 @@ final class FieldStub<P, R, C> {
     reason,
     _directives,
     _middleware,
+    _authorization,
   );
 
   /// The same field with [directives] applied after the ones already given.
   FieldStub<P, R, C> withDirectives(List<AppliedDirective> directives) =>
-      FieldStub._(name, type, _args, description, _deprecationReason, [
-        ..._directives,
-        ...directives,
-      ], _middleware);
+      FieldStub._(
+        name,
+        type,
+        _args,
+        description,
+        _deprecationReason,
+        [
+          ..._directives,
+          ...directives,
+        ],
+        _middleware,
+        _authorization,
+      );
 
   /// The same field with [middleware] after the ones already given.
   ///
@@ -83,6 +96,27 @@ final class FieldStub<P, R, C> {
         _deprecationReason,
         _directives,
         [..._middleware, ...middleware],
+        _authorization,
+      );
+
+  /// The same field under [authorization], replacing a rule given before.
+  ///
+  /// The rule wins over the object type's (`ObjectOptions.authorization`).
+  /// A field that needs the authorizer is checked before its middleware,
+  /// whichever lane it has, and a build without an authorizer fails
+  /// (`GQL304`). On an interface field the rule guards the implementations
+  /// that inherit the field; an object that declares the field itself is
+  /// not guarded by it.
+  FieldStub<P, R, C> withAuthorization(Authorization authorization) =>
+      FieldStub._(
+        name,
+        type,
+        _args,
+        description,
+        _deprecationReason,
+        _directives,
+        _middleware,
+        authorization,
       );
 
   /// Completes the field with a synchronous getter (the pure lane, R4.2).
@@ -199,5 +233,6 @@ final class FieldStub<P, R, C> {
     directives: _directives,
     lane: lane,
     middleware: _middleware,
+    authorization: _authorization,
   );
 }

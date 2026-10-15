@@ -2,6 +2,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../execution/executable_schema.dart';
 import '../introspection/introspection_bindings.dart';
+import 'authorization_applier.dart';
 import 'build_options.dart';
 import 'builder_checks.dart';
 import 'field_middleware_composer.dart';
@@ -63,10 +64,14 @@ final class ExecutableSchemaAssembly<C> {
       schema,
       options,
     ).compose(bindings);
+    final guarded = AuthorizationApplier<C>(
+      options.authorizer,
+    ).apply(composed);
     return ExecutableSchema(
       ValidSchema.assumeValid(schema),
-      IntrospectionBindings(schema).addTo(composed),
+      IntrospectionBindings(schema).addTo(guarded),
       planCacheSize: options.planCacheSize,
+      authorizer: options.authorizer,
     );
   }
 

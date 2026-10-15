@@ -1,5 +1,6 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../authorization/authorization.dart';
 import 'arg.dart';
 import 'field_lane.dart';
 import 'output_ref.dart';
@@ -20,6 +21,7 @@ final class FieldDef<P, C> {
     required this.lane,
     this.description,
     this.deprecationReason,
+    this.authorization,
     List<Object> middleware = const [],
   }) : args = List.unmodifiable(args),
        directives = List.unmodifiable(directives),
@@ -51,15 +53,22 @@ final class FieldDef<P, C> {
   /// `C`-typed function. The build casts them back where `C` is known.
   final List<Object> middleware;
 
+  /// The authorization rule that applies to the field: its own, else (after
+  /// the build) its object type's; null when it has none.
+  final Authorization? authorization;
+
   /// The same field with [lane] and no middleware of its own: the build
-  /// stores the composed chain this way.
-  FieldDef<P, C> withLane(FieldLane lane) => FieldDef(
-    name: name,
-    type: type,
-    args: args,
-    directives: directives,
-    lane: lane,
-    description: description,
-    deprecationReason: deprecationReason,
-  );
+  /// stores the composed chain this way. [authorization] replaces the rule
+  /// when given.
+  FieldDef<P, C> withLane(FieldLane lane, [Authorization? authorization]) =>
+      FieldDef(
+        name: name,
+        type: type,
+        args: args,
+        directives: directives,
+        lane: lane,
+        description: description,
+        deprecationReason: deprecationReason,
+        authorization: authorization ?? this.authorization,
+      );
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../authorization/authorizer.dart';
 import '../plan/plan_cache.dart';
 import '../subscription/subscription_result.dart';
 import 'execution_options.dart';
@@ -19,8 +20,12 @@ import 'subscription_execution.dart';
 /// {@category execution}
 final class ExecutableSchema<C> {
   /// Creates the schema from a validated [schema] and its [bindings].
-  ExecutableSchema(this.schema, this.bindings, {int planCacheSize = 1000})
-    : planCache = PlanCache(planCacheSize);
+  ExecutableSchema(
+    this.schema,
+    this.bindings, {
+    int planCacheSize = 1000,
+    this.authorizer,
+  }) : planCache = PlanCache(planCacheSize);
 
   /// The validated schema.
   final ValidSchema schema;
@@ -28,6 +33,9 @@ final class ExecutableSchema<C> {
   /// The run-time tables the executor reads; not part of the public API.
   @internal
   final SchemaBindings bindings;
+
+  /// The authorizer the schema was built with, null when it has none.
+  final Authorizer<C>? authorizer;
 
   /// The operation plans made for this schema; not part of the public API.
   @internal

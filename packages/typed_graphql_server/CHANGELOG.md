@@ -104,3 +104,10 @@
   names to sorted, de-duplicated columns. `isDeferred` arrives with
   incremental delivery.
 - The Look-ahead guide and its dartdoc category `lookahead`.
+- Authorization: `Authorization.requires` and `Authorization.public` rules on a
+  field (`.withAuthorization`) or an object type (`ObjectOptions.authorization`),
+  an `Authorizer<C>` in `BuildOptions.authorizer` that answers `Allow` or `Deny`
+  (a `GQL352` field error) after argument coercion and before the middleware,
+  on every lane, `GQL304` for a guarded field without an authorizer,
+  `SelectedField.authorization`, `AuthorizationCoverage.uncovered` and the
+  Authorization guide.
