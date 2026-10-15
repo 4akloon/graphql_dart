@@ -9,6 +9,10 @@ void main() {
       }
     });
 
+    test('Suggestions is reachable from the barrel', () {
+      expect(const Suggestions().didYouMean(['a']), ' Did you mean "a"?');
+    });
+
     test('ids are unique and sorted', () {
       final ids = [for (final code in DiagnosticCode.values) code.id];
       expect(ids.toSet(), hasLength(ids.length));

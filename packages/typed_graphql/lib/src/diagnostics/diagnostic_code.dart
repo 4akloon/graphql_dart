@@ -510,4 +510,18 @@ enum DiagnosticCode(
   /// `GQL238`: an operation whose field cost or type cost is more than the
   /// maximum `MaxCostRule` allows.
   maxCostExceeded('GQL238'),
+
+  /// `GQL300`: an object type built with `ExecutableSchemaBuilder` lists an
+  /// interface whose Dart type is not a supertype of the object's Dart type.
+  incompatibleImplementation('GQL300'),
+
+  /// `GQL301`: two possible types of an abstract type have Dart types where
+  /// one is a subtype of the other (or equal), the abstract type has no
+  /// `resolveType`, and not both have `isTypeOf`.
+  ambiguousTypeResolution('GQL301'),
+
+  /// `GQL302`: a default value of an argument or input field built with
+  /// `ExecutableSchemaBuilder` cannot be written as a literal (the codec's
+  /// `encode` throws, or an input object has no `encode`).
+  unencodableDefaultValue('GQL302'),
 }

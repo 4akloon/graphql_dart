@@ -17,6 +17,7 @@ export 'src/diagnostics/source.dart';
 export 'src/diagnostics/source_excerpt.dart';
 export 'src/diagnostics/source_location.dart';
 export 'src/diagnostics/source_span.dart';
+export 'src/diagnostics/suggestions.dart';
 export 'src/language/ast/argument.dart';
 export 'src/language/ast/definition.dart';
 export 'src/language/ast/directive.dart';

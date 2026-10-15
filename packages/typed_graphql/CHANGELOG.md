@@ -264,3 +264,5 @@
 - `SlicingArgumentsRule` (`GQL237`): a field with `@listSize(slicingArguments:)` is given exactly one slicing argument.
 - `MaxCostRule` (`GQL238`) limits an operation's field cost and type cost.
 - The Operation Validation guide covers the limit rules and cost analysis.
+- `GQL300`-`GQL302`: the diagnostics of the executable schema builder (incompatible implementation, ambiguous type resolution, unencodable default value).
+- `Suggestions` is exported: graphql-js's "Did you mean" text for messages that suggest a name.

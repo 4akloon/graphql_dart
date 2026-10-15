@@ -3,6 +3,8 @@ import 'lexical_distance.dart';
 /// graphql-js's "Did you mean" text: `suggestionList`, `didYouMean`,
 /// `orList` and `naturalCompare`, shared by the messages that suggest a
 /// name.
+///
+/// {@category diagnostics}
 final class const Suggestions() {
   /// Creates the helper; it keeps no state.
   this;
