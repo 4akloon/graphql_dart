@@ -5,6 +5,7 @@ import '../../language/ast/type_ref.dart';
 import '../../language/printer/printer.dart';
 import '../../language/visitor/ast_visitor.dart';
 import '../../schema/model/input_value.dart';
+import '../meta_fields.dart';
 import '../validation_context.dart';
 import '../validation_rule.dart';
 
@@ -46,13 +47,11 @@ final class _ProvidedRequiredArguments(final ValidationContext context)
     final provided = {
       for (final argument in node.arguments) argument.name.value,
     };
+    // graphql-js names a meta-field `<meta>`: it belongs to no type.
+    final owner = identical(field, MetaFields.type) ? '<meta>' : parent.name;
     for (final argument in field.arguments) {
       if (_isMissing(argument, provided)) {
-        _report(
-          node,
-          '${parent.name}.${field.name}(${argument.name}:)',
-          argument,
-        );
+        _report(node, '$owner.${field.name}(${argument.name}:)', argument);
       }
     }
   }

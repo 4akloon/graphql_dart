@@ -282,3 +282,5 @@
 - `IntrospectionListing`: which types and directives introspection lists for
   a schema, and in which order (the order `Schema.toIntrospection` writes);
   the server's introspection resolvers share it.
+- `ProvidedRequiredArgumentsRule` names the missing argument of `__type`
+  `<meta>.__type(name:)`, as graphql-js.

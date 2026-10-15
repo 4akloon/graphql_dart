@@ -101,4 +101,16 @@ directive @tag(label: String!) on FIELD
       [startsWith('1:19 GQL208'), startsWith('1:3 GQL210')],
     );
   });
+
+  test('a missing argument of a meta-field names the field <meta>', () {
+    expect(
+      checked.errors('{ __type { name } }', [
+        const ProvidedRequiredArgumentsRule(),
+      ]),
+      [
+        '1:3 GQL210 Argument "<meta>.__type(name:)" of type "String!" is '
+            'required, but it was not provided.',
+      ],
+    );
+  });
 }
