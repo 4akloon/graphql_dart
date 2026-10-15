@@ -6,10 +6,14 @@ import 'built_in_scalar_definitions.dart';
 import 'definition_registry.dart';
 import 'enum_type_def.dart';
 import 'enum_value_mapping.dart';
+import 'field_def.dart';
+import 'fields_builder.dart';
 import 'input_list_ref.dart';
 import 'input_object_def.dart';
 import 'input_ref.dart';
 import 'named_type_def.dart';
+import 'object_options.dart';
+import 'object_type_def.dart';
 import 'output_list_ref.dart';
 import 'output_ref.dart';
 import 'scalar_type_def.dart';
@@ -64,6 +68,24 @@ final class ExecutableSchemaBuilder<C>() with BuiltInScalarDefinitions {
       ], description: description),
     );
   }
+
+  /// Declares the object type [name] whose values are [P].
+  ///
+  /// [fields] runs once, on first use (by the build), so types may refer to
+  /// each other through `late final` variables or class fields.
+  ObjectTypeDef<P> object<P>(
+    String name, {
+    required List<FieldDef<P, C>> Function(FieldsBuilder<P, C> t) fields,
+    String? description,
+    ObjectOptions options = const ObjectOptions(),
+  }) => _registry.add(
+    ObjectTypeDef(
+      name,
+      () => fields(FieldsBuilder<P, C>()),
+      description: description,
+      options: options,
+    ),
+  );
 
   /// The non-null list of [item] as an output type.
   OutputRef<Iterable<R>> list<R>(OutputRef<R> item) => OutputListRef(item);
