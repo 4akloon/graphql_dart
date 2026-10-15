@@ -7,8 +7,8 @@ creation order; `build` checks them and returns an `ExecutableSchema<C>`
 (`typed_graphql`'s own `SchemaBuilder` builds a schema from SDL text, hence
 the different name).
 
-The package cannot execute a request yet: execution arrives in M5b. What
-works today is declaring, checking and printing a schema.
+Declaring, checking and printing a schema is this guide; running a request
+against it is the Execution guide.
 
 ## Refs and nullability
 

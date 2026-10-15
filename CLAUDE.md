@@ -45,7 +45,13 @@ cost directives (`includesCostDirectives`, `GQL156`-`GQL161`), `CostAnalysis`,
 fuzzers and the guide sections on limits and cost. M5a (typed schema
 builder) delivers `ExecutableSchemaBuilder`, the typed refs, fields and
 arguments, `build` and `SchemaBuildError` (`GQL300`-`GQL302`) in
-`typed_graphql_server`, and the Schema Builder guide; execution is M5b.
+`typed_graphql_server`, and the Schema Builder guide. M5b (execution) delivers
+variable and argument coercion, the operation plan and its cache, the
+executor with specified null propagation, error behaviours, masking and
+`onError`, field middleware, abstract-type resolution at run time
+(`GQL310`-`GQL337`), the graphql-js execution, variables, directives,
+abstract-type, enum and input-coercion suites, and the Execution guide and
+example.
 
 ## Documents
 
@@ -393,9 +399,10 @@ no platform library but `dart:async`, `dart:collection`, `dart:convert`,
 
 **Server** (`packages/typed_graphql_server/lib/src/`; M5). Imports the core
 only through its barrel. One folder per concern, with no import order
-(`builder/` and `execution/` import each other): `builder/` (M5a), then
-`coercion/`, `plan/`, `introspection/`, `subscription/`, `lookahead/`,
-`authorization/` and `cancellation/` in later sub-stages. The package is
+(`builder/` and `execution/` import each other): `builder/` (M5a),
+`coercion/`, `plan/` and `execution/` (M5b), then `introspection/`,
+`subscription/`, `lookahead/`, `authorization/` and `cancellation/` in later
+sub-stages. The package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
 or web framework, only `dart:async`, `dart:collection`, `dart:core`,
 `dart:math`, `meta` and the core (`test/quality/imports_test.dart`), and the
@@ -407,6 +414,22 @@ result type is fixed before the closure); methods take at most five
 parameters, so options travel in `ObjectOptions`, `EnumValueMapping` and
 `BuildOptions`. `build` runs `GQL300`-`GQL302` and the core validator and
 throws `SchemaBuildError`. Its guides are in `packages/typed_graphql_server/doc/`.
+`ExecutableSchema.execute(ValidDocument, context:, ...)` returns
+`FutureOr<ResponsePayload>` (a synchronous query is an `ExecutionResult`, not a
+`Future`). `coercion/`: `InputCoercion` (JSON values), `VariableCoercion`,
+`ArgumentCoercion` (one problem per argument, graphql-js's messages) and
+`LiteralCoercion` (substitutes variables); a `CoercionProblem` carries its
+code and the `GraphQLException` extensions. `plan/`: `OperationPlanner` turns
+a document into an `OperationPlan` (fields per `ConditionKey`, constant
+arguments coerced once) kept in `ExecutableSchema.planCache`; request errors
+are never cached. `execution/`: `OperationExecution` runs a plan through
+`ExecutionRun`, `SelectionExecutor`/`SerialFields`, `FieldExecution` (the one
+place a resolver lane is called, where middleware composed at build time
+lives) and `ValueCompletion` with its leaf, list, object and abstract
+variants; null propagation is a returned sentinel, not an exception, and
+`ErrorReporter` applies `ErrorBehavior`, masking (`GQL330`) and `onError`.
+`ExecutionOptions` holds every per-call setting, `maxDepth` and `maxSteps`
+bound the work (`GQL336`, `GQL337`).
 
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
@@ -604,11 +627,12 @@ README that leaves the package folder is an absolute URL.
   `packages/typed_graphql/test/doc/`.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
 - Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`,
-  `mapping/schema.csv` and `mapping/validation.csv`, checked by
+  `mapping/schema.csv`, `mapping/validation.csv` and `mapping/execution.csv`, checked by
   `test/mapping_test.dart` there; port helpers in its `test/support/`
   (`SchemaPort` for the schema suites, `ValidationPort` for
   `validateSchema`, `IntrospectionPort` for `buildClientSchema`,
-  `RulePort` for the validation rule suites).
+  `RulePort` for the validation rule suites, `ExecutionPort` for the
+  execution, variables and input-coercion suites).
 - Hostile-document tests: `packages/typed_graphql/test/validation/hostile_*_test.dart`.
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
   round trip, hostile SDL, introspection round trip, hostile

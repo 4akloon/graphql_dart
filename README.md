@@ -25,8 +25,9 @@ What it is built to be (see the [roadmap](docs/roadmap.md)):
 
 What works today: the language (parse, print, visit and transform queries and
 SDL), the schema (build it from SDL, extend, print and validate it, introspection
-both ways, schema coordinates), the wire protocol types, scalar codecs and the
-diagnostics model.
+both ways, schema coordinates), operation validation, the wire protocol types,
+scalar codecs and the diagnostics model; and, in `typed_graphql_server`, a
+typed schema builder and the execution of a validated operation.
 
 ```dart
 import 'package:typed_graphql/typed_graphql.dart';
@@ -99,8 +100,7 @@ approaches:
 - **Conformance is measured.** The graphql-js v17 language and schema suites
   are ported with a mapping table (`typed_graphql_conformance`), and the core
   tests also run AOT-compiled and in the browser (dart2js and dart2wasm). The
-  validation suites are ported too; the execution suites will be ported
-  with their stage.
+  validation and execution suites are ported too.
 - **Independent.** The core is pure Dart and depends only on `meta`.
 
 ## Packages
@@ -110,12 +110,12 @@ This repository is a Dart **pub workspace**. Dart SDK: `^3.13.0`.
 | Package | Role | Status |
 |---|---|---|
 | [`typed_graphql`](packages/typed_graphql) | Core: language, type system, validation, wire protocol, diagnostics. Pure Dart, depends only on `meta`. | diagnostics, protocol types, the language, the schema model, SDL, scalar codecs, schema validation, introspection, operation validation, limits and cost analysis (M1, M2, M3, M4) |
-| [`typed_graphql_server`](packages/typed_graphql_server) | Typed schema builder, executor, subscriptions, DataLoader, HTTP / graphql-ws / graphql-sse handlers. | builder (M5a) |
+| [`typed_graphql_server`](packages/typed_graphql_server) | Typed schema builder, executor, subscriptions, DataLoader, HTTP / graphql-ws / graphql-sse handlers. | builder and query execution (M5a, M5b) |
 | [`typed_graphql_shelf`](packages/typed_graphql_shelf) | `shelf` adapter with an optional GraphiQL page. | skeleton (M7) |
 | [`typed_graphql_client`](packages/typed_graphql_client) | Client runtime: links, transports, normalized cache, `MockLink`. | skeleton (M11) |
 | [`typed_graphql_codegen`](packages/typed_graphql_codegen) | Code generation engine and CLI, without `analyzer`. | skeleton (M8, M10) |
 | [`typed_graphql_builder`](packages/typed_graphql_builder) | `build_runner` builders and the annotation front end. | skeleton (M9) |
-| [`typed_graphql_conformance`](packages/typed_graphql_conformance) | Repository tool: ported graphql-js suites, fuzzers, benchmarks. Never published. | language, schema and introspection suites, fuzzers (M2, M3) |
+| [`typed_graphql_conformance`](packages/typed_graphql_conformance) | Repository tool: ported graphql-js suites, fuzzers, benchmarks. Never published. | language, schema, introspection, validation and execution suites, fuzzers (M2-M5b) |
 
 ## Install
 

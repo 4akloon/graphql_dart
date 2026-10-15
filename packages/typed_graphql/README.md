@@ -17,8 +17,9 @@ of [typed_graphql](https://github.com/4akloon/graphql_dart).
 > extending it from SDL, printing it, scalar codecs, validating it,
 > introspection both ways, resolving schema coordinates) and the validation
 > of executable documents by the specification's 30 rules, with opt-in
-> limit rules and cost analysis. Execution
-> arrives in M5 (see the
+> limit rules and cost analysis. Execution is in
+> [typed_graphql_server](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_server)
+> (see the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)).
 
 ## Contents
@@ -54,8 +55,9 @@ dependencies:
   [Operation validation](doc/validation.md#validating-a-document),
   [Diagnostics](doc/diagnostics.md#reading-a-diagnostic)).
 - **You do not need it when** you only send a query string to a server and
-  read the JSON back. Today it also does not execute an operation:
-  execution arrives in `typed_graphql_server` (M5).
+  read the JSON back. It does not execute an operation either:
+  that is `typed_graphql_server`, which declares a schema in typed Dart and
+  executes a validated document against it.
 - **What it replaces**: matching GraphQL text with regular expressions or
   string splitting, and reading responses as `Map<String, dynamic>`. A regular
   expression does not see comments, block strings or nested selections, and

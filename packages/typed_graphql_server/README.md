@@ -6,16 +6,135 @@
 
 **A fully typed GraphQL server for Dart: a typed schema builder, the execution engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws and graphql-sse handlers.** Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
-> **Status: under construction.** The typed schema builder works (stage M5a):
-> you can declare a schema in typed Dart code, build it, check it and print
-> its SDL. Execution arrives in M5b, see the
+> **Status: under construction.** The typed schema builder (M5a) and query
+> execution (M5b) work: you can declare a schema in typed Dart code, parse and
+> validate a request with the core, and execute it, with variables, specified
+> null propagation, error behaviours, masking and field middleware. Introspection
+> resolvers and subscriptions arrive in M5c; look-ahead, authorization and
+> cancellation in M5d; the request pipeline and the HTTP, graphql-ws and
+> graphql-sse handlers later. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
-**Not usable yet.** This package cannot execute a request yet; the part of typed_graphql that works today is the core package, [typed_graphql](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql), and the schema builder of this one.
+## Contents
 
-Today: `ExecutableSchemaBuilder` declares scalars, enums, input objects, objects with typed fields and arguments, interfaces and unions, and `build` returns a validated `ExecutableSchema` or throws a `SchemaBuildError` with diagnostics. The [Schema Builder guide](https://github.com/4akloon/graphql_dart/blob/main/packages/typed_graphql_server/doc/schema_builder.md) shows each step.
+- [Install](#install)
+- [Should I use this?](#should-i-use-this)
+- [A quick tour](#a-quick-tour)
+- [Guides](#guides)
+- [License](#license)
 
-Planned: execution (M5b), introspection and subscriptions (M5c), look-ahead, authorization and cancellation (M5d), the `GraphQLServer` pipeline with APQ, trusted documents and DataLoader (M6), and the GraphQL over HTTP, graphql-ws and graphql-sse handlers (M7).
+## Install
+
+Nothing is on pub.dev yet. To try it from the repository:
+
+```yaml
+dependencies:
+  typed_graphql_server:
+    git:
+      url: https://github.com/4akloon/graphql_dart
+      path: packages/typed_graphql_server
+```
+
+## Should I use this?
+
+- **Use it when** you want to serve GraphQL from Dart and have the compiler
+  check resolvers: a field's result type is fixed by its declaration, an
+  argument is read with its type, and a bad request or a bad resolver result
+  is a value in the response, not an exception
+  ([Schema Builder](doc/schema_builder.md#objects-and-fields),
+  [Execution](doc/execution.md#executing-a-request)).
+- **You do not need it when** you only call a GraphQL server: that is the
+  client package, not usable yet. Today it also has no HTTP handler or
+  subscriptions: you call `ExecutableSchema.execute` yourself with a parsed
+  and validated document.
+- **What it replaces**: resolvers written against `Map<String, dynamic>`, where
+  a wrong result type or a misspelled argument name fails at run time in the
+  middle of a request. Here the wrong type does not compile, and every error
+  that does happen reaches the client as a coded `GraphQLError`
+  ([errors and masking](doc/execution.md#field-errors-and-masking)).
+- **Which package**: this one for the server side. It needs the core,
+  [typed_graphql](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql),
+  to parse and validate documents.
+
+## A quick tour
+
+Declare the schema, validate a request, execute it. Every resolver here is
+synchronous; a resolver may also return a `Future`. The same program is in
+[example/example.dart](example/example.dart).
+
+```dart
+import 'dart:io';
+
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_server/typed_graphql_server.dart';
+
+final class Book {
+  const Book(this.title, this.pages);
+
+  final String title;
+  final int? pages;
+}
+
+Future<void> main() async {
+  // Declare the schema in typed Dart: a wrong result type does not compile.
+  final b = ExecutableSchemaBuilder<Object?>();
+  final book = b.object<Book>(
+    'Book',
+    fields: (t) => [
+      t.field('title', b.string).pure((book) => book.title),
+      t.field('pages', b.int.nullable).pure((book) => book.pages),
+    ],
+  );
+  final limit = Arg('limit', b.int, defaultValue: 10);
+  final query = b.object<Object?>(
+    'Query',
+    fields: (t) => [
+      t
+          .field('books', b.list(book), args: [limit])
+          .resolve(
+            (parent, args, context, info) =>
+                const [Book('Dune', 412), Book('Emma', null)].take(
+                  args.get(limit),
+                ),
+          ),
+    ],
+  );
+  final schema = b.build(query: query);
+
+  // Parse and validate a request against the schema: a problem is a
+  // diagnostic, never an exception.
+  final source = Source('{ books(limit: 2) { title pages } }');
+  final document = const Parser().parse(source).requireDocument();
+  final checked = const DocumentValidator().validate(
+    schema.schema,
+    document,
+    source: source,
+  );
+  if (checked case final ValidDocument valid) {
+    // Execute it: the response is a value that writes itself as JSON.
+    final response = await schema.execute(
+      valid,
+      context: null,
+      options: ExecutionOptions(source: source),
+    );
+    stdout.writeln(response.toJson());
+  }
+}
+```
+
+It prints:
+
+```text
+{"data":{"books":[{"title":"Dune","pages":412},{"title":"Emma","pages":null}]}}
+```
+
+## Guides
+
+- [Schema Builder](doc/schema_builder.md): refs, objects, fields, arguments,
+  scalars, enums, input objects, interfaces and unions, building the schema.
+- [Execution](doc/execution.md): executing a request, variables, request errors
+  and field errors, error behaviours, masking and `onError`, middleware,
+  abstract types, limits and the plan cache.
 
 ## License
 
