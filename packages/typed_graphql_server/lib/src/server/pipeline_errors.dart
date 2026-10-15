@@ -3,6 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../execution/error_hook.dart';
 import '../execution/graphql_exception.dart';
+import '../execution/masked_message.dart';
 import 'server_outcome.dart';
 import 'server_response.dart';
 
@@ -18,8 +19,6 @@ final class PipelineErrors {
 
   /// The server's error hook, null when there is none.
   final ErrorHook? onError;
-
-  static const String _maskedMessage = 'Unexpected error.';
 
   /// A refusal with one error coded [code].
   SingleResponse refusal(
@@ -49,12 +48,22 @@ final class PipelineErrors {
   SingleResponse internal(Object error, StackTrace stackTrace) {
     final reported = _coded(
       DiagnosticCode.unexpectedError,
-      maskErrors ? _maskedMessage : error.toString(),
+      _describe(error),
     );
     return SingleResponse(
       RequestErrorResult(errors: [_hooked(error, stackTrace, reported)]),
       outcome: ServerOutcome.internalError,
     );
+  }
+
+  // A `toString()` that throws must not turn the report into a failure.
+  String _describe(Object error) {
+    if (maskErrors) return const MaskedMessage().text;
+    try {
+      return error.toString();
+    } on Object {
+      return const MaskedMessage().text;
+    }
   }
 
   GraphQLError _hooked(
@@ -69,7 +78,7 @@ final class PipelineErrors {
     try {
       return hook(error, stackTrace, reported) ?? reported;
     } on Object {
-      return _coded(DiagnosticCode.unexpectedError, _maskedMessage);
+      return _coded(DiagnosticCode.unexpectedError, const MaskedMessage().text);
     }
   }
 

@@ -10,6 +10,14 @@ final class Ctx {
   final String tag;
 }
 
+/// A thrown object whose description cannot be made.
+final class UnprintableError implements Exception {
+  const UnprintableError();
+
+  @override
+  String toString() => throw StateError('no description');
+}
+
 /// A visitor that does nothing.
 final class IdleVisitor extends AstVisitor {
   const IdleVisitor();

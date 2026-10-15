@@ -20,8 +20,10 @@ import 'server_response.dart';
 /// executes (R5.1).
 ///
 /// It knows nothing of HTTP: a transport decodes a [ServerRequest] and
-/// writes the [ServerResponse]. Every refusal comes before the context is
-/// built and before any resolver runs.
+/// writes the [ServerResponse]. Every refusal of the server (length,
+/// document, method, limits) comes before the context is built and before
+/// any resolver runs; the refusals of the executor (an unknown operation
+/// name, invalid variables) come after the context is built.
 ///
 /// {@category server}
 final class GraphQLServer<C> {

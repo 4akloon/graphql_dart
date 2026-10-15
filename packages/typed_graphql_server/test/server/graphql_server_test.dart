@@ -194,19 +194,80 @@ void main() {
       );
       expect(fixture.codeOf(response), 'GQL321');
     });
+    test('a mutation named next to an anonymous query is GQL402', () async {
+      // The lone-anonymous rule would refuse this document first.
+      final response = await fixture
+          .server(validationRules: [])
+          .handle(
+            fixture.request(
+              '{ hello } mutation M { bump }',
+              method: 'GET',
+              operationName: 'M',
+            ),
+          );
+      expect(fixture.codeOf(response), 'GQL402');
+    });
 
-    test('a refusal before the context never builds it', () async {
-      var built = 0;
+    test('an empty operation name names no operation: GQL320', () async {
+      final response = await fixture.server().handle(
+        fixture.request('{ hello }', operationName: ''),
+      );
+      expect(fixture.codeOf(response), 'GQL320');
+    });
+  });
+
+  group('the context factory', () {
+    int built = 0;
+
+    GraphQLServer<Ctx> counting() => fixture.server(
+      contextFactory: (_) {
+        built++;
+        return const Ctx('x');
+      },
+    );
+
+    setUp(() => built = 0);
+
+    test('is not called for a mutation over GET', () async {
+      await counting().handle(
+        fixture.request('mutation { bump }', method: 'GET'),
+      );
+      expect(built, 0);
+    });
+
+    test('is not called for an invalid document', () async {
+      await counting().handle(fixture.request('{ nothing }'));
+      expect(built, 0);
+    });
+
+    test('is not called without a query', () async {
+      await counting().handle(fixture.request(null));
+      expect(built, 0);
+    });
+
+    test('throwing synchronously gives GQL330', () async {
       final server = fixture.server(
         contextFactory: (_) {
-          built++;
-          return const Ctx('x');
+          throw StateError('boom');
         },
       );
-      await server.handle(fixture.request('mutation { bump }', method: 'GET'));
-      await server.handle(fixture.request('{ nothing }'));
-      await server.handle(fixture.request(null));
-      expect(built, 0);
+      final response = await server.handle(fixture.request('{ hello }'));
+      expect(fixture.codeOf(response), 'GQL330');
+      expect(
+        (response as SingleResponse).outcome,
+        ServerOutcome.internalError,
+      );
+    });
+
+    test('throwing an object whose toString throws still answers', () async {
+      final server = fixture.server(
+        contextFactory: (_) {
+          throw const UnprintableError();
+        },
+      );
+      final response = await server.handle(fixture.request('{ hello }'));
+      expect(fixture.codeOf(response), 'GQL330');
+      expect(fixture.messageOf(response), 'Unexpected error.');
     });
   });
 
