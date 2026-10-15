@@ -69,7 +69,11 @@ guide. M6b (request pipeline) delivers `GraphQLServer`, `RequestInfo`,
 `ServerExtension` and its three phases, `ServerProfile` and `ServerLimits`
 (length, tokens, depth, aliases, directives, cost per request), CSRF
 prevention, error masking and the error hook in the pipeline (`GQL400`-
-`GQL403`), the hostile-input tests and the Server guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+`GQL403`), the hostile-input tests and the Server guide. M6c (persisted
+documents) delivers automatic persisted queries (`PersistedQueryStore`,
+`MemoryPersistedQueryStore`), `TrustedDocuments` read from M10's manifest
+(`GQL410`-`GQL415`), their hostile-input tests and the Persisted Documents
+guide; with it stage M6 (server pipeline) is complete. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
 file or a URL, the project's documents as one fragment graph, the planner and
 emitters that generate the schema-types library and a library per document
 (operations, variables, data, fragments, sealed polymorphic classes, the
@@ -427,7 +431,8 @@ only through its barrel. One folder per concern, with no import order
 (`builder/` and `execution/` import each other): `builder/` (M5a),
 `coercion/`, `plan/` and `execution/` (M5b), `introspection/` and
 `subscription/` (M5c), `lookahead/`, `authorization/` and `cancellation/`
-(M5d), `dataloader/` (M6a) and `server/` (M6b). The package is
+(M5d), `dataloader/` (M6a), `server/` (M6b) and `persisted/` (M6c). The
+package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
 or web framework, only `dart:async`, `dart:collection`, `dart:convert`,
 `dart:core`, `dart:math`, `meta`, `crypto` and the core
@@ -532,6 +537,17 @@ runs the execution phase (`ExecutionStep`, options per profile).
 `PipelineErrors` makes every refusal and the masked `GQL330`;
 `GraphQLServer.handle` is the outermost catch, so it never throws.
 `dart:convert` and `crypto` are allowed in `lib/` for the hash.
+`persisted/` (M6c) and `server/` import each other: `PipelineAssembly`
+places one internal document-phase extension after CSRF, chosen once:
+`TrustedDocumentsCheck` with `trustedDocuments`, `AutomaticPersistedQueries`
+with `persistedQueries` (both together are an `ArgumentError`), else
+`PersistedQueriesUnsupported` (a hash alone is `GQL412`).
+`PersistedQueryReader` reads `extensions.persistedQuery` into the sealed
+`PersistedQueryReference` (`GQL413` when malformed). A hash always names its
+own text: a mismatch is `GQL411`, a text is stored only once the core step
+accepted it, a stored text is length-checked and hashed again on read (a
+mismatch is `GQL410`). `TrustedDocuments.decode` reads the manifest through
+`TrustedManifestReader`, which refuses an id that is not its body's hash.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine

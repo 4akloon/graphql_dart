@@ -47,6 +47,8 @@ adds its row (or turns it to "yes") together with its README line and its
 | cancel or time out a GraphQL request dart | M5 | yes |
 | dataloader dart graphql | M6 | yes |
 | GraphQL CSRF prevention dart | M6 | yes |
+| GraphQL persisted queries dart | M6 | yes |
+| GraphQL trusted documents dart | M6 | yes |
 | GraphQL server dart | M7 | no |
 | generate a typed GraphQL client dart | M10 | yes |
 

@@ -18,9 +18,10 @@
 > `GroupedLoader` batch and cache the loads of one request. The request
 > pipeline (M6b) works: `GraphQLServer` serves a transport-agnostic request
 > with a document cache, the limits and the cost limit of a production or
-> development profile, CSRF prevention, extensions and error masking.
-> Persisted queries come later in M6, the HTTP, graphql-ws and graphql-sse
-> handlers in M7. See the
+> development profile, CSRF prevention, extensions and error masking, and
+> with automatic persisted queries or trusted documents (M6c); with it stage
+> M6 is complete. The HTTP, graphql-ws and graphql-sse handlers come in M7.
+> See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
 ## Contents
@@ -151,6 +152,8 @@ executed
 - [Server](doc/server.md): `GraphQLServer`, requests, responses and outcomes,
   profiles, limits and the cost limit, CSRF prevention, the document cache,
   extensions, errors and masking.
+- [Persisted Documents](doc/persisted_documents.md): automatic persisted
+  queries and their store, trusted documents from the codegen manifest.
 - [Schema Builder](doc/schema_builder.md): refs, objects, fields, arguments,
   scalars, enums, input objects, interfaces and unions, building the schema.
 - [Execution](doc/execution.md): executing a request, variables, request errors

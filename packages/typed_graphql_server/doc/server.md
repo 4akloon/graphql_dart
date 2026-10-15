@@ -385,8 +385,10 @@ back.
 
 The first extension in `extensions` is the outermost: it sees every
 request, refused ones included. The built-in checks sit inside the user's
-extensions in a fixed order, so no list order runs a step before a security
-check. Per-field interception is field middleware, set when the schema is
+extensions in a fixed order (CSRF prevention, then persisted documents: see
+the Persisted Documents guide), so no list order runs a step before a
+security check, and a user's `onDocument` sees the text a hash names only
+after it returns from `next`. Per-field interception is field middleware, set when the schema is
 built (see the Execution guide).
 
 ```dart
@@ -529,7 +531,8 @@ internalError {"errors":[{"message":"Unexpected error.","extensions":{"code":"GQ
 | `GQL402` | a mutation in a `GET` request |
 | `GQL403` | CSRF prevention refused the request |
 | `GQL238` | the operation costs more than `maxCost` with the request's variables |
-| `GQL330` | an unexpected error of the context factory or an extension |
+| `GQL330` | an unexpected error of the context factory, an extension or a persisted query store |
+| `GQL410`-`GQL415` | a persisted query or trusted document problem (Persisted Documents guide) |
 
 The parser's `GQL0xx`, the validator's `GQL2xx` and the executor's `GQL3xx`
 codes reach the client unchanged.
