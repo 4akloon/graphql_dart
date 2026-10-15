@@ -33,7 +33,9 @@ final class InputObjectDecoder {
       return InvalidValue.instance;
     }
     try {
-      return definition.decode(Arguments(definition.fields, coerced));
+      return definition.decode(
+        Arguments(definition.fields, Map.unmodifiable(coerced)),
+      );
     } on GraphQLException catch (exception) {
       problems.add(exception.message, path, extensions: exception.extensions);
     } on Object catch (error, stackTrace) {

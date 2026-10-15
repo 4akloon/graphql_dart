@@ -96,7 +96,9 @@ final class LiteralCoercion {
   Object? _list(Value literal, TypeRef item, InputPath path, int depth) {
     if (literal is! ListValue) {
       final single = coerce(literal, item, path, depth + 1);
-      return single is InvalidValue ? single : <Object?>[single];
+      return single is InvalidValue
+          ? single
+          : List<Object?>.unmodifiable([single]);
     }
     final result = <Object?>[];
     var isValid = true;
@@ -111,7 +113,7 @@ final class LiteralCoercion {
         result.add(coerced);
       }
     }
-    return isValid ? result : InvalidValue.instance;
+    return isValid ? List<Object?>.unmodifiable(result) : InvalidValue.instance;
   }
 
   Object? _named(Value literal, String name, InputPath path, int depth) =>

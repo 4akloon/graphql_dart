@@ -51,7 +51,7 @@ final class ArgumentCoercion {
         return CoercionFailure([problem], hasOverflowed: false);
       }
     }
-    return CoercionSuccess(values);
+    return CoercionSuccess(Map<String, Object?>.unmodifiable(values));
   }
 
   CoercionProblem? _coerceOne(

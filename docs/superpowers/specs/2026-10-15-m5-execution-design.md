@@ -749,6 +749,11 @@ depends on the other). These constraints keep that possible:
     call per event and turn a revoked permission into a stream of GQL352
     events. A server that must re-check per event does so in the event
     resolver.
+46. Coerced arguments are frozen: the argument map, the map of each coerced
+    input object and each coerced list are unmodifiable. A plan caches the
+    arguments of a field without variables across requests, so a resolver
+    writing to `Arguments.coerced` would change later requests; it gets an
+    `UnsupportedError` instead.
 
 ## 19. Conformance (R0.7, R10.3)
 

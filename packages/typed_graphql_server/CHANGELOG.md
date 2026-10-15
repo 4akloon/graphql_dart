@@ -133,3 +133,5 @@
   warns that a redeclared interface field is unguarded without its own rule.
 - A subscription field's authorization runs once, at subscribe, not for each
   event.
+- Coerced arguments are unmodifiable (the argument map, input-object maps and
+  lists), so a resolver cannot change the cached arguments of later requests.

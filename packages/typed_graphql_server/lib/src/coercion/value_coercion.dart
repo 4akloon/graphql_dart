@@ -67,7 +67,9 @@ final class ValueCoercion {
   Object? _list(JsonValue value, TypeRef item, InputPath path, int depth) {
     if (value is! JsonArray) {
       final single = coerce(value, item, path, depth + 1);
-      return single is InvalidValue ? single : <Object?>[single];
+      return single is InvalidValue
+          ? single
+          : List<Object?>.unmodifiable([single]);
     }
     final result = <Object?>[];
     var isValid = true;
@@ -79,7 +81,7 @@ final class ValueCoercion {
         result.add(coerced);
       }
     }
-    return isValid ? result : InvalidValue.instance;
+    return isValid ? List<Object?>.unmodifiable(result) : InvalidValue.instance;
   }
 
   Object? _named(JsonValue value, String name, InputPath path, int depth) =>
