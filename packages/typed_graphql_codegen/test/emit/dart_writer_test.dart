@@ -36,6 +36,15 @@ void main() {
     );
   });
 
+  test('doc backticks angle brackets outside a fence only', () {
+    final DartWriter writer = DartWriter();
+    writer.doc('A List<User>.\n```graphql\nList<User>\n```');
+    expect(
+      writer.text,
+      '/// A List`<User>`.\n/// ```graphql\n/// List<User>\n/// ```\n',
+    );
+  });
+
   test('doc keeps a fence that already has a language', () {
     final DartWriter writer = DartWriter();
     writer.doc('```dart\nx\n```');

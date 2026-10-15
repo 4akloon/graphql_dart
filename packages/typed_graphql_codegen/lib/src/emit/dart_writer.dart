@@ -1,3 +1,5 @@
+import 'doc_comment_escaper.dart';
+
 /// A text builder for generated Dart code.
 ///
 /// {@category codegen}
@@ -54,6 +56,10 @@ final class DartWriter {
 
   String _docLine(String content) {
     final String trimmed = content.trim();
+    if (!_isInFence && !trimmed.startsWith('```')) {
+      // Descriptions come from the schema; see [DocCommentEscaper].
+      return _docText(const DocCommentEscaper().escape(content));
+    }
     if (trimmed.startsWith('```')) {
       if (_isInFence) {
         _isInFence = false;
@@ -64,8 +70,10 @@ final class DartWriter {
         }
       }
     }
-    return content.isEmpty ? '///' : '/// $content';
+    return _docText(content);
   }
+
+  String _docText(String content) => content.isEmpty ? '///' : '/// $content';
 
   /// Writes `open + items.join(', ') + close` on one line when it fits in 80
   /// columns, otherwise one item per line, each ending with `,`.

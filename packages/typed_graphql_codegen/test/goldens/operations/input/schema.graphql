@@ -75,6 +75,7 @@ type Stats {
   _hidden: Int
   flag: Flag
   matrix: [[User!]]
+  "Returns a List<User> of [x] costing $5, 'quoted', \\ and */ closed."
   summary: String
 }
 

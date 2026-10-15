@@ -194,7 +194,7 @@ final class GetStatsDataStats implements client.DataObject {
   /// The field `matrix`.
   final List<List<GetStatsDataStatsMatrix>?>? matrix;
 
-  /// The field `summary`.
+  /// Returns a List`<User>` of [x] costing $5, 'quoted', \ and */ closed.
   final String? summary;
 
   @override
