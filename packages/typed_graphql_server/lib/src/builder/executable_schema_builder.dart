@@ -1,10 +1,13 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
+import 'arg.dart';
+import 'arguments.dart';
 import 'built_in_scalar_definitions.dart';
 import 'definition_registry.dart';
 import 'enum_type_def.dart';
 import 'enum_value_mapping.dart';
 import 'input_list_ref.dart';
+import 'input_object_def.dart';
 import 'input_ref.dart';
 import 'named_type_def.dart';
 import 'output_list_ref.dart';
@@ -67,4 +70,45 @@ final class ExecutableSchemaBuilder<C>() with BuiltInScalarDefinitions {
 
   /// The non-null list of [item] as an input type.
   InputRef<List<T>> inputList<T>(InputRef<T> item) => InputListRef(item);
+
+  /// Declares the input object [name] decoded to [T].
+  ///
+  /// [fields] runs once, on first use. [decode] builds [T] from the coerced
+  /// values; [encode] is needed only when a default value of this type is
+  /// declared.
+  InputObjectDef<T> inputObject<T extends Object>(
+    String name, {
+    required List<Arg<Object?>> Function() fields,
+    required T Function(Arguments values) decode,
+    JsonObject Function(T value)? encode,
+    String? description,
+  }) => _registry.add(
+    InputObjectDef(
+      name,
+      fields,
+      decode,
+      encode: encode,
+      description: description,
+    ),
+  );
+
+  /// Declares the `@oneOf` input object [name]: exactly one of its fields is
+  /// given. The parameters are those of [inputObject]; this is a separate
+  /// method to keep each signature within five parameters.
+  InputObjectDef<T> oneOfInputObject<T extends Object>(
+    String name, {
+    required List<Arg<Object?>> Function() fields,
+    required T Function(Arguments values) decode,
+    JsonObject Function(T value)? encode,
+    String? description,
+  }) => _registry.add(
+    InputObjectDef(
+      name,
+      fields,
+      decode,
+      encode: encode,
+      isOneOf: true,
+      description: description,
+    ),
+  );
 }
