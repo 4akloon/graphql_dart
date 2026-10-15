@@ -277,3 +277,39 @@ data: {"hero":{"name":"R2-D2","friends":[null,null]}}
 first error at [hero, friends, 1, name]
 DecodeSuccess(RequestErrorResult({"errors":[{"message":"Syntax Error: Unexpected \")\"."}]}))
 ```
+
+## Optional values
+
+GraphQL tells an argument, input field or variable that was not given from one
+given as `null`. `Optional<T>` holds that difference: `Optional.present(value)`
+(the value may be `null` when `T` is nullable) or `Optional.absent()`. A
+`switch` over it needs two cases.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+
+void describe(Optional<String?> value) {
+  switch (value) {
+    case Present(value: final text?):
+      print('present: $text');
+    case Present():
+      print('present null');
+    case Absent():
+      print('absent');
+  }
+}
+
+void main() {
+  describe(const Optional.present('Ada'));
+  describe(const Optional.present(null));
+  describe(const Optional.absent());
+}
+```
+
+It prints:
+
+```text
+present: Ada
+present null
+absent
+```

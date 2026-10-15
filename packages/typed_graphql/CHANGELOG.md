@@ -13,6 +13,8 @@
 - `GraphQLError`: the error format of the spec, read and written.
 - `GraphQLRequest` and `ResponsePayload` (`ExecutionResult`,
   `RequestErrorResult`).
+- `Optional`, `Present` and `Absent`: a value that may be absent, which
+  GraphQL tells apart from `null`.
 - The syntax tree: `Node` (`children`, `withChildren`, `isEquivalentTo`),
   `Name`, `Document`, and the `Value` and `TypeRef` families.
 - Executable nodes: `OperationDefinition`, `FragmentDefinition`, the
