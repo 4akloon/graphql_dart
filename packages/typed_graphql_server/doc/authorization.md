@@ -86,6 +86,12 @@ A rule on an interface field guards the implementations that inherit the field.
 An object that redeclares the field does not inherit the interface's rule: give
 it its own, or its type's.
 
+Security note: an object field that redeclares a guarded interface field is
+unguarded unless the field or its object type has a rule, so a query through
+the concrete type can reach data the interface protects. Declare the rule on
+the type, or check `AuthorizationCoverage`, which lists such a field as
+uncovered.
+
 ## Asynchronous decisions and deny messages
 
 `authorize` returns a `FutureOr`, so an authorizer may look the answer up in a

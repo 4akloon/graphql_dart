@@ -732,6 +732,17 @@ depends on the other). These constraints keep that possible:
     listened to, with no cancel and no timeout, keeps its listener on the
     caller's signal until that signal is cancelled or collected; the guide
     says to listen to the stream or drop the signal.
+43. Look-ahead walks spend the run's step counter (the one `maxSteps` limits).
+    Collecting a selection and building a fingerprint (by the size of its
+    text) charge it; a charge that would pass the limit spends nothing and
+    throws a `GraphQLException` with `GQL337` and the executor's step message,
+    which is the error of the field whose resolver read the selection, not a
+    halt. Plan nodes are listed once per (field nodes, object type) and a
+    fingerprint reads fields over the same nodes once, so a selection costs
+    in proportion to the request unless its text itself fans out.
+44. `SelectedField`s merge by response key, field name and printed arguments,
+    not by response key alone (spec 11): object types that cannot overlap may
+    give one alias to different fields, and `FieldsInSetCanMerge` allows it.
 
 ## 19. Conformance (R0.7, R10.3)
 

@@ -464,9 +464,16 @@ last result (`GQL340`), one that fails at start is a `SubscriptionRejected`.
 `subscription/` holds only the public `SubscriptionResult` family.
 `lookahead/` (M5d): `FieldInfo.selection` is a `FieldSelection` built on first
 read from the field's `FieldPlan` and the run (`FieldInfo.plan` and `run` are
-`@internal`, so an unread selection allocates nothing); `SelectionNodes` flattens
-fragments and applies `@skip`/`@include`, `forType` narrows an abstract type,
-every name starting with `__` is hidden. A `SelectedField` reads its
+`@internal`, so an unread selection allocates nothing). `FieldCollector`
+(`plan/`) flattens fragments and applies `@skip`/`@include`; `SelectionNodes`
+finds the plan nodes of a field's sub-selection, one per (field nodes, object
+type), so an abstract type costs its distinct nodes, not their product per
+level. `forType` narrows an abstract type, every name starting with `__` is
+hidden, and plans merge into one `SelectedField` by response key, field name
+and arguments. Every look-ahead walk spends the run's step counter
+(`LookAheadBudget`, over `ExecutionLimits.spend`): one that would pass
+`maxSteps` throws a `GraphQLException` with `GQL337`, the field's error, and
+spends nothing; a new walk must charge it. A `SelectedField` reads its
 `arguments` on first use (a failing argument reads absent; the executor
 reports it) and has its own `selection`. `SelectionFingerprint` (field names
 sorted, arguments as `CanonicalJson` with sorted keys, explicit stacks) is the

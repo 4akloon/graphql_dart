@@ -2,8 +2,9 @@
 /// engine, subscriptions, DataLoader and transport-agnostic HTTP, graphql-ws
 /// and graphql-sse handlers.
 ///
-/// Under construction: the typed schema builder (M5a), query execution (M5b),
-/// introspection and subscriptions (M5c) work. See the package README.
+/// Under construction: stage M5 is complete (the typed schema builder,
+/// execution, introspection, subscriptions, look-ahead, authorization and
+/// cancellation); transports follow. See the package README.
 library;
 
 export 'src/authorization/authorization.dart';
