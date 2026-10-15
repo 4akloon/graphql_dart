@@ -42,6 +42,27 @@ final class const InputField({
     );
   }
 
+  /// The plan of the operation variable [variable]: optional when it is
+  /// nullable or has a default value.
+  factory InputField.variable(
+    VariableDefinition variable,
+    TypeMapper mapper,
+    Imports imports,
+  ) {
+    final String name = variable.variable.name.value;
+    final Value? defaultValue = variable.defaultValue;
+    final String printed = defaultValue == null
+        ? ''
+        : '; its default is `${_printed(defaultValue)}`';
+    return InputField(
+      graphQLName: name,
+      dartName: dartNameOf(name),
+      value: mapper.of(variable.type, imports),
+      isOptional: variable.type is! NonNullType || defaultValue != null,
+      doc: 'The variable `\$$name`$printed.',
+    );
+  }
+
   /// The plan of a field of a `@oneOf` input object: always given, with the
   /// non-null type, because the variant that holds it says which is given.
   factory InputField.exclusive(
@@ -82,14 +103,15 @@ final class const InputField({
     reservedMembers: DartNames.objectMembers,
   );
 
+  static String _printed(Value value) =>
+      const Printer().print(value).replaceAll(RegExp(r'\s*\n\s*'), ' ');
+
   static String _doc(InputValue input) {
     final String base = input.description ?? 'The field `${input.name}`.';
     final StringBuffer out = StringBuffer(base);
     final Value? defaultValue = input.defaultValue;
     if (defaultValue != null) {
-      final String printed = const Printer()
-          .print(defaultValue)
-          .replaceAll(RegExp(r'\s*\n\s*'), ' ');
+      final String printed = _printed(defaultValue);
       out
         ..write(base.contains('\n') ? '\n\n' : ' ')
         ..write('Its default is `$printed`.');

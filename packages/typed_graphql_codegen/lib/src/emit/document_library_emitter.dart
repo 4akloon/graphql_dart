@@ -1,5 +1,7 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../plan/data_class_role.dart';
+import '../plan/operation_text.dart';
 import '../plan/planned_class.dart';
 import '../plan/shape_planner.dart';
 import 'class_documentation.dart';
@@ -9,8 +11,10 @@ import 'fragment_holder_emitter.dart';
 import 'generated_header.dart';
 import 'imports.dart';
 import 'library_imports.dart';
+import 'operation_emitter.dart';
 import 'polymorphic_base_emitter.dart';
 import 'type_mapper.dart';
+import 'variables_emitter.dart';
 
 /// Writes the library of one document file: the classes of its fragments
 /// (spec §7 "Files").
@@ -33,24 +37,40 @@ final class DocumentLibraryEmitter {
   /// The path of the library generated from the document file [documentPath].
   String libraryPathOf(String documentPath) => '$documentPath.dart';
 
-  /// The text of the library of [documentPath], which defines [fragments] in
-  /// document order.
-  String emit(String documentPath, List<FragmentDefinition> fragments) {
+  /// The text of the library of [documentPath], which defines
+  /// [definitions] in document order.
+  String emit(String documentPath, List<ExecutableDefinition> definitions) {
     final imports = Imports();
     final body = DartWriter();
     final String libraryPath = libraryPathOf(documentPath);
     final plans = [
-      for (final fragment in fragments)
-        (fragment, planner.planFragment(fragment)),
+      for (final definition in definitions) (definition, _plan(definition)),
     ];
     final all = [for (final (_, classes) in plans) ...classes];
-    libraryImports.record(imports, libraryPath, all);
+    libraryImports.record(imports, libraryPath, all, [
+      for (final (definition, classes) in plans)
+        if (definition is OperationDefinition && classes.isNotEmpty) definition,
+    ]);
+    final text = OperationText(planner.schema, planner.fragments);
     var isFirst = true;
-    for (final (fragment, classes) in plans) {
-      for (final planned in classes) {
+    for (final (definition, classes) in plans) {
+      if (classes.isEmpty) continue;
+      void separate() {
         if (!isFirst) body.line();
         isFirst = false;
-        _write(planned, classes, fragment.name.value, body, imports);
+      }
+
+      if (definition case final OperationDefinition operation) {
+        separate();
+        OperationEmitter(text).emit(operation, classes.first.name, body);
+        if (operation.variableDefinitions.isNotEmpty) {
+          separate();
+          VariablesEmitter(mapper).emit(operation, body, imports);
+        }
+      }
+      for (final planned in classes) {
+        separate();
+        _write(planned, classes, definition, body, imports);
       }
     }
     final head = DartWriter();
@@ -60,25 +80,41 @@ final class DocumentLibraryEmitter {
     return all.isEmpty ? head.text : '${head.text}\n${body.text}';
   }
 
+  List<PlannedClass> _plan(ExecutableDefinition definition) =>
+      switch (definition) {
+        OperationDefinition() => planner.planOperation(definition),
+        FragmentDefinition() => planner.planFragment(definition),
+      };
+
   void _write(
     PlannedClass planned,
     List<PlannedClass> classes,
-    String fragmentName,
+    ExecutableDefinition definition,
     DartWriter body,
     Imports imports,
   ) {
+    final documentation = ClassDocumentation(classes);
+    final String? fragmentName = switch (definition) {
+      FragmentDefinition(:final name) => name.value,
+      OperationDefinition() => null,
+    };
     switch (planned) {
+      case DataClassPlan(role: DataClassRole.operationData)
+          when definition is OperationDefinition:
+        DataClassEmitter(mapper).emit(
+          planned,
+          documentation.ofOperation(definition),
+          body,
+          imports,
+          operation: definition,
+        );
       case final DataClassPlan plan:
-        final doc = ClassDocumentation(
-          classes,
-        ).of(plan, fragmentName: fragmentName);
+        final doc = documentation.of(plan, fragmentName: fragmentName);
         DataClassEmitter(mapper).emit(plan, doc, body, imports);
       case final FragmentHolderPlan plan:
         const FragmentHolderEmitter().emit(plan, body);
       case final PolymorphicBasePlan plan:
-        final doc = ClassDocumentation(
-          classes,
-        ).ofBase(plan, fragmentName: fragmentName);
+        final doc = documentation.ofBase(plan, fragmentName: fragmentName);
         PolymorphicBaseEmitter(mapper).emit(plan, doc, body, imports);
     }
   }

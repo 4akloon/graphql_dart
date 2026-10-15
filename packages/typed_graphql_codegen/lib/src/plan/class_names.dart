@@ -1,3 +1,5 @@
+import 'package:typed_graphql/typed_graphql.dart';
+
 import '../emit/dart_names.dart';
 
 /// Names the classes generated for operations, fragments and selections.
@@ -10,6 +12,15 @@ final class ClassNames {
   /// The class of an operation's data: `GetUser` is `GetUserData`.
   String operationData(String operationName) =>
       '${_names.typeName(operationName)}Data';
+
+  /// The class of an operation: `GetUser` is `GetUserQuery`, or
+  /// `GetUserMutation` or `GetUserSubscription`.
+  String operation(String operationName, OperationType type) =>
+      '${_names.typeName(operationName)}${_names.capitalized(type.name)}';
+
+  /// The class of an operation's variables: `GetUser` is `GetUserVariables`.
+  String variables(String operationName) =>
+      '${_names.typeName(operationName)}Variables';
 
   /// The class of a fragment definition.
   String fragment(String fragmentName) => _names.typeName(fragmentName);

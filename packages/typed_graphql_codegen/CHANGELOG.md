@@ -42,3 +42,11 @@
   generates a sealed class that reads `__typename`, a final class per type
   and an unknown class for any other type; fields every class selects the same
   way are declared by the sealed class.
+- `ClientGenerator.generate` writes the operations of each document file, in
+  document order with its fragments: the operation class (`GetUserQuery`,
+  `...Mutation`, `...Subscription`) with its `operationDocument` (minified
+  text of the operation and the fragments it spreads, with `__typename` added
+  to every field with a selection, and its SHA-256), the variables class
+  (`required` or `Optional` per variable, written only), and the data class
+  with `decode(json, variables:)` and the defaults of its Boolean variables.
+  Depends on `package:crypto`.

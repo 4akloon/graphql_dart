@@ -1,6 +1,7 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../plan/data_class_role.dart';
+import '../plan/flag_defaults.dart';
 import '../plan/planned_class.dart';
 import '../plan/planned_field.dart';
 import 'dart_string_literal.dart';
@@ -8,6 +9,7 @@ import 'dart_writer.dart';
 import 'data_class_field.dart';
 import 'fragment_decode_writer.dart';
 import 'imports.dart';
+import 'operation_decode_writer.dart';
 import 'reader_factory_writer.dart';
 import 'to_json_writer.dart';
 import 'type_mapper.dart';
@@ -28,15 +30,16 @@ final class DataClassEmitter {
   /// Writes [plan] with the class doc comment [doc].
   ///
   /// A variant implements its sealed base, which reads it and declares its
-  /// shared members; [DataClassRole.operationData] is not written here and
-  /// is a [StateError].
+  /// shared members. The data class of an operation needs the [operation];
+  /// without it, it is a [StateError].
   void emit(
     DataClassPlan plan,
     String doc,
     DartWriter writer,
-    Imports imports,
-  ) {
-    if (plan.role == DataClassRole.operationData) {
+    Imports imports, {
+    OperationDefinition? operation,
+  }) {
+    if (plan.role == DataClassRole.operationData && operation == null) {
       throw StateError('${plan.name} is a ${plan.role.name} class.');
     }
     final fields = [
@@ -46,13 +49,15 @@ final class DataClassEmitter {
       for (final field in plan.fields)
         DataClassField.of(field, mapper, imports),
     ];
-    final String noun = plan.role == DataClassRole.fragment
-        ? 'fragment'
-        : 'value';
+    final String noun = switch (plan.role) {
+      DataClassRole.fragment => 'fragment',
+      DataClassRole.operationData => 'data',
+      _ => 'value',
+    };
     final String implemented = plan.baseName ?? 'client.DataObject';
     writer.doc(doc);
     writer.block('final class ${plan.name} implements $implemented', () {
-      _members(writer, plan, fields, noun);
+      _members(writer, plan, fields, noun, operation);
     });
   }
 
@@ -69,18 +74,53 @@ final class DataClassEmitter {
     DataClassPlan plan,
     List<DataClassField> fields,
     String noun,
+    OperationDefinition? operation,
   ) {
     final String name = plan.name;
     _constructor(writer, plan, fields, noun);
     writer.line();
     _reader(writer, plan, fields);
+    _codecs(writer, plan, fields, noun);
+    final Map<String, bool> flagDefaults = operation == null
+        ? const {}
+        : const FlagDefaults().of(operation);
+    _flagDefaults(writer, flagDefaults);
+    _typename(writer, plan);
+    _fields(writer, plan, fields);
+    if (plan.role == DataClassRole.fragment) {
+      writer.line();
+      const FragmentDecodeWriter().write(writer, name);
+    } else if (operation != null) {
+      writer.line();
+      const OperationDecodeWriter().write(
+        writer,
+        name,
+        operation,
+        flagDefaults,
+      );
+    }
+    writer.line();
+    _toJson(writer, plan, fields);
+    writer.line();
+    const ValueMembers().write(writer, name, [
+      for (final field in fields) field.valueMember,
+      if (plan.holderName != null) const ValueMember('fragments', false),
+    ]);
+  }
+
+  void _codecs(
+    DartWriter writer,
+    DataClassPlan plan,
+    List<DataClassField> fields,
+    String noun,
+  ) {
     // The sealed base reads a variant.
     if (plan.baseName == null) {
       writer.line();
       writer.doc('Reads and writes the $noun.');
       writer.assign(
-        'static const client.DataCodec<$name> codec',
-        'client.ObjectDataCodec($name._read)',
+        'static const client.DataCodec<${plan.name}> codec',
+        'client.ObjectDataCodec(${plan.name}._read)',
       );
     }
     for (final field in fields) {
@@ -90,19 +130,6 @@ final class DataClassEmitter {
         field.type.codec,
       );
     }
-    _typename(writer, plan);
-    _fields(writer, plan, fields);
-    if (plan.role == DataClassRole.fragment) {
-      writer.line();
-      const FragmentDecodeWriter().write(writer, name);
-    }
-    writer.line();
-    _toJson(writer, plan, fields);
-    writer.line();
-    const ValueMembers().write(writer, name, [
-      for (final field in fields) field.valueMember,
-      if (plan.holderName != null) const ValueMember('fragments', false),
-    ]);
   }
 
   void _constructor(
@@ -174,6 +201,19 @@ final class DataClassEmitter {
     } else {
       writer.doc(doc);
     }
+  }
+
+  void _flagDefaults(DartWriter writer, Map<String, bool> defaults) {
+    if (defaults.isEmpty) return;
+    final entries = [
+      for (final MapEntry(:key, :value) in defaults.entries)
+        '${const DartStringLiteral().of(key)}: $value',
+    ];
+    writer.line();
+    writer.assign(
+      'static const Map<String, bool> _flagDefaults',
+      '{${entries.join(', ')}}',
+    );
   }
 
   void _typename(DartWriter writer, DataClassPlan plan) {

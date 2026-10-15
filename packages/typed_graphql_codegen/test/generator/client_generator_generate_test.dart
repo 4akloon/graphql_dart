@@ -216,6 +216,36 @@ type Query {
         contains('final class B implements client.DataObject'),
       ),
     );
-    expect(byPath['lib/a.graphql.dart'], isNot(contains('final class')));
+    expect(
+      byPath['lib/a.graphql.dart'],
+      allOf(
+        contains('final class AQuery extends client.GraphQLQuery<AData>'),
+        isNot(contains('final class B ')),
+      ),
+    );
+  });
+
+  test('an operation is generated in the library of its file', () {
+    final result = generator.generate(
+      schema: _schema,
+      documents: const [
+        ProjectFile(
+          'lib/a.graphql',
+          r'query A($f: Boolean = false) { role @include(if: $f) }',
+        ),
+      ],
+    );
+    final text = {
+      for (final file in result.files) file.path: file.text,
+    }['lib/a.graphql.dart'];
+    expect(
+      text,
+      allOf(
+        contains('final class AQuery extends client.GraphQLQuery<AData>'),
+        contains('final class AVariables implements client.DataObject'),
+        contains('final class AData implements client.DataObject'),
+        contains("import 'schema.graphql.dart';"),
+      ),
+    );
   });
 }

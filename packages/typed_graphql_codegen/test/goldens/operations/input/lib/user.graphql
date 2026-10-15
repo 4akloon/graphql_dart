@@ -1,0 +1,30 @@
+query GetUser($id: ID!, $withFriends: Boolean = false, $full: Boolean!) {
+  user(id: $id) {
+    ...UserCard @include(if: $full)
+    role
+    createdAt
+    cursor
+    friends(first: 2) @include(if: $withFriends) {
+      id
+      name
+    }
+  }
+}
+
+fragment UserCard on User {
+  id
+  name
+}
+
+query FindNode($id: ID!) {
+  node(id: $id) {
+    id
+    ... on User {
+      name
+      ...UserCard
+    }
+    ... on Bot {
+      model
+    }
+  }
+}

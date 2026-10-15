@@ -27,13 +27,14 @@ final class DocumentLibraries {
   List<GeneratedFile> generate() {
     final files = project.documents.files;
     final map = project.documents.sourceMap;
-    final fragmentsByFile = <int, List<FragmentDefinition>>{};
+    final definitionsByFile = <int, List<ExecutableDefinition>>{};
     final fragmentsByName = <String, FragmentDefinition>{};
     final libraryOf = <String, String>{};
     for (final definition in project.document.document.definitions) {
-      if (definition is! FragmentDefinition) continue;
+      if (definition is! ExecutableDefinition) continue;
       final index = map.fileIndexAt(definition.start);
-      fragmentsByFile.putIfAbsent(index, () => []).add(definition);
+      definitionsByFile.putIfAbsent(index, () => []).add(definition);
+      if (definition is! FragmentDefinition) continue;
       fragmentsByName[definition.name.value] = definition;
       libraryOf[definition.name.value] = '${files[index].path}.dart';
     }
@@ -46,7 +47,7 @@ final class DocumentLibraries {
       for (final (int index, file) in files.indexed)
         GeneratedFile(
           emitter.libraryPathOf(file.path),
-          emitter.emit(file.path, fragmentsByFile[index] ?? const []),
+          emitter.emit(file.path, definitionsByFile[index] ?? const []),
         ),
     ];
   }

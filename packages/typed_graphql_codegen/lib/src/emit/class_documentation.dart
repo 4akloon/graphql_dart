@@ -24,6 +24,12 @@ final class ClassDocumentation {
   String of(DataClassPlan plan, {String? fragmentName}) =>
       _wrapped(_sentence(plan, fragmentName));
 
+  /// The doc of the data class of [operation]: ``The data of the query
+  /// `GetUser`.``
+  String ofOperation(OperationDefinition operation) =>
+      'The data of the ${operation.operation.name} '
+      '`${operation.name?.value ?? ''}`.';
+
   String _sentence(DataClassPlan plan, String? fragmentName) =>
       switch (plan.role) {
         DataClassRole.fragment =>

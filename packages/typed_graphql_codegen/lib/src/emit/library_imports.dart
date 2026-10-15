@@ -29,12 +29,13 @@ final class LibraryImports {
   final Map<String, String> fragmentLibraries;
 
   /// Records into [imports] what the library at [libraryPath] needs for
-  /// [classes]. The imports of custom scalars are recorded while the classes
-  /// are written.
+  /// [classes] and the variables of [operations]. The imports of custom
+  /// scalars are recorded while the classes are written.
   void record(
     Imports imports,
     String libraryPath,
     List<PlannedClass> classes,
+    List<OperationDefinition> operations,
   ) {
     if (classes.isEmpty) {
       return;
@@ -48,7 +49,8 @@ final class LibraryImports {
       prefix: 'client',
     );
     final targets = <String>{
-      if (_usesSchemaTypes(classes)) schemaTypesPath,
+      if (_usesSchemaTypes(classes) || _variablesUseSchemaTypes(operations))
+        schemaTypesPath,
       for (final fragment in _spreadFragments(classes))
         ?fragmentLibraries[fragment],
     }..remove(libraryPath);
@@ -59,14 +61,23 @@ final class LibraryImports {
     }
   }
 
+  bool _variablesUseSchemaTypes(List<OperationDefinition> operations) =>
+      operations.any(
+        (operation) => operation.variableDefinitions.any(
+          (variable) => _isSchemaType(variable.type),
+        ),
+      );
+
+  bool _isSchemaType(TypeRef type) => switch (schema.namedTypeOf(type)) {
+    EnumType() || InputObjectType() => true,
+    _ => false,
+  };
+
   bool _usesSchemaTypes(List<PlannedClass> classes) => classes.any(
     (planned) => switch (planned) {
       DataClassPlan(:final fields) ||
       PolymorphicBasePlan(sharedFields: final fields) => fields.any(
-        (field) => switch (schema.namedTypeOf(field.type)) {
-          EnumType() || InputObjectType() => true,
-          _ => false,
-        },
+        (field) => _isSchemaType(field.type),
       ),
       FragmentHolderPlan() => false,
     },

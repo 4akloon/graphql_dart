@@ -1,0 +1,12 @@
+subscription UserChanged($id: ID!) {
+  userChanged(id: $id) {
+    id
+    name
+  }
+}
+
+query Everyone {
+  node(id: "1") {
+    id
+  }
+}
