@@ -8,6 +8,7 @@ import 'execution_options.dart';
 import 'execution_run.dart';
 import 'operation_preparation.dart';
 import 'prepared_operation.dart';
+import 'run_cancellation.dart';
 import 'schema_bindings.dart';
 import 'subscription_responses.dart';
 
@@ -70,9 +71,25 @@ final class SubscriptionExecution {
       return _rejected(run);
     }
     final opened = run.fields.openSource(_options.rootValue, fields.first);
-    return opened is Future<Stream<Object?>?>
-        ? opened.then((source) => _started(run, source))
-        : _started(run, opened);
+    if (opened is! Future<Stream<Object?>?>) {
+      return _started(run, opened);
+    }
+    // A source that is still pending when the run is cancelled must not
+    // keep `subscribe` pending (graphql-js's cancellation test); a stream
+    // it yields later is never listened to.
+    return switch (run.cancellation) {
+      final cancellation? => cancellation.raceCancelled(
+        opened,
+        (source) => _started(run, source),
+        () => _cancelled(cancellation),
+      ),
+      null => opened.then((source) => _started(run, source)),
+    };
+  }
+
+  SubscriptionRejected _cancelled(RunCancellation entry) {
+    entry.dispose();
+    return SubscriptionRejected(RequestErrorResult(errors: [entry.error]));
   }
 
   SubscriptionResult _started(ExecutionRun run, Stream<Object?>? source) =>

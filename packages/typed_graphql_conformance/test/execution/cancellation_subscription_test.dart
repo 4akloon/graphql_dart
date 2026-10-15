@@ -95,5 +95,26 @@ void main() {
         await source.close();
       },
     );
+    test(
+      'should stop the execution when aborted prior to return of a subscription resolver',
+      () async {
+        final started = Completer<Stream<String>>();
+        final probe = CancellationProbe()..source = () => started.future;
+        final signal = CancelSignal();
+        final pending = subscribe(probe, signal);
+        signal.cancel();
+        final result = await pending.timeout(const Duration(seconds: 2));
+        expect(result, isA<SubscriptionRejected>());
+        expect(
+          (result as SubscriptionRejected).error.toJson().toJson(),
+          {'errors': cancelled['errors']},
+        );
+        final late = StreamController<String>();
+        started.complete(late.stream);
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        expect(late.hasListener, isFalse);
+        unawaited(late.close());
+      },
+    );
   });
 }

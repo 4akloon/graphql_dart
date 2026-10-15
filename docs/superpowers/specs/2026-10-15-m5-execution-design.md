@@ -701,6 +701,10 @@ depends on the other). These constraints keep that possible:
     other root takes a value of its Dart type. A guide shows how to declare a
     root that needs none (`introspection_test.dart`,
     `union_interface_test.dart`).
+34. `CancelSignal.cancel(reason)` keeps the reason in `CancelSignal.reason`;
+    the `GQL350` message is always "Execution was cancelled.", where
+    graphql-js surfaces the abort reason's message
+    (`cancellation_test.dart`).
 
 ## 19. Conformance (R0.7, R10.3)
 

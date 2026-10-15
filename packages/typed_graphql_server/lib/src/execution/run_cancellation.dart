@@ -86,6 +86,37 @@ final class RunCancellation {
     return completer.future;
   }
 
+  /// [pending] mapped by [onReady], or [onCancelled] as soon as the run is
+  /// cancelled. [onReady] never runs for a [pending] that completes after
+  /// the cancellation, and a late failure of it is dropped.
+  Future<T> raceCancelled<S, T>(
+    Future<S> pending,
+    T Function(S value) onReady,
+    T Function() onCancelled,
+  ) {
+    final completer = Completer<T>();
+    final detach = signal.addListener(() {
+      if (!completer.isCompleted) {
+        completer.complete(onCancelled());
+      }
+    });
+    pending.then(
+      (value) {
+        detach();
+        if (!completer.isCompleted) {
+          completer.complete(onReady(value));
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        detach();
+        if (!completer.isCompleted) {
+          completer.completeError(error, stackTrace);
+        }
+      },
+    );
+    return completer.future;
+  }
+
   /// Ends the timer and stops listening to the caller's signal.
   void dispose() {
     _timer?.cancel();

@@ -28,6 +28,10 @@ final class Probe {
 
   bool isSourceCancelled = false;
 
+  /// What the `pending` subscription field's source function returns: a
+  /// future the test completes when it wants.
+  final Completer<Stream<int>> pendingSource = Completer<Stream<int>>();
+
   /// Ends the source; one nobody listened to stays pending.
   void dispose() => unawaited(source.close());
 }
@@ -109,6 +113,11 @@ final class CancellationFixture {
         t
             .field('ticks', b.int)
             .subscribe((parent, args, context, info) => context.source.stream),
+        t
+            .field('pending', b.int)
+            .subscribe(
+              (parent, args, context, info) => context.pendingSource.future,
+            ),
         t.field('held', b.int).subscribeWith<int>(
           (parent, args, context, info) => context.source.stream,
           (event, args, context, info) async {
