@@ -113,21 +113,29 @@ compiles fixtures that must fail (`test/compile/`, see section 3.10).
   `b.boolean` (`bool`), `b.id` (`String`), backed by the core codecs.
 - Custom scalars: `b.scalar<T>(name, codec, {description,
   specifiedByUrl})` over a core `ScalarCodec<T>`.
-- Enums: `b.enumType<E extends Enum>(name, values, {nameOf,
-  descriptionOf, deprecationReasonOf, description})`; `nameOf` defaults to
-  `Enum.name` (open question 3).
+- Enums: `b.enumType<E extends Enum>(name, values, {mapping,
+  description})`, where `EnumValueMapping<E>({nameOf, descriptionOf,
+  deprecationReasonOf})` groups the per-value callbacks; `nameOf`
+  defaults to `Enum.name` (open question 3).
+- The code rules allow five parameters per method (section 18), so
+  settings past five go into a parameter object (`EnumValueMapping`,
+  `ObjectOptions`), a second method (`b.oneOfInputObject`) or a fluent
+  modifier on the field stub (section 3.4).
 
 ### 3.4 Object types and fields
 
 - `b.object<P>(name, {required fields, interfaces, description,
-  isTypeOf, middleware, authorization})` returns `ObjectTypeDef<P>`, an
+  options})` returns `ObjectTypeDef<P>`, an
   `OutputRef<P>`. `fields` is a thunk `(FieldsBuilder<P, C> t) => [...]`
   evaluated by `build()`, so types may refer to each other (`late final`
-  or class fields; documented).
-- `t.field(name, type, {args, description, deprecationReason,
-  middleware, authorization, directives})` returns
+  or class fields; documented). `ObjectOptions({isTypeOf, directives,
+  authorization})` holds the rarer settings.
+- `t.field(name, type, {args, description})` returns
   `FieldStub<P, R, C>`; a stub is not a `FieldDef`, so a field without a
-  resolver does not compile. Its completions:
+  resolver does not compile. Modifiers return a new stub:
+  `.deprecated(reason)`, `.withDirectives([...])`,
+  `.withMiddleware([...])` (M5b), `.withAuthorization(...)` (M5d). Its
+  completions:
   - `.pure(R Function(P parent))`: the pure lane (R4.2): synchronous, no
     arguments, no middleware, no `FieldInfo` allocated. A guarded field
     (section 12) still goes through the `Authorizer`.
@@ -165,9 +173,10 @@ compiles fixtures that must fail (`test/compile/`, see section 3.10).
 ### 3.6 Input objects and enums (R4.4)
 
 - `b.inputObject<T>(name, {required fields, required decode, encode,
-  isOneOf, description})`: `fields` is a thunk returning `Arg`s (input
-  fields are arguments in all but name), `decode(InputValues values)`
-  gives `T`, `encode(T)` gives a `JsonObject` and is needed only when a
+  description})` and `b.oneOfInputObject<T>(...)` (the same with
+  `@oneOf`): `fields` is a thunk returning `Arg`s (input fields are
+  arguments in all but name), `decode(Arguments values)` gives `T`
+  (one `Arguments` class reads field arguments and input fields), `encode(T)` gives a `JsonObject` and is needed only when a
   default value of this type must be printed (build error otherwise).
 - A `decode` that throws `GraphQLException` rejects the value with its
   message; any other exception is masked (section 9).
@@ -363,12 +372,14 @@ Arguments args, C context, FieldInfo info)` and
 `typedef FieldMiddleware<C> = FieldResolver<C> Function(FieldResolver<C>
 next, FieldSite field)`, where `FieldSite` names the parent type and the
 `SchemaField`. Chains are composed once per field at build time in the
-order global → type → field → directive slots (`directiveMiddleware`,
+order global → field → directive slots (`directiveMiddleware`,
 keyed by directive name, applied to fields carrying that directive in
 declaration order); the outermost runs first. A middleware may return
 `next` unchanged for fields it ignores, so it costs nothing there; an
 empty chain is the resolver itself (a direct call). The pure lane has no
-chain.
+chain. There is no type-level slot: a global middleware sees
+`FieldSite.parentType` at build time and returns `next` for other types,
+which costs nothing (section 18).
 
 ## 9. Introspection (M5c; R4.14)
 
@@ -429,8 +440,9 @@ member is read.
 
 - `Authorization` (sealed): `Authorization.public()` (no check, counted
   as covered) or `Authorization.requires(List<String> requirements)`. It
-  is set on an object type (every field of the type) or on a field (wins
-  over the type).
+  is set on an object type (`ObjectOptions.authorization`, every field
+  of the type) or on a field (`.withAuthorization(...)`, wins over the
+  type).
 - `Authorizer<C>.authorize(FieldAccess<C> access)` returns
   `FutureOr<AuthorizationDecision>` (`Allow` | `Deny(message?)`), called
   only for guarded fields, after argument coercion and before the
@@ -589,7 +601,12 @@ depends on the other). These constraints keep that possible:
    graphql-js rejects the promise.
 10. A source stream error ends a subscription with a final error result;
     graphql-js rethrows it to the consumer.
-11. New codes are added to the core catalog in one core commit at the
+11. Builder methods take at most five parameters (the code rules), so
+    some settings move to parameter objects, a second method or fluent
+    stub modifiers (section 3.3, 3.4), and the type-level middleware slot
+    is dropped: a global middleware filters by parent type at build time
+    for free.
+12. New codes are added to the core catalog in one core commit at the
     start of each sub-stage, not in the server commit that first reports
     each, so core and server commits stay apart (the task's rule); the
     catalog test still sees each code used by a test before the stage
