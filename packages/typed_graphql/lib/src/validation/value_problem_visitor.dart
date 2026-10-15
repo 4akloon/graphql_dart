@@ -44,10 +44,19 @@ final class ValueProblemVisitor(
       allowsVariables: true,
       includesSuggestions: context.includesSuggestions,
     );
-    for (final problem in checker.check(node, type)) {
-      if (problem.kind == kind) {
-        context.report(code, problem.message, [problem.node]);
+    // The siblings of this rule check the same value for their kinds: each
+    // builds only its own messages, and the path is never read.
+    final problems = checker.check(
+      node,
+      type,
+      only: kind,
+      includesPaths: false,
+    );
+    for (final problem in problems) {
+      if (context.isAborted) {
+        break;
       }
+      context.report(code, problem.message, [problem.node]);
     }
     return .skip;
   }

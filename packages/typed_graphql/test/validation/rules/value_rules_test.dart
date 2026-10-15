@@ -67,7 +67,11 @@ type Query { f(arg: In): Int any(arg: Any): Int }
   group('values nested 100000 deep, built in code', () {
     const depth = 100000;
 
-    List<Diagnostic> validate(String field, Value argument) {
+    List<Diagnostic> validate(
+      String field,
+      Value argument, {
+      int maxErrors = 100,
+    }) {
       final document = Document([
         OperationDefinition(
           OperationType.query,
@@ -80,8 +84,9 @@ type Query { f(arg: In): Int any(arg: Any): Int }
           ]),
         ),
       ]);
-      return const DocumentValidator(
+      return DocumentValidator(
         rules: [...valueRules, UniqueInputFieldNamesRule()],
+        maxErrors: maxErrors,
       ).validate(checked.schema, document).diagnostics;
     }
 
@@ -112,6 +117,17 @@ type Query { f(arg: In): Int any(arg: Any): Int }
         ]);
       }
       expect(validate('f', value), isEmpty);
+    });
+
+    test('an input object value missing a field at every level', () {
+      Value value = ObjectValue([]);
+      for (var i = 0; i < depth; i++) {
+        value = ObjectValue([ObjectField(const Name('next'), value)]);
+      }
+      final stopwatch = Stopwatch()..start();
+      final diagnostics = validate('f', value, maxErrors: depth + 10);
+      expect(diagnostics, hasLength(depth + 1));
+      expect(stopwatch.elapsed, lessThan(const Duration(seconds: 10)));
     });
   });
 }

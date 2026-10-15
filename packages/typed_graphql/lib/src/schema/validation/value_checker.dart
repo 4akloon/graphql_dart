@@ -47,14 +47,29 @@ final class ValueChecker(
   /// The problems of [value] as a value of [type], in report order.
   ///
   /// The problems are found as the result is read, so a caller that stops
-  /// at its error limit stops the work too.
-  Iterable<ValueProblem> check(Value value, TypeRef type) sync* {
+  /// at its error limit stops the work too. With [only], the problems of
+  /// other kinds are left out before their messages are built; without
+  /// [includesPaths] the problems have an empty path (a path costs its
+  /// length, so a caller that never reads it saves quadratic work on a
+  /// deep value).
+  Iterable<ValueProblem> check(
+    Value value,
+    TypeRef type, {
+    ValueProblemKind? only,
+    bool includesPaths = true,
+  }) sync* {
     final shapes = <InputObjectType, InputObjectShape>{};
     final work = <_Work>[_Check(value, type, null)];
     while (work.isNotEmpty) {
       switch (work.removeLast()) {
         case _Report(:final message, :final node, :final path, :final kind):
-          yield ValueProblem(message(), node, _Path.keys(path), kind: kind);
+          if (only != null && kind != only) continue;
+          yield ValueProblem(
+            message(),
+            node,
+            includesPaths ? _Path.keys(path) : const <Object>[],
+            kind: kind,
+          );
         case _Check(:final value, :final type, :final path):
           work.addAll(_step(value, type, path, shapes).reversed);
       }
