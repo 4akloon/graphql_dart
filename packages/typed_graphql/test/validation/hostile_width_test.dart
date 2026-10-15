@@ -92,17 +92,17 @@ type Node { name: String child: Node size(n: Int): Int }
     expect(result.diagnostics.single.code, DiagnosticCode.documentTooComplex);
   });
 
-  test('fragments that expand to 2^60 fields spend the step budget', () {
+  test('fragments that expand to 2^60 fields are merged once per fragment', () {
     final fragments = List.generate(
       60,
       (index) =>
           'fragment F$index on Node { a: child { ...F${index + 1} } '
           'b: child { ...F${index + 1} } }',
     ).join(' ');
-    final result = timed(
-      '{ node { ...F0 } } $fragments fragment F60 on Node { name }',
-    ) as InvalidDocument;
-    expect(result.diagnostics.single.code, DiagnosticCode.documentTooComplex);
+    expect(
+      timed('{ node { ...F0 } } $fragments fragment F60 on Node { name }'),
+      isA<ValidDocument>(),
+    );
   });
 
   test('20000 fragments that each spread the first one are cut off, not '

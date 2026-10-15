@@ -59,7 +59,7 @@ final class FieldMerging(
   }
 
   void _checkRoot(ExecutableDefinition root) {
-    final path = FragmentPath();
+    final path = FragmentPath(_cyclicFragments);
     final SelectionSet selectionSet;
     switch (root) {
       case OperationDefinition():
@@ -72,6 +72,7 @@ final class FieldMerging(
       SelectionCollector(context, origins, path, _cyclicFragments),
       MergeSplit(context, _shapes, _arguments),
       ConflictJudge(context, _shapes, _arguments, root),
+      path,
     );
     final steps = <_Step>[];
     merge.descend(steps, const MergeWork([]), [(selectionSet, null)]);
@@ -94,7 +95,12 @@ final class _RootMerge(
   final SelectionCollector collector,
   final MergeSplit splitter,
   final ConflictJudge judge,
+  final FragmentPath path,
 ) {
+  // The checks already put on the steps for the subfields of a field that
+  // is alone in its set: bit 1 is the shape check, bit 2 the name check.
+  final Map<Field, int> _descended = Map.identity();
+
   /// Judges the pairs of [work] into [reports] and puts the sets under
   /// each of its classes on [steps].
   void visit(List<_Step> steps, MergeWork work, ConflictReports reports) {
@@ -127,6 +133,7 @@ final class _RootMerge(
     MergeWork part,
     List<(SelectionSet, MergeItem?)> sources,
   ) {
+    if (_isDescendedAlready(part, sources)) return;
     final (:groups, :expanded) = collector.collect(sources);
     steps.add(_Leave(expanded));
     for (final items in groups.values.toList().reversed) {
@@ -141,6 +148,28 @@ final class _RootMerge(
       );
     }
     steps.add(_Enter(expanded));
+  }
+
+  /// Whether the subfields of the one field of [part] were put on the
+  /// steps before, so the second descent can only find the pairs of the
+  /// first again (a report is kept once per pair of fields).
+  ///
+  /// The pairs under a lone field have their nearest distinct ancestors
+  /// below it, and the fields they are made of do not depend on the way
+  /// to the field, unless a cyclic fragment on the [path] hides a spread:
+  /// then nothing is skipped. Without this, a fragment spread under two
+  /// fields, 20 levels deep, is expanded 2^20 times (spec §8).
+  bool _isDescendedAlready(
+    MergeWork part,
+    List<(SelectionSet, MergeItem?)> sources,
+  ) {
+    if (path.hasCyclic || part.items.length != 1 || sources.length != 1) {
+      return false;
+    }
+    final bit = (part.checksShape ? 1 : 0) | (part.checksNames ? 2 : 0);
+    final known = _descended[part.items.single.node] ?? 0;
+    _descended[part.items.single.node] = known | bit;
+    return known & bit == bit;
   }
 }
 

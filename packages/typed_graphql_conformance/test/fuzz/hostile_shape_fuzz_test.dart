@@ -164,12 +164,14 @@ void main() {
     }
   });
 
-  test('fragments that triple the fields to merge 60 times give GQL230', () {
+  test('fragments that triple the fields to merge 60 times are merged in '
+      'time, not given GQL230', () {
     final result = HostileRules.validator.validate(schema, fragmentFan(60));
-    expect(
-      [for (final diagnostic in result.diagnostics) diagnostic.code],
-      contains(DiagnosticCode.documentTooComplex),
-    );
+    final codes = [
+      for (final diagnostic in result.diagnostics) diagnostic.code,
+    ];
+    expect(codes, isNot(contains(DiagnosticCode.documentTooComplex)));
+    expect(codes, isNot(contains(DiagnosticCode.overlappingFieldsCanBeMerged)));
   });
 
   test('a chain that spreads each fragment twice is valid and fast', () {

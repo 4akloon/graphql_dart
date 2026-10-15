@@ -267,7 +267,11 @@ expanded once per root. The code is in `validation/overlap/`.
   `maxErrors` conflicts are known (`ValidationContext.maxErrors`).
 - **Bounds.** Each collected item and each judged chain step is charged to the
   step budget (section 8): a document whose fragments expand exponentially
-  ends with `GQL230`, not a hang.
+  ends with `GQL230`, not a hang. The subfields of a field that is alone in
+  its set are descended once per root and check kind, wherever the field is
+  reached from (the pairs under it have their nearest distinct ancestors
+  below it), unless a cyclic fragment is on the path; so `p: a { ...F }
+  q: b { ...F }` over 20 levels is merged in linear steps and is valid.
 
 Conflicts come in graphql-js's order in the common cases; with three or more
 fields of one name in conflict the count differs (deviation 4; one adapted
