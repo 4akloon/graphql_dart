@@ -5,6 +5,8 @@ import 'diagnostic_errors.dart';
 import 'document_entry.dart';
 
 /// Parses and validates one document text against the server's schema.
+///
+/// Not final: tests subclass it to count the compilations.
 @internal
 class DocumentCompiler {
   /// Creates a compiler that parses with [parser] and validates against

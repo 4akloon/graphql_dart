@@ -1,8 +1,7 @@
 # Server
 
-A transport hands the server a `ServerRequest` and gets a `ServerResponse`
-back. This guide grows with the request pipeline; for now it describes the
-values on both sides.
+This guide describes `RequestInfo`, the request a transport hands to the
+server. It grows with the request pipeline.
 
 `RequestInfo` holds the method, the URI and the headers of a request. Header
 names are lower-cased when it is made, and `header` finds one by any case.

@@ -90,9 +90,41 @@ void main() {
     });
   });
 
+  group('ServerProfile with methods keep the other fields', () {
+    final base = ServerProfile.production
+        .withCsrfPrevention(null)
+        .withTimeout(const Duration(seconds: 5));
+
+    void expectKept(ServerProfile copy) {
+      expect(copy.timeout, const Duration(seconds: 5));
+      expect(copy.csrfPrevention, isNull);
+    }
+
+    test('withIntrospection', () {
+      expectKept(base.withIntrospection(IntrospectionPolicy.enabled));
+    });
+
+    test('withSuggestions', () => expectKept(base.withSuggestions(true)));
+
+    test('withErrorMasking', () => expectKept(base.withErrorMasking(false)));
+
+    test(
+      'withLimits',
+      () => expectKept(base.withLimits(ServerLimits.development)),
+    );
+  });
+
   group('ServerProfile equality', () {
     test('equal profiles have equal hash codes', () {
-      final copy = ServerProfile.production.withSuggestions(false);
+      // Built at run time, so it is not the canonical constant.
+      final copy = ServerProfile(
+        introspection: IntrospectionPolicy.values.byName('disabled'),
+        includesSuggestions: false,
+        maskErrors: true,
+        csrfPrevention: const CsrfPrevention(),
+        limits: ServerLimits.production,
+      );
+      expect(copy, ServerProfile.production);
       expect(copy.hashCode, ServerProfile.production.hashCode);
     });
 
@@ -141,6 +173,24 @@ void main() {
       expect(
         const ServerLimits(maxDepth: 3).hashCode,
         const ServerLimits(maxDepth: 3).hashCode,
+      );
+    });
+
+    test('a NaN cost is a programmer error', () {
+      expect(
+        () => ServerLimits(maxCost: double.nan),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
+    test('a negative depth is a programmer error', () {
+      expect(() => ServerLimits(maxDepth: -1), throwsA(isA<AssertionError>()));
+    });
+
+    test('a negative default list size is a programmer error', () {
+      expect(
+        () => ServerLimits(defaultListSize: -1),
+        throwsA(isA<AssertionError>()),
       );
     });
 

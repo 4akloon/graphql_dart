@@ -14,9 +14,10 @@ final class HeaderNames {
           key.toLowerCase(): value,
       });
 
-  /// [base] with [additions] on top, names lower-cased, new values winning.
+  /// [base], whose names are already lower-case, with [additions] on top (names
+  /// lower-cased), new values winning.
   Map<String, String> merged(
     Map<String, String> base,
     Map<String, String> additions,
-  ) => lowerCased({...base, ...lowerCased(additions)});
+  ) => Map.unmodifiable({...base, ...lowerCased(additions)});
 }

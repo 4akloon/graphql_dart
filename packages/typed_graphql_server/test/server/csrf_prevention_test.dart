@@ -50,6 +50,36 @@ void main() {
     });
   }
 
+  test('refuses a list of types that starts with a simple type', () {
+    final info = request({'content-type': 'text/plain, application/json'});
+    expect(csrf.allows(info), false);
+  });
+
+  test('refuses a list of types that ends with a simple type', () {
+    final info = request({'content-type': 'application/json, text/plain'});
+    expect(csrf.allows(info), false);
+  });
+
+  test('allows application/json with surrounding spaces', () {
+    expect(csrf.allows(request({'content-type': ' application/json '})), true);
+  });
+
+  test('refuses text/plain with surrounding spaces', () {
+    expect(csrf.allows(request({'content-type': ' text/plain '})), false);
+  });
+
+  test('refuses an empty content type', () {
+    expect(csrf.allows(request({'content-type': ''})), false);
+  });
+
+  test('allows an unparsable content type with a non-empty header', () {
+    final info = request({
+      'content-type': 'a b/c',
+      'graphql-require-preflight': '1',
+    });
+    expect(csrf.allows(info), true);
+  });
+
   test('refuses an empty preflight header', () {
     expect(csrf.allows(request({'graphql-require-preflight': ''})), false);
   });
@@ -97,6 +127,31 @@ void main() {
         ],
       ),
     );
+  });
+
+  test('header lists in another order differ', () {
+    expect(
+      const CsrfPrevention(requestHeaders: ['x-a', 'x-b']),
+      isNot(const CsrfPrevention(requestHeaders: ['x-b', 'x-a'])),
+    );
+  });
+
+  test('header lists equal ignoring case', () {
+    expect(
+      const CsrfPrevention(requestHeaders: ['X-A']),
+      const CsrfPrevention(requestHeaders: ['x-a']),
+    );
+  });
+
+  test('with no headers, only a preflighting content type passes', () {
+    const strict = CsrfPrevention(requestHeaders: []);
+    expect(strict.allows(request({'content-type': 'application/json'})), true);
+    expect(strict.allows(request({'x-apollo-operation-name': 'Q'})), false);
+  });
+
+  test('with no headers, the refusal names no header', () {
+    const strict = CsrfPrevention(requestHeaders: []);
+    expect(strict.refusal, endsWith('multipart/form-data, text/plain.'));
   });
 
   test('different header lists differ', () {

@@ -7,6 +7,10 @@ import 'request_info.dart';
 /// {@category server}
 final class CsrfPrevention {
   /// Creates the rule; [requestHeaders] replace [defaultHeaders].
+  ///
+  /// [requestHeaders] must not be mutated afterwards: a constant constructor
+  /// cannot copy it. An empty list lets only a request with a content type a
+  /// browser cannot send cross-site pass.
   const CsrfPrevention({this.requestHeaders = defaultHeaders});
 
   /// The headers Apollo Server and GraphQL Yoga accept, so Apollo clients
@@ -25,6 +29,12 @@ final class CsrfPrevention {
       'multipart/form-data, text/plain) or provide a non-empty value for one '
       'of the following headers: ';
 
+  static const String _contentTypeOnlyMessage =
+      'This operation has been blocked as a potential Cross-Site Request '
+      "Forgery (CSRF). Please specify a 'content-type' header with a type "
+      'that is not one of application/x-www-form-urlencoded, '
+      'multipart/form-data, text/plain.';
+
   static const List<String> _simpleTypes = [
     'application/x-www-form-urlencoded',
     'multipart/form-data',
@@ -41,7 +51,9 @@ final class CsrfPrevention {
   final List<String> requestHeaders;
 
   /// The refusal text for this rule, naming [requestHeaders].
-  String get refusal => '$message${requestHeaders.join(', ')}.';
+  String get refusal => requestHeaders.isEmpty
+      ? _contentTypeOnlyMessage
+      : '$message${requestHeaders.join(', ')}.';
 
   /// Whether the request in [info] passes (September 2025 is silent; this is
   /// Apollo Server's rule).
@@ -59,12 +71,17 @@ final class CsrfPrevention {
 
   @override
   bool operator ==(Object other) =>
-      other is CsrfPrevention &&
-      other.requestHeaders.length == requestHeaders.length &&
-      [for (final name in other.requestHeaders) name.toLowerCase()].join(
-            '\n',
-          ) ==
-          [for (final name in requestHeaders) name.toLowerCase()].join('\n');
+      other is CsrfPrevention && _sameNames(other.requestHeaders);
+
+  bool _sameNames(List<String> others) {
+    if (others.length != requestHeaders.length) return false;
+    for (var index = 0; index < others.length; index++) {
+      if (others[index].toLowerCase() != requestHeaders[index].toLowerCase()) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   @override
   int get hashCode =>

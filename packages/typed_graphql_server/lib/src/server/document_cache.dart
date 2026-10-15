@@ -28,6 +28,7 @@ final class DocumentCache {
       LinkedHashMap<String, DocumentEntry>();
 
   /// The number of entries held.
+  @visibleForTesting
   int get length => _entries.length;
 
   /// The entry for [text]: the stored one, which becomes the most recent, or

@@ -3,6 +3,11 @@
 /// {@category server}
 final class ServerLimits {
   /// Creates limits; every limit but [defaultListSize] is off when null.
+  ///
+  /// A non-null limit must be positive, [maxCost] not NaN and
+  /// [defaultListSize] not negative. These are programmer errors, checked by
+  /// assertions because a constant constructor cannot throw an
+  /// [ArgumentError].
   const ServerLimits({
     this.maxDocumentLength = 100000,
     this.maxTokens = 15000,
@@ -11,7 +16,25 @@ final class ServerLimits {
     this.maxDirectives,
     this.maxCost,
     this.defaultListSize = 10,
-  });
+  }) : assert(
+         maxDocumentLength == null || maxDocumentLength > 0,
+         'maxDocumentLength must be positive',
+       ),
+       assert(maxTokens == null || maxTokens > 0, 'maxTokens must be positive'),
+       assert(maxDepth == null || maxDepth > 0, 'maxDepth must be positive'),
+       assert(
+         maxAliases == null || maxAliases > 0,
+         'maxAliases must be positive',
+       ),
+       assert(
+         maxDirectives == null || maxDirectives > 0,
+         'maxDirectives must be positive',
+       ),
+       assert(
+         maxCost == null || maxCost > 0,
+         'maxCost must be positive (NaN fails the comparison)',
+       ),
+       assert(defaultListSize >= 0, 'defaultListSize must not be negative');
 
   /// The limits of a server in development: the bounds on the text only.
   static const ServerLimits development = ServerLimits();

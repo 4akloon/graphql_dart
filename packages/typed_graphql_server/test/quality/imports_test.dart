@@ -25,12 +25,18 @@ void main() {
       );
     });
 
-    test('allows dart:convert and package:crypto/crypto.dart', () {
+    test('allows dart:convert', () {
+      expect(
+        rule.check('lib/src/server/a.dart', "import 'dart:convert';\n"),
+        isEmpty,
+      );
+    });
+
+    test('allows package:crypto/crypto.dart', () {
       expect(
         rule.check(
           'lib/src/server/a.dart',
-          "import 'dart:convert';\n"
-              "import 'package:crypto/crypto.dart';\n",
+          "import 'package:crypto/crypto.dart';\n",
         ),
         isEmpty,
       );
