@@ -272,6 +272,50 @@ type Query {
     });
   });
 
+  group('a bare string is a list of one', () {
+    test('accepts sizedFields: "items" naming a list field', () {
+      expect(
+        const _Checked().errors('''
+type Query { page: Page @listSize(sizedFields: "items") }
+type Page { items: [Int] }
+'''),
+        isEmpty,
+      );
+    });
+
+    test('reports a bare slicingArguments that is not an Int (GQL159)', () {
+      expect(
+        const _Checked().errors(
+          'type Query { users(first: String): [Int] '
+          '@listSize(slicingArguments: "first") }',
+        ),
+        [contains('GQL159 The slicing argument "first"')],
+      );
+    });
+
+    test('reports a bare sizedFields that is no list field (GQL160)', () {
+      expect(
+        const _Checked().errors('''
+type Query { page: Page @listSize(sizedFields: "count") }
+type Page { count: Int }
+'''),
+        [contains('GQL160 The sized field "count"')],
+      );
+    });
+  });
+
+  test('checks the arguments of a directive definition (GQL156)', () {
+    expect(
+      const _Checked().errors(
+        'type Query { a: Int }\n'
+        'directive @tag(x: Int @cost(weight: "q")) on FIELD',
+      ),
+      [
+        '2:23 GQL156 The @cost weight "q" of "@tag(x:)" is not a number.',
+      ],
+    );
+  });
+
   test('checks nothing without the flag', () {
     expect(
       const _Checked().errors(

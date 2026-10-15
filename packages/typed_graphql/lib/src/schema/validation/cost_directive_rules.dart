@@ -25,10 +25,17 @@ final class CostDirectiveRules(
     r'^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$',
   );
 
+  // late: reads [report] and [schema], set before; one instance per run
+  // keeps the list rules' cache of list fields.
+  late final ListSizeRules _listSizes = ListSizeRules(report, schema);
+
   /// Reports the problems of the cost directives applied in the schema.
   void check() {
     for (final type in schema.types) {
-      _weights(type.name, type.appliedDirectives);
+      if (report.isFull) {
+        return;
+      }
+      _weights(() => type.name, type.appliedDirectives);
       switch (type) {
         case ObjectType(:final fields):
           _fields(type, fields, isInterface: false);
@@ -36,10 +43,26 @@ final class CostDirectiveRules(
           _fields(type, fields, isInterface: true);
         case InputObjectType(:final fields):
           for (final field in fields) {
-            _weights('${type.name}.${field.name}', field.appliedDirectives);
+            _weights(
+              () => '${type.name}.${field.name}',
+              field.appliedDirectives,
+            );
           }
         case ScalarType() || UnionType() || EnumType():
           break;
+      }
+    }
+    _directiveArguments();
+  }
+
+  // The arguments of a directive definition (ARGUMENT_DEFINITION).
+  void _directiveArguments() {
+    for (final directive in schema.directives) {
+      for (final argument in directive.arguments) {
+        _weights(
+          () => '@${directive.name}(${argument.name}:)',
+          argument.appliedDirectives,
+        );
       }
     }
   }
@@ -50,12 +73,15 @@ final class CostDirectiveRules(
     required bool isInterface,
   }) {
     for (final field in fields) {
-      final coordinate = '${type.name}.${field.name}';
+      if (report.isFull) {
+        return;
+      }
+      String coordinate() => '${type.name}.${field.name}';
       _weights(coordinate, field.appliedDirectives);
       if (isInterface) {
         _misplaced('field', coordinate, field.appliedDirectives);
       }
-      ListSizeRules(report, schema).check(coordinate, field);
+      _listSizes.check(coordinate, field);
       for (final argument in field.arguments) {
         _argument(coordinate, argument, isInterface: isInterface);
       }
@@ -63,18 +89,21 @@ final class CostDirectiveRules(
   }
 
   void _argument(
-    String fieldCoordinate,
+    String Function() fieldCoordinate,
     InputValue argument, {
     required bool isInterface,
   }) {
-    final coordinate = '$fieldCoordinate(${argument.name}:)';
+    String coordinate() => '${fieldCoordinate()}(${argument.name}:)';
     _weights(coordinate, argument.appliedDirectives);
     if (isInterface) {
       _misplaced('field argument', coordinate, argument.appliedDirectives);
     }
   }
 
-  void _weights(String coordinate, List<AppliedDirective> directives) {
+  void _weights(
+    String Function() coordinate,
+    List<AppliedDirective> directives,
+  ) {
     for (final directive in directives) {
       if (directive.name != 'cost') {
         continue;
@@ -84,7 +113,7 @@ final class CostDirectiveRules(
           when !_number.hasMatch(value)) {
         report.error(
           .invalidCostWeight,
-          'The @cost weight "$value" of "$coordinate" is not a number.',
+          'The @cost weight "$value" of "${coordinate()}" is not a number.',
           [directive.span],
         );
       }
@@ -93,14 +122,14 @@ final class CostDirectiveRules(
 
   void _misplaced(
     String what,
-    String coordinate,
+    String Function() coordinate,
     List<AppliedDirective> directives,
   ) {
     for (final directive in directives) {
       if (directive.name == 'cost') {
         report.error(
           .misplacedCost,
-          '@cost cannot be applied to the interface $what "$coordinate".',
+          '@cost cannot be applied to the interface $what "${coordinate()}".',
           [directive.span],
         );
       }

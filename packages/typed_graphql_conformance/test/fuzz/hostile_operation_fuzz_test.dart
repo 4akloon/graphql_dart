@@ -69,6 +69,26 @@ void main() {
   void count(String outcome) =>
       outcomes[outcome] = (outcomes[outcome] ?? 0) + 1;
 
+  List<String> summary(DocumentValidationResult result) => [
+    for (final diagnostic in result.diagnostics)
+      '${diagnostic.code.id} ${diagnostic.message}',
+  ];
+
+  DocumentValidationResult validateReprinted(
+    ValidSchema schema,
+    Document document,
+  ) {
+    final text = printer.print(document);
+    final source = Source(text);
+    final reparsed = switch (parser.parse(source)) {
+      ParseSuccess(:final document) => document,
+      ParseFailure(:final diagnostics) => fail(
+        'the printed document does not parse: $diagnostics\n$text',
+      ),
+    };
+    return HostileRules.validator.validate(schema, reparsed, source: source);
+  }
+
   void check(ValidSchema schema, String text, String reason) {
     final source = Source(text);
     final document = switch (parser.parse(source)) {
@@ -84,6 +104,20 @@ void main() {
       document,
       source: source,
     );
+    // Determinism: a second run gives the same diagnostics, and so does the
+    // printed document parsed back (its places differ, so compare texts).
+    expect(
+      HostileRules.validator
+          .validate(schema, document, source: source)
+          .diagnostics,
+      result.diagnostics,
+      reason: reason,
+    );
+    expect(
+      summary(validateReprinted(schema, document)),
+      summary(result),
+      reason: '$reason\nreprinted: ${printer.print(document)}',
+    );
     count(result is ValidDocument ? 'valid' : 'invalid');
     expect(
       result.diagnostics.length,
@@ -92,6 +126,9 @@ void main() {
     );
     for (final diagnostic in result.diagnostics) {
       expect(diagnostic.code.id, startsWith('GQL'), reason: reason);
+      if (diagnostic.code == DiagnosticCode.slicingArgumentsRequired) {
+        count('slicing arguments required');
+      }
     }
   }
 
@@ -101,7 +138,11 @@ void main() {
       outcomes = {};
       for (var index = 0; index < budget.iterations; index++) {
         final random = budget.randomFor(index);
-        final (:sdl, :schema) = RandomValidSchema(random).build();
+        final (:sdl, :schema) = RandomValidSchema(
+          random,
+          includesCostDirectives: true,
+          replay: budget.replay(index),
+        ).build();
         final valid = printer.print(
           RandomOperation(schema.schema, random).document(),
         );
@@ -123,6 +164,7 @@ void main() {
         expect(outcomes['valid'], greaterThan(0));
         expect(outcomes['invalid'], greaterThan(0));
         expect(outcomes['parse failure'], greaterThan(0));
+        expect(outcomes['slicing arguments required'], greaterThan(0));
       }
     },
   );

@@ -103,7 +103,10 @@ Where the reader differs from graphql-js's `buildClientSchema`:
   graphql-js drops built-in types only.
 - A directive named `defer` or `stream` is dropped too and switches on
   `includesDeferAndStream`, whatever its arguments; `cost` or `listSize` does
-  the same for `includesCostDirectives`.
+  the same for `includesCostDirectives`, but only with the draft's arguments
+  (`weight`; `assumedSize`, `slicingArguments`, `requireOneSlicingArgument`,
+  `sizedFields`). A directive of another schema that happens to have one of
+  those names stays an ordinary directive.
 - Directive deprecation (`isDeprecated` of a directive) is ignored: it is
   working-draft, and the built-in `@deprecated` cannot be applied to a
   directive definition, so keeping it would make the schema invalid.

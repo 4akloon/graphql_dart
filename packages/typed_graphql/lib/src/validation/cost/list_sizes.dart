@@ -102,19 +102,26 @@ final class ListSizes(
   };
 
   double _variable(String name) {
-    if (variables[name] case JsonNumber(asInt: final int given)) {
-      return max(0, given).toDouble();
+    // A whole number past the safe-integer range (or a fraction) is still
+    // the size the caller meant: its double value, not the default.
+    if (variables[name] case JsonNumber(:final value)) {
+      return _finiteSize(value.toDouble());
     }
     return _count(variableDefaults[name]) ?? defaultListSize.toDouble();
   }
 
   double? _count(Value? value) => switch (value) {
     IntValue(:final value) => switch (double.tryParse(value)) {
-      final number? => max(0, number),
+      final number? => _finiteSize(number),
       null => null,
     },
     _ => null,
   };
+
+  // A 400-digit literal parses to Infinity: sizes stay finite so no product
+  // of costs is NaN (`SaturatingCost`).
+  double _finiteSize(double size) =>
+      min<double>(double.maxFinite, max<double>(0, size));
 
   // Loops, not recursion: a wrapper chain can be deep.
   TypeRef _unwrapNonNull(TypeRef type) {

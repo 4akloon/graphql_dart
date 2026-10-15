@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import '../../language/ast/value.dart';
 import '../../schema/model/applied_directive.dart';
+import '../../schema/model/string_list_argument.dart';
 
 /// The arguments of one applied `@listSize`, read once.
 final class ListSizeSetting(
@@ -26,12 +29,9 @@ final class ListSizeSetting(
     for (final directive in directives) {
       if (directive.name == 'listSize') {
         return ListSizeSetting(
-          switch (directive.argument('assumedSize')) {
-            IntValue(:final value) => double.tryParse(value),
-            _ => null,
-          },
-          _names(directive, 'slicingArguments'),
-          _names(directive, 'sizedFields'),
+          _assumedSize(directive),
+          StringListArgument(directive).named('slicingArguments'),
+          StringListArgument(directive).named('sizedFields'),
           switch (directive.argument('requireOneSlicingArgument')) {
             BooleanValue(value: false) => false,
             _ => true,
@@ -42,13 +42,13 @@ final class ListSizeSetting(
     return null;
   }
 
-  static List<String> _names(AppliedDirective directive, String argument) {
-    if (directive.argument(argument) case ListValue(:final values)) {
-      return [
-        for (final value in values)
-          if (value case StringValue(:final value)) value,
-      ];
-    }
-    return const [];
-  }
+  // Negative sizes count as 0 and huge ones stay finite.
+  static double? _assumedSize(AppliedDirective directive) =>
+      switch (directive.argument('assumedSize')) {
+        IntValue(:final value) => switch (double.tryParse(value)) {
+          final size? => min<double>(double.maxFinite, max<double>(0, size)),
+          null => null,
+        },
+        _ => null,
+      };
 }

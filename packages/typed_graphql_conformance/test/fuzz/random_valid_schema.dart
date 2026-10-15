@@ -11,11 +11,24 @@ import 'package:typed_graphql/typed_graphql.dart';
 /// object. Input objects refer only to earlier ones, so no input cycle can
 /// arise; an object copies the fields of the one interface it implements.
 final class RandomValidSchema {
-  /// Draws from [random].
-  RandomValidSchema(this.random);
+  /// Draws from [random]; with [includesCostDirectives], some list fields
+  /// get slicing arguments and a `@listSize` (IBM cost draft). A generator
+  /// bug is a [StateError] that starts with [replay], the hint to rerun the
+  /// case (`FuzzBudget.replay`).
+  RandomValidSchema(
+    this.random, {
+    this.includesCostDirectives = false,
+    this.replay = '',
+  });
+
+  /// How to replay the case, at the start of a [StateError] message.
+  final String replay;
 
   /// The random source.
   final Random random;
+
+  /// Whether the schema includes the cost directives and uses `@listSize`.
+  final bool includesCostDirectives;
 
   static const List<String> _builtInScalars = [
     'Int',
@@ -63,17 +76,19 @@ final class RandomValidSchema {
     }
     final sdl = _sdl.toString();
     final document = const Parser().parse(Source(sdl)).requireDocument();
-    final built = const SchemaBuilder().fromSdl(document);
+    final built = SchemaBuilder(
+      includesCostDirectives: includesCostDirectives,
+    ).fromSdl(document);
     if (built is! BuildSuccess) {
       throw StateError(
-        'generated SDL does not build: ${built.diagnostics}\n'
+        '$replay generated SDL does not build: ${built.diagnostics}\n'
         '$sdl',
       );
     }
     final validated = const SchemaValidator().validate(built.schema);
     if (validated is! ValidSchema) {
       throw StateError(
-        'generated SDL is invalid: ${validated.diagnostics}\n'
+        '$replay generated SDL is invalid: ${validated.diagnostics}\n'
         '$sdl',
       );
     }
@@ -139,9 +154,21 @@ final class RandomValidSchema {
   }
 
   List<String> _fields(String prefix, int count) => [
-    for (var i = 0; i < count; i++)
-      '$prefix$i${_arguments()}: ${_wrap(_pickOutput())}',
+    for (var i = 0; i < count; i++) _field('$prefix$i'),
   ];
+
+  String _field(String name) {
+    if (includesCostDirectives && random.nextInt(4) == 0) {
+      return _slicedField(name);
+    }
+    return '$name${_arguments()}: ${_wrap(_pickOutput())}';
+  }
+
+  // A list field whose `first` and `last` size it, so that
+  // `SlicingArgumentsRule` has something to report.
+  String _slicedField(String name) =>
+      '$name(first: Int, last: Int): [${_pickOutput()}] '
+      '@listSize(slicingArguments: ["first", "last"])';
 
   String _pickOutput() => _outputs[random.nextInt(_outputs.length)];
 

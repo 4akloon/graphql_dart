@@ -80,4 +80,35 @@ void main() {
       contains(DiagnosticCode.maxIntrospectionDepthExceeded),
     );
   });
+
+  test('__type with three lists on a path reports at the field', () {
+    expect(
+      errors(
+        '{ __type(name: "Query") { fields { type { fields { type { '
+        'fields { n } } } } } } }',
+      ),
+      ['1:3 GQL236 Maximum introspection depth exceeded'],
+    );
+  });
+
+  test('a __schema under a plain field reports at its own position', () {
+    expect(
+      errors(
+        '{ a { __schema { types { fields { type { fields { type { '
+        'fields { n } } } } } } } } }',
+      ),
+      ['1:7 GQL236 Maximum introspection depth exceeded'],
+    );
+  });
+
+  test('a __schema inside a reported __type is not reported again', () {
+    expect(
+      errors(
+        '{ __type(name: "Query") { fields { type { fields { type { '
+        'fields { n } } } } } __schema { types { fields { type { fields '
+        '{ type { fields { n } } } } } } } } }',
+      ),
+      ['1:3 GQL236 Maximum introspection depth exceeded'],
+    );
+  });
 }

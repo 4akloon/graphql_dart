@@ -18,7 +18,10 @@ void main() {
   test('generated operations are valid', () {
     for (var index = 0; index < budget.iterations; index++) {
       final random = budget.randomFor(index);
-      final (:sdl, :schema) = RandomValidSchema(random).build();
+      final (:sdl, :schema) = RandomValidSchema(
+        random,
+        replay: budget.replay(index),
+      ).build();
       for (var round = 0; round < 3; round++) {
         final text = const Printer().print(
           RandomOperation(schema.schema, random).document(),
@@ -44,7 +47,10 @@ void main() {
     final features = <String>{};
     for (var index = 0; index < budget.iterations; index++) {
       final random = budget.randomFor(index);
-      final schema = RandomValidSchema(random).build().schema;
+      final schema = RandomValidSchema(
+        random,
+        replay: budget.replay(index),
+      ).build().schema;
       final text = const Printer().print(
         RandomOperation(schema.schema, random).document(),
       );
