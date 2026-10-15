@@ -24,7 +24,7 @@ final class CostRun(
   this;
 
   final CostWeights _weights = CostWeights(schema);
-  late final Map<String, FragmentDefinition> _fragments = {
+  final Map<String, FragmentDefinition> _fragments = {
     for (final definition in document.definitions)
       if (definition case FragmentDefinition(:final name))
         name.value: definition,

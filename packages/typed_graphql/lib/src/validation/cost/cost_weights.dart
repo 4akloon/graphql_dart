@@ -26,8 +26,8 @@ final class CostWeights(
 
   final Map<Object, double> _weights = {};
   final Map<SchemaField, ListSizeSetting?> _settings = {};
-  late final bool _hasCost = schema.directiveNamed('cost') != null;
-  late final bool _hasListSize = schema.directiveNamed('listSize') != null;
+  final bool _hasCost = schema.directiveNamed('cost') != null;
+  final bool _hasListSize = schema.directiveNamed('listSize') != null;
 
   /// The weight of [type].
   double ofType(SchemaType type) {
