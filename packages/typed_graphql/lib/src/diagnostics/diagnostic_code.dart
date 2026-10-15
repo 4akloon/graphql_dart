@@ -680,6 +680,43 @@ enum DiagnosticCode(
   /// `GraphQLServer.handle`.
   csrfRequestBlocked('GQL403'),
 
+  /// `GQL410`: reported when a request names a persisted query by its hash
+  /// alone and the server's store does not hold it; the message is
+  /// "PersistedQueryNotFound", which tells a client to send the text with
+  /// the hash. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  persistedQueryNotFound('GQL410'),
+
+  /// `GQL411`: reported when a request sends a document text with a
+  /// persisted query hash that is not the SHA-256 of that text; nothing is
+  /// stored. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  persistedQueryHashMismatch('GQL411'),
+
+  /// `GQL412`: reported when a request names a persisted query by its hash
+  /// alone and the server keeps neither persisted queries nor trusted
+  /// documents; the message is "PersistedQueryNotSupported", which tells a
+  /// client to stop sending hashes. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLServer.handle`.
+  persistedQueryNotSupported('GQL412'),
+
+  /// `GQL413`: reported when `extensions.persistedQuery` of a request is not
+  /// an object with `version` 1 and a `sha256Hash` of 64 lower-case
+  /// hexadecimal digits. It is a `GraphQLError`'s `extensions.code` in a
+  /// response of `GraphQLServer.handle`.
+  invalidPersistedQuery('GQL413'),
+
+  /// `GQL414`: reported when a server that accepts only trusted documents
+  /// receives a document text that is not one of them. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLServer.handle`.
+  untrustedDocument('GQL414'),
+
+  /// `GQL415`: reported when a request names a trusted document by a hash
+  /// that names none. It is a `GraphQLError`'s `extensions.code` in a
+  /// response of `GraphQLServer.handle`.
+  unknownTrustedDocument('GQL415'),
+
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
   /// the YAML parser's.
   configSyntax('GQL500'),

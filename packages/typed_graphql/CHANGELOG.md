@@ -297,3 +297,7 @@
   argument not given: the argument's default, `assumedSize`, then
   `defaultListSize`. A negative value counted 0 and a variable without a
   value skipped the argument's default and `assumedSize`.
+- `DiagnosticCode`: `GQL410`-`GQL415` (`persistedQueryNotFound`,
+  `persistedQueryHashMismatch`, `persistedQueryNotSupported`,
+  `invalidPersistedQuery`, `untrustedDocument`, `unknownTrustedDocument`),
+  reported by the server for persisted queries and trusted documents.
