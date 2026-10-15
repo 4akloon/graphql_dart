@@ -5,7 +5,14 @@ import 'package:typed_graphql/typed_graphql.dart';
 /// Random operations with a few fragments over a small schema, text that
 /// stresses field merging: aliases, arguments, interfaces, unions, spreads
 /// beside and inside fields.
-final class RandomMergeDocument(final Random random, final Schema schema) {
+final class RandomMergeDocument(
+  final Random random,
+  final Schema schema, {
+
+  /// Whether a spread may name any fragment, so that fragments spread
+  /// themselves, directly or through others; else only a later one.
+  final bool hasCycles = false,
+}) {
   /// Creates a generator drawing from [random], over [schema] (see [sdl]).
   this;
 
@@ -45,6 +52,9 @@ union U = T | V
 
   String _selection(String type, int depth, int fragment) {
     final kind = random.nextInt(10);
+    if (kind == 0 && hasCycles && fragment >= 0) {
+      return '...F${random.nextInt(_fragmentCount)}';
+    }
     if (kind == 0 && fragment + 1 < _fragmentCount) {
       final later =
           fragment + 1 + random.nextInt(_fragmentCount - fragment - 1);

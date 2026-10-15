@@ -3,9 +3,18 @@ import 'package:typed_graphql/typed_graphql.dart';
 /// A direct reading of spec §5.3.2 "Field Selection Merging" (the
 /// FieldsInSetCanMerge and SameResponseShape algorithms), comparing every
 /// pair: slow, and the reference the real rule is tested against.
-final class NaiveFieldMerging(final Schema schema, final Document document) {
+final class NaiveFieldMerging(
+  final Schema schema,
+  final Document document, {
+
+  /// How many levels of subfields are compared; null for all of them. A
+  /// document with fragment cycles has infinitely many, so it needs one.
+  final int? maxDepth,
+}) {
   /// Creates the reference for [document] over [schema].
   this;
+
+  int _depth = 0;
 
   late final Map<String, FragmentDefinition> _fragments = {
     for (final definition in document.definitions)
@@ -146,6 +155,19 @@ final class NaiveFieldMerging(final Schema schema, final Document document) {
     if (oneType == null || otherType == null) return true;
     if (!oneType.isCompositeType || !otherType.isCompositeType) return true;
     final merged = _subfields([first, second]);
+    if (_isTooDeep) return true;
+    _depth++;
+    final isSame = _sameShapeInGroups(merged);
+    _depth--;
+    return isSame;
+  }
+
+  bool get _isTooDeep => switch (maxDepth) {
+    final limit? => _depth >= limit,
+    null => false,
+  };
+
+  bool _sameShapeInGroups(List<(Field, SchemaType?)> merged) {
     for (final group in _byResponseName(merged).values) {
       for (var i = 0; i < group.length; i++) {
         for (var j = i + 1; j < group.length; j++) {
@@ -190,8 +212,14 @@ final class NaiveFieldMerging(final Schema schema, final Document document) {
         first.$2 is! ObjectType ||
         second.$2 is! ObjectType;
     if (!mayBeSame) return true;
-    return first.$1.name.value == second.$1.name.value &&
-        _arguments(first.$1) == _arguments(second.$1) &&
-        _canMerge(_subfields([first, second]));
+    if (first.$1.name.value != second.$1.name.value ||
+        _arguments(first.$1) != _arguments(second.$1)) {
+      return false;
+    }
+    if (_isTooDeep) return true;
+    _depth++;
+    final canMerge = _canMerge(_subfields([first, second]));
+    _depth--;
+    return canMerge;
   }
 }
