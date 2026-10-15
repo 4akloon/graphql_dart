@@ -525,4 +525,95 @@ enum DiagnosticCode(
   /// `ExecutableSchemaBuilder` cannot be written as a literal (the codec's
   /// `encode` throws, or an input object has no `encode`).
   unencodableDefaultValue('GQL302'),
+
+  /// `GQL310`: reported when a variable value is invalid, or a required
+  /// variable is missing, as `ExecutableSchema.execute` coerces the variable
+  /// values. It is a `GraphQLError`'s `extensions.code` in a
+  /// response of `ExecutableSchema.execute`.
+  invalidVariableValue('GQL310'),
+
+  /// `GQL311`: reported when the default value of a variable cannot be
+  /// coerced (for example a custom scalar rejects the default literal).
+  /// It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute`.
+  invalidVariableDefault('GQL311'),
+
+  /// `GQL312`: reported when variable coercion stopped because
+  /// `maxCoercionErrors` was reached. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `ExecutableSchema.execute`.
+  tooManyVariableErrors('GQL312'),
+
+  /// `GQL313`: reported when a field or directive argument cannot be
+  /// coerced at run time. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `ExecutableSchema.execute`.
+  invalidArgumentValue('GQL313'),
+
+  /// `GQL314`: reported when an input object's `decode` threw something
+  /// other than a `GraphQLException`; the message is masked. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute`.
+  inputDecodeFailed('GQL314'),
+
+  /// `GQL320`: reported when the document has no operation with the
+  /// requested name. It is a `GraphQLError`'s `extensions.code` in a
+  /// response of `ExecutableSchema.execute`.
+  unknownOperation('GQL320'),
+
+  /// `GQL321`: reported when the document has several operations and no
+  /// operation name was given. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `ExecutableSchema.execute`.
+  operationNameRequired('GQL321'),
+
+  /// `GQL322`: reported when the document has no operation to execute.
+  /// It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute`.
+  noOperation('GQL322'),
+
+  /// `GQL323`: reported when the schema has no root type for the
+  /// operation's type. It is a `GraphQLError`'s `extensions.code` in a
+  /// response of `ExecutableSchema.execute`.
+  unsupportedOperationType('GQL323'),
+
+  /// `GQL330`: reported when a resolver, codec or decode function threw
+  /// an unexpected error; the message is masked. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute`.
+  unexpectedError('GQL330'),
+
+  /// `GQL331`: reported when a resolver returned null for a non-null
+  /// field. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute`.
+  nullNonNullField('GQL331'),
+
+  /// `GQL332`: reported when a leaf value cannot be serialized by its
+  /// scalar codec or enum. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `ExecutableSchema.execute`.
+  unserializableValue('GQL332'),
+
+  /// `GQL333`: reported when no possible type of an abstract type
+  /// accepts the value. It is a `GraphQLError`'s `extensions.code` in a
+  /// response of `ExecutableSchema.execute`.
+  unresolvedAbstractType('GQL333'),
+
+  /// `GQL334`: reported when `resolveType` gave a type that is not a
+  /// possible type of the abstract type, or one whose Dart type does not
+  /// hold the value. It is a `GraphQLError`'s `extensions.code` in a
+  /// response of `ExecutableSchema.execute`.
+  impossibleRuntimeType('GQL334'),
+
+  /// `GQL335`: reported when a value of the wrong Dart shape reached
+  /// completion (for example a non-`Iterable` for a list field). It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute`.
+  unexpectedValue('GQL335'),
+
+  /// `GQL336`: reported when the response is deeper than `maxDepth`. It
+  /// is a `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute`.
+  maxExecutionDepthExceeded('GQL336'),
+
+  /// `GQL337`: reported when execution used more steps than `maxSteps`.
+  /// It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `ExecutableSchema.execute`.
+  maxExecutionStepsExceeded('GQL337'),
 }

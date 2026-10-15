@@ -266,3 +266,4 @@
 - The Operation Validation guide covers the limit rules and cost analysis.
 - `GQL300`-`GQL302`: the diagnostics of the executable schema builder (incompatible implementation, ambiguous type resolution, unencodable default value).
 - `Suggestions` is exported: graphql-js's "Did you mean" text for messages that suggest a name.
+- `GQL310`-`GQL337`: the diagnostics of execution (variable and argument coercion, operation selection, completion errors, limits); they are the `extensions.code` of the errors `ExecutableSchema.execute` returns.
