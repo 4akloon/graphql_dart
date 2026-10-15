@@ -88,22 +88,22 @@ final class FieldExecution {
     if (arguments == null) {
       return null;
     }
-    return _callSource(lane, parent, arguments, (field.type, site));
+    return _callSource(lane, parent, arguments, field.type, site);
   }
 
   FutureOr<Stream<Object?>?> _callSource(
     SubscribeLane lane,
     Object? parent,
     Arguments arguments,
-    (TypeRef, CompletionSite) where,
+    TypeRef type,
+    CompletionSite site,
   ) {
-    final site = where.$2;
     try {
       final opened = lane.source(
         parent,
         arguments,
         _run.context,
-        _infoOf(where.$1, site),
+        _infoOf(type, site),
       );
       return opened is Future<Stream<Object?>>
           ? opened.then<Stream<Object?>?>(

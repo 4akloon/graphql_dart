@@ -78,7 +78,10 @@ final class SubscriptionExecution {
   // root field at all has none, so it says so.
   SubscriptionRejected _rejected(ExecutionRun run) {
     final log = run.reporter.log;
-    final errors = log.haltError != null ? [log.haltError!] : log.errors;
+    final errors = switch (log.haltError) {
+      final halted? => [halted],
+      null => log.errors,
+    };
     return SubscriptionRejected(
       RequestErrorResult(
         errors: errors.isEmpty
