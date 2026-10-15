@@ -157,3 +157,14 @@
   lookup, `GQL402` for a mutation over `GET`, the context factory, execution
   or subscription with the options of the `ServerProfile`) and never throws;
   unexpected errors go to `onError` and are masked (`GQL330`) per the profile.
+- `ServerExtension<C>`: three hooks (`onRequest`, `onDocument`, `onExecute`),
+  each with a default that calls `next`, passed to `GraphQLServer.extensions`
+  (the first is the outermost and sees even the requests CSRF prevention
+  refuses). `RequestHandler`, `DocumentHandler` and `ExecutionHandler<C>` are
+  the `next` types; `DocumentRequest` (`withText`), the sealed
+  `DocumentResult` (`DocumentAccepted` with the hash the server computed,
+  `DocumentRejected`) and `ExecutionRequest<C>` (`withContext`,
+  `withOptions`) are what the hooks take and return.
+- CSRF prevention (`GQL403`) runs in the request phase when the profile has a
+  `CsrfPrevention`: a request without a content type a browser cannot send
+  cross-site and without a preflight header is refused before any other step.

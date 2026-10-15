@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 import 'package:typed_graphql_server/src/server/document_cache.dart';
-import 'package:typed_graphql_server/src/server/document_entry.dart';
 import 'package:typed_graphql_server/src/server/document_hash.dart';
+import 'package:typed_graphql_server/src/server/document_result.dart';
 
 import 'support/compiler_fixture.dart';
 
@@ -28,8 +28,8 @@ void main() {
     test('returns the same accepted entry for the same text', () {
       final cache = DocumentCache(10);
       final compiler = fixture.countingCompiler;
-      final first = cache.entryFor('{a}', compiler);
-      final second = cache.entryFor('{a}', compiler);
+      final first = cache.resultFor('{a}', compiler);
+      final second = cache.resultFor('{a}', compiler);
       expect(second, same(first));
       expect(compiler.calls, 1);
     });
@@ -37,21 +37,23 @@ void main() {
     test('the accepted entry holds one ValidDocument for the text', () {
       final cache = DocumentCache(10);
       final compiler = fixture.compiler;
-      final first = cache.entryFor('{a}', compiler) as AcceptedEntry;
-      final second = cache.entryFor('{a}', compiler) as AcceptedEntry;
+      final first = cache.resultFor('{a}', compiler) as DocumentAccepted;
+      final second = cache.resultFor('{a}', compiler) as DocumentAccepted;
       expect(second.document, same(first.document));
     });
 
-    test('the entry carries the hash of the text', () {
-      final entry = DocumentCache(10).entryFor('{a}', fixture.compiler);
-      expect(entry.hash, const DocumentHash().of('{a}'));
+    test('the result carries the hash of the text', () {
+      final result = DocumentCache(
+        10,
+      ).resultFor('{a}', fixture.compiler) as DocumentAccepted;
+      expect(result.hash, const DocumentHash().of('{a}'));
     });
 
     test('compiles a failure once', () {
       final cache = DocumentCache(10);
       final compiler = fixture.countingCompiler;
-      final first = cache.entryFor('{', compiler);
-      final second = cache.entryFor('{', compiler);
+      final first = cache.resultFor('{', compiler);
+      final second = cache.resultFor('{', compiler);
       expect(second, same(first));
       expect(compiler.calls, 1);
     });
@@ -60,11 +62,11 @@ void main() {
       final cache = DocumentCache(2);
       final compiler = fixture.countingCompiler;
       cache
-        ..entryFor('{a}', compiler)
-        ..entryFor('{ a }', compiler)
-        ..entryFor('{  a }', compiler);
+        ..resultFor('{a}', compiler)
+        ..resultFor('{ a }', compiler)
+        ..resultFor('{  a }', compiler);
       expect(cache.length, 2);
-      cache.entryFor('{a}', compiler);
+      cache.resultFor('{a}', compiler);
       expect(compiler.calls, 4);
     });
 
@@ -72,14 +74,14 @@ void main() {
       final cache = DocumentCache(2);
       final compiler = fixture.countingCompiler;
       cache
-        ..entryFor('{a}', compiler)
-        ..entryFor('{ a }', compiler)
-        ..entryFor('{a}', compiler)
-        ..entryFor('{  a }', compiler);
+        ..resultFor('{a}', compiler)
+        ..resultFor('{ a }', compiler)
+        ..resultFor('{a}', compiler)
+        ..resultFor('{  a }', compiler);
       expect(compiler.calls, 3);
-      cache.entryFor('{a}', compiler);
+      cache.resultFor('{a}', compiler);
       expect(compiler.calls, 3);
-      cache.entryFor('{ a }', compiler);
+      cache.resultFor('{ a }', compiler);
       expect(compiler.calls, 4);
     });
 
@@ -87,8 +89,8 @@ void main() {
       final cache = DocumentCache(0);
       final compiler = fixture.countingCompiler;
       cache
-        ..entryFor('{a}', compiler)
-        ..entryFor('{a}', compiler);
+        ..resultFor('{a}', compiler)
+        ..resultFor('{a}', compiler);
       expect(compiler.calls, 2);
       expect(cache.length, 0);
     });

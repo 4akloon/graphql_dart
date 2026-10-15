@@ -91,6 +91,7 @@ final class ServerFixture {
     List<ValidationRule> validationRules = DocumentValidator.recommendedRules,
     ErrorHook? onError,
     int documentCacheSize = 1000,
+    List<ServerExtension<Ctx>> extensions = const [],
   }) => GraphQLServer<Ctx>(
     schema: schema,
     contextFactory: contextFactory ?? (_) => const Ctx('default'),
@@ -98,6 +99,7 @@ final class ServerFixture {
     validationRules: validationRules,
     onError: onError,
     documentCacheSize: documentCacheSize,
+    extensions: extensions,
   );
 
   ServerRequest request(
@@ -106,13 +108,18 @@ final class ServerFixture {
     String? operationName,
     JsonObject? variables,
     CancelSignal? cancelSignal,
+    Map<String, String> headers = const {'content-type': 'application/json'},
   }) => ServerRequest(
     params: GraphQLRequest(
       query: query,
       operationName: operationName,
       variables: variables,
     ),
-    info: RequestInfo(method: method, uri: Uri.parse('/graphql')),
+    info: RequestInfo(
+      method: method,
+      uri: Uri.parse('/graphql'),
+      headers: headers,
+    ),
     cancelSignal: cancelSignal,
   );
 

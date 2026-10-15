@@ -1,17 +1,18 @@
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../cancellation/cancel_signal.dart';
 import '../execution/error_hook.dart';
 import '../execution/executable_schema.dart';
 import '../execution/execution_options.dart';
 import '../subscription/subscription_result.dart';
-import 'execution_job.dart';
+import 'execution_request.dart';
 import 'server_outcome.dart';
 import 'server_profile.dart';
 import 'server_response.dart';
 
 /// The core step of the execution phase: runs the operation with the
-/// options of section 12 and maps the result to a response.
+/// options of the request and maps the result to a response.
 @internal
 final class ExecutionStep<C> {
   /// Creates the step for [schema] under [profile], passing [onError] on.
@@ -26,31 +27,34 @@ final class ExecutionStep<C> {
   /// The server's error hook.
   final ErrorHook? onError;
 
-  /// The options of [job]: no timeout for a subscription, which would end a
-  /// long-lived stream.
-  ExecutionOptions optionsFor(ExecutionJob<C> job) => ExecutionOptions(
-    source: job.entry.source,
+  /// The options of section 12 for a request on [source]: no timeout for a
+  /// subscription, which would end a long-lived stream.
+  ExecutionOptions optionsFor(
+    Source source,
+    OperationType? operationType,
+    CancelSignal? cancelSignal,
+  ) => ExecutionOptions(
+    source: source,
     maskErrors: profile.maskErrors,
     onError: onError,
     includesSuggestions: profile.includesSuggestions,
     introspection: profile.introspection,
-    cancelSignal: job.request.cancelSignal,
-    timeout: job.operationType == OperationType.subscription
+    cancelSignal: cancelSignal,
+    timeout: operationType == OperationType.subscription
         ? null
         : profile.timeout,
   );
 
-  /// Executes [job] with its [optionsFor].
-  Future<ServerResponse> run(ExecutionJob<C> job) async {
-    final params = job.request.params;
-    final options = optionsFor(job);
-    if (job.operationType == OperationType.subscription) {
+  /// Executes [request] with its options and context.
+  Future<ServerResponse> run(ExecutionRequest<C> request) async {
+    final params = request.request.params;
+    if (request.operationType == OperationType.subscription) {
       final started = await schema.subscribe(
-        job.entry.document,
-        context: job.context,
+        request.document,
+        context: request.context,
         operationName: params.operationName,
         variables: params.variables,
-        options: options,
+        options: request.options,
       );
       return switch (started) {
         SubscriptionStarted(:final results) => StreamResponse(results),
@@ -61,11 +65,11 @@ final class ExecutionStep<C> {
       };
     }
     final payload = await schema.execute(
-      job.entry.document,
-      context: job.context,
+      request.document,
+      context: request.context,
       operationName: params.operationName,
       variables: params.variables,
-      options: options,
+      options: request.options,
     );
     return SingleResponse(
       payload,

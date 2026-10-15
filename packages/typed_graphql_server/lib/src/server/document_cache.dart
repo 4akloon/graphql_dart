@@ -3,8 +3,8 @@ import 'dart:collection';
 import 'package:meta/meta.dart';
 
 import 'document_compiler.dart';
-import 'document_entry.dart';
 import 'document_hash.dart';
+import 'document_result.dart';
 
 /// A least-recently-used cache of compiled documents, keyed by the SHA-256 of
 /// the text (R5.2).
@@ -24,29 +24,29 @@ final class DocumentCache {
   final int capacity;
 
   // Dart's default map keeps insertion order: the first key is the oldest.
-  final LinkedHashMap<String, DocumentEntry> _entries =
-      LinkedHashMap<String, DocumentEntry>();
+  final LinkedHashMap<String, DocumentResult> _entries =
+      LinkedHashMap<String, DocumentResult>();
 
   /// The number of entries held.
   @visibleForTesting
   int get length => _entries.length;
 
-  /// The entry for [text]: the stored one, which becomes the most recent, or
+  /// The result for [text]: the stored one, which becomes the most recent, or
   /// the one [compiler] makes, stored unless the capacity is 0.
-  DocumentEntry entryFor(String text, DocumentCompiler compiler) {
+  DocumentResult resultFor(String text, DocumentCompiler compiler) {
     final hash = const DocumentHash().of(text);
     final stored = _entries.remove(hash);
     if (stored != null) {
       _entries[hash] = stored;
       return stored;
     }
-    final entry = compiler.compile(text, hash);
+    final result = compiler.compile(text, hash);
     if (capacity > 0) {
-      _entries[hash] = entry;
+      _entries[hash] = result;
       if (_entries.length > capacity) {
         _entries.remove(_entries.keys.first);
       }
     }
-    return entry;
+    return result;
   }
 }

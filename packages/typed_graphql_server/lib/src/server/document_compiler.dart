@@ -2,7 +2,7 @@ import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import 'diagnostic_errors.dart';
-import 'document_entry.dart';
+import 'document_result.dart';
 
 /// Parses and validates one document text against the server's schema.
 ///
@@ -22,13 +22,12 @@ class DocumentCompiler {
   /// The schema documents are validated against.
   final ValidSchema schema;
 
-  /// The entry for [text], whose SHA-256 is [hash]: the validated document,
+  /// The result for [text], whose SHA-256 is [hash]: the validated document,
   /// or the errors of the first stage that failed.
-  DocumentEntry compile(String text, String hash) {
+  DocumentResult compile(String text, String hash) {
     final source = Source(text);
     return switch (parser.parse(source)) {
-      ParseFailure(:final diagnostics) => RejectedEntry(
-        hash,
+      ParseFailure(:final diagnostics) => DocumentRejected(
         const DiagnosticErrors().of(diagnostics),
       ),
       ParseSuccess(:final document) => switch (validator.validate(
@@ -36,9 +35,8 @@ class DocumentCompiler {
         document,
         source: source,
       )) {
-        final ValidDocument valid => AcceptedEntry(hash, valid, source),
-        InvalidDocument(:final diagnostics) => RejectedEntry(
-          hash,
+        final ValidDocument valid => DocumentAccepted(valid, source, hash),
+        InvalidDocument(:final diagnostics) => DocumentRejected(
           const DiagnosticErrors().of(diagnostics),
         ),
       },

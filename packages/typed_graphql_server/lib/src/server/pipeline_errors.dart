@@ -27,7 +27,7 @@ final class PipelineErrors {
     ServerOutcome outcome = ServerOutcome.requestError,
     Map<String, String> headers = const {},
   }) => SingleResponse(
-    RequestErrorResult(errors: [_coded(code, message)]),
+    RequestErrorResult(errors: [coded(code, message)]),
     outcome: outcome,
     headers: headers,
   );
@@ -46,7 +46,7 @@ final class PipelineErrors {
   /// The response to an unexpected [error]: offered to the hook, then
   /// masked (`GQL330`) or shown by its `toString()`.
   SingleResponse internal(Object error, StackTrace stackTrace) {
-    final reported = _coded(
+    final reported = coded(
       DiagnosticCode.unexpectedError,
       _describe(error),
     );
@@ -78,11 +78,12 @@ final class PipelineErrors {
     try {
       return hook(error, stackTrace, reported) ?? reported;
     } on Object {
-      return _coded(DiagnosticCode.unexpectedError, const MaskedMessage().text);
+      return coded(DiagnosticCode.unexpectedError, const MaskedMessage().text);
     }
   }
 
-  GraphQLError _coded(DiagnosticCode code, String message) => GraphQLError(
+  /// One error with [message] and `extensions.code` of [code].
+  GraphQLError coded(DiagnosticCode code, String message) => GraphQLError(
     message,
     extensions: JsonObject({'code': JsonString(code.id)}),
   );

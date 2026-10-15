@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'package:typed_graphql/typed_graphql.dart';
-import 'package:typed_graphql_server/src/server/document_entry.dart';
+import 'package:typed_graphql_server/src/server/document_result.dart';
 
 import 'support/compiler_fixture.dart';
 
@@ -11,18 +11,21 @@ void main() {
     text,
     'hash',
   )) {
-    RejectedEntry(:final errors) => errors,
-    AcceptedEntry() => throw StateError('expected a rejection'),
+    DocumentRejected(:final errors) => errors,
+    DocumentAccepted() => throw StateError('expected a rejection'),
   };
 
   test('a valid text is accepted with its source', () {
     final entry = compiler.compile('{ a }', 'hash');
-    expect(entry, isA<AcceptedEntry>());
-    expect((entry as AcceptedEntry).source.body, '{ a }');
+    expect(entry, isA<DocumentAccepted>());
+    expect((entry as DocumentAccepted).source.body, '{ a }');
   });
 
-  test('the entry keeps the hash it was given', () {
-    expect(compiler.compile('{ a }', 'the-hash').hash, 'the-hash');
+  test('an accepted result keeps the hash it was given', () {
+    expect(
+      (compiler.compile('{ a }', 'the-hash') as DocumentAccepted).hash,
+      'the-hash',
+    );
   });
 
   test('a syntax error becomes an error with its code and location', () {

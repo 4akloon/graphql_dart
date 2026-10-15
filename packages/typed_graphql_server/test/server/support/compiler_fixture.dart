@@ -1,6 +1,6 @@
 import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_server/src/server/document_compiler.dart';
-import 'package:typed_graphql_server/src/server/document_entry.dart';
+import 'package:typed_graphql_server/src/server/document_result.dart';
 
 /// A small valid schema and compilers over it.
 final class CompilerFixture {
@@ -31,7 +31,7 @@ final class CountingCompiler extends DocumentCompiler {
   int calls = 0;
 
   @override
-  DocumentEntry compile(String text, String hash) {
+  DocumentResult compile(String text, String hash) {
     calls++;
     return super.compile(text, hash);
   }
