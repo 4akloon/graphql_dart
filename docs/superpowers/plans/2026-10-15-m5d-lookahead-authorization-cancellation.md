@@ -46,33 +46,33 @@
 
 | File | Change | Task |
 |---|---|---|
-| `packages/typed_graphql_server/doc/lookahead.md` | Create, then Modify | 2, 9, 10 |
+| `packages/typed_graphql_server/doc/lookahead.md` | Create, then Modify | 2, 9, 10, 17 |
 | `packages/typed_graphql_server/lib/src/lookahead/argument_text.dart` | Create | 2 |
 | `packages/typed_graphql_server/lib/src/lookahead/canonical_json.dart` | Create, then Modify | 2, 10 |
-| `packages/typed_graphql_server/lib/src/lookahead/column_whitelist.dart` | Create | 2 |
+| `packages/typed_graphql_server/lib/src/lookahead/column_whitelist.dart` | Create, then Delete | 2, 17 |
 | `packages/typed_graphql_server/lib/src/lookahead/field_selection.dart` | Create, then Modify | 2, 10 |
 | `packages/typed_graphql_server/lib/src/lookahead/selected_field.dart` | Create, then Modify | 2, 3, 10 |
 | `packages/typed_graphql_server/lib/src/lookahead/selection_fingerprint.dart` | Create, then Modify | 2, 10 |
 | `packages/typed_graphql_server/lib/src/lookahead/selection_nodes.dart` | Create, then Modify | 2, 10 |
-| `packages/typed_graphql_server/test/lookahead/column_whitelist_test.dart` | Create | 2 |
+| `packages/typed_graphql_server/test/lookahead/column_whitelist_test.dart` | Create, then Delete | 2, 17 |
 | `packages/typed_graphql_server/test/lookahead/field_selection_test.dart` | Create, then Modify | 2, 10 |
 | `packages/typed_graphql_server/test/lookahead/look_ahead_fixture.dart` | Create | 2 |
 | `packages/typed_graphql_server/test/lookahead/selection_fingerprint_test.dart` | Create | 2 |
-| `packages/typed_graphql_server/doc/authorization.md` | Create, then Modify | 3, 9, 12 |
+| `packages/typed_graphql_server/doc/authorization.md` | Create, then Modify | 3, 9, 12, 13 |
 | `packages/typed_graphql_server/lib/src/authorization/authorization.dart` | Create | 3 |
 | `packages/typed_graphql_server/lib/src/authorization/authorization_coverage.dart` | Create | 3 |
 | `packages/typed_graphql_server/lib/src/authorization/authorization_decision.dart` | Create | 3 |
 | `packages/typed_graphql_server/lib/src/authorization/authorizer.dart` | Create | 3 |
 | `packages/typed_graphql_server/lib/src/authorization/field_access.dart` | Create | 3 |
-| `packages/typed_graphql_server/lib/src/builder/authorization_applier.dart` | Create | 3 |
+| `packages/typed_graphql_server/lib/src/builder/authorization_applier.dart` | Create, then Modify | 3, 13 |
 | `packages/typed_graphql_server/lib/src/builder/field_guard.dart` | Create | 3 |
-| `packages/typed_graphql_server/test/authorization/authorization_fixture.dart` | Create | 3 |
-| `packages/typed_graphql_server/test/authorization/authorization_test.dart` | Create | 3 |
+| `packages/typed_graphql_server/test/authorization/authorization_fixture.dart` | Create, then Modify | 3, 13 |
+| `packages/typed_graphql_server/test/authorization/authorization_test.dart` | Create, then Modify | 3, 13 |
 | `packages/typed_graphql_server/doc/cancellation.md` | Create, then Modify | 4, 9, 11 |
-| `packages/typed_graphql_server/lib/src/cancellation/cancel_signal.dart` | Create, then Modify | 4, 11 |
-| `packages/typed_graphql_server/lib/src/execution/run_cancellation.dart` | Create, then Modify | 4, 6, 11 |
+| `packages/typed_graphql_server/lib/src/cancellation/cancel_signal.dart` | Create, then Modify | 4, 11, 15 |
+| `packages/typed_graphql_server/lib/src/execution/run_cancellation.dart` | Create, then Modify | 4, 6, 11, 16 |
 | `packages/typed_graphql_server/test/cancellation/cancellation_fixture.dart` | Create, then Modify | 4, 6, 11 |
-| `packages/typed_graphql_server/test/cancellation/execute_cancellation_test.dart` | Create | 4 |
+| `packages/typed_graphql_server/test/cancellation/execute_cancellation_test.dart` | Create, then Modify | 4, 16 |
 | `packages/typed_graphql_server/test/cancellation/subscription_cancellation_test.dart` | Create | 4 |
 | `packages/typed_graphql_conformance/test/execution/cancellation_bubbling_test.dart` | Create | 5 |
 | `packages/typed_graphql_conformance/test/execution/cancellation_subscription_test.dart` | Create, then Modify | 5, 6 |
@@ -87,21 +87,24 @@
 | `packages/typed_graphql_server/test/lookahead/bounds_fixture.dart` | Create | 10 |
 | `packages/typed_graphql_server/test/lookahead/bounds_test.dart` | Create | 10 |
 | `packages/typed_graphql_server/test/cancellation/subscription_release_test.dart` | Create | 11 |
-| `packages/typed_graphql/CHANGELOG.md` | Modify | 1 |
+| `packages/typed_graphql_server/test/coercion/frozen_arguments_test.dart` | Create | 14 |
+| `packages/typed_graphql_server/lib/src/lookahead/column_allowlist.dart` | Create | 17 |
+| `packages/typed_graphql_server/test/lookahead/column_allowlist_test.dart` | Create | 17 |
+| `packages/typed_graphql/CHANGELOG.md` | Modify | 1, 19 |
 | `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart` | Modify | 1 |
-| `packages/typed_graphql_server/CHANGELOG.md` | Modify | 2, 3, 4, 10, 11, 12 |
+| `packages/typed_graphql_server/CHANGELOG.md` | Modify | 2, 3, 4, 10, 11, 12, 13, 14, 15, 16, 17 |
 | `packages/typed_graphql_server/dartdoc_options.yaml` | Modify | 2, 3, 4 |
 | `packages/typed_graphql_server/lib/src/execution/field_execution.dart` | Modify | 2, 4, 10 |
 | `packages/typed_graphql_server/lib/src/execution/field_info.dart` | Modify | 2, 4, 10 |
-| `packages/typed_graphql_server/lib/typed_graphql_server.dart` | Modify | 2, 3, 4, 12 |
+| `packages/typed_graphql_server/lib/typed_graphql_server.dart` | Modify | 2, 3, 4, 12, 17 |
 | `packages/typed_graphql_server/lib/src/builder/build_options.dart` | Modify | 3 |
 | `packages/typed_graphql_server/lib/src/builder/executable_schema_assembly.dart` | Modify | 3 |
-| `packages/typed_graphql_server/lib/src/builder/field_def.dart` | Modify | 3 |
+| `packages/typed_graphql_server/lib/src/builder/field_def.dart` | Modify | 3, 15 |
 | `packages/typed_graphql_server/lib/src/builder/field_stub.dart` | Modify | 3 |
 | `packages/typed_graphql_server/lib/src/builder/object_options.dart` | Modify | 3 |
-| `packages/typed_graphql_server/lib/src/execution/executable_schema.dart` | Modify | 3 |
+| `packages/typed_graphql_server/lib/src/execution/executable_schema.dart` | Modify | 3, 15 |
 | `packages/typed_graphql_server/lib/src/execution/execution_options.dart` | Modify | 4 |
-| `packages/typed_graphql_server/lib/src/execution/execution_run.dart` | Modify | 4, 10 |
+| `packages/typed_graphql_server/lib/src/execution/execution_run.dart` | Modify | 4, 10, 16 |
 | `packages/typed_graphql_server/lib/src/execution/operation_execution.dart` | Modify | 4 |
 | `packages/typed_graphql_server/lib/src/execution/operation_preparation.dart` | Modify | 4 |
 | `packages/typed_graphql_server/lib/src/execution/subscription_execution.dart` | Modify | 4, 6 |
@@ -109,15 +112,24 @@
 | `packages/typed_graphql_conformance/mapping/execution.csv` | Modify | 5, 6 |
 | `packages/typed_graphql_conformance/test/mapping_test.dart` | Modify | 5 |
 | `packages/typed_graphql_conformance/test/support/execution_port.dart` | Modify | 5 |
-| `docs/superpowers/specs/2026-10-15-m5-execution-design.md` | Modify | 6, 8, 11, 12 |
+| `docs/superpowers/specs/2026-10-15-m5-execution-design.md` | Modify | 6, 8, 11, 12, 13, 14, 16, 17, 18, 20 |
 | `packages/typed_graphql_conformance/README.md` | Modify | 7 |
-| `CLAUDE.md` | Modify | 9, 10, 11, 12 |
+| `CLAUDE.md` | Modify | 9, 10, 11, 12, 20 |
 | `README.md` | Modify | 9 |
 | `docs/discovery.md` | Modify | 9 |
-| `docs/superpowers/HANDOFF.md` | Modify | 9 |
+| `docs/superpowers/HANDOFF.md` | Modify | 9, 17, 18 |
 | `llms.txt` | Modify | 9 |
-| `packages/typed_graphql_server/README.md` | Modify | 9 |
+| `packages/typed_graphql_server/README.md` | Modify | 9, 17 |
 | `packages/typed_graphql_server/lib/src/execution/execution_limits.dart` | Modify | 10 |
+| `packages/typed_graphql_server/doc/subscriptions.md` | Modify | 13 |
+| `packages/typed_graphql_server/lib/src/coercion/argument_coercion.dart` | Modify | 14 |
+| `packages/typed_graphql_server/lib/src/coercion/input_object_decoder.dart` | Modify | 14 |
+| `packages/typed_graphql_server/lib/src/coercion/literal_coercion.dart` | Modify | 14 |
+| `packages/typed_graphql_server/lib/src/coercion/value_coercion.dart` | Modify | 14 |
+| `docs/requirements.md` | Modify | 17 |
+| `docs/superpowers/specs/2026-10-13-typed-graphql-design.md` | Modify | 17 |
+| `docs/superpowers/plans/2026-10-15-m5a-typed-builder.md` | Modify | 18 |
+| `docs/superpowers/plans/2026-10-15-m5b-execution-core.md` | Modify | 18 |
 
 ## The green check
 
@@ -8172,6 +8184,1203 @@ git commit -q -m "docs(typed_graphql_server): correct the M5d texts" \
   -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
+### Task 13: Final review fix: a subscription is authorized once
+
+The final review found the authorizer guarding both the source and the per-event resolver of a `SubscribeLane`. `AuthorizationApplier` now guards only the source, so a guarded subscription is authorized once, at `subscribe` (spec section 18 item 45; open question 15). A test counts the authorizer calls across several events; the Authorization and Subscriptions guides say so.
+
+**Files:**
+- Modify: `packages/typed_graphql_server/lib/src/builder/authorization_applier.dart`, `docs/superpowers/specs/2026-10-15-m5-execution-design.md`, `packages/typed_graphql_server/CHANGELOG.md`, `packages/typed_graphql_server/doc/authorization.md`, `packages/typed_graphql_server/doc/subscriptions.md`
+- Test: `packages/typed_graphql_server/test/authorization/authorization_fixture.dart`, `packages/typed_graphql_server/test/authorization/authorization_test.dart`
+
+**Interfaces:**
+- Consumes: the earlier tasks of this plan.
+- Produces: no new declaration; the steps change existing code, tests or documents.
+
+- [ ] **Step 1: Write the tests**
+
+In `packages/typed_graphql_server/test/authorization/authorization_fixture.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -142,7 +142,7 @@ final class AuthorizationFixture {
+         t
+             .field('tick', b.int)
+             .withAuthorization(Authorization.requires(['admin']))
+-            .subscribe((p, a, c, i) => Stream.value(1)),
++            .subscribe((p, a, c, i) => Stream.fromIterable([1, 2, 3])),
+       ],
+     );
+     return b.build(
+```
+
+In `packages/typed_graphql_server/test/authorization/authorization_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -130,6 +130,16 @@ void main() {
+     });
+   });
+ 
++  test('a subscription is authorized once, not for every event', () async {
++    final result = await fixture.built.subscribe(
++      fixture.validDocument('subscription { tick }'),
++      context: const Caller({'admin'}),
++    );
++    final responses = await (result as SubscriptionStarted).results.toList();
++    expect(responses, hasLength(3));
++    expect(authorizer.calls, ['Subscription.tick']);
++  });
++
+   group('rules', () {
+     test('a type rule guards the fields without one', () async {
+       final json = await fixture.run('{ account { id } }');
+```
+
+- [ ] **Step 2: Run the tests and see them fail**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/authorization/authorization_test.dart)
+```
+
+Expected: FAIL. The test files do not compile: they use the names that the next step adds (`Error: ... isn't defined` or `Member not found`).
+
+- [ ] **Step 3: Write the implementation**
+
+In `packages/typed_graphql_server/lib/src/builder/authorization_applier.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -78,9 +78,10 @@ final class AuthorizationApplier<C> {
+         }),
+       ),
+       ResolverLane(:final resolve) => ResolverLane(guard.guard(resolve)),
++      // Once per request, as for a query (spec 18.45).
+       SubscribeLane(:final source, :final resolve) => SubscribeLane(
+         guard.guard(source),
+-        guard.guard(resolve),
++        resolve,
+       ),
+       final DeclaredOnlyLane lane => lane,
+     }, rule);
+```
+
+- [ ] **Step 4: Run the tests and see them pass**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/authorization/authorization_test.dart)
+```
+
+Expected: `All tests passed!`.
+
+- [ ] **Step 5: Update the documents**
+
+In `docs/superpowers/specs/2026-10-15-m5-execution-design.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -743,6 +743,12 @@ depends on the other). These constraints keep that possible:
+ 44. `SelectedField`s merge by response key, field name and printed arguments,
+     not by response key alone (spec 11): object types that cannot overlap may
+     give one alias to different fields, and `FieldsInSetCanMerge` allows it.
++45. A subscription field's authorization guards the source only: the
++    authorizer runs once, at subscribe, not for each event. Authorization is
++    a per-request decision, as for a query; a per-event check would cost one
++    call per event and turn a revoked permission into a stream of GQL352
++    events. A server that must re-check per event does so in the event
++    resolver.
+ 
+ ## 19. Conformance (R0.7, R10.3)
+ 
+```
+
+Append to `packages/typed_graphql_server/CHANGELOG.md`:
+
+```markdown
+- A subscription field's authorization runs once, at subscribe, not for each
+  event.
+```
+
+Append to `packages/typed_graphql_server/doc/authorization.md`:
+
+```markdown
+
+## Subscriptions
+
+A rule on a subscription field is checked once, when the subscription starts,
+and not for each event. A server that must re-check per event does it in the
+event resolver.
+```
+
+Append to `packages/typed_graphql_server/doc/subscriptions.md`:
+
+```markdown
+
+## Authorization
+
+A rule on a subscription field is checked once, at subscribe; the events are
+not authorized again.
+```
+
+- [ ] **Step 6: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 7: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 8: Commit**
+
+```sh
+git add docs/superpowers/specs/2026-10-15-m5-execution-design.md packages/typed_graphql_server/CHANGELOG.md packages/typed_graphql_server/doc/authorization.md packages/typed_graphql_server/doc/subscriptions.md packages/typed_graphql_server/lib/src/builder/authorization_applier.dart packages/typed_graphql_server/test/authorization/authorization_fixture.dart packages/typed_graphql_server/test/authorization/authorization_test.dart
+git commit -q -m "fix(typed_graphql_server): authorize a subscription once, at subscribe" \
+  -m "The guard wraps the source only; events are not authorized again." \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 14: Final review fix: frozen coerced arguments
+
+Coerced arguments are cached on the shared `FieldPlan`, so a resolver writing to `Arguments.coerced` changed later requests. Argument coercion now returns unmodifiable maps and lists (spec section 18 item 46); a test writes to `args.coerced` and checks that a second execution of the cached plan sees the original value.
+
+**Files:**
+- Modify: `packages/typed_graphql_server/lib/src/coercion/argument_coercion.dart`, `packages/typed_graphql_server/lib/src/coercion/input_object_decoder.dart`, `packages/typed_graphql_server/lib/src/coercion/literal_coercion.dart`, `packages/typed_graphql_server/lib/src/coercion/value_coercion.dart`, `docs/superpowers/specs/2026-10-15-m5-execution-design.md`, `packages/typed_graphql_server/CHANGELOG.md`
+- Test: `packages/typed_graphql_server/test/coercion/frozen_arguments_test.dart`
+
+**Interfaces:**
+- Consumes: the earlier tasks of this plan.
+- Produces: no new declaration; the steps change existing code, tests or documents.
+
+- [ ] **Step 1: Write the tests**
+
+Create `packages/typed_graphql_server/test/coercion/frozen_arguments_test.dart`:
+
+```dart
+import 'package:test/test.dart';
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_server/typed_graphql_server.dart';
+
+void main() {
+  late ExecutableSchema<Object?> built;
+  late ValidDocument document;
+  var seen = <Object?>[];
+
+  setUp(() {
+    seen = [];
+    final b = ExecutableSchemaBuilder<Object?>();
+    final name = Arg('name', b.string);
+    final query = b.object<Object?>(
+      'Query',
+      fields: (t) => [
+        t.field('greet', b.string.nullable, args: [name]).resolve((
+          parent,
+          args,
+          context,
+          info,
+        ) {
+          seen.add(args.coerced['name']);
+          args.coerced['name'] = 'changed';
+          return 'ok';
+        }),
+      ],
+    );
+    built = b.build(query: query);
+    final parsed = const Parser(
+      options: ParserOptions(maxTokens: null, maxDepth: null),
+    ).parse(Source('{ greet(name: "Ada") }')).requireDocument();
+    document = ValidDocument.assumeValid(built.schema, parsed);
+  });
+
+  test('a resolver cannot write to the coerced arguments', () async {
+    final payload = await built.execute(document, context: null);
+    final errors = payload.toJson().toJson()['errors']! as List<Object?>;
+    expect(errors, hasLength(1));
+  });
+
+  test('a later execution of the cached operation sees the original', () async {
+    await built.execute(document, context: null);
+    await built.execute(document, context: null);
+    expect(seen, ['Ada', 'Ada']);
+  });
+}
+```
+
+- [ ] **Step 2: Run the tests and see them fail**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/coercion/frozen_arguments_test.dart)
+```
+
+Expected: FAIL. The test files do not compile: they use the names that the next step adds (`Error: ... isn't defined` or `Member not found`).
+
+- [ ] **Step 3: Write the implementation**
+
+In `packages/typed_graphql_server/lib/src/coercion/argument_coercion.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -51,7 +51,7 @@ final class ArgumentCoercion {
+         return CoercionFailure([problem], hasOverflowed: false);
+       }
+     }
+-    return CoercionSuccess(values);
++    return CoercionSuccess(Map<String, Object?>.unmodifiable(values));
+   }
+ 
+   CoercionProblem? _coerceOne(
+```
+
+In `packages/typed_graphql_server/lib/src/coercion/input_object_decoder.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -33,7 +33,9 @@ final class InputObjectDecoder {
+       return InvalidValue.instance;
+     }
+     try {
+-      return definition.decode(Arguments(definition.fields, coerced));
++      return definition.decode(
++        Arguments(definition.fields, Map.unmodifiable(coerced)),
++      );
+     } on GraphQLException catch (exception) {
+       problems.add(exception.message, path, extensions: exception.extensions);
+     } on Object catch (error, stackTrace) {
+```
+
+In `packages/typed_graphql_server/lib/src/coercion/literal_coercion.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -96,7 +96,9 @@ final class LiteralCoercion {
+   Object? _list(Value literal, TypeRef item, InputPath path, int depth) {
+     if (literal is! ListValue) {
+       final single = coerce(literal, item, path, depth + 1);
+-      return single is InvalidValue ? single : <Object?>[single];
++      return single is InvalidValue
++          ? single
++          : List<Object?>.unmodifiable([single]);
+     }
+     final result = <Object?>[];
+     var isValid = true;
+@@ -111,7 +113,7 @@ final class LiteralCoercion {
+         result.add(coerced);
+       }
+     }
+-    return isValid ? result : InvalidValue.instance;
++    return isValid ? List<Object?>.unmodifiable(result) : InvalidValue.instance;
+   }
+ 
+   Object? _named(Value literal, String name, InputPath path, int depth) =>
+```
+
+In `packages/typed_graphql_server/lib/src/coercion/value_coercion.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -67,7 +67,9 @@ final class ValueCoercion {
+   Object? _list(JsonValue value, TypeRef item, InputPath path, int depth) {
+     if (value is! JsonArray) {
+       final single = coerce(value, item, path, depth + 1);
+-      return single is InvalidValue ? single : <Object?>[single];
++      return single is InvalidValue
++          ? single
++          : List<Object?>.unmodifiable([single]);
+     }
+     final result = <Object?>[];
+     var isValid = true;
+@@ -79,7 +81,7 @@ final class ValueCoercion {
+         result.add(coerced);
+       }
+     }
+-    return isValid ? result : InvalidValue.instance;
++    return isValid ? List<Object?>.unmodifiable(result) : InvalidValue.instance;
+   }
+ 
+   Object? _named(JsonValue value, String name, InputPath path, int depth) =>
+```
+
+- [ ] **Step 4: Run the tests and see them pass**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/coercion/frozen_arguments_test.dart)
+```
+
+Expected: `All tests passed!`.
+
+- [ ] **Step 5: Update the documents**
+
+In `docs/superpowers/specs/2026-10-15-m5-execution-design.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -749,6 +749,11 @@ depends on the other). These constraints keep that possible:
+     call per event and turn a revoked permission into a stream of GQL352
+     events. A server that must re-check per event does so in the event
+     resolver.
++46. Coerced arguments are frozen: the argument map, the map of each coerced
++    input object and each coerced list are unmodifiable. A plan caches the
++    arguments of a field without variables across requests, so a resolver
++    writing to `Arguments.coerced` would change later requests; it gets an
++    `UnsupportedError` instead.
+ 
+ ## 19. Conformance (R0.7, R10.3)
+ 
+```
+
+Append to `packages/typed_graphql_server/CHANGELOG.md`:
+
+```markdown
+- Coerced arguments are unmodifiable (the argument map, input-object maps and
+  lists), so a resolver cannot change the cached arguments of later requests.
+```
+
+- [ ] **Step 6: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 7: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 8: Commit**
+
+```sh
+git add docs/superpowers/specs/2026-10-15-m5-execution-design.md packages/typed_graphql_server/CHANGELOG.md packages/typed_graphql_server/lib/src/coercion/argument_coercion.dart packages/typed_graphql_server/lib/src/coercion/input_object_decoder.dart packages/typed_graphql_server/lib/src/coercion/literal_coercion.dart packages/typed_graphql_server/lib/src/coercion/value_coercion.dart packages/typed_graphql_server/test/coercion/frozen_arguments_test.dart
+git commit -q -m "fix(typed_graphql_server): freeze coerced arguments" \
+  -m "The argument map, input-object maps and coerced lists are unmodifiable, so a resolver cannot change the arguments a plan caches." \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 15: Final review fix: internal types out of the public API
+
+`@internal` on the `ExecutableSchema` constructor (it takes the unexported `SchemaBindings`), on the `FieldDef` constructor, `lane` and `middleware`, and on `CancelSignal.listenerCount` (was `@visibleForTesting`).
+
+**Files:**
+- Modify: `packages/typed_graphql_server/lib/src/builder/field_def.dart`, `packages/typed_graphql_server/lib/src/cancellation/cancel_signal.dart`, `packages/typed_graphql_server/lib/src/execution/executable_schema.dart`, `packages/typed_graphql_server/CHANGELOG.md`
+
+**Interfaces:**
+- Consumes: the earlier tasks of this plan.
+- Produces: no new declaration; the steps change existing code, tests or documents.
+
+- [ ] **Step 1: Write the implementation**
+
+In `packages/typed_graphql_server/lib/src/builder/field_def.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -1,3 +1,4 @@
++import 'package:meta/meta.dart';
+ import 'package:typed_graphql/typed_graphql.dart';
+ 
+ import '../authorization/authorization.dart';
+@@ -12,7 +13,9 @@ import 'output_ref.dart';
+ ///
+ /// {@category builder}
+ final class FieldDef<P, C> {
+-  /// Declares the field [name] of type [type].
++  /// Declares the field [name] of type [type]; the builder calls it, so it
++  /// is not part of the public API.
++  @internal
+   FieldDef({
+     required this.name,
+     required this.type,
+@@ -45,12 +48,15 @@ final class FieldDef<P, C> {
+   /// The directives applied to the field, besides `@deprecated`.
+   final List<AppliedDirective> directives;
+ 
+-  /// How the field produces its value.
++  /// How the field produces its value; not part of the public API.
++  @internal
+   final FieldLane lane;
+ 
+   /// The `FieldMiddleware<C>` values of the field, erased to [Object]: a
+   /// definition read as `FieldDef<Object?, Object?>` must not hold a
+-  /// `C`-typed function. The build casts them back where `C` is known.
++  /// `C`-typed function. The build casts them back where `C` is known; not
++  /// part of the public API.
++  @internal
+   final List<Object> middleware;
+ 
+   /// The authorization rule that applies to the field: its own, else (after
+```
+
+In `packages/typed_graphql_server/lib/src/cancellation/cancel_signal.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -29,7 +29,7 @@ final class CancelSignal {
+   Future<void> get whenCancelled => _completer.future;
+ 
+   /// How many listeners wait for the signal.
+-  @visibleForTesting
++  @internal
+   int get listenerCount => _listeners?.length ?? 0;
+ 
+   /// Cancels the signal with an optional [reason]. Only the first call has
+```
+
+In `packages/typed_graphql_server/lib/src/execution/executable_schema.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -19,7 +19,9 @@ import 'subscription_execution.dart';
+ ///
+ /// {@category execution}
+ final class ExecutableSchema<C> {
+-  /// Creates the schema from a validated [schema] and its [bindings].
++  /// Creates the schema from a validated [schema] and its [bindings]; the
++  /// builder calls it, so it is not part of the public API.
++  @internal
+   ExecutableSchema(
+     this.schema,
+     this.bindings, {
+```
+
+- [ ] **Step 2: Update the documents**
+
+Append to `packages/typed_graphql_server/CHANGELOG.md`:
+
+```markdown
+- The `ExecutableSchema` and `FieldDef` constructors, `FieldDef.lane`,
+  `FieldDef.middleware` and `CancelSignal.listenerCount` are `@internal`.
+```
+
+- [ ] **Step 3: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 4: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 5: Commit**
+
+```sh
+git add packages/typed_graphql_server/CHANGELOG.md packages/typed_graphql_server/lib/src/builder/field_def.dart packages/typed_graphql_server/lib/src/cancellation/cancel_signal.dart packages/typed_graphql_server/lib/src/execution/executable_schema.dart
+git commit -q -m "fix(typed_graphql_server): keep internal types out of the public API" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 16: Final review fix: the halt error wins over a later cancel
+
+`ExecutionRun` answered `GQL350` when the caller cancelled after a halt while started resolvers were awaited. The halt error now wins; spec section 18 item 38 says so; a test halts, cancels and checks the halt error.
+
+**Files:**
+- Modify: `packages/typed_graphql_server/lib/src/execution/execution_run.dart`, `packages/typed_graphql_server/lib/src/execution/run_cancellation.dart`, `docs/superpowers/specs/2026-10-15-m5-execution-design.md`, `packages/typed_graphql_server/CHANGELOG.md`
+- Test: `packages/typed_graphql_server/test/cancellation/execute_cancellation_test.dart`
+
+**Interfaces:**
+- Consumes: the earlier tasks of this plan.
+- Produces: no new declaration; the steps change existing code, tests or documents.
+
+- [ ] **Step 1: Write the tests**
+
+In `packages/typed_graphql_server/test/cancellation/execute_cancellation_test.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -80,6 +80,20 @@ void main() {
+       expect(result.errors, hasLength(1));
+     });
+ 
++    test('after a halt keeps the halt error', () async {
++      final probe = Probe();
++      final signal = CancelSignal();
++      final pending = fixture.execute(
++        '{ slow sync after }',
++        probe,
++        options: ExecutionOptions(cancelSignal: signal, maxSteps: 1),
++      );
++      signal.cancel();
++      final result = await (pending as Future<ResponsePayload>);
++      probe.gate.complete();
++      expect(CancellationFixture.codeOf(result), 'GQL337');
++    });
++
+     test('starts no field after it', () async {
+       final probe = Probe();
+       final signal = CancelSignal();
+```
+
+- [ ] **Step 2: Run the tests and see them fail**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/cancellation/execute_cancellation_test.dart)
+```
+
+Expected: FAIL. The test files do not compile: they use the names that the next step adds (`Error: ... isn't defined` or `Member not found`).
+
+- [ ] **Step 3: Write the implementation**
+
+In `packages/typed_graphql_server/lib/src/execution/execution_run.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -126,18 +126,20 @@ final class ExecutionRun {
+       return _response(data);
+     }
+     final response = data.then(_response);
+-    return cancellation?.race(response) ?? response;
++    return cancellation?.race(response, () => _response(null)) ?? response;
+   }
+ 
+-  // A call cancelled meanwhile answers with the cancellation only (spec 13).
++  // A halt wins over a cancellation that arrives after it: the limit is the
++  // cause, the cancel only cut the wait (spec 18.38). Otherwise a call
++  // cancelled meanwhile answers with the cancellation only (spec 13).
+   ExecutionResult _response(JsonObject? data) {
+-    if (cancellation case final cancelled? when cancelled.isCancelled) {
+-      return cancelled.result;
+-    }
+     final log = reporter.log;
+     if (log.haltError case final halted?) {
+       return ExecutionResult(null, errors: [halted]);
+     }
++    if (cancellation case final cancelled? when cancelled.isCancelled) {
++      return cancelled.result;
++    }
+     return ExecutionResult(data, errors: log.errors);
+   }
+ 
+```
+
+In `packages/typed_graphql_server/lib/src/execution/run_cancellation.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -64,15 +64,18 @@ final class RunCancellation {
+   /// The response of a cancelled run: no data and [error].
+   ExecutionResult get result => ExecutionResult(null, errors: [error]);
+ 
+-  /// [pending], or the cancelled [result] as soon as the run is cancelled.
+-  Future<ExecutionResult> race(Future<ExecutionResult> pending) {
++  /// [pending], or [cancelledResult] as soon as the run is cancelled.
++  Future<ExecutionResult> race(
++    Future<ExecutionResult> pending,
++    ExecutionResult Function() cancelledResult,
++  ) {
+     if (isCancelled) {
+-      return Future.value(result);
++      return Future.value(cancelledResult());
+     }
+     final completer = Completer<ExecutionResult>();
+     final detach = signal.addListener(() {
+       if (!completer.isCompleted) {
+-        completer.complete(result);
++        completer.complete(cancelledResult());
+       }
+     });
+     pending.then(
+```
+
+- [ ] **Step 4: Run the tests and see them pass**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/cancellation/execute_cancellation_test.dart)
+```
+
+Expected: `All tests passed!`.
+
+- [ ] **Step 5: Update the documents**
+
+In `docs/superpowers/specs/2026-10-15-m5-execution-design.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -716,7 +716,9 @@ depends on the other). These constraints keep that possible:
+     `__typename`.
+ 38. The executor races the pending result against cancellation once, at the
+     root, and checks `isCancelled` before it starts each field. A resolver
+-    already running is not interrupted; its result is dropped.
++    already running is not interrupted; its result is dropped. A halt (for
++    example `GQL337`) wins over a cancellation that arrives after it: the
++    response carries the halt error, not `GQL350`.
+ 39. Request errors win over an already-cancelled signal: an unknown
+     operation or unusable variables are a `RequestErrorResult`, and no timer
+     starts for them.
+```
+
+Append to `packages/typed_graphql_server/CHANGELOG.md`:
+
+```markdown
+- A run that halted (for example `GQL337`) and is then cancelled answers with
+  the halt error, not `GQL350`.
+```
+
+- [ ] **Step 6: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 7: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 8: Commit**
+
+```sh
+git add docs/superpowers/specs/2026-10-15-m5-execution-design.md packages/typed_graphql_server/CHANGELOG.md packages/typed_graphql_server/lib/src/execution/execution_run.dart packages/typed_graphql_server/lib/src/execution/run_cancellation.dart packages/typed_graphql_server/test/cancellation/execute_cancellation_test.dart
+git commit -q -m "fix(typed_graphql_server): keep the halt error when a halted run is cancelled" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 17: Final review fix: ColumnAllowlist
+
+`ColumnWhitelist` is renamed `ColumnAllowlist` (file, test, barrel, guide, README, CHANGELOG, spec, HANDOFF), as the repository says "allowlist" everywhere else.
+
+**Files:**
+- Create: `packages/typed_graphql_server/lib/src/lookahead/column_allowlist.dart`
+- Modify: `packages/typed_graphql_server/lib/typed_graphql_server.dart`, `docs/requirements.md`, `docs/superpowers/HANDOFF.md`, `docs/superpowers/specs/2026-10-13-typed-graphql-design.md`, `docs/superpowers/specs/2026-10-15-m5-execution-design.md`, `packages/typed_graphql_server/CHANGELOG.md`, `packages/typed_graphql_server/README.md`, `packages/typed_graphql_server/doc/lookahead.md`
+- Test: `packages/typed_graphql_server/test/lookahead/column_allowlist_test.dart`
+- Delete (with `git rm` in the commit step): `packages/typed_graphql_server/lib/src/lookahead/column_whitelist.dart`, `packages/typed_graphql_server/test/lookahead/column_whitelist_test.dart`
+
+**Interfaces:**
+- Consumes: the earlier tasks of this plan.
+- Produces:
+- Declarations (signatures as committed; the code is in the steps):
+
+```dart
+// lookahead/column_allowlist.dart
+final class ColumnAllowlist
+  ColumnAllowlist(…)
+  List<String> columnsFor(FieldSelection selection)
+```
+
+- [ ] **Step 1: Write the tests**
+
+Create `packages/typed_graphql_server/test/lookahead/column_allowlist_test.dart`:
+
+```dart
+import 'package:test/test.dart';
+import 'package:typed_graphql_server/typed_graphql_server.dart';
+
+import 'look_ahead_fixture.dart';
+
+void main() {
+  final f = LookAheadFixture();
+  final allowlist = ColumnAllowlist(
+    {'name': 'full_name', 'friend': 'friend_id', 'alias': 'full_name'},
+    always: ['id'],
+  );
+
+  test('gives the sorted columns of the fields the map knows', () async {
+    final selection = await f.selection(
+      'user',
+      '{ user { friend { name } name } }',
+    );
+    expect(allowlist.columnsFor(selection), ['friend_id', 'full_name', 'id']);
+  });
+
+  test('ignores the fields the map does not know', () async {
+    final selection = await f.selection('user', '{ user { posts { title } } }');
+    expect(allowlist.columnsFor(selection), ['id']);
+  });
+
+  test('lists a column once when two fields share it', () async {
+    final both = ColumnAllowlist({'name': 'n', 'friend': 'n'});
+    final selection = await f.selection(
+      'user',
+      '{ user { name friend { name } } }',
+    );
+    expect(both.columnsFor(selection), ['n']);
+  });
+
+  test('adds the always columns to an empty selection', () {
+    expect(allowlist.columnsFor(FieldSelection.empty), ['id']);
+  });
+
+  test('reads names, so an alias does not hide a column', () async {
+    final selection = await f.selection('user', '{ user { shown: name } }');
+    expect(allowlist.columnsFor(selection), ['full_name', 'id']);
+  });
+}
+```
+
+- [ ] **Step 2: Write the implementation**
+
+Create `packages/typed_graphql_server/lib/src/lookahead/column_allowlist.dart`:
+
+```dart
+import 'field_selection.dart';
+
+/// Maps GraphQL field names to database columns, so a resolver selects only
+/// the columns the request needs (R4.18). It reads a [FieldSelection]; it
+/// preloads nothing and writes no SQL.
+///
+/// {@category lookahead}
+final class ColumnAllowlist {
+  /// Maps each field name in [columns] to its column; the [always] columns
+  /// are in every answer (a key, say).
+  ColumnAllowlist(Map<String, String> columns, {List<String> always = const []})
+    : _columns = Map.unmodifiable(columns),
+      _always = List.unmodifiable(always);
+
+  final Map<String, String> _columns;
+  final List<String> _always;
+
+  /// The columns of the fields [selection] selects at its own level that the
+  /// map knows, plus the always ones, sorted and without repeats. Fields the
+  /// map does not know are ignored.
+  List<String> columnsFor(FieldSelection selection) {
+    final columns = <String>{..._always};
+    for (final field in selection.fields) {
+      if (_columns[field.name] case final column?) {
+        columns.add(column);
+      }
+    }
+    return columns.toList()..sort();
+  }
+}
+```
+
+In `packages/typed_graphql_server/lib/typed_graphql_server.dart`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -47,7 +47,7 @@ export 'src/execution/field_site.dart';
+ export 'src/execution/graphql_exception.dart';
+ export 'src/execution/response_path.dart';
+ export 'src/introspection/introspection_policy.dart';
+-export 'src/lookahead/column_whitelist.dart';
++export 'src/lookahead/column_allowlist.dart';
+ export 'src/lookahead/field_selection.dart';
+ export 'src/lookahead/selected_field.dart';
+ export 'src/subscription/subscription_result.dart';
+```
+
+- [ ] **Step 3: Run the tests and see them pass**
+
+Run:
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/lookahead/column_allowlist_test.dart)
+```
+
+Expected: `All tests passed!`.
+
+- [ ] **Step 4: Update the documents**
+
+In `docs/requirements.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -88,7 +88,7 @@ stage.
+ | R4.15 | DataLoader: `BatchLoader`, `GroupedLoader`, request-scoped, microtask dispatch plus level flush | MUST | M6 |
+ | R4.16 | `executeIncrementally` for `@defer` / `@stream` | MUST | M14 |
+ | R4.17 | Allocation and throughput benchmarks of the executor | MUST | M5 |
+-| R4.18 | Look-ahead: `info.selection`, a tree of the requested fields computed once from the `OperationPlan` (fragments flattened, `@skip` / `@include` applied, type conditions resolved with `forType`, aliases and arguments per occurrence, `__typename` hidden, a `fingerprint` per sub-selection usable as a DataLoader key, `@defer`red fields flagged `isDeferred`); string-path access (`has('posts.comments')`, children and arguments accessors); typed field handles only if the builder yields them at no extra cost. The field-to-column mapping lives at the call site; the library offers only a whitelist helper and no built-in preload | MUST | M5 |
++| R4.18 | Look-ahead: `info.selection`, a tree of the requested fields computed once from the `OperationPlan` (fragments flattened, `@skip` / `@include` applied, type conditions resolved with `forType`, aliases and arguments per occurrence, `__typename` hidden, a `fingerprint` per sub-selection usable as a DataLoader key, `@defer`red fields flagged `isDeferred`); string-path access (`has('posts.comments')`, children and arguments accessors); typed field handles only if the builder yields them at no extra cost. The field-to-column mapping lives at the call site; the library offers only a allowlist helper and no built-in preload | MUST | M5 |
+ | R4.19 | `Authorizer`: a typed hook called by the executor around field resolution and exposed to look-ahead and the pipeline, plus a lint / test helper that reports schema fields and types with no authorization coverage; no policy engine | MUST | M5 |
+ | R4.20 | `CancelSignal` in the execution context, observable by resolvers; an execution timeout in the pipeline options; cancellation and timeout reported as errors with stable codes (`GQL3xx`); subscriptions end on cancellation | MUST | M5 |
+ 
+```
+
+In `docs/superpowers/HANDOFF.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -16,7 +16,7 @@ needed.
+ | M3c Core docs | [plan](plans/2026-10-14-m3c-core-docs.md) | — | merged into `main` locally (not pushed): six guides in `packages/typed_graphql/doc/`, `example/`, dartdoc categories, doc test suite (`test/doc/`), CI `dart doc` step. M3b added "Validating a schema" and "Resolving a coordinate" to `doc/schema.md`, and the `introspection` category with its guide `doc/introspection.md` |
+ | Agent discoverability | [spec](specs/2026-10-14-agent-discoverability-design.md) | [plan](plans/2026-10-14-agent-discoverability.md) | merged locally into main (3df6740, not pushed): pub.dev metadata, the core README's "Should I use this?", `llms.txt`, `docs/discovery.md`, the `test/discovery/` suite |
+ | M4 Operation validation | [spec](specs/2026-10-14-m4-operation-validation-design.md) | M4a: [plan](plans/2026-10-14-m4a-operation-validation.md); M4b: [plan](plans/2026-10-14-m4b-limits-and-cost.md) | M4a and M4b are complete and merged into `main` locally (not pushed); the final opus review and two fix rounds are done. M4a: the rule framework, the 30 rules of spec §5 (`GQL200`-`GQL229`), field selection merging (near-linear; a fan-out through parts that repeat a response name can still reach the step budget, spec §14 item 15), the step budget (`GQL230`), custom rules (`GQL231`), every graphql-js validation suite in `mapping/validation.csv`, the hostile-document tests and `doc/validation.md`. M4b: the opt-in limit rules `MaxDepthRule`, `MaxAliasesRule`, `MaxDirectivesRule`, `NoIntrospectionRule`, `MaxIntrospectionDepthRule` (`GQL232`-`GQL236`) and `DocumentValidator.recommendedRules`; `includesCostDirectives` with `@cost` and `@listSize` and their schema checks (`GQL156`-`GQL161`); `CostAnalysis` / `OperationCost`, `SlicingArgumentsRule` (`GQL237`), `MaxCostRule` (`GQL238`); three operation fuzzers; the guide sections "Limits" and "Cost"; next is M5 (execution) |
+-| M5 Execution | [spec](specs/2026-10-15-m5-execution-design.md) | M5a: [plan](plans/2026-10-15-m5a-typed-builder.md); M5b: [plan](plans/2026-10-15-m5b-execution-core.md); M5c: [plan](plans/2026-10-15-m5c-introspection-and-subscriptions.md); M5d: [plan](plans/2026-10-15-m5d-lookahead-authorization-cancellation.md) | M5a is done on branch `m5-final` (not merged, not pushed): `ExecutableSchemaBuilder`, typed refs, fields, arguments, `build`, `SchemaBuildError` (`GQL300`-`GQL302`) and the Schema Builder guide. M5b is done on the same branch: variable and argument coercion, the operation plan and cache, the executor (null propagation, error behaviours, masking, `onError`, limits), field middleware, abstract types at run time (`GQL310`-`GQL337`), the graphql-js execution, variables, directives, abstract-type, enum and input-coercion suites in `mapping/execution.csv`, the deviations in spec §18 items 13-25, the Execution guide and `example/example.dart`; M5c is done on the same branch: the `__schema`/`__type` resolvers and `IntrospectionPolicy` (`GQL338`), `subscribe` (`GQL324`, `GQL340`), the graphql-js introspection and subscribe suites, spec §18 items 26-33 and the Introspection and Subscriptions guides; M5d is done on the same branch: `FieldInfo.selection` (look-ahead, `ColumnWhitelist`), `Authorization`, `Authorizer` and `AuthorizationCoverage` (`GQL304`, `GQL352`), `CancelSignal`, `timeout` and `FieldInfo.cancelSignal` (`GQL350`, `GQL351`), the graphql-js cancellation suite, the executor benchmark, spec §18 items 34-44 and the Look-ahead, Authorization and Cancellation guides. **Stage M5 is complete on `m5-final`; it is not merged and not pushed.** Next: the final whole-branch review, then the merge (needs the owner's yes). Open questions for the owner are spec §21, with recommendations in `.superpowers/m5-open-questions.md` (local, untracked, in the worktree) |
++| M5 Execution | [spec](specs/2026-10-15-m5-execution-design.md) | M5a: [plan](plans/2026-10-15-m5a-typed-builder.md); M5b: [plan](plans/2026-10-15-m5b-execution-core.md); M5c: [plan](plans/2026-10-15-m5c-introspection-and-subscriptions.md); M5d: [plan](plans/2026-10-15-m5d-lookahead-authorization-cancellation.md) | M5a is done on branch `m5-final` (not merged, not pushed): `ExecutableSchemaBuilder`, typed refs, fields, arguments, `build`, `SchemaBuildError` (`GQL300`-`GQL302`) and the Schema Builder guide. M5b is done on the same branch: variable and argument coercion, the operation plan and cache, the executor (null propagation, error behaviours, masking, `onError`, limits), field middleware, abstract types at run time (`GQL310`-`GQL337`), the graphql-js execution, variables, directives, abstract-type, enum and input-coercion suites in `mapping/execution.csv`, the deviations in spec §18 items 13-25, the Execution guide and `example/example.dart`; M5c is done on the same branch: the `__schema`/`__type` resolvers and `IntrospectionPolicy` (`GQL338`), `subscribe` (`GQL324`, `GQL340`), the graphql-js introspection and subscribe suites, spec §18 items 26-33 and the Introspection and Subscriptions guides; M5d is done on the same branch: `FieldInfo.selection` (look-ahead, `ColumnAllowlist`), `Authorization`, `Authorizer` and `AuthorizationCoverage` (`GQL304`, `GQL352`), `CancelSignal`, `timeout` and `FieldInfo.cancelSignal` (`GQL350`, `GQL351`), the graphql-js cancellation suite, the executor benchmark, spec §18 items 34-44 and the Look-ahead, Authorization and Cancellation guides. **Stage M5 is complete on `m5-final`; it is not merged and not pushed.** Next: the final whole-branch review, then the merge (needs the owner's yes). Open questions for the owner are spec §21, with recommendations in `.superpowers/m5-open-questions.md` (local, untracked, in the worktree) |
+ | M10 Client code generation | [spec](specs/2026-10-15-m10-client-codegen-design.md) | M10a: [plan](plans/2026-10-15-m10a-codegen-front-end.md); M10b: [plan](plans/2026-10-15-m10b-runtime-and-schema-types.md); M10c: [plan](plans/2026-10-15-m10c-operations-and-fragments.md); M10d: [plan](plans/2026-10-15-m10d-command-line.md) | M10 is complete on branch `m10-final`: the final opus whole-branch review is done and its fix round is committed; awaiting merge, not merged and not pushed (the plans are generated from the commits; the fix round's commits are in the M10d plan). The client's Chrome test runs are deferred to M11. `typed_graphql_codegen` reads `typed_graphql.yaml` (`GQL500`, `GQL501`), loads the schema from SDL, an introspection result or a URL (`GQL502`, `GQL510`), checks the documents as one fragment graph (`GQL503`-`GQL506`, `GQL511`), plans the classes and generates the schema-types library, a library per document and the persisted-operations manifest (`GQL507`, `GQL508`); the CLI `generate` / `check` (`GQL509`) lives in `lib/src/cli/`; the core gained `Optional` and the client the generated-code contract (`JsonMerger` included); goldens, an analysis test and the checked-in `example/` project; the guide `client_codegen.md` |
+ 
+ **Decisions (2026-10-14):**
+```
+
+In `docs/superpowers/specs/2026-10-13-typed-graphql-design.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -288,7 +288,7 @@ final schema = b.build(query: queryType, mutation: mutationType); // ExecutableS
+   offers string paths (`has('posts.comments')`, children and arguments
+   accessors); typed handles (`has(user.posts)`) only if the builder yields them at
+   no extra cost. The field-to-column (SQL) mapping lives at the call site, never
+-  in the schema; the library offers only a small whitelist helper from requested
++  in the schema; the library offers only a small allowlist helper from requested
+   field names to columns. There is no built-in preload (the parent loaded a
+   relation, the child reads it): the pattern is documented. Generated selection
+   classes come with codegen (M8).
+```
+
+In `docs/superpowers/specs/2026-10-15-m5-execution-design.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -45,7 +45,7 @@ and the executor reads the builder's definitions, so `builder/` and
+ | `execution/` | `ExecutableSchema.execute`, the executor, errors, `ExecutionOptions`, `FieldInfo`, middleware composition | M5a (`FieldInfo`, `ExecutableSchema`), M5b |
+ | `introspection/` | the `__Schema` family as object types, `IntrospectionPolicy` | M5c |
+ | `subscription/` | `subscribe`, `SubscriptionResult` | M5c |
+-| `lookahead/` | `FieldSelection`, `SelectedField`, `ColumnWhitelist` | M5d |
++| `lookahead/` | `FieldSelection`, `SelectedField`, `ColumnAllowlist` | M5d |
+ | `authorization/` | `Authorizer`, `Authorization`, `AuthorizationCoverage` | M5d |
+ | `cancellation/` | `CancelSignal` | M5d |
+ 
+@@ -427,7 +427,7 @@ member is read.
+ - `fingerprint`: a canonical string of the sub-selection (field names
+   sorted, arguments printed in sorted key order, children nested), usable
+   as a DataLoader key; built with an explicit stack.
+-- `ColumnWhitelist({fieldName: column}, {always})`:
++- `ColumnAllowlist({fieldName: column}, {always})`:
+   `columnsFor(selection)` gives the sorted, de-duplicated columns of the
+   requested fields the map knows, plus `always`. No preload, no SQL.
+ - Typed handles (`has(user.posts)`): not in M5; the builder does not
+```
+
+In `packages/typed_graphql_server/CHANGELOG.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -100,7 +100,7 @@
+   `fields`, `forType`, `has('posts.comments')`, `fieldsNamed` and
+   `fingerprint` (canonical, for DataLoader keys); `SelectedField` has `name`,
+   `alias`, `responseKey`, `arguments` (coerced on first read; an argument that
+-  fails reads as absent) and its own `selection`. `ColumnWhitelist` maps field
++  fails reads as absent) and its own `selection`. `ColumnAllowlist` maps field
+   names to sorted, de-duplicated columns. `isDeferred` arrives with
+   incremental delivery.
+ - The Look-ahead guide and its dartdoc category `lookahead`.
+```
+
+In `packages/typed_graphql_server/README.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -143,7 +143,7 @@ It prints:
+ - [Subscriptions](doc/subscriptions.md): source streams, one event at a time,
+   rejected and failed subscriptions.
+ - [Look-ahead](doc/lookahead.md): the fields a request selected under a field,
+-  `fingerprint` as a DataLoader key, `ColumnWhitelist`.
++  `fingerprint` as a DataLoader key, `ColumnAllowlist`.
+ - [Authorization](doc/authorization.md): rules on fields and types, the
+   `Authorizer`, deny messages, `AuthorizationCoverage`.
+ - [Cancellation](doc/cancellation.md): `CancelSignal`, timeouts, what
+```
+
+In `packages/typed_graphql_server/doc/lookahead.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -135,7 +135,7 @@ the rest of the execution goes on. Fields over the same field nodes are read
+ once, so a selection whose aliases use the same arguments costs time in
+ proportion to the request, not to its expansion.
+ 
+-`ColumnWhitelist` turns a selection into database columns. It maps field
++`ColumnAllowlist` turns a selection into database columns. It maps field
+ names to columns, adds the `always` columns (a key, say), ignores the fields
+ it does not know and returns the sorted, de-duplicated list. It preloads
+ nothing and writes no SQL: the resolver builds the query.
+@@ -154,7 +154,7 @@ Future<void> main() async {
+       t.field('email', b.string).pure((_) => 'ada@example.com'),
+     ],
+   );
+-  final columns = ColumnWhitelist(
++  final columns = ColumnAllowlist(
+     {'name': 'full_name', 'email': 'email_address'},
+     always: ['id'],
+   );
+```
+
+- [ ] **Step 5: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql_server && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 6: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 7: Commit**
+
+```sh
+git rm -q packages/typed_graphql_server/lib/src/lookahead/column_whitelist.dart packages/typed_graphql_server/test/lookahead/column_whitelist_test.dart
+git add docs/requirements.md docs/superpowers/HANDOFF.md docs/superpowers/specs/2026-10-13-typed-graphql-design.md docs/superpowers/specs/2026-10-15-m5-execution-design.md packages/typed_graphql_server/CHANGELOG.md packages/typed_graphql_server/README.md packages/typed_graphql_server/doc/lookahead.md packages/typed_graphql_server/lib/src/lookahead/column_allowlist.dart packages/typed_graphql_server/lib/typed_graphql_server.dart packages/typed_graphql_server/test/lookahead/column_allowlist_test.dart
+git commit -q -m "refactor(typed_graphql_server): rename ColumnWhitelist to ColumnAllowlist" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 18: Final review fix: the stage documents
+
+An erratum in the M5a plan (merge 6e5bd05 replaced the server's `Optional` with the core's) and a note on the M5b plan's base; spec section 12 names `BuildOptions.authorizer`; spec section 18 item 36 says a look-ahead `decode` error reaches `onError` only when the field runs; HANDOFF says M10 is on `main` and records the 11 commits with a Sonnet trailer.
+
+**Files:**
+- Modify: `docs/superpowers/HANDOFF.md`, `docs/superpowers/plans/2026-10-15-m5a-typed-builder.md`, `docs/superpowers/plans/2026-10-15-m5b-execution-core.md`, `docs/superpowers/specs/2026-10-15-m5-execution-design.md`
+
+**Interfaces:**
+- Consumes: the earlier tasks of this plan.
+- Produces: no new declaration; the steps change existing code, tests or documents.
+
+- [ ] **Step 1: Update the documents**
+
+In `docs/superpowers/HANDOFF.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -1,10 +1,15 @@
+ # Handoff: where typed_graphql stands and how to continue
+ 
+-Last updated: 2026-10-15 (M3a, M3c and M3b merged into `main` locally, not pushed; M4a and M4b merged too; M5 (a-d) complete on branch `m5-final`, not merged; M10 complete on branch `m10-final`, awaiting merge (not merged); local `main` is ahead of `origin/main`, push needs the owner's yes). Read this
++Last updated: 2026-10-15 (M3a, M3c and M3b merged into `main` locally, not pushed; M4a and M4b merged too; M5 (a-d) complete on branch `m5-final`, not merged; M10 complete and merged into `main` (3d1fe38); local `main` is ahead of `origin/main`, push needs the owner's yes). Read this
+ first on a new device or in a new Claude session. Session memory and scratch
+ directories do not travel; this file and the repository hold everything
+ needed.
+ 
++Note: 11 M5 commits carry a `Claude Sonnet 5.5` trailer (585a4f0, 1b36f23,
++db33dc7, 62ba263, cb78cf6, 8be71bd, 6981a03, 6c0dc4d, 383fa6a, f469521,
++901adfc). They are left as they are: rewriting them would cross the merge
++6e5bd05 and change SHAs that the plans quote.
++
+ ## State
+ 
+ | Stage | Design | Plan | Code |
+@@ -17,7 +22,7 @@ needed.
+ | Agent discoverability | [spec](specs/2026-10-14-agent-discoverability-design.md) | [plan](plans/2026-10-14-agent-discoverability.md) | merged locally into main (3df6740, not pushed): pub.dev metadata, the core README's "Should I use this?", `llms.txt`, `docs/discovery.md`, the `test/discovery/` suite |
+ | M4 Operation validation | [spec](specs/2026-10-14-m4-operation-validation-design.md) | M4a: [plan](plans/2026-10-14-m4a-operation-validation.md); M4b: [plan](plans/2026-10-14-m4b-limits-and-cost.md) | M4a and M4b are complete and merged into `main` locally (not pushed); the final opus review and two fix rounds are done. M4a: the rule framework, the 30 rules of spec §5 (`GQL200`-`GQL229`), field selection merging (near-linear; a fan-out through parts that repeat a response name can still reach the step budget, spec §14 item 15), the step budget (`GQL230`), custom rules (`GQL231`), every graphql-js validation suite in `mapping/validation.csv`, the hostile-document tests and `doc/validation.md`. M4b: the opt-in limit rules `MaxDepthRule`, `MaxAliasesRule`, `MaxDirectivesRule`, `NoIntrospectionRule`, `MaxIntrospectionDepthRule` (`GQL232`-`GQL236`) and `DocumentValidator.recommendedRules`; `includesCostDirectives` with `@cost` and `@listSize` and their schema checks (`GQL156`-`GQL161`); `CostAnalysis` / `OperationCost`, `SlicingArgumentsRule` (`GQL237`), `MaxCostRule` (`GQL238`); three operation fuzzers; the guide sections "Limits" and "Cost"; next is M5 (execution) |
+ | M5 Execution | [spec](specs/2026-10-15-m5-execution-design.md) | M5a: [plan](plans/2026-10-15-m5a-typed-builder.md); M5b: [plan](plans/2026-10-15-m5b-execution-core.md); M5c: [plan](plans/2026-10-15-m5c-introspection-and-subscriptions.md); M5d: [plan](plans/2026-10-15-m5d-lookahead-authorization-cancellation.md) | M5a is done on branch `m5-final` (not merged, not pushed): `ExecutableSchemaBuilder`, typed refs, fields, arguments, `build`, `SchemaBuildError` (`GQL300`-`GQL302`) and the Schema Builder guide. M5b is done on the same branch: variable and argument coercion, the operation plan and cache, the executor (null propagation, error behaviours, masking, `onError`, limits), field middleware, abstract types at run time (`GQL310`-`GQL337`), the graphql-js execution, variables, directives, abstract-type, enum and input-coercion suites in `mapping/execution.csv`, the deviations in spec §18 items 13-25, the Execution guide and `example/example.dart`; M5c is done on the same branch: the `__schema`/`__type` resolvers and `IntrospectionPolicy` (`GQL338`), `subscribe` (`GQL324`, `GQL340`), the graphql-js introspection and subscribe suites, spec §18 items 26-33 and the Introspection and Subscriptions guides; M5d is done on the same branch: `FieldInfo.selection` (look-ahead, `ColumnAllowlist`), `Authorization`, `Authorizer` and `AuthorizationCoverage` (`GQL304`, `GQL352`), `CancelSignal`, `timeout` and `FieldInfo.cancelSignal` (`GQL350`, `GQL351`), the graphql-js cancellation suite, the executor benchmark, spec §18 items 34-44 and the Look-ahead, Authorization and Cancellation guides. **Stage M5 is complete on `m5-final`; it is not merged and not pushed.** Next: the final whole-branch review, then the merge (needs the owner's yes). Open questions for the owner are spec §21, with recommendations in `.superpowers/m5-open-questions.md` (local, untracked, in the worktree) |
+-| M10 Client code generation | [spec](specs/2026-10-15-m10-client-codegen-design.md) | M10a: [plan](plans/2026-10-15-m10a-codegen-front-end.md); M10b: [plan](plans/2026-10-15-m10b-runtime-and-schema-types.md); M10c: [plan](plans/2026-10-15-m10c-operations-and-fragments.md); M10d: [plan](plans/2026-10-15-m10d-command-line.md) | M10 is complete on branch `m10-final`: the final opus whole-branch review is done and its fix round is committed; awaiting merge, not merged and not pushed (the plans are generated from the commits; the fix round's commits are in the M10d plan). The client's Chrome test runs are deferred to M11. `typed_graphql_codegen` reads `typed_graphql.yaml` (`GQL500`, `GQL501`), loads the schema from SDL, an introspection result or a URL (`GQL502`, `GQL510`), checks the documents as one fragment graph (`GQL503`-`GQL506`, `GQL511`), plans the classes and generates the schema-types library, a library per document and the persisted-operations manifest (`GQL507`, `GQL508`); the CLI `generate` / `check` (`GQL509`) lives in `lib/src/cli/`; the core gained `Optional` and the client the generated-code contract (`JsonMerger` included); goldens, an analysis test and the checked-in `example/` project; the guide `client_codegen.md` |
++| M10 Client code generation | [spec](specs/2026-10-15-m10-client-codegen-design.md) | M10a: [plan](plans/2026-10-15-m10a-codegen-front-end.md); M10b: [plan](plans/2026-10-15-m10b-runtime-and-schema-types.md); M10c: [plan](plans/2026-10-15-m10c-operations-and-fragments.md); M10d: [plan](plans/2026-10-15-m10d-command-line.md) | M10 is complete and merged into `main` (3d1fe38; not pushed): the final opus whole-branch review is done and its fix round is committed (the plans are generated from the commits; the fix round's commits are in the M10d plan). The client's Chrome test runs are deferred to M11. `typed_graphql_codegen` reads `typed_graphql.yaml` (`GQL500`, `GQL501`), loads the schema from SDL, an introspection result or a URL (`GQL502`, `GQL510`), checks the documents as one fragment graph (`GQL503`-`GQL506`, `GQL511`), plans the classes and generates the schema-types library, a library per document and the persisted-operations manifest (`GQL507`, `GQL508`); the CLI `generate` / `check` (`GQL509`) lives in `lib/src/cli/`; the core gained `Optional` and the client the generated-code contract (`JsonMerger` included); goldens, an analysis test and the checked-in `example/` project; the guide `client_codegen.md` |
+ 
+ **Decisions (2026-10-14):**
+ - Layer order is diagnostics < language < protocol < schema < validation; the
+```
+
+In `docs/superpowers/plans/2026-10-15-m5a-typed-builder.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -1,5 +1,7 @@
+ # M5a Typed Schema Builder Implementation Plan
+ 
++> **Erratum.** Superseded by merge 6e5bd05: the server's `Optional` was removed; `Arg.optional` uses the core's `Optional` from `package:typed_graphql`. The file `builder/optional.dart`, its export line and its `import 'optional.dart'` lines no longer exist.
++
+ > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+ 
+ **Goal:** Start `typed_graphql_server` with the typed schema builder (R4.1, R4.2, R0.2, R0.3): `ExecutableSchemaBuilder<C>` and its typed refs (`OutputRef`, `InputRef`, `LeafRef`), scalars, enums, typed arguments and input objects (`Arg`, `Arguments`, `Optional`, `@oneOf`), object types with two-step typed fields (`t.field(name, ref).pure|resolve|resolveWith|declareOnly`), interfaces and unions with inheritance and `resolveType` / `isTypeOf`, and `build`, which runs the builder checks `GQL300`-`GQL302` and the core `SchemaValidator` and returns an `ExecutableSchema<C>` or throws `SchemaBuildError`. Compile-failure fixtures prove that a wrong resolver type does not compile. The Schema Builder guide, the server documentation suite, CHANGELOG, README, `llms.txt` and `CLAUDE.md` describe it.
+@@ -299,6 +301,8 @@ git commit -q -m "feat(typed_graphql): add the M5a diagnostic codes and export S
+ 
+ ### Task 2: Refs, scalars, enums and `Optional`
+ 
++> **Erratum.** Superseded by merge 6e5bd05: the server's `Optional` was removed; `Arg.optional` uses the core's `Optional` from `package:typed_graphql`. The file `builder/optional.dart`, its export line and its `import 'optional.dart'` lines no longer exist.
++
+ Create the package's type references (`NamedTypeDef`, `OutputRef`, `InputRef`, `LeafRef` and their nullable and list forms), custom scalars over a `ScalarCodec`, Dart-enum-backed enum types with `EnumValueMapping`, `Optional` (`Present` / `Absent`), the built-in scalar getters, the `DefinitionRegistry` and the `ExecutableSchemaBuilder<C>` entry point. Add the server's external-imports quality test.
+ 
+ **Files:**
+```
+
+In `docs/superpowers/plans/2026-10-15-m5b-execution-core.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -12,6 +12,8 @@
+ 
+ **Base:** the M5a plan (`2026-10-15-m5a-typed-builder.md`) applied, on branch `m5-final` at `8d59203`. The plan was verified by applying its tasks in order, one commit per task, with the green check after each and the server and core suites on exe at the end.
+ 
++`Optional<…>` now comes from the core (`package:typed_graphql`), since merge 6e5bd05; the plan's text and code stay as committed.
++
+ ## Global Constraints
+ 
+ - `CLAUDE.md` is binding. The code rules apply to tests too:
+```
+
+In `docs/superpowers/specs/2026-10-15-m5-execution-design.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -447,7 +447,7 @@ member is read.
+   context, the `FieldInfo` (and so the look-ahead) and the requirements.
+   A deny is a field error (`GQL352`, default message `Not authorized to
+   access Type.field.`); an authorizer exception is masked.
+-- `ExecutableSchema.authorizer` is set by `build(authorizer:)`; a schema
++- `ExecutableSchema.authorizer` is set by `BuildOptions.authorizer`; a schema
+   with guarded fields and no authorizer is a build error (`GQL304`).
+ - `AuthorizationCoverage(executableSchema).uncovered`: the coordinates
+   (`Type.field`) of fields with no authorization on the field or its type,
+@@ -711,7 +711,9 @@ depends on the other). These constraints keep that possible:
+ 36. `SelectedField.arguments` reads an argument whose value fails coercion
+     as absent. Reading a required one then throws, which the resolver's
+     error masking turns into `GQL330`; the executor reports the real
+-    coercion error when that field runs, so no problem is silent.
++    coercion error when that field runs, so no problem is silent. Reading
++    `arguments` in look-ahead runs the user `decode`; what it throws there is
++    dropped, and `onError` sees it only when the field itself runs.
+ 37. Look-ahead hides every meta field (a name starting with `__`), not only
+     `__typename`.
+ 38. The executor races the pending result against cancellation once, at the
+```
+
+- [ ] **Step 2: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 3: Commit**
+
+```sh
+git add docs/superpowers/HANDOFF.md docs/superpowers/plans/2026-10-15-m5a-typed-builder.md docs/superpowers/plans/2026-10-15-m5b-execution-core.md docs/superpowers/specs/2026-10-15-m5-execution-design.md
+git commit -q -m "docs: record the M5 final review" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 19: Final review fix: core changelog order
+
+The core CHANGELOG groups the M5 entries before the M10 ones, every line kept.
+
+**Files:**
+- Modify: `packages/typed_graphql/CHANGELOG.md`
+
+**Interfaces:**
+- Consumes: the earlier tasks of this plan.
+- Produces: no new declaration; the steps change existing code, tests or documents.
+
+- [ ] **Step 1: Update the documents**
+
+In `packages/typed_graphql/CHANGELOG.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -272,6 +272,11 @@
+ - `GQL303`, `GQL324`, `GQL338`, `GQL340`: the diagnostics of introspection and subscriptions (misplaced or missing subscription source, `subscribe` with a query or mutation, introspection not allowed, failed subscription source).
+ - `GQL304`, `GQL350`, `GQL351`, `GQL352`: the diagnostics of authorization and cancellation (guarded fields without an authorizer, execution cancelled, execution timed out, field not authorized).
+ - The messages of the built-in scalar codecs print an offending list or object as graphql-js does (`[1, 2, 3]`, `{ a: 1 }`, at most ten items, nested containers cut at depth two), not as compact JSON.
++- `IntrospectionListing`: which types and directives introspection lists for
++  a schema, and in which order (the order `Schema.toIntrospection` writes);
++  the server's introspection resolvers share it.
++- `ProvidedRequiredArgumentsRule` names the missing argument of `__type`
++  `<meta>.__type(name:)`, as graphql-js.
+ - The catalog has the code generator's codes `GQL500`-`GQL506`: configuration
+   syntax and content, schema input, anonymous operations, unsupported
+   constructs, unknown scalar mappings and no documents (a warning).
+@@ -280,8 +285,3 @@
+   code uses).
+ - The catalog adds `GQL511` (an operation or fragment that would generate
+   too many classes).
+-- `IntrospectionListing`: which types and directives introspection lists for
+-  a schema, and in which order (the order `Schema.toIntrospection` writes);
+-  the server's introspection resolvers share it.
+-- `ProvidedRequiredArgumentsRule` names the missing argument of `__type`
+-  `<meta>.__type(name:)`, as graphql-js.
+```
+
+- [ ] **Step 2: Run the documentation checks**
+
+```sh
+(cd packages/typed_graphql && ulimit -v 8000000 && timeout 600 dart test test/doc && timeout 600 dart doc && rm -rf doc/api)
+```
+
+Expected: `All tests passed!`, and `dart doc` prints `Found 0 warnings and 0 errors.`
+
+- [ ] **Step 3: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 4: Commit**
+
+```sh
+git add packages/typed_graphql/CHANGELOG.md
+git commit -q -m "docs(typed_graphql): group the M5 changelog entries before the M10 ones" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+### Task 20: Final review fix: CLAUDE.md and open question 15
+
+`CLAUDE.md` says `ColumnAllowlist`, that a guarded subscription is authorized once and that coerced arguments are unmodifiable; spec section 21 adds open question 15 (when a guarded subscription is authorized).
+
+**Files:**
+- Modify: `CLAUDE.md`, `docs/superpowers/specs/2026-10-15-m5-execution-design.md`
+
+**Interfaces:**
+- Consumes: the earlier tasks of this plan.
+- Produces: no new declaration; the steps change existing code, tests or documents.
+
+- [ ] **Step 1: Update the documents**
+
+In `CLAUDE.md`, apply this change (a unified diff: `-` lines go, `+` lines come, the others are context):
+
+```diff
+@@ -56,7 +56,7 @@ example. M5c (introspection and subscriptions) delivers the `__schema` and
+ source streams and rejected requests (`GQL324`, `GQL340`), the graphql-js
+ introspection and subscribe suites, and the Introspection and Subscriptions
+ guides. M5d (look-ahead, authorization, cancellation) delivers
+-`FieldInfo.selection` (`FieldSelection`, `SelectedField`, `ColumnWhitelist`),
++`FieldInfo.selection` (`FieldSelection`, `SelectedField`, `ColumnAllowlist`),
+ `Authorization`, `Authorizer` and `AuthorizationCoverage` (`GQL304`,
+ `GQL352`), `CancelSignal` with `ExecutionOptions.cancelSignal` and `timeout`
+ (`GQL350`, `GQL351`), the graphql-js cancellation suite, the executor
+@@ -438,8 +438,9 @@ throws `SchemaBuildError`. Its guides are in `packages/typed_graphql_server/doc/
+ `LiteralCoercion` (substitutes variables); a `CoercionProblem` carries its
+ code and the `GraphQLException` extensions. `plan/`: `OperationPlanner` turns
+ a document into an `OperationPlan` (fields per `ConditionKey`, constant
+-arguments coerced once) kept in `ExecutableSchema.planCache`; request errors
+-are never cached. `execution/`: `OperationExecution` runs a plan through
++arguments coerced once, as unmodifiable maps and lists, since a cached plan
++is shared by every request: spec §18 item 46) kept in
++`ExecutableSchema.planCache`; request errors are never cached. `execution/`: `OperationExecution` runs a plan through
+ `ExecutionRun`, `SelectionExecutor`/`SerialFields`, `FieldExecution` (the one
+ place a resolver lane is called, where middleware composed at build time
+ lives) and `ValueCompletion` with its leaf, list, object and abstract
+@@ -477,15 +478,17 @@ spends nothing; a new walk must charge it. A `SelectedField` reads its
+ `arguments` on first use (a failing argument reads absent; the executor
+ reports it) and has its own `selection`. `SelectionFingerprint` (field names
+ sorted, arguments as `CanonicalJson` with sorted keys, explicit stacks) is the
+-DataLoader key; `ColumnWhitelist` maps field names to sorted columns.
++DataLoader key; `ColumnAllowlist` maps field names to sorted columns.
+ `authorization/` (M5d): `Authorization` is sealed (`public`, `requires`); a
+ rule is set by `FieldStub.withAuthorization` or `ObjectOptions.authorization`
+ (the field's own wins) and applied after middleware composition by
+ `builder/AuthorizationApplier` and `FieldGuard`, which wrap the composed lane
+ so the `Authorizer<C>` (in `BuildOptions.authorizer`) runs before middleware
+-on every lane, a pure field included. A deny is `GQL352`, a missing authorizer
+-one `GQL304` listing the coordinates; introspection fields are never guarded;
+-a redeclared interface field does not inherit the interface's rule.
++on every lane, a pure field included; a subscription field's rule guards only
++its source, so it is authorized once, at `subscribe` (spec §18 item 45). A
++deny is `GQL352`, a missing authorizer one `GQL304` listing the coordinates;
++introspection fields are never guarded; a redeclared interface field does not
++inherit the interface's rule.
+ `AuthorizationCoverage` lists unguarded fields for a test.
+ `cancellation/` (M5d): `CancelSignal` is the caller's plain class (no
+ platform import); `execution/RunCancellation` links it with the timeout into
+```
+
+Append to `docs/superpowers/specs/2026-10-15-m5-execution-design.md`:
+
+```markdown
+15. **When a guarded subscription is authorized.** Once, at `subscribe`:
+    the rule guards the source, not each event (recommended: one decision
+    per request, as for a query, and no authorizer call per event; section
+    18 item 45) or on every event, a deny becoming a `GQL352` error in that
+    event's result while the stream goes on.
+```
+
+- [ ] **Step 2: Run the green check**
+
+Run the commands of "The green check".
+
+Expected: format changes 0 files, analyze prints `No issues found!`, and every suite ends with `All tests passed!`.
+
+- [ ] **Step 3: Commit**
+
+```sh
+git add CLAUDE.md docs/superpowers/specs/2026-10-15-m5-execution-design.md
+git commit -q -m "docs: record the M5 review fixes in CLAUDE.md and the open questions" \
+  -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
 ---
 
 ## Open questions for the owner
@@ -8183,7 +9392,8 @@ git commit -q -m "docs(typed_graphql_server): correct the M5d texts" \
 - Spec coverage: section 11 (look-ahead) by Task 2; 12 (authorization) by Task 3; 13 (cancellation) by Tasks 4 and 6; 14 (benchmarks) by Task 7; 15 (codes) by Task 1; 18 by Tasks 6 and 8; 19 by Task 5; 20 by Task 9. Tasks 10-12 answer the M5d review: bounded look-ahead, released subscription cancellation, corrected texts.
 - Every code block is the committed text that passed the green check; no placeholder remains.
 - Names are consistent across tasks: `FieldSelection`, `SelectedField`, `ColumnWhitelist`, `Authorization`, `Authorizer`, `AuthorizationCoverage`, `CancelSignal`, `RunCancellation`.
+- Tasks 13-20 answer the M5 final whole-branch review: subscription authorization once at subscribe, frozen coerced arguments, `@internal` on internal types, the halt error over a later cancel, `ColumnAllowlist`, the stage documents and `CLAUDE.md`.
 
 ## After the plan
 
-Stage M5 is complete on `m5-final`. The final whole-branch review comes next; merging `m5-final` into `main` and pushing need the owner's explicit yes. M6 adds the request pipeline and DataLoader.
+Stage M5 is complete on `m5-final`, with the final whole-branch review answered (Tasks 13-20). Merging `m5-final` into `main` and pushing need the owner's explicit yes. M6 adds the request pipeline and DataLoader.
