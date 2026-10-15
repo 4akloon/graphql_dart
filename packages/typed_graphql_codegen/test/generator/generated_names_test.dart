@@ -50,6 +50,44 @@ void main() {
     expect(names.diagnostics.single.code, DiagnosticCode.reservedTypeName);
   });
 
+  test(
+    'problems are ordered by file and offset, those without a place last',
+    () {
+      final other = Source('0123456789', name: 'a.graphql');
+      final names = GeneratedNames()
+        ..register('A', 'the first', null)
+        ..register('A', 'the second', null)
+        ..register('B', 'the first', second)
+        ..register('B', 'the second', second)
+        ..register('C', 'the first', SourceSpan(other, 9, 9))
+        ..register('C', 'the second', SourceSpan(other, 9, 9))
+        ..register('D', 'the first', first)
+        ..register('D', 'the second', first);
+      expect(
+        [
+          for (final diagnostic in names.diagnostics)
+            diagnostic.message.split(' ')[3],
+        ],
+        ["'C'", "'D'", "'B'", "'A'"],
+      );
+    },
+  );
+
+  test('a file written twice is a GQL507 at the second writer', () {
+    final names = GeneratedNames()
+      ..registerFile('lib/a.dart', 'the schema types', null)
+      ..registerFile('lib/a.dart', "the document 'lib/a'", first);
+    expect(names.diagnostics, [
+      Diagnostic(
+        .generatedNameCollision,
+        .error,
+        "The generated file 'lib/a.dart' is written twice: by the schema "
+        "types and by the document 'lib/a'.",
+        span: first,
+      ),
+    ]);
+  });
+
   test('distinct ordinary names are fine', () {
     final names = GeneratedNames()
       ..register('Role', "the enum 'Role'", first)
@@ -101,7 +139,7 @@ type Query { a: Int }
           'enum Status { NOT_FOUND notFound OK }\ntype Query { a: Int }',
         ),
         [
-          "The generated member name 'notFound' of the enum 'Status' is "
+          "The generated member 'notFound' of the enum 'Status' is "
               "declared twice: by the value 'NOT_FOUND' and by the value "
               "'notFound'.",
         ],
@@ -129,7 +167,7 @@ type Query { a: Int }
       expect(diagnostic.code, DiagnosticCode.generatedNameCollision);
       expect(
         diagnostic.message,
-        "The generated member name 'firstName' of the input object 'In' is "
+        "The generated member 'firstName' of the input object 'In' is "
         "declared twice: by the field 'first_name' and by the field "
         "'firstName'.",
       );

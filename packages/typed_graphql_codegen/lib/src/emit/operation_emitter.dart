@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:crypto/crypto.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../plan/class_names.dart';
@@ -99,7 +96,7 @@ final class OperationEmitter {
   ) {
     const literal = DartStringLiteral();
     final String document = text.of(operation);
-    final String hash = sha256.convert(utf8.encode(document)).toString();
+    final String hash = text.hashOf(document);
     writer.doc('The document of `$operationName` as it is sent.');
     writer.line('static const client.OperationDocument operationDocument =');
     writer.indented(() {

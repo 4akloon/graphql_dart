@@ -236,8 +236,8 @@ client can read the type of any object; fragment definitions and inline
 fragments get none, because the field around them has it. The operation's
 own selection set gets it only when a fragment on an interface or a union is
 spread at its top level, as the sealed class that reads it needs. A
-subscription cannot select `__typename` at its root, so it is left as
-written. The `sha256` is the SHA-256 of the text in UTF-8, in lowercase
+subscription cannot select `__typename` at its root, so a subscription that
+needs it there (`GQL504`) cannot be generated. The `sha256` is the SHA-256 of the text in UTF-8, in lowercase
 hexadecimal: the id of a persisted query.
 
 The variables class has a field per variable, like an input object without a
@@ -251,6 +251,17 @@ The variables matter only for the fragments spread under `@include` and
 `@skip`; the defaults of the operation's `Boolean` variables fill those that
 were not sent. `GetUserQuery.decodeData` passes them. The golden
 `test/goldens/operations` is analyzed and run like the other goldens.
+
+With `persisted_operations` set, `generate` also writes that file last: a
+JSON manifest with the `id` (the `sha256`), `name`, `type` and `body` (the
+minified text) of every operation, sorted by name, the same values the
+operation classes carry.
+
+Before anything is written, every class and member the generator would
+declare is checked: two classes with one name, two members of one class with
+one Dart name (`user_name` and `userName`, two fragments `UserCard` and
+`userCard`) and two files with one path are a `GQL507`, whatever declares
+them.
 
 ## Schema types
 
@@ -412,10 +423,10 @@ and are never reused.
 | `GQL501` | error | A configuration key is missing, unknown or mistyped, or a path or Dart reference is malformed. |
 | `GQL502` | error | The schema file is not JSON, or is JSON that is not an object, when it should be an introspection result. |
 | `GQL503` | error | An operation has no name; the generated classes are named after the operation. |
-| `GQL504` | error | A document uses `@defer` or `@stream`, which the generator does not support yet. |
+| `GQL504` | error | A document uses `@defer`, `@stream`, or a fragment on an abstract type at the root of a subscription, which the generator does not support yet. |
 | `GQL505` | error | The configuration maps a scalar that the schema does not declare as a custom scalar: it is unknown, is not a scalar, or is built in. |
 | `GQL506` | warning | No document matches `documents`. |
-| `GQL507` | error | The generator would declare one Dart name twice, such as an enum `Role` and an input object `RoleKnown` (the enum also declares `RoleKnown` and `RoleUnknown`). |
+| `GQL507` | error | The generator would declare one Dart name twice, such as an enum `Role` and an input object `RoleKnown` (the enum also declares `RoleKnown` and `RoleUnknown`), a class of an operation and a fragment, two members of one class, or write one file twice. |
 | `GQL508` | error | A name the generator would declare hides a Dart type the generated code uses, such as `List`, or a `dart:core` type a scalar is mapped to. |
 
 The problems of the schema and of the documents keep the codes of the core:

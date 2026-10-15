@@ -39,10 +39,33 @@ final class GeneratedNames {
 
   final Set<String> _reserved;
   final Map<String, (String, SourceSpan?)> _declared = {};
+  final Map<String, (String, SourceSpan?)> _files = {};
   final List<Diagnostic> _diagnostics = [];
 
-  /// The problems found so far, in registration order.
-  List<Diagnostic> get diagnostics => List.unmodifiable(_diagnostics);
+  /// The problems found so far, each once: by file, then offset; the ones
+  /// without a place last, in registration order.
+  List<Diagnostic> get diagnostics {
+    final unique = <Diagnostic>[];
+    for (final diagnostic in _diagnostics) {
+      if (!unique.contains(diagnostic)) unique.add(diagnostic);
+    }
+    final indexed = unique.indexed.toList()
+      ..sort((a, b) {
+        final first = a.$2.span;
+        final second = b.$2.span;
+        if (first == null || second == null) {
+          if (first == second) return a.$1.compareTo(b.$1);
+          return first == null ? 1 : -1;
+        }
+        final byFile = first.source.name.compareTo(second.source.name);
+        if (byFile != 0) return byFile;
+        final byOffset = first.start.compareTo(second.start);
+        return byOffset != 0 ? byOffset : a.$1.compareTo(b.$1);
+      });
+    return List.unmodifiable([
+      for (final (_, diagnostic) in indexed) diagnostic,
+    ]);
+  }
 
   /// Records that [declarer] (such as `the enum 'Role'`) declares [name].
   void register(String name, String declarer, SourceSpan? span) {
@@ -74,6 +97,26 @@ final class GeneratedNames {
     );
   }
 
+  /// Records that [declarer] writes the file at [path]; a second writer is a
+  /// problem.
+  void registerFile(String path, String declarer, SourceSpan? span) {
+    final first = _files[path];
+    if (first == null) {
+      _files[path] = (declarer, span);
+      return;
+    }
+    _diagnostics.add(
+      Diagnostic(
+        .generatedNameCollision,
+        .error,
+        "The generated file '$path' is written twice: by ${first.$1} and by "
+        '$declarer.',
+        span: span,
+        related: [?first.$2],
+      ),
+    );
+  }
+
   /// Records every name the classes of the enum or input object [type]
   /// declare; any other type declares none.
   void registerSchemaType(SchemaType type) {
@@ -93,7 +136,7 @@ final class GeneratedNames {
     for (final name in [base, '${base}Known', '${base}Unknown']) {
       register(name, declarer, type.span);
     }
-    _registerMembers(declarer, [
+    registerMembers(declarer, [
       for (final value in type.values)
         (
           names.memberName(value.name, reservedMembers: DartNames.enumMembers),
@@ -115,7 +158,7 @@ final class GeneratedNames {
       }
       return;
     }
-    _registerMembers(declarer, [
+    registerMembers(declarer, [
       for (final field in type.fields)
         (
           InputField.dartNameOf(field.name),
@@ -125,9 +168,12 @@ final class GeneratedNames {
     ]);
   }
 
-  // Several GraphQL names can give one Dart member name (`RED` and `red`,
-  // `first_name` and `firstName`), which would not compile.
-  void _registerMembers(
+  /// Records the [members] (Dart name, declarer, span) of the class that
+  /// [owner] describes; two with one Dart name are a problem.
+  ///
+  /// Several GraphQL names can give one Dart member name (`RED` and `red`,
+  /// `first_name` and `firstName`), which would not compile.
+  void registerMembers(
     String owner,
     List<(String, String, SourceSpan?)> members,
   ) {
@@ -142,7 +188,7 @@ final class GeneratedNames {
         Diagnostic(
           .generatedNameCollision,
           .error,
-          "The generated member name '$name' of $owner is declared twice: "
+          "The generated member '$name' of $owner is declared twice: "
           'by ${first.$1} and by $declarer.',
           span: span,
           related: [?first.$2],

@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import 'root_typename.dart';
 import 'typename_adder.dart';
 
 /// Writes the document text an operation is sent with (R7.9): the operation
@@ -13,6 +17,12 @@ final class OperationText {
 
   /// The project's fragment definitions, by name.
   final Map<String, FragmentDefinition> fragments;
+
+  RootTypename get _rootTypename =>
+      RootTypename(schema, (name) => fragments[name]);
+
+  /// The SHA-256 of a document [text], in lower-case hexadecimal.
+  String hashOf(String text) => sha256.convert(utf8.encode(text)).toString();
 
   /// The minified text of [operation] followed by the fragments it spreads,
   /// directly or not, sorted by name.
@@ -53,7 +63,7 @@ final class OperationText {
     TypenameAdder adder,
   ) {
     if (operation.operation == OperationType.subscription ||
-        !_readsAbstractType(operation.selectionSet)) {
+        !_rootTypename.isNeededBy(operation.selectionSet)) {
       return operation;
     }
     return OperationDefinition(
@@ -67,34 +77,6 @@ final class OperationText {
       end: operation.end,
     );
   }
-
-  // Whether the top level of [root] spreads a fragment, or has an inline
-  // fragment, on an abstract type, through spread fragments too.
-  bool _readsAbstractType(SelectionSet root) {
-    final visited = <String>{};
-    final pending = [...root.selections];
-    while (pending.isNotEmpty) {
-      switch (pending.removeLast()) {
-        case Field():
-          continue;
-        case InlineFragment(:final typeCondition, :final selectionSet):
-          if (_isAbstract(typeCondition?.name.value)) return true;
-          pending.addAll(selectionSet.selections);
-        case FragmentSpread(:final name):
-          final FragmentDefinition? fragment = fragments[name.value];
-          if (fragment == null || !visited.add(name.value)) continue;
-          if (_isAbstract(fragment.typeCondition.name.value)) return true;
-          pending.addAll(fragment.selectionSet.selections);
-      }
-    }
-    return false;
-  }
-
-  bool _isAbstract(String? typeName) =>
-      switch (typeName == null ? null : schema.typeNamed(typeName)) {
-        InterfaceType() || UnionType() => true,
-        _ => false,
-      };
 }
 
 // Collects the names of the fragments a definition spreads.

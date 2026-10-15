@@ -8,10 +8,13 @@ import 'client_project.dart';
 import 'client_project_loader.dart';
 import 'client_project_result.dart';
 import 'document_libraries.dart';
+import 'document_name_checker.dart';
 import 'generated_file.dart';
 import 'generated_names.dart';
 import 'generation_result.dart';
+import 'persisted_manifest.dart';
 import 'rules/named_operations_rule.dart';
+import 'rules/subscription_root_rule.dart';
 import 'rules/unsupported_directives_rule.dart';
 import 'schema_type_usage.dart';
 
@@ -59,6 +62,7 @@ final class const ClientGenerator(final CodegenConfig config) {
     UniqueInputFieldNamesRule(),
     NamedOperationsRule(),
     UnsupportedDirectivesRule(),
+    SubscriptionRootRule(),
   ];
 
   /// Checks the schema and the documents as `generate` will read them;
@@ -116,14 +120,51 @@ final class const ClientGenerator(final CodegenConfig config) {
       ],
     );
     types.forEach(names.registerSchemaType);
+    final mapper = TypeMapper(project.schema.schema, config.scalars);
+    final libraries = DocumentLibraries(project, mapper, config.schemaTypes);
+    _registerFiles(names, project);
+    DocumentNameChecker(project, libraries.planner, names).check();
     if (names.diagnostics.isNotEmpty) {
       return GenerationResult(const [], [...warnings, ...names.diagnostics]);
     }
-    final mapper = TypeMapper(project.schema.schema, config.scalars);
     final text = SchemaTypesEmitter(mapper).emit(types, source: schemaPath);
+    final manifest = config.persistedOperations;
     return GenerationResult([
       GeneratedFile(config.schemaTypes, text),
-      ...DocumentLibraries(project, mapper, config.schemaTypes).generate(),
+      ...libraries.generate(),
+      if (manifest != null)
+        GeneratedFile(
+          manifest,
+          PersistedManifest(
+            libraries.operationText,
+          ).of(project.document.document),
+        ),
     ], warnings);
+  }
+
+  // Two writers of one path would overwrite each other.
+  void _registerFiles(GeneratedNames names, ClientProject project) {
+    names.registerFile(config.schemaTypes, 'the schema types', null);
+    final map = project.documents.sourceMap;
+    final firstDefinitions = <int, SourceSpan>{};
+    for (final definition in project.document.document.definitions) {
+      firstDefinitions.putIfAbsent(
+        map.fileIndexAt(definition.start),
+        () => map.translate(
+          SourceSpan(map.source, definition.start, definition.end),
+        ),
+      );
+    }
+    for (final (index, file) in project.documents.files.indexed) {
+      names.registerFile(
+        '${file.path}.dart',
+        "the document '${file.path}'",
+        firstDefinitions[index],
+      );
+    }
+    final manifest = config.persistedOperations;
+    if (manifest != null) {
+      names.registerFile(manifest, 'the persisted-operations manifest', null);
+    }
   }
 }

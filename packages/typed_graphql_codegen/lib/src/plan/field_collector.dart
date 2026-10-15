@@ -163,7 +163,7 @@ final class _Run {
       case TypeConditionMatch.applies:
         final existing = uses[name];
         uses[name] = existing == null
-            ? FragmentUse(name, [conditions])
+            ? FragmentUse(name, [conditions], spread: spread)
             : existing.merge(conditions);
       case TypeConditionMatch.narrows:
         narrowings.add(

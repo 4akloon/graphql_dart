@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_codegen/src/generator/rules/named_operations_rule.dart';
+import 'package:typed_graphql_codegen/src/generator/rules/subscription_root_rule.dart';
 import 'package:typed_graphql_codegen/src/generator/rules/unsupported_directives_rule.dart';
 import 'package:typed_graphql_codegen/typed_graphql_codegen.dart';
 
@@ -246,6 +247,7 @@ scalars:
             if (!dropped.contains(rule.runtimeType)) rule.runtimeType,
           NamedOperationsRule,
           UnsupportedDirectivesRule,
+          SubscriptionRootRule,
         ],
       );
     });

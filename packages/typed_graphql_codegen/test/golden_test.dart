@@ -22,9 +22,12 @@ void main() {
       });
 
       test('writes the files of the goldens', () {
-        expect([
-          for (final file in result.files) file.path,
-        ], golden.goldens.keys.toList()..sort());
+        expect(
+          [
+            for (final file in result.files) file.path,
+          ]..sort(),
+          golden.goldens.keys.toList()..sort(),
+        );
       });
 
       for (final file in result.files) {

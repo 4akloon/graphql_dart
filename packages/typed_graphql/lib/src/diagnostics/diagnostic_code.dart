@@ -527,8 +527,9 @@ enum DiagnosticCode(
   /// reads; its classes are named after the operation.
   anonymousOperation('GQL503'),
 
-  /// `GQL504`: a construct the code generator does not support yet: `@defer`
-  /// or `@stream`.
+  /// `GQL504`: a construct the code generator does not support yet: `@defer`,
+  /// `@stream`, or a fragment on an abstract type spread at the root of a
+  /// subscription.
   unsupportedInDocument('GQL504'),
 
   /// `GQL505`: the configuration maps a scalar the schema does not have as a

@@ -12,6 +12,7 @@ final class PlannedField {
     required this.isConditional,
     this.definition,
     this.className,
+    this.node,
     this.overridesBase = false,
   });
 
@@ -40,6 +41,10 @@ final class PlannedField {
   /// The generated class of a composite field, null for a leaf.
   final String? className;
 
+  /// The first field node of the response name, for diagnostics; null for a
+  /// `__typename` the planner added.
+  final Field? node;
+
   /// Whether the field is a shared field of the sealed base, which the
   /// class overrides.
   final bool overridesBase;
@@ -52,6 +57,7 @@ final class PlannedField {
     isConditional: isConditional,
     definition: definition,
     className: className,
+    node: node,
     overridesBase: true,
   );
 }

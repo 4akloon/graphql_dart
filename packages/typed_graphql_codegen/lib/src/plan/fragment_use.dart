@@ -1,3 +1,5 @@
+import 'package:typed_graphql/typed_graphql.dart';
+
 import 'condition.dart';
 
 /// A named fragment selected at one level of a selection.
@@ -7,8 +9,11 @@ final class FragmentUse(
 
   /// The spread is selected when all conditions of any one list hold; one
   /// empty list means it is unconditional.
-  List<List<Condition>> whenAny,
-) {
+  List<List<Condition>> whenAny, {
+
+  /// The first spread node of the fragment, for diagnostics.
+  final FragmentSpread? spread,
+}) {
   /// Creates a use.
   this;
 
@@ -29,12 +34,12 @@ final class FragmentUse(
       return this;
     }
     if (conditions.isEmpty) {
-      return FragmentUse(fragmentName, [const <Condition>[]]);
+      return FragmentUse(fragmentName, [const <Condition>[]], spread: spread);
     }
     if (whenAny.any((existing) => _same(existing, conditions))) {
       return this;
     }
-    return FragmentUse(fragmentName, [...whenAny, conditions]);
+    return FragmentUse(fragmentName, [...whenAny, conditions], spread: spread);
   }
 
   static bool _same(List<Condition> a, List<Condition> b) {

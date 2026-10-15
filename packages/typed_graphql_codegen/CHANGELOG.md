@@ -50,3 +50,9 @@
   (`required` or `Optional` per variable, written only), and the data class
   with `decode(json, variables:)` and the defaults of its Boolean variables.
   Depends on `package:crypto`.
+- Names are checked over operations and fragments too: classes, the members of
+  every class (fields, variables, fragment accessors) and file paths, as
+  `GQL507`/`GQL508`, in file and offset order. A subscription that spreads a
+  fragment on an abstract type at its root is a `GQL504`.
+- `persisted_operations` writes the persisted-operations manifest (ids, names,
+  types and minified bodies, sorted by name) as the last generated file.

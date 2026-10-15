@@ -288,6 +288,7 @@ final class ShapePlanner {
       isConditional: group.isConditional,
       definition: group.fieldName == '__typename' ? null : group.definition,
       className: className,
+      node: group.nodes.first,
     );
   }
 }
