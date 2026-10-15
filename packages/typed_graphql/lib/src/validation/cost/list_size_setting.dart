@@ -29,17 +29,7 @@ final class ListSizeSetting(
     for (final directive in directives) {
       if (directive.name == 'listSize') {
         return ListSizeSetting(
-          switch (directive.argument('assumedSize')) {
-            // Negative sizes count as 0 and huge ones stay finite.
-            IntValue(:final value) => switch (double.tryParse(value)) {
-              final size? => min<double>(
-                double.maxFinite,
-                max<double>(0, size),
-              ),
-              null => null,
-            },
-            _ => null,
-          },
+          _assumedSize(directive),
           StringListArgument(directive).named('slicingArguments'),
           StringListArgument(directive).named('sizedFields'),
           switch (directive.argument('requireOneSlicingArgument')) {
@@ -51,4 +41,14 @@ final class ListSizeSetting(
     }
     return null;
   }
+
+  // Negative sizes count as 0 and huge ones stay finite.
+  static double? _assumedSize(AppliedDirective directive) =>
+      switch (directive.argument('assumedSize')) {
+        IntValue(:final value) => switch (double.tryParse(value)) {
+          final size? => min<double>(double.maxFinite, max<double>(0, size)),
+          null => null,
+        },
+        _ => null,
+      };
 }

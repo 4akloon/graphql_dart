@@ -20,30 +20,38 @@ type User {
 
 const _builder = SchemaBuilder(includesCostDirectives: true);
 
-OperationCost _cost(
-  String text, {
-  Map<String, JsonValue> variables = const {},
-  int defaultListSize = 10,
-}) {
-  final document = const Parser(
-    options: ParserOptions(maxTokens: null),
-  ).parse(Source(text)).requireDocument();
-  return CostAnalysis(
-    Built(_sdl, builder: _builder).schema,
-    defaultListSize: defaultListSize,
-  ).costOf(
-    document,
-    document.definitions.whereType<OperationDefinition>().first,
-    variables: variables,
-  );
+final class _Costs {
+  const _Costs();
+
+  OperationCost of(
+    String text, {
+    Map<String, JsonValue> variables = const {},
+    int defaultListSize = 10,
+  }) {
+    final document = const Parser(
+      options: ParserOptions(maxTokens: null),
+    ).parse(Source(text)).requireDocument();
+    return CostAnalysis(
+      Built(_sdl, builder: _builder).schema,
+      defaultListSize: defaultListSize,
+    ).costOf(
+      document,
+      document.definitions.whereType<OperationDefinition>().first,
+      variables: variables,
+    );
+  }
 }
+
+const _costs = _Costs();
 
 void main() {
   final hugeLiteral = '9' * 400;
   final checked = Checked(_sdl, builder: _builder);
 
   test('a 400-digit slicing literal costs a finite number', () {
-    final cost = _cost('{ users(first: $hugeLiteral) { friends { name } } }');
+    final cost = _costs.of(
+      '{ users(first: $hugeLiteral) { friends { name } } }',
+    );
     expect(cost.fieldCost.isFinite, isTrue);
     expect(cost.fieldCost, greaterThan(1e300));
   });
@@ -58,7 +66,7 @@ void main() {
   });
 
   test('first: 0 over an overflowing child costs the field alone', () {
-    final cost = _cost(
+    final cost = _costs.of(
       '{ users(first: 0) { friends(first: $hugeLiteral) '
       '{ friends(first: $hugeLiteral) { name } } } }',
     );
@@ -68,7 +76,7 @@ void main() {
 
   test('nested default lists that overflow stay finite', () {
     final text = '{ users ${'{ friends ' * 30} { name } ${'}' * 30} }';
-    final cost = _cost(text, defaultListSize: 1000000000000000);
+    final cost = _costs.of(text, defaultListSize: 1000000000000000);
     expect(cost.fieldCost.isFinite, isTrue);
     expect(cost.typeCost.isFinite, isTrue);
     expect(
@@ -80,11 +88,11 @@ void main() {
   });
 
   test('a negative assumedSize counts as 0', () {
-    expect(_cost('{ negative { name } }').typeCost, 1);
+    expect(_costs.of('{ negative { name } }').typeCost, 1);
   });
 
   test('a variable beyond the safe-integer range is its double value', () {
-    final cost = _cost(
+    final cost = _costs.of(
       r'query ($n: Int) { users(first: $n) { friends(first: 1) { name } } }',
       variables: {'n': JsonNumber(1e16)},
     );
