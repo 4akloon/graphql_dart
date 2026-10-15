@@ -7,9 +7,11 @@ and reports each problem as a diagnostic at `file:line:column`. It generates
 the schema-types library (the enums and input objects the documents use,
 with the scalars mapped to Dart types) and a library per document: the
 classes of its operations, variables, data and fragments, the minified
-document with its SHA-256, and the persisted-operations manifest. The command
-line arrives next. Bad input never throws: a problem is a diagnostic with a
-stable code, in a sealed result or a list.
+document with its SHA-256, and the persisted-operations manifest. The
+command line (`generate` and `check`) reads the project from disk, takes the
+schema from a file or a URL and writes the generated files. Bad input never
+throws: a problem is a diagnostic with a stable code, in a sealed result or a
+list.
 
 ## Configuration
 
@@ -50,7 +52,7 @@ headers:
 ```
 
 The values of `headers` are kept as written: the configuration reader does
-not expand `${NAME}`.
+not expand `${NAME}`; the command line does (see "Command line").
 
 ## Checking a project
 
@@ -161,6 +163,59 @@ It prints:
 lib/schema.graphql.dart: Role, RoleUnknown
 role.graphql.dart: GetRoleQuery, GetRoleData
 ```
+
+## Command line
+
+The same engine runs from a terminal, in the folder of the project:
+
+```text
+dart run typed_graphql_codegen generate
+dart run typed_graphql_codegen check
+dart run typed_graphql_codegen generate --config path/to/typed_graphql.yaml
+```
+
+`--config` (`-c`) names the configuration file; it defaults to
+`typed_graphql.yaml` in the working directory, and every path in it is
+relative to the file's folder. `--help` prints the usage.
+
+`generate` reads the configuration, the schema and the documents, runs the
+checks and, when there is no error, writes each generated file whose text
+differs from what is on disk (creating folders as needed). It prints
+`Wrote N files.` or `Nothing to write.` and never deletes a file: a library
+whose document you removed stays until you delete it. `check` writes nothing;
+it reports a `GQL509` for each generated file that is missing or differs, and
+prints `Up to date.` when none does, so a CI job can run it to catch generated
+code that was not regenerated. Nothing is written when a document has an
+error, and an error in one file blocks every file.
+
+A diagnostic is printed to the error stream as
+`path:line:column: severity GQLnnn: message`, followed by the excerpt of its
+place; one without a place has no path. A file the command must read (the
+configuration, the schema, a document) that cannot be read is a `GQL510`.
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Success; warnings such as `GQL506` do not change it. |
+| `1` | At least one error: a problem in the project, a failed schema fetch, or (for `check`) an outdated file. |
+| `64` | The command line itself is wrong: a missing or unknown command or option. The usage is printed. |
+
+When `schema` is a URL, the command posts the full introspection query to it
+(the response may be an introspection result or a GraphQL response around
+one) and uses the result as the schema; a network failure, a timeout or a
+response that is not an introspection result is a diagnostic, not a crash. A
+`${NAME}` in a value of `headers` is replaced by the environment variable
+`NAME`; an unset variable is a `GQL501`. The values are never printed, not in
+a diagnostic either. Put secrets there, not in `typed_graphql.yaml`:
+
+```text
+schema: https://example.com/graphql
+headers:
+  Authorization: Bearer ${GRAPHQL_TOKEN}
+```
+
+The `example/` folder of the package is a small project with its generated
+code checked in; `test/example_test.dart` generates it again and compares the
+files byte for byte.
 
 ## Document libraries
 
@@ -839,6 +894,8 @@ and are never reused.
 | `GQL506` | warning | No document matches `documents`. |
 | `GQL507` | error | The generator would declare one Dart name twice, such as an enum `Role` and an input object `RoleKnown` (the enum also declares `RoleKnown` and `RoleUnknown`), a class of an operation and a fragment, two members of one class (such as the fields `user_name` and `userName`, or two fragments `UserCard` and `userCard`), or two files at one path. |
 | `GQL508` | error | A name the generator would declare hides a Dart type the generated code uses, such as `List`, or a `dart:core` type a scalar is mapped to. |
+| `GQL509` | error | `check` found a generated file that is missing or differs from what `generate` would write. |
+| `GQL510` | error | The command line cannot read the configuration, the schema file, a document or the schema URL (a network failure, a timeout, a non-success status or a body that is not an introspection result). |
 | `GQL511` | error | An operation or fragment would generate more than 10000 classes, for instance a selection on an interface that reaches many types, repeated under many aliases. |
 
 The problems of the schema and of the documents keep the codes of the core:

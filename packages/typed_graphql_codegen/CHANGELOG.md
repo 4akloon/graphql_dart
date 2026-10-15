@@ -81,3 +81,12 @@
   a response with `errors` and no `data` is `GQL502`. Header values may use
   `${NAME}` (`HeaderExpander`): a variable that is not set is `GQL501`, a line
   break from a variable is refused, and no header value is ever printed.
+- The command line `dart run typed_graphql_codegen generate|check [--config]`:
+  `generate` writes the changed files and never deletes; `check` reports
+  `GQL509` for a missing or outdated file; exit codes 0, 1 and 64; unreadable
+  inputs are `GQL510`.
+- A `schema` URL is fetched with the full introspection query; `${NAME}` in
+  `headers` is read from the environment and values are never printed.
+- The README's quick start, the guide's "Command line" section and the
+  `example/` project with its generated code checked in
+  (`test/example_test.dart`).
