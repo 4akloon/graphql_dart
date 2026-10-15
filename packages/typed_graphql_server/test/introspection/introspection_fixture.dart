@@ -16,7 +16,7 @@ final class Robot {
 /// A schema with every kind of type, deprecations, descriptions and a
 /// repeatable directive, and helpers to run queries against it.
 final class IntrospectionFixture {
-  IntrospectionFixture() {
+  IntrospectionFixture({List<FieldMiddleware<Object?>> middleware = const []}) {
     final b = ExecutableSchemaBuilder<Object?>();
     final url = b.scalar<String>(
       'Url',
@@ -119,6 +119,7 @@ final class IntrospectionFixture {
       mutation: mutation,
       options: BuildOptions(
         description: 'The API.',
+        middleware: middleware,
         directives: [
           SchemaDirective(
             'tag',
