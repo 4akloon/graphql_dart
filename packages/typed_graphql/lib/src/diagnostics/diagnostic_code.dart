@@ -522,4 +522,21 @@ enum DiagnosticCode(
   /// `GQL502`: a schema file the code generator cannot read as a schema: not
   /// JSON, or JSON that is not an object.
   invalidSchemaInput('GQL502'),
+
+  /// `GQL503`: an operation without a name in a document the code generator
+  /// reads; its classes are named after the operation.
+  anonymousOperation('GQL503'),
+
+  /// `GQL504`: a construct the code generator does not support yet: `@defer`,
+  /// `@stream`, or a fragment on an abstract type spread at the root of a
+  /// subscription.
+  unsupportedInDocument('GQL504'),
+
+  /// `GQL505`: the configuration maps a scalar the schema does not have as a
+  /// custom scalar: unknown, not a scalar, or built in.
+  unknownScalarMapping('GQL505'),
+
+  /// `GQL506`: no document matches the configuration's `documents`; reported
+  /// as a warning.
+  noDocuments('GQL506'),
 }
