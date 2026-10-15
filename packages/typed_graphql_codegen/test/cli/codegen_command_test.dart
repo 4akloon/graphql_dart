@@ -32,6 +32,13 @@ void main() {
     }
   });
 
+  test('a generate that writes one file says so in the singular', () async {
+    await project.run(['generate']);
+    project.file(generated).writeAsStringSync('// edited\n');
+    expect(await project.run(['generate']), 0);
+    expect(project.out.toString(), 'Wrote 1 file.\n');
+  });
+
   test('a second generate writes nothing', () async {
     await project.run(['generate']);
     expect(await project.run(['generate']), 0);

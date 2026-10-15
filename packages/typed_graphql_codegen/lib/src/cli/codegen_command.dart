@@ -99,9 +99,11 @@ final class CodegenCommand {
     }
     final (:written, :problems) = writer.write(result.files);
     final code = _report([...result.diagnostics, ...problems], secrets);
-    out.writeln(
-      written.isEmpty ? 'Nothing to write.' : 'Wrote ${written.length} files.',
-    );
+    out.writeln(switch (written.length) {
+      0 => 'Nothing to write.',
+      1 => 'Wrote 1 file.',
+      final count => 'Wrote $count files.',
+    });
     return code;
   }
 

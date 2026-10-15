@@ -124,9 +124,14 @@ final class ProjectReader {
         );
         for (final entity in entities) {
           if (entity is! File || !entity.path.endsWith('.graphql')) continue;
-          final relative = p.posix.joinAll(
-            p.split(p.relative(entity.path, from: directory)),
-          );
+          final parts = p.split(p.relative(entity.path, from: directory));
+          if (parts.first == '..') {
+            // A brace alternative such as `{..,lib}` passes the path rule,
+            // which only checks whole segments.
+            problems.add(_leavesProject(pattern));
+            break;
+          }
+          final relative = p.posix.joinAll(parts);
           if (relative != schemaPath) paths.add(relative);
         }
       } on FormatException catch (error) {
@@ -148,6 +153,12 @@ final class ProjectReader {
     }
     return (paths: paths.toList()..sort(), problems: problems);
   }
+
+  Diagnostic _leavesProject(String pattern) => Diagnostic(
+    .invalidConfig,
+    .error,
+    "The documents pattern '$pattern' matches a file outside the project.",
+  );
 
   _FileOutcome _readText(String path) {
     try {

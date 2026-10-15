@@ -30,6 +30,21 @@ void main() {
     );
   });
 
+  test('a brace alternative that leaves the project is GQL501', () async {
+    final outside = File('${project.directory.parent.path}/m10_outside.graphql')
+      ..writeAsStringSync('query Outside { __typename }');
+    addTearDown(outside.deleteSync);
+    documents('"{..,lib}/m10_outside.graphql"');
+    expect(await project.run(['generate']), 1);
+    expect(
+      project.err.toString(),
+      startsWith(
+        "error GQL501: The documents pattern '{..,lib}/m10_outside.graphql' "
+        'matches a file outside the project.',
+      ),
+    );
+  });
+
   test('a symbolic link to a document is not followed', () async {
     final outside = File('${project.directory.path}/outside.txt')
       ..writeAsStringSync('query Outside { __typename }');

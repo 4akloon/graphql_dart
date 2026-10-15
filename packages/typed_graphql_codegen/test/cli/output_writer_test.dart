@@ -36,7 +36,21 @@ void main() {
     expect(result.problems.map((d) => d.toString()), [
       startsWith("error GQL510: Cannot write 'lib/a.dart': "),
     ]);
-    expect(File('${directory.path}/lib/a.dart.tmp').existsSync(), isFalse);
+    expect(
+      [
+        for (final entity in Directory('${directory.path}/lib').listSync())
+          entity.path,
+      ]..sort(),
+      ['${directory.path}/lib/a.dart', '${directory.path}/lib/b.dart'],
+    );
+  });
+
+  test('write keeps a user file named like a fixed temporary name', () {
+    File('${directory.path}/lib/a.dart.tmp')
+      ..createSync(recursive: true)
+      ..writeAsStringSync('mine');
+    writer.write([file]);
+    expect(File('${directory.path}/lib/a.dart.tmp').readAsStringSync(), 'mine');
   });
 
   test('an output that is not UTF-8 is replaced by write', () {

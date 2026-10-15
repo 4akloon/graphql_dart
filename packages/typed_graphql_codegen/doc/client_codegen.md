@@ -181,7 +181,7 @@ relative to the file's folder. `--help` prints the usage.
 `generate` reads the configuration, the schema and the documents, runs the
 checks and, when there is no error, writes each generated file whose text
 differs from what is on disk (creating folders as needed). It prints
-`Wrote N files.` or `Nothing to write.` and never deletes a file: a library
+`Wrote N files.` (`Wrote 1 file.` for one) or `Nothing to write.` and never deletes a file: a library
 whose document you removed stays until you delete it, and neither `generate`
 nor `check` looks at it, so `check` can be clean while a stale library is
 still compiled. A file is written through a temporary file and a rename; a

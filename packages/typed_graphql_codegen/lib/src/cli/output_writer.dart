@@ -76,13 +76,15 @@ final class const OutputWriter(
   void _replace(GeneratedFile generated) {
     final file = File(p.join(directory, generated.path));
     file.parent.createSync(recursive: true);
-    final temporary = File('${file.path}.tmp');
+    // A folder of its own: a fixed name next to the target could overwrite
+    // a file of the user's.
+    final folder = file.parent.createTempSync('.typed_graphql_');
     try {
+      final temporary = File(p.join(folder.path, 'output'));
       temporary.writeAsStringSync(generated.text);
       temporary.renameSync(file.path);
-    } on FileSystemException {
-      if (temporary.existsSync()) temporary.deleteSync();
-      rethrow;
+    } finally {
+      folder.deleteSync(recursive: true);
     }
   }
 
