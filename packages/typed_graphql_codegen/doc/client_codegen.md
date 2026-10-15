@@ -898,7 +898,7 @@ and are never reused.
 | Code | Severity | Reported when |
 |---|---|---|
 | `GQL500` | error | `typed_graphql.yaml` is not valid YAML. |
-| `GQL501` | error | A configuration key is missing, unknown or mistyped, or a path or Dart reference is malformed. |
+| `GQL501` | error | A configuration key is missing, unknown or mistyped, or a path, glob or Dart reference is malformed; or a schema URL header uses a `${NAME}` variable that is not set or is empty, or expands to a value that is not ASCII. |
 | `GQL502` | error | The schema file is not JSON, or is JSON that is not an object, when it should be an introspection result. |
 | `GQL503` | error | An operation has no name; the generated classes are named after the operation. |
 | `GQL504` | error | A document uses `@defer` or `@stream`, or selects an introspection field (`__schema`, `__type`), which the generator does not support yet; or a subscription spreads, at its root, a fragment that becomes a sealed class (directly or through other fragments or inline fragments): the sealed class would need `__typename` there, and a subscription cannot select it. |
@@ -907,7 +907,7 @@ and are never reused.
 | `GQL507` | error | The generator would declare one Dart name twice, such as an enum `Role` and an input object `RoleKnown` (the enum also declares `RoleKnown` and `RoleUnknown`), a class of an operation and a fragment, two members of one class (such as the fields `user_name` and `userName`, or two fragments `UserCard` and `userCard`), or two files at one path. |
 | `GQL508` | error | A name the generator would declare hides a Dart type the generated code uses, such as `List`, or a `dart:core` type a scalar is mapped to. |
 | `GQL509` | error | `check` found a generated file that is missing or differs from what `generate` would write. |
-| `GQL510` | error | The command line cannot read the configuration, the schema file, a document or the schema URL (a network failure, a timeout, a redirect, a body over 64 MiB, a non-success status or an unreadable body). |
+| `GQL510` | error | The command line cannot read the configuration, the schema file or a document, cannot list the documents glob, cannot fetch the schema URL (a network failure, a timeout, a redirect, a body over 64 MiB, a non-success status or an unreadable body), or cannot write a generated file. |
 | `GQL511` | error | An operation or fragment would generate more than 10000 classes, for instance a selection on an interface that reaches many types, repeated under many aliases. |
 
 The problems of the schema and of the documents keep the codes of the core:

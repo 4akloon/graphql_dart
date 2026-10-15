@@ -515,8 +515,10 @@ enum DiagnosticCode(
   /// the YAML parser's.
   configSyntax('GQL500'),
 
-  /// `GQL501`: a missing, unknown or mistyped key, or a malformed path or Dart
-  /// reference, in the code generator's configuration.
+  /// `GQL501`: a missing, unknown or mistyped key, or a malformed path, glob
+  /// or Dart reference, in the code generator's configuration; also a schema
+  /// URL header whose `${NAME}` variable is not set or is empty, or whose
+  /// expanded value is not ASCII.
   invalidConfig('GQL501'),
 
   /// `GQL502`: a schema file the code generator cannot read as a schema: not
@@ -529,9 +531,10 @@ enum DiagnosticCode(
 
   /// `GQL504`: a construct the code generator does not support yet: `@defer`,
   /// `@stream`, an introspection field (`__schema`, `__type`), or a
-  /// subscription root that spreads (directly or inside an inline fragment) a
-  /// fragment which plans as a sealed base class; it would need `__typename`,
-  /// which a subscription cannot select. A plain inline fragment is fine.
+  /// subscription root that spreads a fragment which plans as a sealed base
+  /// class, directly, inside an inline fragment or through other fragment
+  /// spreads; it would need `__typename`, which a subscription cannot select.
+  /// A plain inline fragment is fine.
   unsupportedInDocument('GQL504'),
 
   /// `GQL505`: the configuration maps a scalar the schema does not have as a
@@ -557,9 +560,11 @@ enum DiagnosticCode(
   /// what `generate` would write; reported without a span.
   outputOutdated('GQL509'),
 
-  /// `GQL510`: a file the command line must read, such as the configuration,
-  /// the schema or a document, or the schema URL, cannot be read; reported
-  /// without a span.
+  /// `GQL510`: the command line cannot read a file it needs (the
+  /// configuration, the schema or a document), list the documents glob, fetch
+  /// the schema URL (a network failure, a timeout, a redirect, a body over
+  /// 64 MiB, a non-success status or an unreadable body), or write a generated
+  /// file; reported without a span.
   inputUnreadable('GQL510'),
 
   /// `GQL511`: an operation or fragment whose selections would make the code
