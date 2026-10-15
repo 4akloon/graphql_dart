@@ -306,12 +306,17 @@ It prints:
 The checks of the `ServerLimits` constructor are `assert`s, so they run in
 debug and test builds only (a constant constructor cannot throw). In a
 release build a bad value is not reported at construction, and the server
-reacts as follows. A zero or negative `maxDocumentLength`, `maxTokens` or
-`maxCost`, or a NaN `maxCost`, refuses every request (it fails closed). A
-zero or negative `maxDepth`, `maxAliases` or `maxDirectives` is a
-`RangeError` when the `GraphQLServer` is built. A negative `defaultListSize`
-turns every request into a `GQL330` error. Nothing a request sends can change
-a limit.
+reacts as follows. A zero or negative `maxDocumentLength` or `maxTokens`
+refuses every request (it fails closed). A zero `maxDepth`, `maxAliases` or
+`maxDirectives` is accepted, and refuses any document with a field. A
+negative one throws a `RangeError` each time a document is compiled, not when
+the `GraphQLServer` is built, so every request that misses the document cache
+is answered with `GQL330` (nothing is cached). A negative or NaN `maxCost`
+refuses every request that costs anything; a `maxCost` of 0 still lets
+documents that cost 0, such as `{ __typename }`, through. A negative
+`defaultListSize` turns every request that has a selected operation into a
+`GQL330` error when `maxCost` is set (it is not read otherwise). Nothing a
+request sends can change a limit.
 
 The cost limit counts a list field with a slicing argument from the value the
 client sent. A value that names no size (`first: $n` with `n: null`, or a

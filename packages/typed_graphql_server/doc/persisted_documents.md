@@ -24,6 +24,11 @@ first sends only the hash. When the store does not hold it, the answer is
 text with the hash; the server checks that the hash is the text's, runs it
 and stores it. From then on the hash alone is enough.
 
+A stored text longer than `maxDocumentLength` (the limit was lowered, or
+another writer filled a shared store) answers `GQL401` to a request that sends
+only the hash. That is not `PersistedQueryNotFound`, so the client does not
+send the text again and the entry is not replaced; remove it from the store.
+
 ```dart
 import 'dart:convert';
 
@@ -129,7 +134,10 @@ text is refused with `GQL414` before it is parsed, a change of whitespace
 included, and an unknown hash is `GQL415`. A text sent with a hash that is
 not its own is `GQL411`. What runs is always the manifest's own text, never
 the client's, and a trusted text longer than `maxDocumentLength` is refused
-with `GQL401` like any other.
+with `GQL401` like any other. Hooks still see the client's text in
+`request.params.query`; only the parser, validator, cost step, executor and
+cache are given the manifest's. A hook that must judge what runs reads
+`DocumentAccepted.source`.
 
 `TrustedDocuments.decode` reads the persisted-operations manifest that
 `typed_graphql_codegen` writes for the client (`persisted_queries.json`,
