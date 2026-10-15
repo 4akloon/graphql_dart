@@ -33,7 +33,9 @@ void main() {
         1: [1],
       },
     );
-    expect(await loader.load(2), isEmpty);
+    final values = await loader.load(2);
+    expect(values, isEmpty);
+    expect(() => values.add(1), throwsUnsupportedError);
   });
 
   test('the returned list is unmodifiable', () async {
@@ -116,5 +118,52 @@ void main() {
       [3, 3],
       [1, 1],
     ]);
+  });
+
+  test(
+    'changing the list of an async batch later keeps the cached value',
+    () async {
+      final source = [1];
+      final loader = GroupedLoader<int, int>((keys) async => {1: source});
+      final values = await loader.load(1);
+      source.add(2);
+      expect(await loader.load(1), [1]);
+      expect(() => values.add(3), throwsUnsupportedError);
+    },
+  );
+
+  test('changing a primed list later keeps the cached value', () async {
+    final source = [9];
+    final loader = GroupedLoader<int, int>(Recorder().pairs)..prime(1, source);
+    source.add(8);
+    expect(await loader.load(1), [9]);
+  });
+
+  test('maxBatchSize splits one pass into chunks', () async {
+    final recorder = Recorder();
+    final loader = GroupedLoader<int, int>(recorder.pairs, maxBatchSize: 2);
+    await loader.loadMany([1, 2, 3]);
+    expect(recorder.calls, [
+      [1, 2],
+      [3],
+    ]);
+  });
+
+  test('a maxBatchSize below 1 is an ArgumentError', () {
+    expect(
+      () => GroupedLoader<int, int>(Recorder().pairs, maxBatchSize: 0),
+      throwsArgumentError,
+    );
+  });
+
+  test('a loader that does not cache calls the function again', () async {
+    final recorder = Recorder();
+    final loader = GroupedLoader<int, int>(
+      recorder.pairs,
+      cachesValues: false,
+    );
+    await loader.load(1);
+    await loader.load(1);
+    expect(recorder.calls, hasLength(2));
   });
 }

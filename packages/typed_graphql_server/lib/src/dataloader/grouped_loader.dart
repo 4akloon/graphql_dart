@@ -39,7 +39,7 @@ final class GroupedLoader<K, V> {
          },
          maxBatchSize: maxBatchSize,
          cachesValues: cachesValues,
-         missing: (_) => const [],
+         missing: (_) => List<V>.unmodifiable(<V>[]),
        );
 
   final LoaderQueue<K, List<V>> _queue;
