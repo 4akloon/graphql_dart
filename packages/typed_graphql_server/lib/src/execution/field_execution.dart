@@ -8,6 +8,7 @@ import '../builder/field_lane.dart';
 import '../coercion/coercion_result.dart';
 import '../introspection/entry_fields.dart';
 import '../introspection/introspection_policy.dart';
+import '../lookahead/field_selection.dart';
 import '../plan/field_plan.dart';
 import 'completion_site.dart';
 import 'execution_run.dart';
@@ -255,6 +256,11 @@ final class FieldExecution {
       variables: _run.rawVariables,
       schema: _run.schema,
       rootValue: _run.options.rootValue,
+      selectionReader: () => FieldSelection.under(
+        [plan],
+        _run.variables,
+        _run.bindings.fields,
+      ),
     );
   }
 }

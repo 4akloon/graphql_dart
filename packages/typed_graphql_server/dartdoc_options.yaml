@@ -9,6 +9,9 @@ dartdoc:
     introspection:
       markdown: doc/introspection.md
       displayName: Introspection
+    lookahead:
+      markdown: doc/lookahead.md
+      displayName: Look-ahead
     subscription:
       markdown: doc/subscriptions.md
       displayName: Subscriptions
@@ -16,5 +19,6 @@ dartdoc:
     - builder
     - execution
     - introspection
+    - lookahead
     - subscription
   showUndocumentedCategories: true
