@@ -272,6 +272,11 @@ expanded once per root. The code is in `validation/overlap/`.
   reached from (the pairs under it have their nearest distinct ancestors
   below it), unless a cyclic fragment is on the path; so `p: a { ...F }
   q: b { ...F }` over 20 levels is merged in linear steps and is valid.
+  The memo covers lone fields only: a part that repeats a response name
+  beside its spreads (`fragment G_i on Node { p: child { ...G_next }
+  p: child { ...G_next } q: child { ...G_next } q: child { ...G_next } }`)
+  fans out through parts that are not alone, and from about 18 levels it
+  ends with `GQL230` (section 8, deviation 15).
 
 Conflicts come in graphql-js's order in the common cases; with three or more
 fields of one name in conflict the count differs (deviation 4; one adapted
@@ -297,10 +302,16 @@ reports one `GQL230` "The document is too complex to validate: it needs more
 than N steps." at the document and aborts the run, which is then an
 `InvalidDocument`. The default is measured, not guessed: the VM does about
 1.2 million steps a second, so the budget bounds a run near one second (a
-10 000 000 budget let the 2^60 hostile document run 10.9 s). A document within
-the parser's default limits stays far below it; the budget exists for
+10 000 000 budget let the 2^60 hostile document run 10.9 s). The budget exists for
 documents built in code, parsed without limits, or shaped to expand
-exponentially through fragments.
+exponentially through fragments. Within the parser's default limits a
+document stays below it except in one shape: the field merging memoises the
+subfields of a field that is alone in its set, so a fragment spread under
+two fields over 25 levels is merged in linear steps, but a fan-out through
+parts that repeat a response name (`fragment G_i on Node { p: child
+{ ...G_next } p: child { ...G_next } q: child { ...G_next } q: child
+{ ...G_next } }`, about 18 levels or more) still spends the budget and ends
+with `GQL230`. This is an honest, bounded limit, not a hang.
 
 ## 9. Hostile documents (R0.3)
 
@@ -316,7 +327,9 @@ minutes or overflows:
 - 100000 aliases, conflicting fields of one response name, directives,
   repeated arguments, variables, operations and spreads;
 - 1000 operations each spreading one chain of 1000 fragments spend the budget
-  (`GQL230`), and so do fragments that expand to 2^60 fields to merge.
+  (`GQL230`); fragments that expand to 2^60 fields through lone fields are
+  merged in near-linear steps and are valid, while a fan-out through parts
+  that repeat a response name ends with `GQL230` (section 8).
 
 The M4b fuzzers (section 12) repeat these shapes with random sizes and every
 opt-in rule on.
@@ -517,6 +530,10 @@ list and Documentation section, the package CHANGELOG, `CLAUDE.md` (a
     UTF-16 code units (`Suggestions.maxInputLength`): graphql-js measures
     any length, which lets one hostile name make every error cost its
     length.
+15. The field-merging memo covers fields alone in their set only: a part that
+    repeats a response name and fans out through fragments (about 18 levels
+    of four spreads) still ends with `GQL230` where graphql-js, with no
+    bound, would take exponential time (section 8).
 
 ## 15. Open questions for the owner
 

@@ -6,6 +6,8 @@ import 'checked.dart';
 // Spec section 8 of M4 (R0.3, R3.3): a valid document within the parser's
 // limits never reaches the step budget. A fragment spread under two fields,
 // level after level, has 2^levels paths and graphql-js merges it linearly.
+// The one shape that still spends the budget (GQL230) is a part that repeats
+// a response name beside the spread: see the last test and spec section 8.
 void main() {
   final checked = Checked('type Query { a: Query b: Query }');
   const levels = 25;
@@ -34,6 +36,23 @@ void main() {
     ) as InvalidDocument;
     expect(result.diagnostics.map((d) => d.code), [
       DiagnosticCode.overlappingFieldsCanBeMerged,
+    ]);
+  });
+
+  test('a fan-out through parts that repeat a response name spends the '
+      'budget (GQL230), it does not hang', () {
+    const deepLevels = 20;
+    final text = [
+      '{ ...G0 }',
+      for (var index = 0; index < deepLevels; index++)
+        'fragment G$index on Query { '
+            'p: a { ...G${index + 1} } p: a { ...G${index + 1} } '
+            'q: a { ...G${index + 1} } q: a { ...G${index + 1} } }',
+      'fragment G$deepLevels on Query { __typename }',
+    ].join('\n');
+    final result = timed(text) as InvalidDocument;
+    expect(result.diagnostics.map((d) => d.code), [
+      DiagnosticCode.documentTooComplex,
     ]);
   });
 }
