@@ -510,4 +510,12 @@ enum DiagnosticCode(
   /// `GQL238`: an operation whose field cost or type cost is more than the
   /// maximum `MaxCostRule` allows.
   maxCostExceeded('GQL238'),
+
+  /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
+  /// the YAML parser's.
+  configSyntax('GQL500'),
+
+  /// `GQL501`: a missing, unknown or mistyped key, or a malformed path or Dart
+  /// reference, in the code generator's configuration.
+  invalidConfig('GQL501'),
 }
