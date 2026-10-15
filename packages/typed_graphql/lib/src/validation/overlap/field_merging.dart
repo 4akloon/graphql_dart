@@ -85,6 +85,8 @@ final class FieldMerging(
           path.leave(fragments);
         case _Visit(:final work):
           merge.visit(steps, work, _reports);
+        case _Descend(:final part, :final sources):
+          merge.descend(steps, part, sources);
       }
     }
   }
@@ -120,8 +122,11 @@ final class _RootMerge(
           ],
         ),
     ];
+    // Steps run last in, first out, and the lone-field memo is read when a
+    // descent runs, not when it is put here: the first part's descent runs
+    // first, as without the memo.
     for (final (part, sources) in descents.reversed) {
-      descend(steps, part, sources);
+      steps.add(_Descend(part, sources));
     }
   }
 
@@ -180,3 +185,8 @@ final class _Enter(final List<String> fragments) extends _Step;
 final class _Leave(final List<String> fragments) extends _Step;
 
 final class _Visit(final MergeWork work) extends _Step;
+
+final class _Descend(
+  final MergeWork part,
+  final List<(SelectionSet, MergeItem?)> sources,
+) extends _Step;
