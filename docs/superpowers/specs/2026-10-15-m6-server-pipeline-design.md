@@ -85,7 +85,8 @@ transport-agnostic value and gets one back.
     trusted document problem, an operation that cannot be selected,
     variables that do not coerce, or a `GraphQLException` thrown by the
     context factory or an extension. No `data`.
-  - `methodNotAllowed`: a mutation in a `GET` request (section 6); headers
+  - `methodNotAllowed`: a mutation in a request whose method is not `POST`
+    (section 6); headers
     hint `allow: POST`.
   - `internalError`: an unexpected error in the pipeline itself (the
     context factory, an extension, a store), masked by the profile.
@@ -174,9 +175,10 @@ One request, in order; each refusal ends it with a `SingleResponse`:
    the checks below judge the operation that runs (section 15 item 22).
    When none can be selected the pipeline goes on and M5's `execute`
    reports `GQL320`-`GQL323`. A mutation when
-   `RequestInfo.method` is `GET` or `HEAD` (the safe methods) is `GQL402`, `methodNotAllowed`, headers
-   `allow: POST` (GraphQL over HTTP: a `GET` request must not run a
-   mutation; only the pipeline knows the operation type, so M6 holds the
+   `RequestInfo.method` is not `POST` (compared ignoring case; an
+   allow-list, so an unknown or empty method fails closed) is `GQL402`,
+   `methodNotAllowed`, headers `allow: POST` (GraphQL over HTTP: a `GET`
+   request must not run a mutation; only the pipeline knows the operation type, so M6 holds the
    rule, section 15 item 11). A subscription over `GET` is allowed (SSE).
 5. **Cost.** With `limits.maxCost`, the selected operation's cost with the
    request's variables (section 9) above the maximum is `GQL238`.
@@ -307,7 +309,8 @@ code rules' limit, and returns a copy):
 
 ## 10. CSRF prevention (R5.4, R5.15)
 
-`CsrfPrevention({List<String> requestHeaders = CsrfPrevention.defaultHeaders})`.
+`const CsrfPrevention()` (headers `CsrfPrevention.defaultHeaders`) or
+`CsrfPrevention.withHeaders(List<String>)`.
 A request passes when either:
 
 1. it has a `content-type` header whose media type (the part before `;`,
@@ -447,7 +450,7 @@ start of the sub-stage that reports them (M5 spec §18 item 12):
 |---|---|---|---|
 | GQL400 | `queryRequired` | M6b | no document text and no persisted id resolved one ("Must provide query string.") |
 | GQL401 | `documentTooLong` | M6b | the text is longer than `maxDocumentLength` |
-| GQL402 | `mutationRequiresPost` | M6b | a mutation in a `GET` request |
+| GQL402 | `mutationRequiresPost` | M6b | a mutation in a request whose method is not `POST` |
 | GQL403 | `csrfRequestBlocked` | M6b | CSRF prevention refused the request |
 | GQL410 | `persistedQueryNotFound` | M6c | APQ: a hash the store does not hold |
 | GQL411 | `persistedQueryHashMismatch` | M6c | the hash is not the SHA-256 of the text |
@@ -519,7 +522,7 @@ Hostile-input tests (one file per concern under
    the transport" holds because M7's handlers go through the pipeline.
 10. The context is created after the document is accepted and every limit
     passed, not when the request arrives.
-11. The pipeline refuses a mutation in a `GET` request (a GraphQL over HTTP
+11. The pipeline refuses a mutation unless the method is `POST` (a GraphQL over HTTP
     rule, M7's area): only the pipeline knows the operation type.
 12. APQ errors carry `extensions.code` `GQL410`/`GQL412` like every library
     error and Apollo's messages (`PersistedQueryNotFound`,
@@ -584,8 +587,7 @@ Hostile-input tests (one file per concern under
   rule (an upgrade request is a `GET` without a content type), and their
   own `Origin` checks.
 - A transport that carries many operations over one connection (WebSocket,
-  `graphql-ws`) has no HTTP method per message: it must pass a method other
-  than `GET` and `HEAD` (`POST`) in the `RequestInfo` of each message, or
+  `graphql-ws`) has no HTTP method per message: it must pass `POST` in the `RequestInfo` of each message, or
   the mutation guard (section 6 step 4) refuses its mutations.
 - Status codes per media type from `ServerOutcome`; body size limits;
   decoding `GET` parameters and JSON bodies into `GraphQLRequest`.

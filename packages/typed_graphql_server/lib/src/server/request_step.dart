@@ -71,11 +71,9 @@ final class RequestStep<C> {
     };
   }
 
-  // RFC 9110 section 9.2.1: GET and HEAD must not change state.
-  bool _isSafeMethod(String method) {
-    final upper = method.toUpperCase();
-    return upper == 'GET' || upper == 'HEAD';
-  }
+  // An allow-list: only POST may change state (GraphQL over HTTP), so an
+  // unknown or empty method fails closed.
+  bool _mayMutate(String method) => method.toUpperCase() == 'POST';
 
   Future<ServerResponse> _accepted(
     DocumentAccepted accepted,
@@ -87,7 +85,7 @@ final class RequestStep<C> {
       request.params.operationName,
     );
     final type = operation?.operation;
-    if (type == OperationType.mutation && _isSafeMethod(request.info.method)) {
+    if (type == OperationType.mutation && !_mayMutate(request.info.method)) {
       return errors.refusal(
         DiagnosticCode.mutationRequiresPost,
         'A mutation can only be sent with the POST method.',

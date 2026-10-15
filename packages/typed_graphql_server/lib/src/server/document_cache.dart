@@ -33,8 +33,8 @@ final class DocumentCache {
     }
   }
 
-  /// The default of [maxTotalLength]: 16 million characters.
-  static const int defaultMaxTotalLength = 16000000;
+  /// The default of [maxTotalLength]: 4 million characters.
+  static const int defaultMaxTotalLength = 4000000;
 
   /// The most entries the cache holds.
   final int capacity;

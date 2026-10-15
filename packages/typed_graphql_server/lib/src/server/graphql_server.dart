@@ -35,9 +35,12 @@ final class GraphQLServer<C> {
   /// are masked. [documentCacheSize] is the most compiled documents kept;
   /// 0 keeps none and a negative size is an [ArgumentError].
   /// [documentCacheMaxLength] is the most characters the kept texts hold
-  /// together (default 16,000,000; negative is an [ArgumentError]): the least recently used documents are
-  /// dropped to stay under it, and a text longer than it is never kept, so
-  /// distinct large texts cannot grow the cache's memory without bound.
+  /// together (default 4,000,000; negative is an [ArgumentError]): the least
+  /// recently used documents are dropped to stay under it, and a text longer
+  /// than it is never kept. The budget counts characters of text, not bytes of
+  /// heap: a parsed document costs roughly an order of magnitude more heap per
+  /// character (an estimate, not measured), so a host that needs a tighter
+  /// bound lowers it.
   ///
   /// [extensions] hook into the three phases of a request; the first is the
   /// outermost and sees even the requests the built-in checks (CSRF
@@ -58,7 +61,7 @@ final class GraphQLServer<C> {
     List<ValidationRule> validationRules = DocumentValidator.recommendedRules,
     ErrorHook? onError,
     int documentCacheSize = 1000,
-    int documentCacheMaxLength = 16000000,
+    int documentCacheMaxLength = 4000000,
     List<ServerExtension<C>> extensions = const [],
     PersistedQueryStore? persistedQueries,
     TrustedDocuments? trustedDocuments,

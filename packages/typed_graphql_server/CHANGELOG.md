@@ -189,10 +189,11 @@
   it is an `ArgumentError`.
 - The document cache is keyed by the text itself and bounded by the total
   length of the cached texts too: `GraphQLServer(documentCacheMaxLength:)`
-  (default 16,000,000 characters) drops the least recently used documents to
+  (default 4,000,000 characters) drops the least recently used documents to
   stay under it and never keeps a longer text.
-- A mutation in a `HEAD` request is refused with `GQL402` like one in a `GET`
-  request.
+- A mutation is refused with `GQL402` unless the method is `POST` (compared
+  ignoring case): `GET`, `HEAD`, `PUT`, `DELETE`, `PATCH` and an empty method
+  are refused.
 - A trusted document runs the manifest's text, not the client's, so a text
   with a lone surrogate (which hashes like the same text with U+FFFD) cannot
   run or poison the cache entry of the trusted one.

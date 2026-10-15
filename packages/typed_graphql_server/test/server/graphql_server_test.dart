@@ -128,6 +128,33 @@ void main() {
       expect(rule.runs, 1);
     });
 
+    test(
+      'is validated again when its text is over documentCacheMaxLength',
+      () async {
+        final rule = CountingRule();
+        const text = '{ hello }';
+        final server = fixture.server(
+          validationRules: [rule],
+          documentCacheMaxLength: text.length - 1,
+        );
+        await server.handle(fixture.request(text));
+        await server.handle(fixture.request(text));
+        expect(rule.runs, 2);
+      },
+    );
+
+    test('is kept when its text fits documentCacheMaxLength', () async {
+      final rule = CountingRule();
+      const text = '{ hello }';
+      final server = fixture.server(
+        validationRules: [rule],
+        documentCacheMaxLength: text.length,
+      );
+      await server.handle(fixture.request(text));
+      await server.handle(fixture.request(text));
+      expect(rule.runs, 1);
+    });
+
     test('is validated again with the cache off', () async {
       final rule = CountingRule();
       final server = fixture.server(
@@ -170,6 +197,23 @@ void main() {
         fixture.request('mutation { bump }', method: 'get'),
       );
       expect(fixture.codeOf(response), 'GQL402');
+    });
+
+    for (final method in ['PUT', 'DELETE', 'PATCH', 'OPTIONS', '', 'put']) {
+      test('a mutation with "$method" is refused', () async {
+        final response = await fixture.server().handle(
+          fixture.request('mutation { bump }', method: method),
+        );
+        expect(fixture.codeOf(response), 'GQL402');
+        expect(response.headers, {'allow': 'POST'});
+      });
+    }
+
+    test('a query with GET runs', () async {
+      final response = await fixture.server().handle(
+        fixture.request('{ hello }', method: 'GET'),
+      );
+      expect(fixture.json(response)['data'], {'hello': 'world'});
     });
 
     test('a mutation with POST runs', () async {

@@ -17,7 +17,7 @@ final class RequestInfo {
   }) : headers = const HeaderNames().lowerCased(headers);
 
   /// The HTTP method as the transport gave it; the pipeline compares it with
-  /// `GET` ignoring case.
+  /// `POST` ignoring case, and only `POST` may run a mutation.
   final String method;
 
   /// The URI the request was sent to.
