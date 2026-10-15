@@ -30,10 +30,12 @@ code (M8, M9).
 
 ## 2. Layering
 
-`packages/typed_graphql_server/lib/src/` has one folder per concern,
-lowest first. A library imports its own folder and the folders before it,
-and the core through `package:typed_graphql/typed_graphql.dart` only
-(never `src/`):
+`packages/typed_graphql_server/lib/src/` has one folder per concern. The
+core imports only through `package:typed_graphql/typed_graphql.dart`
+(never `src/`). Unlike the core's layers, the folders have no import
+order: the builder creates an `ExecutableSchema` that runs the executor,
+and the executor reads the builder's definitions, so `builder/` and
+`execution/` import each other; each folder still holds one concern.
 
 | Folder | Holds | Sub-stage |
 |---|---|---|
@@ -45,21 +47,16 @@ and the core through `package:typed_graphql/typed_graphql.dart` only
 | `subscription/` | `subscribe`, `SubscriptionResult` | M5c |
 | `lookahead/` | `FieldSelection`, `SelectedField`, `ColumnWhitelist` | M5d |
 | `authorization/` | `Authorizer`, `Authorization`, `AuthorizationCoverage` | M5d |
-| `cancellation/` | `CancelSignal`, `CancelController` | M5d |
+| `cancellation/` | `CancelSignal` | M5d |
 
-`execution/` is the hub, so the folders after it (`introspection/` …
-`cancellation/`) are imported by it through small interfaces defined below
-it where a cycle would appear: `FieldInfo` (M5a) declares `selection` and
-`cancelSignal` from M5d, so M5d adds those members to it and the types
-they return live in their own folders, which import nothing of
-`execution/` but `FieldInfo`'s collaborators. A quality test in the server
-package (`test/quality/folders_test.dart`) checks that `lib/src` imports
-only `dart:async`, `dart:collection`, `dart:core`, `dart:math`,
-`package:meta` and the core barrel: the server runs on the VM, AOT,
-dart2js and dart2wasm like the core (R0.6).
+A quality test in the server package (`test/quality/imports_test.dart`)
+checks that `lib/` imports only `dart:async`, `dart:collection`,
+`dart:core`, `dart:math`, `package:meta` and the core barrel: the server
+runs on the VM, AOT, dart2js and dart2wasm like the core (R0.6), and no
+transport (section 17).
 
-The package depends on `typed_graphql` and `meta` (added in M5a: `@immutable`
-on the const option classes); nothing else.
+The package depends on `typed_graphql` and, when a class first needs
+`@immutable`, `meta`; nothing else.
 
 ## 3. The typed builder (M5a; R4.1, R4.3–R4.6)
 
