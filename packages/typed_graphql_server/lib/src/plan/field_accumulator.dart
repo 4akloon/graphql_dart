@@ -12,7 +12,8 @@ final class FieldAccumulator {
   // again after a deferred visit) is kept once.
   final Set<Field> _nodes;
 
-  /// Whether every node added so far is deferred.
+  /// Whether every node added so far is deferred (read by M14, incremental
+  /// delivery, through `FieldPlan.isDeferred`).
   bool isDeferred;
 
   /// Adds [node]; the key stays deferred only while every node is.

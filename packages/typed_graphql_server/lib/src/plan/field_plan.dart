@@ -44,7 +44,7 @@ final class FieldPlan {
 
   /// Whether every field node of the key sits in a fragment with
   /// `@defer` (and an `if` that is not false). Deferred fields run inline
-  /// in M5.
+  /// in M5; incremental delivery (M14) reads this.
   final bool isDeferred;
 
   /// What collection reads, kept to collect the children.

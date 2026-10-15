@@ -33,10 +33,13 @@ final class LeafCompletion {
         site,
       );
     } on Object catch (error, stackTrace) {
-      if (error is ArgumentError) {
+      // A codec says "cannot represent" with an `ArgumentError` (R2.9), and
+      // its message reaches the client. A `RangeError` is an `ArgumentError`
+      // too, but a bug in the codec, so it stays masked.
+      if (error is ArgumentError && error is! RangeError) {
         _run.reporter.fieldError(
           DiagnosticCode.unserializableValue,
-          '${error.message}',
+          '${error.message ?? error}',
           site,
         );
       } else {

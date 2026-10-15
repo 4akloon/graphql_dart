@@ -8,10 +8,13 @@ final class AbstractTypeBinding {
     this.name,
     this.resolveType,
     List<ObjectTypeDef<Object?>> possibleTypes,
-  ) : possibleTypes = List.unmodifiable(possibleTypes);
+  ) : possibleTypes = List.unmodifiable(possibleTypes),
+      _possibleSet = Set.identity()..addAll(possibleTypes);
 
   /// The abstract type's name.
   final String name;
+
+  final Set<ObjectTypeDef<Object?>> _possibleSet;
 
   /// The explicit type resolution, null for the default (the first possible
   /// type that accepts the value).
@@ -19,4 +22,7 @@ final class AbstractTypeBinding {
 
   /// The object types that can be a value, in schema order.
   final List<ObjectTypeDef<Object?>> possibleTypes;
+
+  /// Whether [type] is one of the [possibleTypes].
+  bool isPossible(ObjectTypeDef<Object?> type) => _possibleSet.contains(type);
 }

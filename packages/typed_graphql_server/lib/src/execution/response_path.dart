@@ -6,24 +6,26 @@ import 'package:typed_graphql/typed_graphql.dart';
 ///
 /// {@category execution}
 final class ResponsePath {
-  const ResponsePath._(this._parent, this._segment, this.length);
+  const ResponsePath._(this._parent, this._segment, this.length, this._order);
 
   /// The empty path, the root of `data`.
-  static const ResponsePath root = ResponsePath._(null, null, 0);
+  static const ResponsePath root = ResponsePath._(null, null, 0, 0);
 
   final ResponsePath? _parent;
   final PathSegment? _segment;
+  final int _order;
 
   /// How many segments the path has.
   final int length;
 
-  /// This path followed by the response name [name].
-  ResponsePath key(String name) =>
-      ResponsePath._(this, PathKey(name), length + 1);
+  /// This path followed by the response name [name], the field at
+  /// [position] among the fields collected for the object (document order).
+  ResponsePath key(String name, int position) =>
+      ResponsePath._(this, PathKey(name), length + 1, position);
 
   /// This path followed by the list index [position].
   ResponsePath index(int position) =>
-      ResponsePath._(this, PathIndex(position), length + 1);
+      ResponsePath._(this, PathIndex(position), length + 1, position);
 
   /// The segments from the root.
   List<PathSegment> toList() {
@@ -34,6 +36,20 @@ final class ResponsePath {
       }
     }
     return segments.reversed.toList(growable: false);
+  }
+
+  /// The place of the path in document order: the position of each segment
+  /// from the root. Comparing two of them lexicographically orders the
+  /// errors of a response (September2025 7.1.2 asks for none; the library
+  /// answers in document order so a response does not depend on timing).
+  List<int> orderKey() {
+    final positions = <int>[];
+    for (ResponsePath? step = this; step != null; step = step._parent) {
+      if (step._segment != null) {
+        positions.add(step._order);
+      }
+    }
+    return positions.reversed.toList(growable: false);
   }
 
   @override

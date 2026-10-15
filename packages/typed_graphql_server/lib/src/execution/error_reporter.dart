@@ -22,7 +22,10 @@ final class ErrorReporter {
 
   /// Records an error the library makes at [site].
   void fieldError(DiagnosticCode code, String message, CompletionSite site) =>
-      log.record(_coded(code, message, site.path, site.plan.nodes));
+      log.record(
+        _coded(code, message, site.path, site.plan.nodes),
+        site.path.orderKey(),
+      );
 
   /// Ends the execution with an error the library makes at [site].
   void halt(DiagnosticCode code, String message, CompletionSite site) =>
@@ -49,6 +52,7 @@ final class ErrorReporter {
       thrown == null
           ? reported
           : hooked(thrown.error, thrown.stackTrace, reported),
+      path?.orderKey() ?? const [],
     );
   }
 
@@ -56,7 +60,10 @@ final class ErrorReporter {
   void thrown(Object error, StackTrace stackTrace, CompletionSite site) {
     final path = site.path;
     final nodes = site.plan.nodes;
-    log.record(hooked(error, stackTrace, _reportedFor(error, path, nodes)));
+    log.record(
+      hooked(error, stackTrace, _reportedFor(error, path, nodes)),
+      path.orderKey(),
+    );
   }
 
   /// [reported] after `ExecutionOptions.onError` has seen it: the hook's

@@ -12,9 +12,6 @@ import 'package:typed_graphql/typed_graphql.dart';
 final class PendingValues {
   final List<FutureOr<JsonValue?>> _values = [];
 
-  /// How many values were added.
-  int get length => _values.length;
-
   /// Adds the next value.
   void add(FutureOr<JsonValue?> value) => _values.add(value);
 

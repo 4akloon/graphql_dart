@@ -27,11 +27,17 @@ final class SelectionExecutor {
     int depth,
   ) {
     final pending = PendingValues();
-    for (final field in node.fields) {
+    for (var i = 0; i < node.fields.length; i++) {
       if (_run.reporter.log.isHalted) {
         return pending.abandon();
       }
-      final result = _run.fields.execute(parent, field, path, depth);
+      final result = _run.fields.execute(
+        parent,
+        node.fields[i],
+        path,
+        depth,
+        i,
+      );
       if (result == null) {
         return pending.abandon();
       }

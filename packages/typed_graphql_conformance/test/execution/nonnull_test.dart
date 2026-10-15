@@ -169,15 +169,17 @@ void main() {
           equals({
             'data': data,
             'errors': [
+              // graphql-js lists these by completion time; this executor
+              // lists them in document order.
               error('sync', ['syncNest', 'sync'], 4, 11),
-              error('sync', ['syncNest', 'syncNest', 'sync'], 6, 22),
               error('promise', ['syncNest', 'promise'], 5, 11),
+              error('sync', ['syncNest', 'syncNest', 'sync'], 6, 22),
               error('promise', ['syncNest', 'syncNest', 'promise'], 6, 27),
               error('sync', ['syncNest', 'promiseNest', 'sync'], 7, 25),
-              error('sync', ['promiseNest', 'sync'], 10, 11),
-              error('sync', ['promiseNest', 'syncNest', 'sync'], 12, 22),
               error('promise', ['syncNest', 'promiseNest', 'promise'], 7, 30),
+              error('sync', ['promiseNest', 'sync'], 10, 11),
               error('promise', ['promiseNest', 'promise'], 11, 11),
+              error('sync', ['promiseNest', 'syncNest', 'sync'], 12, 22),
               error('promise', ['promiseNest', 'syncNest', 'promise'], 12, 27),
               error('sync', ['promiseNest', 'promiseNest', 'sync'], 13, 25),
               error(

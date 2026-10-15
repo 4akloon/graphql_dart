@@ -23,15 +23,21 @@ final class FieldExecution {
   final ExecutionRun _run;
 
   /// The response value of [plan] on [parent], with the parent's response
-  /// path [parentPath] and the field's [depth]. Dart `null` when the field
-  /// failed at a non-null position, `JsonNull` for a null that stays.
+  /// path [parentPath], the field's [depth] and its [position] among the
+  /// object's fields. Dart `null` when the field failed at a non-null
+  /// position, `JsonNull` for a null that stays.
   FutureOr<JsonValue?> execute(
     Object? parent,
     FieldPlan plan,
     ResponsePath parentPath,
     int depth,
+    int position,
   ) {
-    final site = CompletionSite(plan, parentPath.key(plan.responseKey), depth);
+    final site = CompletionSite(
+      plan,
+      parentPath.key(plan.responseKey, position),
+      depth,
+    );
     final field = plan.field;
     if (field == null) {
       return _metaField(plan, site);
@@ -58,8 +64,13 @@ final class FieldExecution {
       'The introspection field "${plan.fieldName}" is not available.',
       site,
     );
-    return const JsonNull();
+    return _run.settle(_metaFieldType(plan.fieldName), null);
   }
+
+  // `__schema` is non-null, `__type` nullable (September2025 4.1.4).
+  TypeRef _metaFieldType(String fieldName) => fieldName == '__schema'
+      ? const NonNullType(NamedType(Name('__Schema')))
+      : const NamedType(Name('__Type'));
 
   FutureOr<JsonValue?> _resolve(
     Object? parent,
@@ -67,6 +78,9 @@ final class FieldExecution {
     TypeRef type,
     CompletionSite site,
   ) {
+    if (!_run.limits.admitsDepth(site)) {
+      return _run.settle(type, null);
+    }
     final arguments = _argumentsOf(definition, site);
     if (arguments == null) {
       return _run.settle(type, null);
@@ -91,7 +105,14 @@ final class FieldExecution {
     TypeRef type,
     Object? value,
     CompletionSite site,
-  ) => _run.settle(type, _run.values.complete(type, value, site));
+  ) {
+    try {
+      return _run.settle(type, _run.values.complete(type, value, site));
+    } on Object catch (error, stackTrace) {
+      // User code runs during completion too (isTypeOf, resolveType, codecs).
+      return _failed(error, stackTrace, type, site);
+    }
+  }
 
   FutureOr<JsonValue?> _failed(
     Object error,

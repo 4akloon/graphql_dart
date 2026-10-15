@@ -22,21 +22,21 @@ final class ListCompletion {
     CompletionSite site,
   ) {
     if (value is! Iterable<Object?>) {
-      _run.reporter.fieldError(
-        DiagnosticCode.unexpectedValue,
-        'Expected Iterable, but did not find one for field '
-        '"${site.fieldLabel}".',
-        site,
-      );
-      return null;
+      return _notIterable(site);
     }
     final pending = PendingValues();
     try {
       var index = 0;
       for (final item in value) {
+        final itemSite = site.itemAt(index);
+        // Items are one level deeper than the list and all alike: the first
+        // one refuses for the whole list, once, instead of one error each.
+        if (index == 0 && !_run.limits.admitsDepth(itemSite)) {
+          return null;
+        }
         final completed = _run.settle(
           type.type,
-          _run.values.complete(type.type, item, site.itemAt(index)),
+          _run.values.complete(type.type, item, itemSite),
         );
         if (completed == null || _run.reporter.log.isHalted) {
           return pending.abandon();
@@ -50,5 +50,15 @@ final class ListCompletion {
       return pending.abandon();
     }
     return pending.finishWith(JsonArray.new);
+  }
+
+  JsonValue? _notIterable(CompletionSite site) {
+    _run.reporter.fieldError(
+      DiagnosticCode.unexpectedValue,
+      'Expected Iterable, but did not find one for field '
+      '"${site.fieldLabel}".',
+      site,
+    );
+    return null;
   }
 }

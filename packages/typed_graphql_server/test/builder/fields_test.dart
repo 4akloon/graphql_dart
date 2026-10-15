@@ -22,7 +22,7 @@ void main() {
     fieldName: field,
     parentType: ObjectType('User'),
     returnType: const NamedType(Name('String')),
-    path: ResponsePath.root.key(field),
+    path: ResponsePath.root.key(field, 0),
     fieldNodes: const [],
     operation: OperationDefinition(
       OperationType.query,

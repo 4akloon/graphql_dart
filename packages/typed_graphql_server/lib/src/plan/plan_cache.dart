@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import 'lru_map.dart';
@@ -20,9 +21,11 @@ final class PlanCache(
   int _misses = 0;
 
   /// How many lookups found a plan.
+  @visibleForTesting
   int get hitCount => _hits;
 
   /// How many lookups found none.
+  @visibleForTesting
   int get missCount => _misses;
 
   /// The number of plans held.

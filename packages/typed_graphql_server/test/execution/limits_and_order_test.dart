@@ -71,6 +71,16 @@ void main() {
       expect(codeOf(errorsOf(json).first), 'GQL336');
     });
 
+    test('a list that is too deep reports once, not per item', () async {
+      final json = await f.json(
+        '{ numbers }',
+        options: const ExecutionOptions(maxDepth: 1),
+      );
+      expect(errorsOf(json), hasLength(1));
+      expect(codeOf(errorsOf(json).single), 'GQL336');
+      expect(json['data'], {'numbers': null});
+    });
+
     test('maxSteps halts with GQL337 and null data', () async {
       final json = await f.json(
         '{ hello strings }',

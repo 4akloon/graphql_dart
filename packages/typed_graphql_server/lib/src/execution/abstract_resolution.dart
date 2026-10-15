@@ -22,24 +22,21 @@ final class AbstractResolution {
       throw StateError('"${type.name}" has no abstract type binding.');
     }
     final ObjectTypeDef<Object?>? chosen;
+    final String? problem;
     try {
       chosen = _choose(binding.resolveType, binding.possibleTypes, value);
+      // `isTypeOf` runs here too, so it is inside the guard.
+      problem = chosen == null
+          ? null
+          : _impossibility(binding, chosen, type, value);
     } on Object catch (error, stackTrace) {
       _run.reporter.thrown(error, stackTrace, site);
       return null;
     }
     if (chosen == null) {
-      _run.reporter.fieldError(
-        DiagnosticCode.unresolvedAbstractType,
-        'Abstract type "${type.name}" must resolve to an Object type at '
-        'runtime for field "${site.fieldLabel}". Either the "${type.name}" '
-        'type should provide a "resolveType" function or each possible type '
-        'should provide an "isTypeOf" function.',
-        site,
-      );
+      _unresolved(type, site);
       return null;
     }
-    final problem = _impossibility(binding, chosen, type, value);
     if (problem != null) {
       _run.reporter.fieldError(
         DiagnosticCode.impossibleRuntimeType,
@@ -54,6 +51,16 @@ final class AbstractResolution {
     };
   }
 
+  void _unresolved(SchemaType type, CompletionSite site) =>
+      _run.reporter.fieldError(
+        DiagnosticCode.unresolvedAbstractType,
+        'Abstract type "${type.name}" must resolve to an Object type at '
+        'runtime for field "${site.fieldLabel}". Either the "${type.name}" '
+        'type should provide a "resolveType" function or each possible type '
+        'should provide an "isTypeOf" function.',
+        site,
+      );
+
   // The message of a GQL334, else null: [chosen] must be a possible type and,
   // when it came from `resolveType`, must hold the value.
   String? _impossibility(
@@ -62,7 +69,7 @@ final class AbstractResolution {
     SchemaType type,
     Object value,
   ) {
-    if (!binding.possibleTypes.contains(chosen)) {
+    if (!binding.isPossible(chosen)) {
       return 'Runtime Object type "${chosen.name}" is not a possible type '
           'for "${type.name}".';
     }

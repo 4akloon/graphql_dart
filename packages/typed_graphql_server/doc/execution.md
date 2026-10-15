@@ -2,9 +2,9 @@
 
 `ExecutableSchema<C>.execute` runs a validated document against the schema
 the builder made and answers with a response value. It builds on the Schema
-Builder guide's schemas and on the core's parsing and validation: `execute` takes a `ValidDocument`, the typestate that
-`DocumentValidator` returns for a document it accepted, so an unchecked
-document cannot reach it.
+Builder guide's schemas and on the core's parsing and validation: `execute`
+takes a `ValidDocument`, the typestate that `DocumentValidator` returns for
+a document it accepted, so an unchecked document cannot reach it.
 
 ## Executing a request
 
@@ -70,14 +70,17 @@ gives errors their `locations`), `errorBehavior`, `maskErrors`, `onError`,
 
 Mutation root fields run one after another, as the specification asks. In
 every other selection set the fields are started in document order, and the
-ones that wait are waited for together.
+ones that wait are waited for together. The `errors` of the response are in
+document order too, whichever field finished first.
 
 ## Variables and request errors
 
 Variable values arrive as a `JsonObject` and are coerced against the
 operation's variable definitions before anything runs: defaults apply, a
 missing required variable is refused, and an input object or custom scalar
-goes through its `decode`. Arguments are coerced afterwards, per field, with
+goes through its `decode`. An `InputObjectDef.decode` must return an
+immutable value: constant arguments are decoded once per plan and the value
+is shared across requests. Arguments are coerced afterwards, per field, with
 the variables substituted; constant arguments are coerced once and kept in
 the plan.
 
@@ -312,7 +315,11 @@ halt: {"errors":[{"message":"No name.","path":["user","name"]}],"data":null}
 
 `ExecutionOptions.onError(error, stackTrace, reported)` runs for every error
 thrown by user code (resolvers, middleware, `decode`, codecs), before the
-masked or raw error is recorded. `reported` is what would be recorded;
+masked or raw error is recorded. One exception is by design: a codec's
+`encode` signals "cannot represent this value" (R2.9) with an
+`ArgumentError`, and its message reaches the client as a `GQL332` field
+error, unmasked, so write it for clients. A `RangeError` or any other error
+from a codec is unexpected and stays masked. `reported` is what would be recorded;
 return a `GraphQLError` to replace it, or `null` to keep it. This is where a
 host logs the stack trace that the client never sees, and maps its own
 exception types to codes. A hook that throws is recorded as the masked
@@ -507,8 +514,10 @@ Two options end runaway executions with an error instead of a hung process.
 `maxDepth` (256) bounds how deep completion nests: a value below it is a
 field error `GQL336` and that branch ends. `maxSteps` (10 000 000) bounds the
 work, one step per completed value: past it the execution halts with
-`GQL337` and no data. The parser bounds documents before they get here;
-these two bound what the data makes of them (long lists, a recursive type).
+`data: null` and only the `GQL337` error, dropping the field errors found
+before. A list nested too deep reports `GQL336` once for the list, not for
+each item. The parser bounds documents before they get here; these two
+bound what the data makes of them (long lists and deep list nesting).
 
 The first run of a document plans it: it collects the fields for each
 combination of `@skip`, `@include` and `@defer` conditions, expands every

@@ -305,13 +305,6 @@ void main() {
           equals({
             'data': {'listField': null},
             'errors': [
-              {
-                'message': 'also bad',
-                'locations': [
-                  {'line': 1, 'column': 15},
-                ],
-                'path': ['listField', 1, 'index'],
-              },
               // The executor waits for the resolver that had started, so its
               // late error is in the response (graphql-js drops it).
               {
@@ -320,6 +313,13 @@ void main() {
                   {'line': 1, 'column': 15},
                 ],
                 'path': ['listField', 0, 'index'],
+              },
+              {
+                'message': 'also bad',
+                'locations': [
+                  {'line': 1, 'column': 15},
+                ],
+                'path': ['listField', 1, 'index'],
               },
             ],
           }),

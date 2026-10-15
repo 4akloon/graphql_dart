@@ -65,3 +65,8 @@
   condition.
 - The README shows a working program, `example/example.dart`, which a test
   keeps identical to it.
+- The errors of a response come in document order whatever finished first. A
+  throw while completing a value (`isTypeOf`, `resolveType`, a codec, a lazy
+  iterable) is a field error, never a thrown `execute`. A codec's
+  `ArgumentError` is `GQL332` with its message; a `RangeError` is masked. A
+  too-deep field runs no resolver, and a too-deep list reports `GQL336` once.

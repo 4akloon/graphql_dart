@@ -31,7 +31,13 @@ final class SerialFields {
       if (_run.reporter.log.isHalted) {
         return null;
       }
-      final result = _run.fields.execute(_parent, fields[i], _path, _depth);
+      final result = _run.fields.execute(
+        _parent,
+        fields[i],
+        _path,
+        _depth,
+        i,
+      );
       if (result is Future<JsonValue?>) {
         return result.then((resolved) => _after(i, resolved));
       }

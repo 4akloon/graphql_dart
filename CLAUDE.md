@@ -626,9 +626,11 @@ README that leaves the package folder is an absolute URL.
   `packages/typed_graphql/example/example.dart`. The documentation suite is
   `packages/typed_graphql/test/doc/`.
 - Diagnostic catalog: `packages/typed_graphql/lib/src/diagnostics/diagnostic_code.dart`.
-- Conformance mapping tables: `packages/typed_graphql_conformance/mapping/language.csv`,
-  `mapping/schema.csv`, `mapping/validation.csv` and `mapping/execution.csv`, checked by
-  `test/mapping_test.dart` there; port helpers in its `test/support/`
+- Conformance mapping tables:
+  `packages/typed_graphql_conformance/mapping/language.csv`,
+  `mapping/schema.csv`, `mapping/validation.csv` and
+  `mapping/execution.csv`, checked by `test/mapping_test.dart` there; port
+  helpers in its `test/support/`
   (`SchemaPort` for the schema suites, `ValidationPort` for
   `validateSchema`, `IntrospectionPort` for `buildClientSchema`,
   `RulePort` for the validation rule suites, `ExecutionPort` for the

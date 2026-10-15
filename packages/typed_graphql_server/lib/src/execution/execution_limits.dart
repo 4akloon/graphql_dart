@@ -30,14 +30,21 @@ final class ExecutionLimits {
       );
       return false;
     }
-    if (site.depth > _options.maxDepth) {
-      _reporter.fieldError(
-        DiagnosticCode.maxExecutionDepthExceeded,
-        'Execution exceeds the maximum depth of ${_options.maxDepth}.',
-        site,
-      );
-      return false;
+    return admitsDepth(site);
+  }
+
+  /// Whether the place [site] is within `maxDepth`; a refusal is already
+  /// reported as a field error. Costs no step, so a field can be refused
+  /// before its resolver runs.
+  bool admitsDepth(CompletionSite site) {
+    if (site.depth <= _options.maxDepth) {
+      return true;
     }
-    return true;
+    _reporter.fieldError(
+      DiagnosticCode.maxExecutionDepthExceeded,
+      'Execution exceeds the maximum depth of ${_options.maxDepth}.',
+      site,
+    );
+    return false;
   }
 }

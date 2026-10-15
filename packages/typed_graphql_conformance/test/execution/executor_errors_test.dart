@@ -209,15 +209,7 @@ void main() {
         equals({
           'data': null,
           'errors': [
-            {
-              'message':
-                  'Cannot return null for non-nullable field '
-                  'Query.syncNullError.',
-              'locations': [
-                {'line': 4, 'column': 9},
-              ],
-              'path': ['syncNullError'],
-            },
+            // Document order; graphql-js lists them by completion time.
             {
               'message':
                   'Cannot return null for non-nullable field '
@@ -226,6 +218,15 @@ void main() {
                 {'line': 3, 'column': 9},
               ],
               'path': ['asyncNullError'],
+            },
+            {
+              'message':
+                  'Cannot return null for non-nullable field '
+                  'Query.syncNullError.',
+              'locations': [
+                {'line': 4, 'column': 9},
+              ],
+              'path': ['syncNullError'],
             },
           ],
         }),
