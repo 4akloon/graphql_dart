@@ -285,3 +285,6 @@
   code uses).
 - The catalog adds `GQL511` (an operation or fragment that would generate
   too many classes).
+- Fix: `Printer` keeps the `query` keyword of an anonymous query that follows
+  a body-less type or extension, so that the text parses back (this differs
+  from graphql-js's `print` and `stripIgnoredCharacters`).

@@ -16,9 +16,14 @@ final class ExecutablePrinter {
 
   static const PrintLayout _layout = PrintLayout();
 
-  /// An operation or a fragment.
-  String definition(ExecutableDefinition definition) => switch (definition) {
-    OperationDefinition() => _operation(definition),
+  /// An operation or a fragment. An anonymous query prints as the
+  /// shorthand `{ ... }` unless [isShorthandAllowed] is false, which is the
+  /// case after a definition whose body a leading `{` would become.
+  String definition(
+    ExecutableDefinition definition, {
+    bool isShorthandAllowed = true,
+  }) => switch (definition) {
+    OperationDefinition() => _operation(definition, isShorthandAllowed),
     FragmentDefinition() => _fragment(definition),
   };
 
@@ -52,7 +57,7 @@ final class ExecutablePrinter {
         '${_layout.wrap(' ', directives)}';
   }
 
-  String _operation(OperationDefinition operation) {
+  String _operation(OperationDefinition operation, bool isShorthandAllowed) {
     final variables = operation.variableDefinitions
         .map(variableDefinition)
         .toList();
@@ -67,7 +72,7 @@ final class ExecutablePrinter {
           values.directives(operation.directives),
         ], ' ');
     // graphql-js: an anonymous query with nothing else prints as `{ ... }`.
-    final head = prefix == 'query' ? '' : '$prefix ';
+    final head = prefix == 'query' && isShorthandAllowed ? '' : '$prefix ';
     return head + selectionSet(operation.selectionSet);
   }
 
