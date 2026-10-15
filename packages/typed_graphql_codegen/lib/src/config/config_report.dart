@@ -16,6 +16,10 @@ final class ConfigReport(
   /// Whether no problem was reported.
   bool get isClean => diagnostics.isEmpty;
 
+  /// The place of [node] in the configuration file.
+  SourceSpan spanOf(YamlNode node) =>
+      SourceSpan(source, node.span.start.offset, node.span.end.offset);
+
   /// Reports [message] at [node].
   void error(YamlNode node, String message) {
     diagnostics.add(
@@ -23,7 +27,7 @@ final class ConfigReport(
         .invalidConfig,
         .error,
         message,
-        span: SourceSpan(source, node.span.start.offset, node.span.end.offset),
+        span: spanOf(node),
       ),
     );
   }

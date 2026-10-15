@@ -1,3 +1,5 @@
+import 'package:typed_graphql/typed_graphql.dart';
+
 import 'dart_reference.dart';
 
 /// How generated code holds a custom scalar (R7.8): its Dart [type] and the
@@ -10,8 +12,13 @@ final class const ScalarMapping(
   final DartReference type,
 
   /// The codec class, constructed as `const Codec()` in generated code.
-  final DartReference codec,
-) {
+  final DartReference codec, {
+
+  /// The scalar's key in the configuration file, where a problem with the
+  /// mapping is reported; null for a mapping built in code. It takes no part
+  /// in `==` and `hashCode`.
+  final SourceSpan? span,
+}) {
   /// Creates a mapping to [type] through [codec].
   this;
 

@@ -11,3 +11,7 @@
 - `SchemaLoader.load` reads the schema file (SDL, or an introspection result
   from a `.json` path) into a `ValidSchema`; a file that is not JSON or not a
   JSON object is `GQL502`.
+- `ClientGenerator.check` validates the schema, the scalar mappings and the
+  documents of a project (`GQL503`-`GQL506`); `ClientGenerator.rules` are the
+  specified rules without the unused-fragment and lone-anonymous rules, plus
+  named operations and no `@defer`/`@stream`.

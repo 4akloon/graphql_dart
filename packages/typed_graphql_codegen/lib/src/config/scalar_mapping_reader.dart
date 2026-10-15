@@ -27,7 +27,7 @@ final class const ScalarMappingReader() {
         report.error(key, 'A scalar name must be a GraphQL name.');
         continue;
       }
-      final mapping = _readMapping(text, value, report);
+      final mapping = _readMapping(text, key, value, report);
       if (mapping != null) mappings[text] = mapping;
     }
     return {
@@ -35,7 +35,12 @@ final class const ScalarMappingReader() {
     };
   }
 
-  ScalarMapping? _readMapping(String name, YamlNode node, ConfigReport report) {
+  ScalarMapping? _readMapping(
+    String name,
+    YamlNode key,
+    YamlNode node,
+    ConfigReport report,
+  ) {
     if (node is! YamlMap) {
       report.error(
         node,
@@ -43,6 +48,19 @@ final class const ScalarMappingReader() {
       );
       return null;
     }
+    final (:type, :codec, :isValid) = _readKeys(name, node, report);
+    final hasAll = _hasRequiredKeys(name, node, report);
+    if (isValid && hasAll && type != null && codec != null) {
+      return ScalarMapping(type, codec, span: report.spanOf(key));
+    }
+    return null;
+  }
+
+  ({DartReference? type, DartReference? codec, bool isValid}) _readKeys(
+    String name,
+    YamlMap node,
+    ConfigReport report,
+  ) {
     DartReference? type;
     DartReference? codec;
     var isValid = true;
@@ -69,11 +87,7 @@ final class const ScalarMappingReader() {
           isValid = false;
       }
     }
-    isValid = _hasRequiredKeys(name, node, report) && isValid;
-    if (isValid && type != null && codec != null) {
-      return ScalarMapping(type, codec);
-    }
-    return null;
+    return (type: type, codec: codec, isValid: isValid);
   }
 
   bool _hasRequiredKeys(String name, YamlMap node, ConfigReport report) {

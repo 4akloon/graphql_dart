@@ -106,6 +106,14 @@ scalars:
       );
     });
 
+    test('a scalar mapping keeps the place of its key', () {
+      final config = read(
+        'schema: s.graphql\nscalars:\n  Moment:\n    type: DateTime\n'
+        '    codec: package:a/a.dart#C\n',
+      );
+      expect('${config.scalars['Moment']!.span}', '$_path:3:3');
+    });
+
     test('the maps are unmodifiable', () {
       final config = read('schema: https://h.dev/g\nheaders:\n  A: b\n');
       expect(() => config.headers['C'] = 'd', throwsUnsupportedError);
