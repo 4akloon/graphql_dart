@@ -48,7 +48,12 @@ void main() {
   });
 
   test('check with only a warning exits 0 and prints it', () async {
-    for (final path in ['user', 'user_mutations', 'user_subscriptions']) {
+    for (final path in [
+      'user',
+      'stats',
+      'user_mutations',
+      'user_subscriptions',
+    ]) {
       project.file('lib/$path.graphql').deleteSync();
     }
     await project.run(['generate']);

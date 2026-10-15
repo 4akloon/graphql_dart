@@ -20,7 +20,7 @@ void main() {
 
   test('generate writes the files of the goldens', () async {
     expect(await project.run(['generate']), 0);
-    expect(project.out.toString(), 'Wrote 5 files.\n');
+    expect(project.out.toString(), 'Wrote 6 files.\n');
     for (final golden in Directory(
       'test/goldens/operations/output',
     ).listSync(recursive: true).whereType<File>()) {
@@ -93,7 +93,12 @@ void main() {
   });
 
   test('a warning alone exits 0', () async {
-    for (final path in ['user', 'user_mutations', 'user_subscriptions']) {
+    for (final path in [
+      'user',
+      'stats',
+      'user_mutations',
+      'user_subscriptions',
+    ]) {
       project.file('lib/$path.graphql').deleteSync();
     }
     expect(await project.run(['generate']), 0);

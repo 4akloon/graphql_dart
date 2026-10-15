@@ -8,8 +8,19 @@ final class DartNames {
   /// Creates the name converter.
   const DartNames();
 
+  // Bare identifiers the generated members use as types or annotations: a
+  // member of the same name would shadow them inside the class.
+  static const Set<String> _shadowable = <String>{
+    'int',
+    'bool',
+    'double',
+    'num',
+    'override',
+  };
+
   /// Members every generated data or input class has.
   static const Set<String> objectMembers = <String>{
+    ..._shadowable,
     'hashCode',
     'runtimeType',
     'toString',
@@ -25,6 +36,7 @@ final class DartNames {
 
   /// Members every generated enum has, including those of `Enum`.
   static const Set<String> enumMembers = <String>{
+    ..._shadowable,
     'hashCode',
     'runtimeType',
     'toString',

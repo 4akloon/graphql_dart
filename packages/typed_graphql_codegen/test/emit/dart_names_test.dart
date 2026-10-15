@@ -55,6 +55,23 @@ void main() {
     );
   });
 
+  test('memberName escapes names that shadow a type or annotation', () {
+    expect(
+      [
+        for (final name in ['int', 'bool', 'double', 'num', 'override'])
+          names.memberName(name, reservedMembers: DartNames.objectMembers),
+      ],
+      [r'int$', r'bool$', r'double$', r'num$', r'override$'],
+    );
+  });
+
+  test('enum values that shadow a type or annotation are escaped', () {
+    expect(
+      names.memberName('bool', reservedMembers: DartNames.enumMembers),
+      r'bool$',
+    );
+  });
+
   test('memberName leaves a member the caller did not reserve', () {
     expect(names.memberName('toJson'), 'toJson');
   });

@@ -15,6 +15,12 @@
       "body": "query FindNode($id:ID!){node(id:$id){id ...on User{name ...UserCard}...on Bot{model}__typename}}fragment UserCard on User{id name}"
     },
     {
+      "id": "130d1b0f2357cd5e194b7ea4e431a802b93cf8ca9b1eccf000514436908f72ba",
+      "name": "GetStats",
+      "type": "query",
+      "body": "query GetStats($role:Role=ADMIN$flag:Flag=name){stats(role:$role flag:$flag){int bool override _hidden flag matrix{id __typename}summary __typename}}"
+    },
+    {
       "id": "198ab8e735cf86b04b66c1094135e3e63cfae5a89e4b793ae58982ff95891f8e",
       "name": "GetUser",
       "type": "query",

@@ -65,7 +65,7 @@ void main() {
 
   test('generate from a URL writes the files of the SDL project', () async {
     expect(await project.run(['generate'], environment: environment), 0);
-    expect(project.out.toString(), 'Wrote 5 files.\n');
+    expect(project.out.toString(), 'Wrote 6 files.\n');
     expect(project.file('lib/user.graphql.dart').existsSync(), isTrue);
   });
 

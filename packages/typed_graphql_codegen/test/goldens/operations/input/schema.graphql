@@ -34,6 +34,8 @@ input Paging {
   other: String!
   after: Cursor
   client: Int
+  int: Int
+  override: String
 }
 
 input Unreached {
@@ -60,7 +62,24 @@ type Bot implements Node {
 
 union SearchResult = User | Bot
 
+enum Flag {
+  name
+  index
+  values
+}
+
+type Stats {
+  int: Int
+  bool: Boolean
+  override: String
+  _hidden: Int
+  flag: Flag
+  matrix: [[User!]]
+  summary: String
+}
+
 type Query {
+  stats(role: Role, flag: Flag): Stats
   user(id: ID!): User
   node(id: ID!): Node
   search(by: SearchBy!, filter: UserFilter, paging: Paging): [SearchResult!]!
