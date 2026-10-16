@@ -48,3 +48,5 @@
 - `AuthLink`: adds an authorization header from a token callback and, on a 401,
   renews the token (one refresh for all requests waiting at once) and sends
   the request again once; a throwing callback is an `AuthenticationFailure`.
+- The Request Policies guide completes with the recommended order of a chain
+  and a program that runs all four policies over a `MockLink`.

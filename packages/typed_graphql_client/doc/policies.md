@@ -298,3 +298,91 @@ world
 {authorization: Bearer expired}
 {authorization: Bearer fresh}
 ```
+
+## The order of a chain
+
+The policies are middle links, so their order in `Link.from` matters. The
+recommended order, from the client toward the transport:
+
+1. `DedupeLink` first, so that identical queries share everything below it,
+   the retries included.
+2. `RetryLink` next, so that every attempt passes through the links below it
+   again and gets a current token.
+3. `AuthLink`, so that the header is added whatever the transport sends, and
+   so that a 401 that comes back through the persisted query link is seen.
+4. `PersistedQueryLink` last of the policies, because it decides what goes on
+   the wire (the hash or the text) and its second request is part of one
+   attempt, not a retry.
+5. Then a `SplitLink` whose branches are the terminating links of your
+   transports, one for subscriptions and one for the rest.
+
+The program sends one query through the whole chain. The first attempt is
+lost to the network, the second asks for a document the server does not know,
+the third is refused for its token, and the fourth succeeds. The `MockLink`
+shows what reached the transport.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_client/typed_graphql_client.dart';
+
+final class HelloQuery extends GraphQLQuery<String> {
+  const HelloQuery();
+
+  @override
+  OperationDocument get document => const OperationDocument(
+    name: 'Hello',
+    type: OperationType.query,
+    text: 'query Hello{hello}',
+    sha256: 'f6004747575e6561b67c600f28196e3c7648ef73797a3078da3e4658ddf6b623',
+  );
+
+  @override
+  JsonObject get variablesJson => JsonObject({});
+
+  @override
+  DecodeResult<String> decodeData(JsonObject data) => switch (data['hello']) {
+    JsonString(:final value) => DecodeSuccess(value),
+    _ => const DecodeFailure('expected a string', path: [PathKey('hello')]),
+  };
+}
+
+Future<void> main() async {
+  var token = 'expired';
+  final mock = MockLink()
+    ..addFailure(NetworkFailure(const FormatException('connection lost')))
+    ..addErrors([GraphQLError('PersistedQueryNotFound')])
+    ..addFailure(HttpStatusFailure(401))
+    ..addData(JsonObject({'hello': JsonString('world')}));
+  final client = GraphQLClient(
+    link: Link.from([
+      DedupeLink(),
+      RetryLink(
+        policy: const RetryPolicy(
+          backoff: Backoff(initialDelay: Duration.zero),
+        ),
+      ),
+      AuthLink(token: () => token, refresh: () async => token = 'fresh'),
+      PersistedQueryLink(),
+      mock,
+    ]),
+  );
+  if (await client.query(const HelloQuery()) case GraphQLData(:final data)) {
+    print(data);
+  }
+  for (final request in mock.requests) {
+    final sent = request.body.query == null ? 'hash alone' : 'text and hash';
+    final headers = request.context.entry<RequestHeaders>();
+    print('$sent, ${headers?.values['authorization']}');
+  }
+}
+```
+
+It prints:
+
+```text
+world
+hash alone, Bearer expired
+hash alone, Bearer expired
+text and hash, Bearer expired
+hash alone, Bearer fresh
+```
