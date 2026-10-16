@@ -36,3 +36,6 @@
 - `UploadFile`, `UploadFileCodec` (the `Upload` scalar's codec, which
   writes a file as its marker) and `UploadFiles` (the files of a request,
   in its context); the start of the Uploads guide.
+- `ClientSocket`: the text-frame socket the WebSocket link talks over, which the
+  app supplies; an internal codec for the graphql-transport-ws messages that
+  never throws on a bad frame; the start of the WebSocket guide.

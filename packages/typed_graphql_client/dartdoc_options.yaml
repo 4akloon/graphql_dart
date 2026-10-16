@@ -9,6 +9,9 @@ dartdoc:
     upload:
       markdown: doc/uploads.md
       displayName: Uploads
+    socket:
+      markdown: doc/websocket.md
+      displayName: WebSocket
     operations:
       markdown: doc/operations.md
       displayName: Generated Operations
@@ -16,5 +19,6 @@ dartdoc:
     - client
     - link
     - upload
+    - socket
     - operations
   showUndocumentedCategories: true
