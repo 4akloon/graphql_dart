@@ -55,14 +55,17 @@ final class OperationStream<D extends Object> {
         );
   }
 
-  Future<void>? _stop() {
+  /// Cancels the link chain's stream without returning its cancel future:
+  /// a returned one would make the caller wait on a root-zone future, so
+  /// under fake time a response would only arrive on the real event loop.
+  void _stop() {
     _removeListener?.call();
     _removeListener = null;
-    return _subscription?.cancel();
+    unawaited(_subscription?.cancel());
   }
 
   void _cancel(CancelToken token) {
-    unawaited(_stop());
+    _stop();
     _controller.add(GraphQLTransportFailure(RequestCancelled(token.reason)));
     _finish();
   }
@@ -75,7 +78,7 @@ final class OperationStream<D extends Object> {
     } else {
       _controller.addError(error, stackTrace);
     }
-    unawaited(_stop());
+    _stop();
     _finish();
   }
 

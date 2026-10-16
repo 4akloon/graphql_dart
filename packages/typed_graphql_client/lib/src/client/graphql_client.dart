@@ -60,19 +60,22 @@ final class GraphQLClient({
     cancelToken,
   ).stream;
 
-  /// The first response of [responses]; leaving the loop cancels the
+  /// The first response of [responses]; taking it cancels the
   /// subscription, which ends the request in every link.
+  ///
+  /// `firstWhere`, not `await for`: leaving an `await for` awaits the
+  /// cancel future, which for a synchronous cancel is a root-zone future,
+  /// so under fake time (`fake_async`, Flutter's widget tests) the answer
+  /// would only arrive on the real event loop.
   Future<GraphQLResponse<D>> _first<D extends Object>(
     Stream<GraphQLResponse<D>> responses,
-  ) async {
-    await for (final response in responses) {
-      return response;
-    }
-    return const GraphQLTransportFailure(
+  ) => responses.firstWhere(
+    (response) => true,
+    orElse: () => const GraphQLTransportFailure(
       UnsupportedOperation(
         .linkEndedWithoutResult,
         'The link chain ended without a result.',
       ),
-    );
-  }
+    ),
+  );
 }

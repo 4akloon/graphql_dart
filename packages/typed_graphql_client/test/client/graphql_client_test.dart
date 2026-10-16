@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:test/test.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_client/typed_graphql_client.dart';
@@ -228,5 +229,18 @@ void main() {
     ).mutate(const RenameMutation('Ada'));
     expect(link.requests.single.type, OperationType.mutation);
     expect(response, isA<GraphQLData<String>>());
+  });
+
+  test('answers under fake time without the real event loop', () {
+    fakeAsync((async) {
+      GraphQLResponse<String>? response;
+      unawaited(
+        GraphQLClient(link: MockLink()..addData(hello('world')))
+            .query(const HelloQuery())
+            .then((value) => response = value),
+      );
+      async.flushMicrotasks();
+      expect(response, isA<GraphQLData<String>>());
+    });
   });
 }
