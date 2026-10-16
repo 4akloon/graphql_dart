@@ -9,6 +9,9 @@ dartdoc:
     http:
       markdown: doc/http.md
       displayName: HTTP
+    policy:
+      markdown: doc/policies.md
+      displayName: Request Policies
     upload:
       markdown: doc/uploads.md
       displayName: Uploads
@@ -19,6 +22,7 @@ dartdoc:
     - client
     - link
     - http
+    - policy
     - upload
     - operations
   showUndocumentedCategories: true

@@ -52,3 +52,22 @@
 - `HttpLink` sends a request with `UploadFiles` as a multipart request
   (the GraphQL multipart request specification), with the preflight header;
   the Uploads guide shows the body.
+- `RetryLink`, `RetryPolicy` and `Idempotent`: queries, and mutations marked
+  idempotent, are sent again after a network failure, a timeout or a
+  retryable HTTP status, after the backoff's delay; the start of the Request
+  Policies guide.
+- `DedupeLink`: identical queries in flight share one forwarded request, each
+  caller keeping its own stream and its own cancellation.
+- `PersistedQueryLink`: sends the document's hash instead of its text; in the
+  automatic mode it falls back to the text when the server does not know the
+  hash or stores no queries, in the trusted mode it never sends the text.
+- `AuthLink`: adds an authorization header from a token callback and, on a 401,
+  renews the token (one refresh for all requests waiting at once) and sends
+  the request again once; a throwing callback is an `AuthenticationFailure`.
+- The Request Policies guide completes with the recommended order of a chain
+  and a program that runs all four policies over a `MockLink`.
+- A link, a callback or a refresh that throws now ends the request of
+  `RetryLink`, `AuthLink`, `PersistedQueryLink` and `DedupeLink` with an error
+  event, not an uncaught error; `RetryLink` no longer retries after a payload
+  was delivered; `TokenRenewal` no longer hands back a refused token after a
+  failed refresh; `RequestHeaders` and `LinkContext` print header names only.
