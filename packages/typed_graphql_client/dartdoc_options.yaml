@@ -9,6 +9,9 @@ dartdoc:
     http:
       markdown: doc/http.md
       displayName: HTTP
+    sse:
+      markdown: doc/sse.md
+      displayName: Server-sent events
     upload:
       markdown: doc/uploads.md
       displayName: Uploads
@@ -19,6 +22,7 @@ dartdoc:
     - client
     - link
     - http
+    - sse
     - upload
     - operations
   showUndocumentedCategories: true

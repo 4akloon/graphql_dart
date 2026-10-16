@@ -50,3 +50,9 @@
 - `HttpLink` sends a request with `UploadFiles` as a multipart request
   (the GraphQL multipart request specification), with the preflight header;
   the Uploads guide shows the body.
+- `SseLink`: queries, mutations and subscriptions over server-sent events,
+  in graphql-sse's distinct connections mode: `next` events delivered as
+  they arrive, `complete` ends the stream, an unknown event or a stream that
+  ends without `complete` is `GQL473`, an event limit (`GQL463`), strict
+  incremental UTF-8, cancellation that closes the connection; the
+  Server-sent events guide (R8.4).

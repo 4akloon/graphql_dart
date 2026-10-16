@@ -28,6 +28,20 @@ final class FakeTransport implements HttpTransport {
     ),
   );
 
+  /// Queues an answer whose body is [body], such as an event stream that
+  /// arrives in pieces or never ends.
+  void answerStream(
+    Stream<List<int>> body, {
+    int status = 200,
+    String contentType = 'text/event-stream',
+  }) => answerWith(
+    (request) async => TransportResponse(
+      statusCode: status,
+      headers: {'content-type': contentType},
+      body: body,
+    ),
+  );
+
   /// Queues an answer computed from the request.
   void answerWith(
     Future<TransportResponse> Function(TransportRequest request) answer,
