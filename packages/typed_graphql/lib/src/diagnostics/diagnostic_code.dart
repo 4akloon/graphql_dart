@@ -726,16 +726,22 @@ enum DiagnosticCode(
   /// outside 2xx and a body that is not `application/graphql-response+json`,
   /// so it is not a GraphQL response. It is the `code` of an
   /// `HttpStatusFailure`.
+  ///
+  /// Reserved: reported from stage M11b.
   httpErrorStatus('GQL461'),
 
   /// `GQL462`: reported by the client when an answer has a content type it
   /// cannot read: none, another media type, or a charset other than UTF-8.
   /// It is the `code` of a `ResponseFormatFailure`.
+  ///
+  /// Reserved: reported from stage M11b (also M11e).
   unsupportedResponseType('GQL462'),
 
   /// `GQL463`: reported by the client when an answer, or one event of a
   /// stream, is longer than the link's byte limit; the request is aborted.
   /// It is the `code` of a `ResponseFormatFailure`.
+  ///
+  /// Reserved: reported from stage M11b (also M11e).
   responseTooLarge('GQL463'),
 
   /// `GQL464`: reported by the client when an answer is not a GraphQL
@@ -756,11 +762,15 @@ enum DiagnosticCode(
   /// `GQL467`: reported by the client when a link's timeout passed before
   /// the answer; the request is aborted. It is the `code` of a
   /// `RequestTimedOut`.
+  ///
+  /// Reserved: reported from stage M11b.
   requestTimedOut('GQL467'),
 
   /// `GQL468`: reported by the client when a terminating link cannot carry
   /// a request, such as a subscription over HTTP or files over a socket.
   /// It is the `code` of an `UnsupportedOperation`.
+  ///
+  /// Reserved: reported from stage M11b (also M11d and M11e).
   operationNotSupportedByLink('GQL468'),
 
   /// `GQL469`: reported by the client when the link chain ended the stream
@@ -771,26 +781,36 @@ enum DiagnosticCode(
   /// `GQL470`: reported by the client when a graphql-transport-ws server
   /// sends a message the protocol does not allow; the client closes the
   /// socket. It is the `code` of a `SocketFailure`.
+  ///
+  /// Reserved: reported from stage M11d.
   malformedSocketMessage('GQL470'),
 
   /// `GQL471`: reported by the client when its socket closed with a code
   /// that forbids reconnecting, or the reconnection attempts ran out. It
   /// is the `code` of a `SocketFailure`.
+  ///
+  /// Reserved: reported from stage M11d.
   socketClosed('GQL471'),
 
   /// `GQL472`: reported by the client when a graphql-transport-ws server
   /// did not acknowledge the connection in time; the client closes the
   /// socket. It is the `code` of a `SocketFailure`.
+  ///
+  /// Reserved: reported from stage M11d.
   connectionAckTimeout('GQL472'),
 
   /// `GQL473`: reported by the client when a graphql-sse stream holds an
   /// event of an unknown type or ends without `complete`. It is the `code`
   /// of an `EventStreamFailure`.
+  ///
+  /// Reserved: reported from stage M11e.
   malformedEventStream('GQL473'),
 
   /// `GQL474`: reported by the client when the callback that gives or
   /// refreshes an authentication token threw. It is the `code` of an
   /// `AuthenticationFailure`.
+  ///
+  /// Reserved: reported from stage M11c.
   authenticationFailed('GQL474'),
 
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
