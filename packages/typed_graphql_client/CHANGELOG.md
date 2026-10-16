@@ -31,3 +31,5 @@
   `GraphQLErrors`, `GraphQLTransportFailure`) (R8.1, R8.2).
 - `SplitLink` (route a request to one of two links) and `ContextLink`
   (rewrite a request's context before forwarding it).
+- `Backoff`: exponential delays with full jitter, for retries and
+  reconnections.

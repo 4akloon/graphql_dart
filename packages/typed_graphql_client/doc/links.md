@@ -115,6 +115,20 @@ over HTTP
 0
 ```
 
+## Backoff
+
+`Backoff(initialDelay:, maxDelay:, multiplier:)` says how long to wait
+before a retry or a reconnection. The ceiling of retry `n` (from 0) is
+`initialDelay` times `multiplier` to the power `n`, at most `maxDelay`;
+`delayFor(n, random)` draws a wait between zero and that ceiling ("full
+jitter"), so clients that failed together do not retry together. The
+defaults are 300 ms, 30 s and 2.
+
+```text
+const Backoff().ceilingFor(0); // 0:00:00.300000
+const Backoff().ceilingFor(3); // 0:00:02.400000
+```
+
 ## Testing with MockLink
 
 `MockLink` is a terminating link for tests: it records every request in
