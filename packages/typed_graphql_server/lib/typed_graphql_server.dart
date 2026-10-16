@@ -2,13 +2,16 @@
 /// engine, subscriptions, DataLoader and a transport-agnostic request
 /// pipeline.
 ///
-/// Under construction: stages M5 and M6 are complete. The typed schema
-/// builder, execution, introspection, subscriptions, look-ahead,
-/// authorization and cancellation work, and so do DataLoader (`BatchLoader`,
-/// `GroupedLoader`) and the request pipeline (`GraphQLServer`: document
-/// cache, limits and cost limit, CSRF prevention, extensions, error masking,
-/// automatic persisted queries and trusted documents). The transports (HTTP,
-/// graphql-ws, graphql-sse) come with M7. See the package README.
+/// Under construction: stages M5 and M6 are complete, and so is the HTTP
+/// handler of M7a. The typed schema builder, execution, introspection,
+/// subscriptions, look-ahead, authorization and cancellation work, and so do
+/// DataLoader (`BatchLoader`, `GroupedLoader`), the request pipeline
+/// (`GraphQLServer`: document cache, limits and cost limit, CSRF prevention,
+/// extensions, error masking, automatic persisted queries and trusted
+/// documents) and GraphQL over HTTP (`GraphQLHttpHandler`: `GET` and `POST`,
+/// media types and status codes, size and time limits, batching). The
+/// graphql-ws and graphql-sse transports come with the rest of M7. See the
+/// package README.
 library;
 
 export 'src/authorization/authorization.dart';

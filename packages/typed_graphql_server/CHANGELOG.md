@@ -224,3 +224,16 @@
   not charged; a request over the limit alone is still `GQL238`.
 - `HttpRequestData`, `HttpResponseData`, `FixedBody` and `StreamedBody`: the
   values a host adapter exchanges with the HTTP transport (the HTTP guide).
+- `GraphQLHttpHandler<C>` and `HttpOptions`: GraphQL over HTTP for any web
+  framework. It serves `GET` and `POST` with JSON bodies, negotiates
+  `application/graphql-response+json` and `application/json` (a missing
+  `Accept` is the legacy type), writes results with the status codes of the
+  specification (`294` for a partial result, switchable with
+  `usesPartialSuccessStatus`), reads the body within `maxBodyBytes` and
+  `bodyTimeout` whatever `content-length` says, bounds JSON nesting
+  (`maxJsonDepth`) and the URI (`maxUriLength`), and never throws.
+- `BatchPolicy` and `HttpOptions.batching`: opt-in batches of requests (a JSON
+  array), run in order with one shared `CostBudget`; a mutation or
+  subscription item is `GQL431` in its slot.
+- The transport codes `GQL420`-`GQL431`.
+- The HTTP guide, with the dartdoc category `http`.

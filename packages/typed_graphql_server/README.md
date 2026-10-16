@@ -20,8 +20,11 @@
 > with a document cache, the limits and the cost limit of a production or
 > development profile, CSRF prevention, extensions and error masking, and
 > with automatic persisted queries or trusted documents (M6c); with it stage
-> M6 is complete. The HTTP, graphql-ws and graphql-sse handlers come in M7.
-> See the
+> M6 is complete. The HTTP handler (M7a) works: `GraphQLHttpHandler` serves
+> GraphQL over HTTP (`GET` and `POST`, both media types, the status codes of
+> the specification, size and time limits, opt-in batching) for any web
+> framework through a small adapter. The graphql-ws and graphql-sse handlers
+> come in the rest of M7. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
 ## Contents
@@ -53,9 +56,10 @@ dependencies:
   ([Schema Builder](doc/schema_builder.md#objects-and-fields),
   [Execution](doc/execution.md#executing-a-request)).
 - **You do not need it when** you only call a GraphQL server: that is the
-  client package, not usable yet. Today it also has no HTTP or
-  WebSocket handler: you decode the request yourself and call
-  `GraphQLServer.handle` (the handlers are M7).
+  client package, not usable yet. Today it has an HTTP handler
+  but no framework adapter and no WebSocket handler: a host converts its
+  request into an `HttpRequestData` and calls `GraphQLHttpHandler.handle`
+  ([HTTP](doc/http.md)).
 - **What it replaces**: resolvers written against `Map<String, dynamic>`, where
   a wrong result type or a misspelled argument name fails at run time in the
   middle of a request. Here the wrong type does not compile, and every error
@@ -152,6 +156,8 @@ executed
 - [Server](doc/server.md): `GraphQLServer`, requests, responses and outcomes,
   profiles, limits and the cost limit, CSRF prevention, the document cache,
   extensions, errors and masking.
+- [HTTP](doc/http.md): `GraphQLHttpHandler`, media types and status codes,
+  limits, batching, writing a host adapter, security notes.
 - [Persisted Documents](doc/persisted_documents.md): automatic persisted
   queries and their store, trusted documents from the codegen manifest.
 - [Schema Builder](doc/schema_builder.md): refs, objects, fields, arguments,

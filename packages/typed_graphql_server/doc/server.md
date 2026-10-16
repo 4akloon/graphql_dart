@@ -80,7 +80,7 @@ executed {"data":{"hello":"Hello, Ada!"}}
   subscription. Both have an `outcome` and `headers`, a hint the transport
   adds to its own. `withHeaders` returns a copy with more headers.
 
-`ServerOutcome` is the status-like part, which the HTTP transport (M7) maps
+`ServerOutcome` is the status-like part, which the HTTP transport (see the HTTP guide) maps
 to a status code:
 
 | Outcome | When |
@@ -147,6 +147,25 @@ GET methodNotAllowed {allow: POST}
 POST requestError {}
 {"errors":[{"message":"Expected Name, found <EOF>.","locations":[{"line":1,"column":8}],"extensions":{"code":"GQL007"}}]}
 ```
+
+### What a transport can ask of the pipeline
+
+Three things exist for the transports; a program that calls `handle` itself
+can use them too.
+
+- `ServerRequest.allowedOperationTypes` (default `ServerRequest.allOperationTypes`)
+  narrows the operation types a request may run. A transport that cannot
+  deliver one, such as a subscription over plain JSON, passes a smaller set,
+  and the pipeline refuses another type with `GQL431` after the `GET` mutation
+  guard (`GQL402`) and before the cost limit and the context factory.
+- `ServerRequest.costBudget` is a `CostBudget` that requests share. They share
+  one `maxCost` too: it bounds their summed field cost and their summed type
+  cost, and the request that would pass it is refused with `GQL430` and is not
+  charged. A request over the limit alone is still `GQL238`. A batch uses it
+  for its items.
+- `GraphQLServer.profile` is the profile the server was built with, so a
+  transport reads the settings it must honour, such as whether errors are
+  masked.
 
 ## Profiles
 
