@@ -782,6 +782,27 @@ enum DiagnosticCode(
   /// `GraphQLHttpHandler.handle` and `GraphQLServer.handle`.
   operationTypeNotAllowed('GQL431'),
 
+  /// `GQL440`: reported when a `multipart/form-data` request is not a valid
+  /// GraphQL multipart request: no boundary, fields out of order, an
+  /// `operations` or `map` field that is not valid, a map path that does not
+  /// name a `null` variable, or a file the map does not name. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  malformedMultipartRequest('GQL440'),
+
+  /// `GQL441`: reported when a multipart request body is larger than
+  /// `UploadLimits.maxRequestBytes`, a field is larger than
+  /// `UploadLimits.maxFieldBytes`, or a file is larger than
+  /// `UploadLimits.maxFileBytes`. It is a `GraphQLError`'s `extensions.code`
+  /// in a response of `GraphQLHttpHandler.handle`.
+  uploadTooLarge('GQL441'),
+
+  /// `GQL442`: reported when a multipart request names more than
+  /// `UploadLimits.maxFiles` files or paths in its map. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  tooManyUploads('GQL442'),
+
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
   /// the YAML parser's.
   configSyntax('GQL500'),

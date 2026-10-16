@@ -19,6 +19,12 @@ void main() {
       expect(ids, [...ids]..sort());
     });
 
+    test('names the multipart upload codes', () {
+      expect(DiagnosticCode.malformedMultipartRequest.id, 'GQL440');
+      expect(DiagnosticCode.uploadTooLarge.id, 'GQL441');
+      expect(DiagnosticCode.tooManyUploads.id, 'GQL442');
+    });
+
     test('keeps the ids already published', () {
       expect(DiagnosticCode.diagnosticLimitReached.id, 'GQL000');
     });

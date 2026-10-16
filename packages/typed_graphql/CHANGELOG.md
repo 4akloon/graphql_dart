@@ -308,3 +308,6 @@
   `requestBodyTimeout`, `batchingDisabled`, `invalidBatchSize`,
   `batchCostExceeded`, `operationTypeNotAllowed`), reported by the HTTP
   transport of the server (the last two also by the request pipeline).
+- `DiagnosticCode`: `GQL440`-`GQL442` (`malformedMultipartRequest`,
+  `uploadTooLarge`, `tooManyUploads`), reported by the multipart upload
+  handling of the HTTP transport of the server.
