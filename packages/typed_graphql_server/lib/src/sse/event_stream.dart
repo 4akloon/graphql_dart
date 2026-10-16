@@ -22,10 +22,18 @@ final class EventStream {
   /// A comment is written every [keepAliveInterval] while the stream is idle.
   /// With [sendsComplete], a `complete` event follows the last payload.
   EventStream(
-    this._source, {
+    Stream<JsonValue> source, {
     required this.keepAliveInterval,
     this.sendsComplete = true,
-  });
+  }) : _frames = source.map(_writer.next);
+
+  /// Creates a stream that writes [frames] as they are, already encoded, and
+  /// never ends by itself.
+  ///
+  /// Single connection mode uses it: its events carry operation ids, and the
+  /// stream lasts until the client goes away.
+  EventStream.frames(this._frames, {required this.keepAliveInterval})
+    : sendsComplete = false;
 
   /// The headers of an event stream. There is no `connection` header: it is
   /// hop-by-hop and forbidden in HTTP/2 (spec deviation 11).
@@ -34,7 +42,7 @@ final class EventStream {
     'cache-control': 'no-cache',
   };
 
-  final Stream<JsonValue> _source;
+  final Stream<List<int>> _frames;
 
   /// How long the stream may stay silent before a comment is written.
   final Duration keepAliveInterval;
@@ -53,7 +61,7 @@ final class EventStream {
         onCancel: _stop,
       );
 
-  StreamSubscription<JsonValue>? _subscription;
+  StreamSubscription<List<int>>? _subscription;
   Timer? _keepAlive;
 
   /// The `200` response, with [extraHeaders] (such as those of the pipeline's
@@ -72,8 +80,8 @@ final class EventStream {
   // operation has produced anything.
   void _start() {
     _write(_writer.comment());
-    _subscription = _source.listen(
-      (payload) => _write(_writer.next(payload)),
+    _subscription = _frames.listen(
+      _write,
       onError: (Object _) => _finish(withComplete: false),
       onDone: () => _finish(withComplete: sendsComplete),
       cancelOnError: true,

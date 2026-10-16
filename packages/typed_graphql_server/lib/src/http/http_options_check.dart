@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../sse/single_connection_options.dart';
 import '../upload/upload_limits.dart';
 import 'http_options.dart';
 
@@ -32,6 +33,8 @@ final class HttpOptionsCheck {
         sse.keepAliveInterval,
         'keepAliveInterval',
       );
+      final single = sse.singleConnection;
+      if (single != null) _checkSingleConnection(single);
     }
     final uploads = options.uploads;
     if (uploads != null) _checkUploads(uploads.limits);
@@ -43,6 +46,24 @@ final class HttpOptionsCheck {
         'must be between 1 and ${JsonReader.maxSupportedDepth}',
       );
     }
+  }
+
+  void _checkSingleConnection(SingleConnectionOptions single) {
+    _positive(
+      single.maxReservations > 0,
+      single.maxReservations,
+      'maxReservations',
+    );
+    _positive(
+      single.reservationTimeout > Duration.zero,
+      single.reservationTimeout,
+      'reservationTimeout',
+    );
+    _positive(
+      single.maxOperationsPerStream > 0,
+      single.maxOperationsPerStream,
+      'maxOperationsPerStream',
+    );
   }
 
   void _checkUploads(UploadLimits limits) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
@@ -80,4 +81,104 @@ final class SseFixture {
   /// A `POST` of [query] that asks for an event stream.
   HttpRequestData postQuery(String query) =>
       http.post({'query': query}, headers: eventStreamClient);
+
+  /// The header that carries the token of a single-connection stream.
+  static const String tokenHeader = 'x-graphql-event-stream-token';
+
+  /// Options with single connection mode on.
+  HttpOptions singleOptions({
+    SingleConnectionOptions limits = const SingleConnectionOptions(),
+    BatchPolicy? batching,
+  }) => HttpOptions(
+    batching: batching,
+    sse: SseOptions(
+      keepAliveInterval: const Duration(hours: 1),
+      singleConnection: limits,
+    ),
+  );
+
+  /// A `PUT` that asks for a reservation.
+  HttpRequestData put({Map<String, String> headers = const {}}) =>
+      HttpRequestData(
+        method: 'PUT',
+        uri: Uri.parse('/graphql'),
+        headers: headers,
+      );
+
+  /// A `GET` that connects the stream of [token], in the header or, with
+  /// [isInQuery], in the `token` parameter.
+  HttpRequestData connect(String token, {bool isInQuery = false}) =>
+      HttpRequestData(
+        method: 'GET',
+        uri: Uri(
+          path: '/graphql',
+          queryParameters: isInQuery ? {'token': token} : null,
+        ),
+        headers: {
+          ...eventStreamClient,
+          if (!isInQuery) tokenHeader: token,
+        },
+      );
+
+  /// A `POST` of [query] as operation [id] on the stream of [token].
+  HttpRequestData operation(
+    String token,
+    String query, {
+    Object? id = 'op',
+  }) => http.post(
+    {
+      'query': query,
+      'extensions': {'operationId': ?id},
+    },
+    headers: {...HttpFixture.modernClient, tokenHeader: token},
+  );
+
+  /// A `DELETE` that cancels operation [id] on the stream of [token].
+  HttpRequestData cancel(String token, {String? id}) => HttpRequestData(
+    method: 'DELETE',
+    uri: Uri(
+      path: '/graphql',
+      queryParameters: id == null ? null : {'operationId': id},
+    ),
+    headers: {tokenHeader: token},
+  );
+
+  /// Reserves a stream on [handler] and returns its token.
+  Future<String> reserve(GraphQLHttpHandler<Ctx> handler) async =>
+      http.text(await handler.handle(put()));
+}
+
+/// Reads the body of a live event stream as it arrives.
+final class StreamReader {
+  StreamReader(HttpResponseData response) {
+    _subscription = (response.body as StreamedBody).chunks.listen(
+      (chunk) => _text += utf8.decode(chunk),
+      onDone: () => isDone = true,
+    );
+  }
+
+  // Set in the constructor body, which runs before any chunk can arrive.
+  late final StreamSubscription<List<int>> _subscription;
+  String _text = '';
+
+  /// Whether the body has ended.
+  bool isDone = false;
+
+  /// The frames received so far, without the comments.
+  List<String> get frames => [
+    for (final frame in _text.split('\n\n'))
+      if (frame.isNotEmpty && !frame.startsWith(':')) frame,
+  ];
+
+  /// The frames once at least [count] have arrived (or three seconds passed).
+  Future<List<String>> waitFor(int count) async {
+    final clock = Stopwatch()..start();
+    while (frames.length < count && clock.elapsedMilliseconds < 3000) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+    return frames;
+  }
+
+  /// Stops reading, as a client that goes away.
+  Future<void> cancel() => _subscription.cancel();
 }

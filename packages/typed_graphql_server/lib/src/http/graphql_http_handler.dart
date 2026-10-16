@@ -2,6 +2,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../server/graphql_server.dart';
 import '../sse/distinct_stream.dart';
+import '../sse/single_connection_routes.dart';
 import '../sse/sse_options.dart';
 import '../upload/multipart_result.dart';
 import 'accept_negotiation.dart';
@@ -42,6 +43,15 @@ final class GraphQLHttpHandler<C> {
         usesPartialSuccessStatus: options.usesPartialSuccessStatus,
       ) {
     const HttpOptionsCheck().check(options);
+    final sse = options.sse;
+    final limits = sse?.singleConnection;
+    if (sse != null && limits != null) {
+      _routes = SingleConnectionRoutes(
+        limits: limits,
+        keepAliveInterval: sse.keepAliveInterval,
+        errors: _errors,
+      );
+    }
   }
 
   /// The pipeline requests are sent to.
@@ -70,6 +80,10 @@ final class GraphQLHttpHandler<C> {
     final policy? => BatchRunner<C>(server, policy, _writer),
     null => null,
   };
+
+  // Null when single connection mode is off; set at most once, in the
+  // constructor body, after the options were checked.
+  SingleConnectionRoutes? _routes;
 
   static const List<ResponseMediaType> _offered = [
     ResponseMediaType.graphqlResponseJson,
@@ -103,14 +117,9 @@ final class GraphQLHttpHandler<C> {
       );
     }
     final method = request.method.toUpperCase();
-    if (method != 'GET' && method != 'POST') {
-      return _errors.refusal(
-        405,
-        DiagnosticCode.unsupportedHttpMethod,
-        'Only GET and POST requests are supported.',
-        headers: const {'allow': 'GET, POST'},
-      );
-    }
+    final early = _routes?.early(request, method);
+    if (early != null) return early;
+    if (method != 'GET' && method != 'POST') return _unsupportedMethod();
     final negotiation = AcceptNegotiation(_offeredFor(request, method));
     final type = negotiation.choose(request.header('accept'));
     if (type == null) {
@@ -130,6 +139,20 @@ final class GraphQLHttpHandler<C> {
     }
     return _answer(request, await PostBody(options).decode(request), type);
   }
+
+  HttpResponseData _unsupportedMethod() => _routes == null
+      ? _errors.refusal(
+          405,
+          DiagnosticCode.unsupportedHttpMethod,
+          'Only GET and POST requests are supported.',
+          headers: const {'allow': 'GET, POST'},
+        )
+      : _errors.refusal(
+          405,
+          DiagnosticCode.unsupportedHttpMethod,
+          'Only GET, POST, PUT and DELETE requests are supported.',
+          headers: const {'allow': 'GET, POST, PUT, DELETE'},
+        );
 
   // A multipart body cannot start an event stream (spec section 5).
   List<ResponseMediaType> _offeredFor(HttpRequestData request, String method) {
