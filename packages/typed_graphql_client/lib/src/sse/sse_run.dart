@@ -5,6 +5,7 @@ import 'package:meta/meta.dart';
 import '../client/client_failure.dart';
 import '../http/http_transport.dart';
 import '../http/media_type.dart';
+import '../http/redacted_error.dart';
 import '../http/response_reader.dart';
 import '../http/transport_request.dart';
 import '../http/transport_response.dart';
@@ -62,7 +63,7 @@ final class SseRun({
     try {
       response = await transport.send(encode(_abort.future));
     } on Exception catch (error) {
-      _finish(LinkFailure(NetworkFailure(error)));
+      _finish(LinkFailure(NetworkFailure(RedactedError(error))));
       return;
     }
     if (_isFinished) {
@@ -97,7 +98,7 @@ final class SseRun({
     try {
       _finish(await reader.read(response));
     } on Exception catch (error) {
-      _finish(LinkFailure(NetworkFailure(error)));
+      _finish(LinkFailure(NetworkFailure(RedactedError(error))));
     }
   }
 
@@ -161,7 +162,7 @@ final class SseRun({
           ),
         );
       case Exception():
-        _finish(LinkFailure(NetworkFailure(error)));
+        _finish(LinkFailure(NetworkFailure(RedactedError(error))));
       default:
         if (!_isFinished) _controller.addError(error, stackTrace);
         _finish();

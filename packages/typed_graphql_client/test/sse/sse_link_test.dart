@@ -206,6 +206,41 @@ void main() {
       transport.answerWith((request) async => throw Exception('refused'));
       expect(failureOf((await send(ticks())).single), isA<NetworkFailure>());
     });
+
+    test('a transport failure message hides the query string', () async {
+      transport.answerWith(
+        (request) async => throw Exception(
+          'Connection failed, uri=https://example.com/graphql?api_key=secret',
+        ),
+      );
+      final message = failureOf((await send(ticks())).single).message;
+      expect(message, contains('https://example.com/graphql'));
+      expect(message, isNot(contains('secret')));
+    });
+
+    test('a body failure message hides the query string', () async {
+      transport.answerStream(
+        Stream.error(
+          Exception('Reset, uri=https://example.com/graphql?api_key=secret'),
+        ),
+      );
+      final message = failureOf((await send(ticks())).single).message;
+      expect(message, isNot(contains('secret')));
+    });
+
+    test('a single answer failure message hides the query string', () async {
+      transport.answerWith(
+        (request) async => TransportResponse(
+          statusCode: 200,
+          headers: {'content-type': 'application/json'},
+          body: Stream.error(
+            Exception('Reset, uri=https://example.com/graphql?api_key=secret'),
+          ),
+        ),
+      );
+      final message = failureOf((await send(ticks())).single).message;
+      expect(message, isNot(contains('secret')));
+    });
   });
 
   group('other answers', () {
