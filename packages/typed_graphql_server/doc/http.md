@@ -280,6 +280,14 @@ How a batch runs:
   the negotiated media type, because one status cannot describe several
   results.
 
+## Uploads
+
+A `POST` with the content type `multipart/form-data` carries files next to the
+operation, as the GraphQL multipart request specification defines. It is
+refused with `415` (`GQL421`) until `HttpOptions.uploads` holds an `Uploads`
+value; see the Uploads guide for the schema scalar, the limits, the CSRF rule
+and the storage.
+
 ## Writing a host adapter
 
 An adapter for a framework does three things: convert the request, call the

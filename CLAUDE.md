@@ -79,7 +79,11 @@ HTTP) delivers `GraphQLHttpHandler`, `HttpOptions`, `BatchPolicy`,
 the status codes of the specification, bounded body reading, batching with a
 shared cost budget, `ServerRequest.allowedOperationTypes`,
 `GraphQLServer.profile`, the codes `GQL420`-`GQL431`, the HTTP hostile-input
-tests and the HTTP guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+tests and the HTTP guide. M7b (multipart uploads) delivers `Upload`,
+`UploadStorage`, `MemoryUploadStorage`, `UploadLimits` and `Uploads` (the
+`Upload` scalar, input only), `HttpOptions.uploads`, the multipart reader on
+`package:mime`, the codes `GQL440`-`GQL442`, the upload hostile-input tests and
+the Uploads guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
 file or a URL, the project's documents as one fragment graph, the planner and
 emitters that generate the schema-types library and a library per document
 (operations, variables, data, fragments, sealed polymorphic classes, the
@@ -437,7 +441,7 @@ only through its barrel. One folder per concern, with no import order
 (`builder/` and `execution/` import each other): `builder/` (M5a),
 `coercion/`, `plan/` and `execution/` (M5b), `introspection/` and
 `subscription/` (M5c), `lookahead/`, `authorization/` and `cancellation/`
-(M5d), `dataloader/` (M6a), `server/` (M6b), `persisted/` (M6c) and `http/` (M7a). The
+(M5d), `dataloader/` (M6a), `server/` (M6b), `persisted/` (M6c), `http/` (M7a) and `upload/` (M7b). The
 package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
 or web framework, only `dart:async`, `dart:collection`, `dart:convert`,
@@ -573,6 +577,14 @@ between items when the client has gone; an array is counted, not decoded,
 before the size check. The outermost boundary of `handle` is the one place
 that catches `Object`, as `GraphQLServer.handle` does: it reports through
 `HttpOptions.onError` and never rethrows.
+`upload/` (M7b): the scalar codec has no request context, so `MultipartReader`
+(over `package:mime`, `WatchedBody` for the byte limit and the timeout,
+`UploadMap` for the `map` field) replaces each mapped `null` with a token
+`upload:<32 hex>` registered in the `Uploads` registry, and `StoredUploads`
+removes the tokens and releases the files. `MultipartPost` (in `http/`) checks
+CSRF before reading the body (deviation 8), then the boundary and the declared
+length; `GraphQLHttpHandler` decodes `operations` with
+`JsonBodyDecoder.decodeValue` and releases the files in a `finally`.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine

@@ -2,15 +2,15 @@
 /// engine, subscriptions, DataLoader and a transport-agnostic request
 /// pipeline.
 ///
-/// Under construction: stages M5 and M6 are complete, and so is the HTTP
-/// handler of M7a. The typed schema builder, execution, introspection,
+/// Under construction: stages M5 and M6 are complete, and so are the HTTP
+/// handler of M7a and the multipart uploads of M7b. The typed schema builder, execution, introspection,
 /// subscriptions, look-ahead, authorization and cancellation work, and so do
 /// DataLoader (`BatchLoader`, `GroupedLoader`), the request pipeline
 /// (`GraphQLServer`: document cache, limits and cost limit, CSRF prevention,
 /// extensions, error masking, automatic persisted queries and trusted
 /// documents) and GraphQL over HTTP (`GraphQLHttpHandler`: `GET` and `POST`,
-/// media types and status codes, size and time limits, batching). The
-/// graphql-ws and graphql-sse transports come with the rest of M7. See the
+/// media types and status codes, size and time limits, batching, and
+/// multipart file uploads through `Uploads`). The graphql-ws and graphql-sse transports come with the rest of M7. See the
 /// package README.
 library;
 
