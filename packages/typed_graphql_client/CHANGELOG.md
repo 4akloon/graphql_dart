@@ -23,3 +23,6 @@
 - `LinkRequest`, `LinkResult` (`LinkPayload`, `LinkFailure`), `LinkContext`,
   `ContextEntry`, `RequestHeaders` and `HttpResponseInfo`; the start of the
   Links guide.
+- `Link`, `NextLink` and `Link.from` (a chain), and `MockLink`, a
+  terminating link for tests that records requests and serves queued
+  answers (R8.5).

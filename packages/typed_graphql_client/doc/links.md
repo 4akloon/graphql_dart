@@ -25,3 +25,34 @@ headers of the answer a result came from.
 final context = LinkContext([RequestHeaders({'X-Trace': 'abc'})]);
 context.entry<RequestHeaders>()?.values; // {x-trace: abc}
 ```
+
+## Writing a link
+
+A link extends `Link` and implements `request(request, forward)`. A middle
+link calls `forward` with the request, changed or not, and returns the
+answer, changed or not; a terminating link answers itself. `Link.from`
+runs links in order: each one's `forward` calls the next.
+
+```text
+final class TraceLink extends Link {
+  @override
+  Stream<LinkResult> request(LinkRequest request, NextLink forward) {
+    final headers = request.context.entry<RequestHeaders>() ?? RequestHeaders({});
+    return forward(request.withContext(
+      request.context.withEntry(headers.withHeader('x-trace', 'abc')),
+    ));
+  }
+}
+```
+
+Cancelling the subscription to a link's stream must end what the link
+started: a link built from stream operations (`map`, `asyncExpand`,
+`async*`) does so by itself.
+
+## Testing with MockLink
+
+`MockLink` is a terminating link for tests: it records every request in
+`requests` and answers each with the next queued answer. `addData`,
+`addErrors`, `addFailure` and `add` queue one result, `addStream` many; an
+`operationName` makes an answer serve only that operation. A request with
+no answer left gets a `StateError`, a bug in the test.
