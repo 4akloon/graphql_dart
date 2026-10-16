@@ -317,3 +317,10 @@
 - `DiagnosticCode`: `GQL440`-`GQL442` (`malformedMultipartRequest`,
   `uploadTooLarge`, `tooManyUploads`), reported by the multipart upload
   handling of the HTTP transport of the server.
+- `DiagnosticCode`: `GQL460`-`GQL474` (`networkFailure`, `httpErrorStatus`,
+  `unsupportedResponseType`, `responseTooLarge`, `malformedResponse`,
+  `dataShapeMismatch`, `requestCancelled`, `requestTimedOut`,
+  `operationNotSupportedByLink`, `linkEndedWithoutResult`,
+  `malformedSocketMessage`, `socketClosed`, `connectionAckTimeout`,
+  `malformedEventStream`, `authenticationFailed`), the codes of the
+  client's failures.

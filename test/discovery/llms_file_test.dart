@@ -77,12 +77,13 @@ void main() {
     });
   }
 
-  test('lists exactly the guides of the core', () {
+  test('lists exactly the guides of the core and of the client', () {
     final guides = [
-      for (final file in Directory('packages/typed_graphql/doc').listSync())
-        if (file.uri.pathSegments.last case final name
-            when name.endsWith('.md'))
-          '${prefix}packages/typed_graphql/doc/$name',
+      for (final package in const ['typed_graphql', 'typed_graphql_client'])
+        for (final file in Directory('packages/$package/doc').listSync())
+          if (file.uri.pathSegments.last case final name
+              when name.endsWith('.md'))
+            '${prefix}packages/$package/doc/$name',
     ];
     final listed = llms
         .entriesOf('Guides')

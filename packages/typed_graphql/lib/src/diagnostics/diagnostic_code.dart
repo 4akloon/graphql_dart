@@ -844,6 +844,82 @@ enum DiagnosticCode(
   /// `GraphQLHttpHandler.handle`.
   tooManyUploads('GQL442'),
 
+  /// `GQL460`: reported by the client when its transport could not send a
+  /// request or read the answer: the HTTP client or the socket threw, or
+  /// the connection was lost. It is the `code` of a `NetworkFailure`.
+  networkFailure('GQL460'),
+
+  /// `GQL461`: reported by the client when an HTTP answer has a status
+  /// outside 2xx and a body that is not `application/graphql-response+json`,
+  /// so it is not a GraphQL response. It is the `code` of an
+  /// `HttpStatusFailure`.
+  httpErrorStatus('GQL461'),
+
+  /// `GQL462`: reported by the client when an answer has a content type it
+  /// cannot read: none, another media type, or a charset other than UTF-8.
+  /// It is the `code` of a `ResponseFormatFailure`.
+  unsupportedResponseType('GQL462'),
+
+  /// `GQL463`: reported by the client when an answer, or one event of a
+  /// stream, is longer than the link's byte limit; the request is aborted.
+  /// It is the `code` of a `ResponseFormatFailure`.
+  responseTooLarge('GQL463'),
+
+  /// `GQL464`: reported by the client when an answer is not a GraphQL
+  /// response: not UTF-8, not JSON, nested too deep, not an object of the
+  /// response format, or `"data": null` without errors. It is the `code`
+  /// of a `ResponseFormatFailure`.
+  malformedResponse('GQL464'),
+
+  /// `GQL465`: reported by the client when the `data` of a response does
+  /// not have the shape of the operation's generated classes. It is the
+  /// `code` of a `DataFormatFailure`.
+  dataShapeMismatch('GQL465'),
+
+  /// `GQL466`: reported by the client when the caller cancelled a request
+  /// before its answer. It is the `code` of a `RequestCancelled`.
+  requestCancelled('GQL466'),
+
+  /// `GQL467`: reported by the client when a link's timeout passed before
+  /// the answer; the request is aborted. It is the `code` of a
+  /// `RequestTimedOut`.
+  requestTimedOut('GQL467'),
+
+  /// `GQL468`: reported by the client when a terminating link cannot carry
+  /// a request, such as a subscription over HTTP or files over a socket.
+  /// It is the `code` of an `UnsupportedOperation`.
+  operationNotSupportedByLink('GQL468'),
+
+  /// `GQL469`: reported by the client when the link chain ended the stream
+  /// of a query or a mutation without a result. It is the `code` of an
+  /// `UnsupportedOperation`.
+  linkEndedWithoutResult('GQL469'),
+
+  /// `GQL470`: reported by the client when a graphql-transport-ws server
+  /// sends a message the protocol does not allow; the client closes the
+  /// socket. It is the `code` of a `SocketFailure`.
+  malformedSocketMessage('GQL470'),
+
+  /// `GQL471`: reported by the client when its socket closed with a code
+  /// that forbids reconnecting, or the reconnection attempts ran out. It
+  /// is the `code` of a `SocketFailure`.
+  socketClosed('GQL471'),
+
+  /// `GQL472`: reported by the client when a graphql-transport-ws server
+  /// did not acknowledge the connection in time; the client closes the
+  /// socket. It is the `code` of a `SocketFailure`.
+  connectionAckTimeout('GQL472'),
+
+  /// `GQL473`: reported by the client when a graphql-sse stream holds an
+  /// event of an unknown type or ends without `complete`. It is the `code`
+  /// of an `EventStreamFailure`.
+  malformedEventStream('GQL473'),
+
+  /// `GQL474`: reported by the client when the callback that gives or
+  /// refreshes an authentication token threw. It is the `code` of an
+  /// `AuthenticationFailure`.
+  authenticationFailed('GQL474'),
+
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
   /// the YAML parser's.
   configSyntax('GQL500'),
