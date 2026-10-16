@@ -31,18 +31,27 @@ final class StreamReservations {
   // 10).
   static final Random _random = Random.secure();
 
+  /// How many reservations are held.
+  int get length => _connections.length;
+
   /// A new token, or null when [SingleConnectionOptions.maxReservations]
   /// reservations are held.
   String? reserve() {
     if (_connections.length >= options.maxReservations) return null;
     final token = _newToken();
-    _connections[token] = SingleConnection(onClosed: () => _drop(token));
+    _connections[token] = SingleConnection(
+      options.maxOperationsPerStream,
+      onClosed: () => _drop(token),
+    );
     _timeouts[token] = Timer(
       options.reservationTimeout,
       () => _connections[token]?.abandon(),
     );
     return token;
   }
+
+  /// The connection of [token], or null.
+  SingleConnection? lookup(String token) => _connections[token];
 
   /// Connects the stream of [token].
   ConnectOutcome connect(String token) {

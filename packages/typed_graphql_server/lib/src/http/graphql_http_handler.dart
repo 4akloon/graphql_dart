@@ -46,10 +46,14 @@ final class GraphQLHttpHandler<C> {
     final sse = options.sse;
     final limits = sse?.singleConnection;
     if (sse != null && limits != null) {
-      _routes = SingleConnectionRoutes(
+      _routes = SingleConnectionRoutes<C>(
+        server: server,
         limits: limits,
         keepAliveInterval: sse.keepAliveInterval,
         errors: _errors,
+        writer: ResultWriter(
+          usesPartialSuccessStatus: options.usesPartialSuccessStatus,
+        ),
       );
     }
   }
@@ -83,7 +87,7 @@ final class GraphQLHttpHandler<C> {
 
   // Null when single connection mode is off; set at most once, in the
   // constructor body, after the options were checked.
-  SingleConnectionRoutes? _routes;
+  SingleConnectionRoutes<C>? _routes;
 
   static const List<ResponseMediaType> _offered = [
     ResponseMediaType.graphqlResponseJson,
@@ -200,6 +204,11 @@ final class GraphQLHttpHandler<C> {
     RequestDecoding decoding,
     ResponseMediaType type,
   ) async {
+    final routes = _routes;
+    if (routes != null &&
+        routes.carriesOperation(request, request.method.toUpperCase())) {
+      return routes.operation(request, decoding, type);
+    }
     if (type == ResponseMediaType.eventStream) {
       return _answerEventStream(request, decoding);
     }
