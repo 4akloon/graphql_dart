@@ -38,3 +38,17 @@
 - `UploadFile`, `UploadFileCodec` (the `Upload` scalar's codec, which
   writes a file as its marker) and `UploadFiles` (the files of a request,
   in its context); the start of the Uploads guide.
+- `HttpTransport`, `TransportRequest` and `TransportResponse`, the seam
+  between the HTTP links and an HTTP library, and `PackageHttpTransport`
+  over any `http.Client` (abortable); the start of the HTTP guide.
+- `HttpLink`: queries and mutations over GraphQL over HTTP (`POST` with a
+  JSON body, the GraphQL response media type, status codes read by the
+  spec's rules, a byte limit counted while the body streams, strict UTF-8,
+  bounded nesting, a timeout, cancellation that aborts the request, the
+  HTTP status in `HttpResponseInfo`) (R8.4).
+- `HttpLink(usesGetForQueries: true)` sends queries as `GET` requests, with
+  the preflight header the server's CSRF prevention asks for; mutations
+  stay `POST`.
+- `HttpLink` sends a request with `UploadFiles` as a multipart request
+  (the GraphQL multipart request specification), with the preflight header;
+  the Uploads guide shows the body.
