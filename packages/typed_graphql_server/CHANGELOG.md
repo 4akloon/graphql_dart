@@ -214,13 +214,14 @@
   gone.
 - `RequestInfo.connectionParams`: the payload of the graphql-ws
   `connection_init` message, for a context factory that reads a token sent there.
-- graphql-ws types: `GraphQLSocket`, `GraphQLWsOptions`, `ConnectionHook`,
-  `AcceptConnection` and `RefuseConnection`, and a first WebSocket guide.
-- `GraphQLWsHandler` serves the `graphql-transport-ws` subprotocol over a
-  `GraphQLSocket`: the connection handshake with `onConnect` and a timeout,
-  `subscribe` through `GraphQLServer.handle` with a `CancelSignal` per
-  operation, `maxOperations` (`GQL432`), `maxMessageLength`, `maxJsonDepth`
-  and `maxConnections`, the protocol's close codes, and an `Origin` check
-  (`allowsUpgrade`, `allowedOrigins`). The WebSocket guide is complete.
-- Tests: the graphql-ws hostile-input suite. A connection that ended while
-  `onConnect` was pending is no longer acknowledged.
+- graphql-ws transport: `GraphQLWsHandler` serves the `graphql-transport-ws`
+  subprotocol over a `GraphQLSocket`: the connection handshake with
+  `onConnect` (`ConnectionHook`, `AcceptConnection`, `RefuseConnection`) and a
+  timeout, `subscribe` through `GraphQLServer.handle` with a `CancelSignal`
+  per operation, the protocol's close codes, and an `Origin` check
+  (`allowsUpgrade`, `allowedOrigins`). `GraphQLWsOptions` bounds a connection:
+  `maxOperations` (`GQL432`, counted until the server stopped working on a
+  cancelled request), `maxMessageLength`, `maxJsonDepth`, `maxIdLength` and
+  `maxConnections`; `onError` (`SocketErrorHook`) sees the errors the handler
+  swallows. A close the peer never answers still ends the session. The
+  WebSocket guide and the graphql-ws hostile-input tests come with it.

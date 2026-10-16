@@ -1,5 +1,5 @@
 /// One WebSocket connection, as the graphql-ws handler sees it; an adapter
-/// (for example `typed_graphql_shelf`) implements it over its own WebSocket.
+/// implements it over its own WebSocket library.
 ///
 /// An adapter must:
 ///

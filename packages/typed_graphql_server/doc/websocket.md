@@ -104,7 +104,7 @@ the protocol closes the socket with a code (below) instead.
 | `Origin` not allowed | close `4403` "Forbidden" |
 | no acknowledgement within `connectionInitTimeout` | close `4408` "Connection initialisation timeout" |
 | a frame longer than `maxMessageLength` | close `1009` "Message too big" |
-| not JSON (or deeper than `maxJsonDepth`), not an object, no string `type`, an unknown type, a field of the wrong type, or `connection_ack`, `next` or `error` from the client | close `4400` "Invalid message received" |
+| not JSON (or deeper than `maxJsonDepth`), not an object, no string `type`, an unknown type, a field of the wrong type, an id longer than `maxIdLength`, or `connection_ack`, `next` or `error` from the client | close `4400` "Invalid message received" |
 | `connection_init` | runs `onConnect`; `AcceptConnection` sends `connection_ack` with its payload, `RefuseConnection` closes `4403`, a throw closes `4500`; without a hook the connection is acknowledged |
 | a second `connection_init` | close `4429` "Too many initialisation requests" |
 | `ping` | `pong`, echoing the payload; allowed before the acknowledgement |
@@ -114,7 +114,7 @@ the protocol closes the socket with a code (below) instead.
 | `subscribe` with `maxOperations` running | an `error` message for that id with `GQL432`; the socket stays open |
 | `subscribe` | a result is `next` then `complete`; a request error is `error` alone; a subscription is one `next` per result, then `complete` |
 | `complete` from the client | cancels the operation and its `CancelSignal`; nothing more is sent for the id |
-| the connection ends | every operation is cancelled |
+| the connection ends, or a close the server asked for finishes | every operation is cancelled and the session ends, even if the peer never answers the closing handshake |
 
 An id is free again once its operation ended, so a client may reuse it. A
 `complete` that arrives while the server is still preparing the operation
@@ -161,21 +161,50 @@ the pipeline pass. The `Origin` check is what protects them.
 | `connectionInitTimeout` | 3 s | a connection that never acknowledges |
 | `maxOperations` | 100 | operations running at once on one connection |
 | `maxMessageLength` | 1 MiB | the characters of one frame |
+| `maxIdLength` | 256 | the characters of an operation id, which every running operation keeps |
 | `maxJsonDepth` | 64 | the nesting of a message |
 | `maxConnections` | 10000 | open sessions of one handler |
+
+`maxOperations` counts operations in flight: an operation the client
+completed still counts until the server stopped working on its request, so
+a client cannot start more executions than the limit by subscribing and
+completing in a loop.
+
+What the limits do not cover:
+
+- `maxMessageLength` is checked after the adapter has buffered the frame, so
+  an adapter must cap the size of a frame before it buffers it.
+- The `Origin` check ignores the scheme and trusts the `Host` header, which
+  a DNS-rebinding page controls; it does not replace authentication in
+  `onConnect`.
+- A `ping` message is answered with a `pong` without a limit; a flood of
+  pings is bounded only by `maxMessageLength` and the adapter.
+- The `4408` timer also covers a slow `onConnect`: a hook that takes longer
+  than `connectionInitTimeout` gets the connection closed.
+- A subscription whose source fails after it started sends its earlier
+  `next` messages, then an `error` message with `GQL330`.
 
 The limits of the pipeline (`ServerLimits`: document length, tokens, depth,
 aliases, cost) apply to each `subscribe` as to any request.
 
 ## Keep-alive and backpressure
 
-Keep-alive is WebSocket ping frames, which are the adapter's job (for
-example the `pingInterval` of the shelf adapter); the handler answers
-graphql-ws `ping` messages but sends none. `send` is fire-and-forget:
-neither the `WebSocket` of `dart:io` nor a `WebSocketChannel` reports a full
-buffer, so a client that reads nothing while a subscription produces fast
-makes the host buffer. `maxOperations` and the schema's own rate bound it;
-this is an open question of the design.
+Keep-alive is WebSocket ping frames, which are the adapter's job; the
+handler answers graphql-ws `ping` messages but sends none. `send` is
+fire-and-forget: neither the `WebSocket` of `dart:io` nor a `WebSocketChannel`
+reports a full buffer, so a client that reads nothing while a subscription
+produces fast makes the host buffer without bound. This is a limit of the
+handler: `maxOperations` and the schema's own rate are the only bounds.
+
+## Reporting errors
+
+`GraphQLWsOptions.onError` receives the errors the handler swallows, with
+their stack traces: a throw of `onConnect` (the client gets `4500`), a throw
+of the server pipeline and a failing result stream (the client gets an
+`error` message with `GQL330`), and a failure of the connection itself. An
+`Error` is reported like any other object and is never rethrown into the
+zone; these are boundary catches, so one broken connection cannot take the
+process down. A hook that throws is ignored.
 
 ## Writing an adapter
 
