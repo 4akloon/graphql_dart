@@ -6,6 +6,7 @@ import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 import '../server/support/server_fixture.dart';
 import 'support/controlled_source.dart';
+import 'support/eventually.dart';
 import 'support/fake_socket.dart';
 import 'support/ws_fixture.dart';
 
@@ -41,7 +42,7 @@ void main() {
       final done = fixture.run(socket, server: source.server());
       await fixture.init(socket);
       fixture.subscribe(socket, '1', 'subscription { events }');
-      await settle();
+      await eventually(() => source.controller.hasListener);
       socket.receive('not json');
       await within(done);
       expect(source.isCancelled, isTrue);
@@ -75,9 +76,9 @@ void main() {
         unawaited(fixture.run(socket, server: source.server()));
         await fixture.init(socket);
         fixture.subscribe(socket, '1', 'subscription { events }');
-        await settle();
+        await eventually(() => source.controller.hasListener);
         socket.receive('not json');
-        await settle();
+        await eventually(() => source.isCancelled);
         expect(source.isCancelled, isTrue);
         closing.complete();
       },
