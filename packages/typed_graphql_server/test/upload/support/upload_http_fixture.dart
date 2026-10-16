@@ -148,6 +148,11 @@ final class UploadHttpFixture {
   /// Expects that nothing was stored, built or run.
   void expectUntouched() {
     expect(storage.stored + storage.failed, 0, reason: 'no file stored');
+    expectNothingKept();
+  }
+
+  /// Expects that no file is held and no context or resolver ran.
+  void expectNothingKept() {
     expect(storage.held, isEmpty);
     expect(uploads.registry.length, 0);
     expect(contexts, 0, reason: 'no context may be built');
