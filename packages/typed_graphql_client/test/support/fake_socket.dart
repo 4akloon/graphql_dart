@@ -19,6 +19,12 @@ final class FakeSocket implements ClientSocket {
   /// The close reason the client gave.
   String? clientCloseReason;
 
+  /// What [send] throws, as a socket that is closing may; null for nothing.
+  Exception? sendFailure;
+
+  /// When set, [close] completes only after this does.
+  Completer<void>? closeGate;
+
   /// Whether the client called [close].
   bool isClosedByClient = false;
 
@@ -42,14 +48,23 @@ final class FakeSocket implements ClientSocket {
   String? get closeReason => _closeReason;
 
   @override
-  void send(String text) => sent.add(text);
+  void send(String text) {
+    final failure = sendFailure;
+    if (failure != null) {
+      throw failure;
+    }
+    sent.add(text);
+  }
 
   @override
   Future<void> close([int? code, String? reason]) {
     isClosedByClient = true;
     clientCloseCode = code;
     clientCloseReason = reason;
-    return _end(code, reason);
+    final gate = closeGate;
+    return gate == null
+        ? _end(code, reason)
+        : gate.future.then((_) => _end(code, reason));
   }
 
   /// The server sends [text].
@@ -62,6 +77,9 @@ final class FakeSocket implements ClientSocket {
   /// The server answers the handshake.
   void serverAcknowledges() =>
       serverSendsJson(const {'type': 'connection_ack'});
+
+  /// The socket reports a network error on its messages stream.
+  void serverFails(Object error) => _incoming.addError(error);
 
   /// The server closes the socket with [code] and [reason].
   Future<void> serverCloses(int code, String reason) => _end(code, reason);
@@ -76,7 +94,9 @@ final class FakeSocket implements ClientSocket {
     }
     _closeCode = code;
     _closeReason = reason;
-    return _incoming.close();
+    // A controller that nobody listens to never completes its `close` future.
+    unawaited(_incoming.close());
+    return Future.value();
   }
 }
 
