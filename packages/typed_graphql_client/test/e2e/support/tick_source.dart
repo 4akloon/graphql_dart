@@ -13,6 +13,12 @@ final class TickSource {
   /// Whether a listener cancelled the stream before it was done.
   bool isCancelled = false;
 
+  final Completer<void> _cancelled = Completer<void>();
+
+  /// Completes when a listener cancels the stream, however many hops the
+  /// cancel travels through.
+  Future<void> get whenCancelled => _cancelled.future;
+
   /// A lazy stream of 1, 2 and 3, then done; nothing runs until it is
   /// listened to.
   Stream<int> stream() {
@@ -24,7 +30,10 @@ final class TickSource {
         }
         if (!isEndless) controller.close();
       },
-      onCancel: () => isCancelled = true,
+      onCancel: () {
+        isCancelled = true;
+        if (!_cancelled.isCompleted) _cancelled.complete();
+      },
     );
     return controller.stream;
   }

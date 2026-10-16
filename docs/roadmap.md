@@ -33,7 +33,7 @@ Decisions: [research/README.md](research/README.md).
 | # | Stage | What appears | Requirements | Depends on |
 |---|---|---|---|---|
 | M10 | Client code generation | `typed_graphql_codegen` engine and CLI: config, schema loading, the project fragment graph, validation with file positions, emitter for data / fragment / union / enum / variables classes, operation metadata, persisted-operations manifest, goldens | R7.1–R7.10 | M4 |
-| M11 | Client runtime | `GraphQLClient`, `GraphQLResponse`, links (HTTP, WebSocket, SSE, split, retry, dedupe, APQ, auth, uploads), `MockLink`; end-to-end tests against an in-memory `typed_graphql_server` once M7 exists | R8.1–R8.5 | M10 |
+| M11 | Client runtime | `GraphQLClient`, `GraphQLResponse`, links (HTTP, WebSocket, SSE, split, retry, dedupe, APQ, auth, uploads), `MockLink`; end-to-end tests against an in-memory `typed_graphql_server` (M11f ran them in memory against the M6 pipeline; the tests over real M7 transports are M11z, after M7) | R8.1–R8.5 | M10 |
 | M12 | Normalized cache | Record store, `typePolicies`, fetch policies, `watchQuery`, optimistic layer, GC, typed fragment reads and writes; cache metadata in generated code | R7.11, R9.1–R9.6 | M11 |
 
 ### After both branches

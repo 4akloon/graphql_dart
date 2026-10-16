@@ -47,7 +47,7 @@ void main() {
       subscription.onData(first.complete);
       await first.future;
       await subscription.cancel();
-      await Future<void>.delayed(Duration.zero);
+      await ticks.whenCancelled;
       expect(ticks.isCancelled, isTrue);
     });
 

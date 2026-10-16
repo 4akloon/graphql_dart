@@ -42,6 +42,11 @@ jobs:
         working-directory: packages/typed_graphql
         run: dart doc 2>&1 | tee "$RUNNER_TEMP/doc.log" && grep -q "Found 0 warnings and 0 errors" "$RUNNER_TEMP/doc.log"
 
+      - name: Client API reference has no warnings
+        shell: bash
+        working-directory: packages/typed_graphql_client
+        run: dart doc 2>&1 | tee "$RUNNER_TEMP/client-doc.log" && grep -q "Found 0 warnings and 0 errors" "$RUNNER_TEMP/client-doc.log"
+
   test:
     name: Test (${{ matrix.os }}, ${{ matrix.sdk }})
     timeout-minutes: 30
