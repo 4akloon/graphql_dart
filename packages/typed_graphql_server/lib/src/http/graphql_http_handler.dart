@@ -1,9 +1,12 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../server/graphql_server.dart';
+import '../sse/distinct_stream.dart';
+import '../sse/sse_options.dart';
 import '../upload/multipart_result.dart';
 import 'accept_negotiation.dart';
 import 'batch_runner.dart';
+import 'content_type.dart';
 import 'get_parameters.dart';
 import 'http_options.dart';
 import 'http_options_check.dart';
@@ -54,6 +57,13 @@ final class GraphQLHttpHandler<C> {
   // cannot read.
   late final JsonExchange<C> _exchange = JsonExchange<C>(server, _writer);
 
+  // `late` for the same reason as `_exchange`.
+  late final DistinctStream<C> _distinct = DistinctStream<C>(
+    server,
+    (options.sse ?? const SseOptions()).keepAliveInterval,
+    _writer,
+  );
+
   // Null without a batch policy: the decoder refuses a batch then, so no
   // runner is needed.
   late final BatchRunner<C>? _batches = switch (options.batching) {
@@ -64,6 +74,11 @@ final class GraphQLHttpHandler<C> {
   static const List<ResponseMediaType> _offered = [
     ResponseMediaType.graphqlResponseJson,
     ResponseMediaType.json,
+  ];
+
+  static const List<ResponseMediaType> _offeredWithEventStream = [
+    ..._offered,
+    ResponseMediaType.eventStream,
   ];
 
   /// Answers [request]; it never throws, so a host can always write what it
@@ -96,15 +111,13 @@ final class GraphQLHttpHandler<C> {
         headers: const {'allow': 'GET, POST'},
       );
     }
-    final type = const AcceptNegotiation(_offered).choose(
-      request.header('accept'),
-    );
+    final negotiation = AcceptNegotiation(_offeredFor(request, method));
+    final type = negotiation.choose(request.header('accept'));
     if (type == null) {
       return _errors.refusal(
         406,
         DiagnosticCode.notAcceptable,
-        'The Accept header allows none of application/graphql-response+json '
-        'and application/json.',
+        'The Accept header allows none of ${negotiation.description}.',
       );
     }
     if (method == 'GET') {
@@ -116,6 +129,17 @@ final class GraphQLHttpHandler<C> {
       return _answerMultipart(request, multipart, type);
     }
     return _answer(request, await PostBody(options).decode(request), type);
+  }
+
+  // A multipart body cannot start an event stream (spec section 5).
+  List<ResponseMediaType> _offeredFor(HttpRequestData request, String method) {
+    final isMultipartPost =
+        method == 'POST' &&
+        ContentType.parse(request.header('content-type'))?.mediaType ==
+            'multipart/form-data';
+    return options.sse == null || isMultipartPost
+        ? _offered
+        : _offeredWithEventStream;
   }
 
   MultipartPost? get _multipart {
@@ -152,13 +176,37 @@ final class GraphQLHttpHandler<C> {
     HttpRequestData request,
     RequestDecoding decoding,
     ResponseMediaType type,
+  ) async {
+    if (type == ResponseMediaType.eventStream) {
+      return _answerEventStream(request, decoding);
+    }
+    return switch (decoding) {
+      DecodedRequest(request: final params) => await _exchange.run(
+        request,
+        params,
+        type,
+      ),
+      DecodedBatch(:final items) => await _runBatch(request, items, type),
+      DecodingRefusal(:final status, :final code, :final message) =>
+        _errors.refusal(status, code, message),
+    };
+  }
+
+  // A refusal of the transport stays JSON: the stream starts only for a
+  // request the pipeline can run.
+  Future<HttpResponseData> _answerEventStream(
+    HttpRequestData request,
+    RequestDecoding decoding,
   ) async => switch (decoding) {
-    DecodedRequest(request: final params) => await _exchange.run(
+    DecodedRequest(request: final params) => await _distinct.run(
       request,
       params,
-      type,
     ),
-    DecodedBatch(:final items) => await _runBatch(request, items, type),
+    DecodedBatch() => _errors.refusal(
+      406,
+      DiagnosticCode.notAcceptable,
+      'A batch cannot be answered as an event stream.',
+    ),
     DecodingRefusal(:final status, :final code, :final message) =>
       _errors.refusal(status, code, message),
   };

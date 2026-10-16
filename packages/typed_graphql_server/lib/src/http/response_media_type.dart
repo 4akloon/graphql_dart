@@ -8,7 +8,10 @@ enum ResponseMediaType {
   graphqlResponseJson('application', 'graphql-response+json'),
 
   /// Plain JSON, for clients that predate `application/graphql-response+json`.
-  json('application', 'json');
+  json('application', 'json'),
+
+  /// Server-sent events, for a client that asks for an event stream.
+  eventStream('text', 'event-stream');
 
   const ResponseMediaType(this.type, this.subtype);
 

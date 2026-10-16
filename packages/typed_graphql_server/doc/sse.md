@@ -8,6 +8,20 @@ mode of the graphql-sse protocol.
 This guide is written in steps. So far it holds the pieces of the event
 stream itself.
 
+## Distinct connections mode
+
+`HttpOptions.sse` is `SseOptions()` by default; `null` turns event streams off,
+and `Accept: text/event-stream` alone is then `406` (`GQL422`). A `GET` or
+`POST` whose `Accept` prefers `text/event-stream` is answered with an event
+stream of its own operation, and `*/*` still gets
+`application/graphql-response+json`. A subscription sends one `next` event
+per result; a query, a mutation or a request error (a parse or validation
+error included) sends one `next` event; each stream ends with `complete`. A
+`GET` mutation is `405`, `500` is `500` and the refusals that precede the
+pipeline (`415`, `413`, `400`) stay JSON. A batch cannot be answered as an
+event stream (`406`), and a multipart `POST` does not offer one. When the
+client goes away, the subscription is cancelled.
+
 ## Event streams
 
 An event stream answers `200` with `content-type: text/event-stream;

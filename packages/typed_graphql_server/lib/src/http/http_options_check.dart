@@ -25,6 +25,14 @@ final class HttpOptionsCheck {
     if (batching != null) {
       _positive(batching.maxRequests > 0, batching.maxRequests, 'maxRequests');
     }
+    final sse = options.sse;
+    if (sse != null) {
+      _positive(
+        sse.keepAliveInterval > Duration.zero,
+        sse.keepAliveInterval,
+        'keepAliveInterval',
+      );
+    }
     final uploads = options.uploads;
     if (uploads != null) _checkUploads(uploads.limits);
     if (options.maxJsonDepth < 1 ||

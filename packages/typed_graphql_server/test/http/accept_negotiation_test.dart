@@ -105,4 +105,41 @@ void main() {
     final header = List.filled(10000, 'text/html;q=0.1').join(',');
     expect(negotiation.choose('$header,application/json'), isNotNull);
   });
+
+  test('chooses the event stream when only it is accepted', () {
+    expect(
+      negotiation.choose('text/event-stream'),
+      ResponseMediaType.eventStream,
+    );
+  });
+
+  test('chooses the event stream when it has the higher quality', () {
+    expect(
+      negotiation.choose('application/json;q=0.5, text/event-stream'),
+      ResponseMediaType.eventStream,
+    );
+  });
+
+  test('offers the event stream last, so a wildcard does not pick it', () {
+    expect(
+      negotiation.choose('text/*'),
+      ResponseMediaType.eventStream,
+    );
+    expect(negotiation.choose('*/*'), ResponseMediaType.graphqlResponseJson);
+  });
+
+  test('words the offered types for a message', () {
+    expect(
+      negotiation.description,
+      'application/graphql-response+json, application/json and '
+      'text/event-stream',
+    );
+    expect(
+      const AcceptNegotiation([
+        ResponseMediaType.graphqlResponseJson,
+        ResponseMediaType.json,
+      ]).description,
+      'application/graphql-response+json and application/json',
+    );
+  });
 }

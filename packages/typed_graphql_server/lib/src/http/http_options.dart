@@ -1,4 +1,5 @@
 import '../execution/error_hook.dart';
+import '../sse/sse_options.dart';
 import '../upload/uploads.dart';
 import 'batch_policy.dart';
 
@@ -20,6 +21,7 @@ final class HttpOptions {
     this.batching,
     this.uploads,
     this.onError,
+    this.sse = const SseOptions(),
   });
 
   /// The longest request body accepted, in bytes; a longer one is refused with
@@ -62,4 +64,11 @@ final class HttpOptions {
   /// and `GQL330`, like the `onError` of `GraphQLServer`; it may return a
   /// replacement error, and one that throws is ignored.
   final ErrorHook? onError;
+
+  /// The event streams of GraphQL over server-sent events, or null to refuse
+  /// `Accept: text/event-stream` with `406` (`GQL422`).
+  ///
+  /// With the default, a `GET` or `POST` that asks for `text/event-stream` is
+  /// answered with one event stream for its operation.
+  final SseOptions? sse;
 }

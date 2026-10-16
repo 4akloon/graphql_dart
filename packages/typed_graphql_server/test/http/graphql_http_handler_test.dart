@@ -61,8 +61,8 @@ void main() {
       expect(await http.code(response), 'GQL422');
       expect(
         await http.message(response),
-        'The Accept header allows none of application/graphql-response+json '
-        'and application/json.',
+        'The Accept header allows none of application/graphql-response+json, '
+        'application/json and text/event-stream.',
       );
     });
 

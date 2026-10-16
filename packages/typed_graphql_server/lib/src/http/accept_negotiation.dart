@@ -14,6 +14,14 @@ final class AcceptNegotiation {
   /// The types the server can write, most preferred first.
   final List<ResponseMediaType> offered;
 
+  /// The offered types worded for a message: `a, b and c`.
+  String get description {
+    final names = [for (final type in offered) type.mediaType];
+    return names.length < 2
+        ? names.join()
+        : '${names.sublist(0, names.length - 1).join(', ')} and ${names.last}';
+  }
+
   /// The offered type [accept] likes best, or null when it allows none.
   ///
   /// A missing or blank header gives [ResponseMediaType.json], the
