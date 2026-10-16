@@ -4,9 +4,10 @@
 ///
 /// This version holds the contract generated code compiles against, the
 /// [GraphQLClient] with its sealed [GraphQLResponse], the link chain
-/// (`Link`, `SplitLink`, `ContextLink`, `MockLink`), `Backoff` and the
-/// upload types. The HTTP, WebSocket and SSE links, the policies and the
-/// normalized cache are planned; see the package README.
+/// (`Link`, `SplitLink`, `ContextLink`, `MockLink`), the transport links
+/// (`HttpLink`, `WebSocketLink`, `SseLink`), the policy links (`RetryLink`,
+/// `DedupeLink`, `PersistedQueryLink`, `AuthLink`), `Backoff` and the upload
+/// types. The normalized cache is planned (M12); see the package README.
 library;
 
 export 'src/client/cancel_token.dart';

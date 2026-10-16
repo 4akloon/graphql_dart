@@ -7,8 +7,8 @@ import 'package:meta/meta.dart';
 /// Pass one to `GraphQLClient.query`, `mutate` or `subscribe`; the client
 /// listens to it and never cancels it. Cancelling it completes a pending
 /// call with a `RequestCancelled` failure and ends the request in every
-/// link: with `HttpLink` (M11b) an HTTP request is aborted, with
-/// `WebSocketLink` (M11d) a subscription is completed.
+/// link: with `HttpLink` an HTTP request is aborted, with
+/// `WebSocketLink` a subscription is completed.
 ///
 /// {@category client}
 final class CancelToken {

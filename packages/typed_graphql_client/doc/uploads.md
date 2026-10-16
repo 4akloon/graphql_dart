@@ -3,7 +3,7 @@
 A GraphQL server that follows the multipart request specification takes
 files as values of the `Upload` scalar. The client's side has two parts:
 the mapping of the scalar and the list of the files of a request. The
-links that send them arrive with `HttpLink` (M11b).
+`HttpLink` sends them.
 
 ## Mapping the scalar
 

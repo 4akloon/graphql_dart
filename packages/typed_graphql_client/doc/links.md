@@ -1,8 +1,11 @@
 # Links
 
 A request goes from the client through a chain of links to a terminating
-link that talks to the server. This guide grows with the links; this
-section covers what travels through them.
+link that talks to the server. The HTTP, WebSocket and Server-sent events
+guides describe the terminating links (`HttpLink`, `WebSocketLink`,
+`SseLink`) and the Request Policies guide the links that wrap them
+(`RetryLink`, `DedupeLink`, `PersistedQueryLink`, `AuthLink`); this guide
+covers what travels through the chain.
 
 ## Requests, results and context
 

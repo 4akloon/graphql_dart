@@ -7,7 +7,8 @@ import 'next_link.dart';
 /// request, answer it, or forward it and change the answer.
 ///
 /// A middle link calls `forward`; a terminating link (`MockLink`, and
-/// `HttpLink` from M11b) ignores it and talks to a server. [request] returns a
+/// `HttpLink`, `WebSocketLink` and `SseLink`) ignores it and talks to a
+/// server. [request] returns a
 /// stream: one event for a query or a mutation, many for a subscription.
 /// Failures are [LinkFailure] events, never stream errors. Cancelling the
 /// subscription to the stream ends the request in every link: a link that

@@ -3,7 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 import 'upload_file.dart';
 
 /// The codec of the `Upload` scalar: it writes a file as its marker, which
-/// `HttpLink` (M11b) will replace with the file itself (R8.4).
+/// `HttpLink` replaces with the file itself (R8.4).
 ///
 /// Map the scalar in `typed_graphql.yaml`:
 ///

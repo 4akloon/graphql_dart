@@ -2,10 +2,10 @@ import '../link/context_entry.dart';
 import 'upload_file.dart';
 
 /// The files of one request, listed by the caller in its context so that
-/// `HttpLink` (M11b) can find the object behind each marker of the variables.
+/// `HttpLink` can find the object behind each marker of the variables.
 ///
-/// Links that cannot send files (`WebSocketLink` and `SseLink`, M11d and
-/// M11e) will answer a request with this entry with an `UnsupportedOperation`.
+/// Links that cannot send files (`WebSocketLink` and `SseLink`) answer a
+/// request with this entry with an `UnsupportedOperation`.
 ///
 /// {@category upload}
 final class UploadFiles extends ContextEntry {

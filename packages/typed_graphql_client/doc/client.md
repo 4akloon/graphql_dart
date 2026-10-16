@@ -95,11 +95,10 @@ When a request gets no GraphQL response, the client reports why as a
 | `EventStreamFailure` | `GQL473` | a server-sent event stream broke the protocol |
 | `AuthenticationFailure` | `GQL474` | the token callback threw |
 
-The codes `GQL461`-`GQL463`, `GQL467`, `GQL468` and `GQL470`-`GQL474` are
-reserved: the links that report them arrive in M11b (HTTP), M11c
-(policies), M11d (WebSocket) and M11e (SSE). Today the client reports
-`GQL464` to `GQL466` and `GQL469`, and `NetworkFailure` (`GQL460`) from
-`ContextLink` and a link's own failures.
+The links report these codes: `HttpLink`, `WebSocketLink` and `SseLink` the
+transport failures (`GQL460`-`GQL464`, `GQL467`, `GQL468`), `WebSocketLink`
+`GQL470`-`GQL472`, `SseLink` `GQL473` and `AuthLink` `GQL474`; the client
+itself reports `GQL465`, `GQL466` and `GQL469`.
 
 Nothing a server or a network does makes the client throw.
 
@@ -123,8 +122,9 @@ Cancelling completes a pending `query` or `mutate` at once with
 `GraphQLTransportFailure(RequestCancelled(reason))`, and ends a `subscribe`
 stream with that failure as its last event. The client then cancels its
 subscription to the link chain, which ends the request in every link: an
-HTTP request is aborted (`HttpLink`, M11b), a WebSocket subscription is
-completed (`WebSocketLink`, M11d). A token
+HTTP request is aborted (`HttpLink`), a WebSocket subscription is
+completed (`WebSocketLink`) and a server-sent event stream is closed
+(`SseLink`). A token
 already cancelled answers without calling the link at all.
 
 Cancelling the subscription to a `subscribe` stream ends the subscription
