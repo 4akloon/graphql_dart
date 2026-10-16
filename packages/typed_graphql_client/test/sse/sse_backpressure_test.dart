@@ -37,6 +37,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(body.isPaused, isTrue);
     await subscription.cancel();
+    await body.close();
   });
 
   test('resuming lets the buffered events through', () async {
@@ -53,6 +54,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(results, hasLength(1));
     await subscription.cancel();
+    await body.close();
   });
 
   test('cancelling before the answer arrives cancels the late body', () async {
@@ -66,5 +68,6 @@ void main() {
     answer.complete(respond(body.stream));
     await Future<void>.delayed(Duration.zero);
     expect(isCancelled, isTrue);
+    await body.close();
   });
 }

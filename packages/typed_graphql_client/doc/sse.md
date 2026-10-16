@@ -119,7 +119,8 @@ as it arrives:
 |---|---|
 | a `next` event | the GraphQL response in its data, with an `HttpResponseInfo` in the context |
 | a `complete` event | the stream ends and the connection closes |
-| an event of another type, or none | `EventStreamFailure` (`GQL473`), then the stream ends |
+| an event of another type, or of no type but with data | `EventStreamFailure` (`GQL473`), then the stream ends |
+| an event with no type and empty data | ignored |
 | the body ends before `complete` | `EventStreamFailure` (`GQL473`), then the stream ends |
 | a `next` that is not a GraphQL response | `ResponseFormatFailure` (`GQL464`), then the stream ends |
 | a 2xx event stream in a charset other than UTF-8 | `ResponseFormatFailure` (`GQL462`) |
@@ -137,9 +138,12 @@ a 2xx status is one result, and anything else is `GQL461` or `GQL462`. An
 
 An event, and the line being read, may hold at most `maxEventBytes` bytes
 (16 MiB by default). Past it the link cancels the body and reports
-`ResponseFormatFailure` (`GQL463`). Comments and the fields graphql-sse
-does not use (`id`, `retry`) are dropped as soon as their line ends, so a
-server that sends only keep-alive comments costs no memory. Bytes that are
+`ResponseFormatFailure` (`GQL463`). Events completed earlier in the same
+chunk are still delivered before the failure. Only the `event` and `data`
+lines add to the count of an event; a comment or an unused field (`id`,
+`retry`) is bounded by the same limit while its line is being read, and is
+dropped as soon as it ends, so a server that sends only keep-alive comments
+costs no memory. Bytes that are
 not UTF-8 are `GQL464`, as is JSON nested deeper than `maxResponseDepth`
 (512 by default).
 

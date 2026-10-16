@@ -30,10 +30,10 @@ final class EventAssembler({
   int _lineBytes = 0;
   int _eventBytes = 0;
 
-  /// Reads [text], the next piece of the stream, and returns the events it
-  /// completes. Throws [EventStreamTooLarge] past the limit.
-  List<ServerSentEvent> add(String text) {
-    final events = <ServerSentEvent>[];
+  /// Reads [text], the next piece of the stream, and adds the events it
+  /// completes to [events]. Throws [EventStreamTooLarge] past the limit,
+  /// after adding the events completed before the line that passed it.
+  void add(String text, List<ServerSentEvent> events) {
     for (final unit in text.codeUnits) {
       if (_isAtStart) {
         _isAtStart = false;
@@ -53,7 +53,6 @@ final class EventAssembler({
           _append(unit);
       }
     }
-    return events;
   }
 
   void _append(int unit) {
@@ -108,16 +107,18 @@ final class EventAssembler({
     }
   }
 
-  /// A blank line ends the event. It is dispatched when it has a type or a
-  /// data line, which WHATWG does not do for an empty data buffer:
-  /// graphql-sse's `complete` carries none.
+  /// A blank line ends the event. It is dispatched when it has a type or
+  /// data, which WHATWG does not do for an empty data buffer: graphql-sse's
+  /// `complete` carries a type and no data. An empty `data:` line alone
+  /// dispatches nothing.
   void _dispatch(List<ServerSentEvent> events) {
     final type = _type;
-    if (type != null || _hasData) {
+    final data = _data.toString();
+    if ((type != null && type.isNotEmpty) || data.isNotEmpty) {
       events.add(
         ServerSentEvent(
           event: type == null || type.isEmpty ? 'message' : type,
-          data: _data.toString(),
+          data: data,
         ),
       );
     }

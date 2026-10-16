@@ -33,12 +33,10 @@ final class const EventStreamParser({
     return bytes.transform(
       StreamTransformer<List<int>, ServerSentEvent>.fromHandlers(
         handleData: (chunk, sink) {
-          try {
-            decoder.add(chunk);
-          } on FormatException {
-            throw const EventStreamNotUtf8();
-          }
-          assembler.add(collector.take()).forEach(sink.add);
+          final events = <ServerSentEvent>[];
+          final failure = _read(chunk, (decoder, collector, assembler), events);
+          events.forEach(sink.add);
+          if (failure != null) throw failure;
         },
         handleDone: (sink) {
           try {
@@ -50,6 +48,39 @@ final class const EventStreamParser({
         },
       ),
     );
+  }
+
+  String _validPrefix(List<int> chunk) {
+    final text = const Utf8Decoder(allowMalformed: true).convert(chunk);
+    final end = text.indexOf('\u{FFFD}');
+    return end < 0 ? text : text.substring(0, end);
+  }
+
+  /// Feeds [chunk] through the decoder and the assembler, adding every event
+  /// completed before a failure to [events]; the failure, if any, is
+  /// returned so that the events are delivered first.
+  EventStreamError? _read(
+    List<int> chunk,
+    (Sink<List<int>>, _TextCollector, EventAssembler) parts,
+    List<ServerSentEvent> events,
+  ) {
+    final (decoder, collector, assembler) = parts;
+    EventStreamError? failure;
+    try {
+      decoder.add(chunk);
+    } on FormatException {
+      failure = const EventStreamNotUtf8();
+      // The strict decoder yields nothing for a failed chunk: read the text
+      // before the first replacement character, so that the events
+      // completed before the bad bytes are not lost.
+      collector.add(_validPrefix(chunk));
+    }
+    try {
+      assembler.add(collector.take(), events);
+    } on EventStreamTooLarge catch (error) {
+      failure = error;
+    }
+    return failure;
   }
 }
 

@@ -80,6 +80,57 @@ void main() {
     });
   });
 
+  group('a chunk that fails', () {
+    Future<(List<ServerSentEvent>, Object?)> collect(
+      List<List<int>> chunks,
+      EventStreamParser using,
+    ) async {
+      final events = <ServerSentEvent>[];
+      Object? error;
+      final done = Completer<void>();
+      using
+          .parse(Stream.fromIterable(chunks))
+          .listen(
+            events.add,
+            onError: (Object e) => error ??= e,
+            onDone: done.complete,
+          );
+      await done.future;
+      return (events, error);
+    }
+
+    test('still yields the events completed before an invalid byte', () async {
+      final (events, error) = await collect([
+        [...utf8.encode('event: next\ndata: 1\n\n'), 0xFF],
+      ], parser);
+      expect(pairs(events), [('next', '1')]);
+      expect(error, isA<EventStreamNotUtf8>());
+    });
+
+    test(
+      'still yields the events completed before an oversized line',
+      () async {
+        final (events, error) = await collect([
+          utf8.encode('event: next\ndata: 1\n\n${'x' * 30}'),
+        ], const EventStreamParser(maxEventBytes: 20));
+        expect(pairs(events), [('next', '1')]);
+        expect(error, isA<EventStreamTooLarge>());
+      },
+    );
+  });
+
+  group('an event with no type', () {
+    test('and empty data is ignored', () async {
+      expect(await parse('data:\n\n'), isEmpty);
+      expect(await parse('event\n\n'), isEmpty);
+      expect(await parse('event:\ndata\n\n'), isEmpty);
+    });
+
+    test('and data is a message', () async {
+      expect(pairs(await parse('data: x\n\n')), [('message', 'x')]);
+    });
+  });
+
   group('comments', () {
     test('are skipped', () async {
       expect(pairs(await parse(': ping\ndata: 1\n:\n\n')), [('message', '1')]);
