@@ -212,3 +212,5 @@
   server, a failing store write is checked to be answered as `GQL330`, and
   the wall-clock assertion and most real sleeps of the pipeline tests are
   gone.
+- `RequestInfo.connectionParams`: the payload of the graphql-ws
+  `connection_init` message, for a context factory that reads a token sent there.
