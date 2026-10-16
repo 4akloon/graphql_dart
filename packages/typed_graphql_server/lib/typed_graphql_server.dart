@@ -61,6 +61,7 @@ export 'src/persisted/memory_persisted_query_store.dart';
 export 'src/persisted/persisted_query_store.dart';
 export 'src/persisted/trusted_documents.dart';
 export 'src/server/context_factory.dart';
+export 'src/server/cost_budget.dart';
 export 'src/server/csrf_prevention.dart';
 export 'src/server/document_handler.dart';
 export 'src/server/document_request.dart';

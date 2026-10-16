@@ -22,6 +22,10 @@ final class CostLimit {
 
   /// The refusal for [operation] of [document] (written in [source]) as
   /// [request] runs it, or null when it is within the limit.
+  ///
+  /// A request within the limit alone is then checked against, and charged
+  /// to, the budget it shares with other requests; a refused request is never
+  /// charged.
   GraphQLError? violation(
     Document document,
     Source source,
@@ -34,15 +38,37 @@ final class CostLimit {
       variables: request.params.variables?.fields ?? const {},
     );
     // Written as a negated `<=` so that a NaN could never pass the limit.
-    if (cost.fieldCost <= maxCost && cost.typeCost <= maxCost) {
-      return null;
+    final isWithinAlone = cost.fieldCost <= maxCost && cost.typeCost <= maxCost;
+    if (!isWithinAlone) {
+      return _error(
+        DiagnosticCode.maxCostExceeded,
+        const CostMessage().of(operation, cost, maxCost),
+        source,
+        operation,
+      );
     }
-    return GraphQLError(
-      const CostMessage().of(operation, cost, maxCost),
-      locations: [SourceSpan(source, operation.start, operation.end).location],
-      extensions: JsonObject({
-        'code': JsonString(DiagnosticCode.maxCostExceeded.id),
-      }),
-    );
+    final budget = request.costBudget;
+    if (budget == null) return null;
+    if (!budget.admits(cost, maxCost)) {
+      return _error(
+        DiagnosticCode.batchCostExceeded,
+        const CostMessage().ofBatch(operation, cost, budget, maxCost),
+        source,
+        operation,
+      );
+    }
+    budget.charge(cost);
+    return null;
   }
+
+  GraphQLError _error(
+    DiagnosticCode code,
+    String message,
+    Source source,
+    OperationDefinition operation,
+  ) => GraphQLError(
+    message,
+    locations: [SourceSpan(source, operation.start, operation.end).location],
+    extensions: JsonObject({'code': JsonString(code.id)}),
+  );
 }

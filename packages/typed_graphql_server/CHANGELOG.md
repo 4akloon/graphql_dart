@@ -218,3 +218,7 @@
   context factory (a `GET` mutation is still `GQL402`).
 - `GraphQLServer.profile`: the profile the server was built with, which
   transports read.
+- `CostBudget` and `ServerRequest.costBudget`: requests that share a budget
+  also share one `maxCost`, which bounds their summed field cost and summed
+  type cost. The request that would pass it is refused with `GQL430` and is
+  not charged; a request over the limit alone is still `GQL238`.
