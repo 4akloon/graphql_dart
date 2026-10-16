@@ -20,9 +20,12 @@ final class ImportRule {
 
   /// The package libraries the client may import.
   static const Set<String> _packages = {
-    'package:http/http.dart',
     'package:typed_graphql/typed_graphql.dart',
   };
+
+  /// The one library that may import `package:http`: the others see only
+  /// [HttpTransport].
+  static const String _httpImporter = 'package_http_transport.dart';
 
   static final RegExp _directive = RegExp(
     r'''^(?:import|export)\s+['"]([^'"]+)['"]''',
@@ -43,6 +46,11 @@ final class ImportRule {
     }
     if (target.startsWith('package:meta/') || _packages.contains(target)) {
       return null;
+    }
+    if (target == 'package:http/http.dart') {
+      return filePath.endsWith(_httpImporter)
+          ? null
+          : '$filePath imports $target: only $_httpImporter may';
     }
     if (target.startsWith('package:')) {
       return '$filePath imports $target: only meta and ${_packages.join(', ')} '

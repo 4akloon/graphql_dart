@@ -28,10 +28,20 @@ void main() {
     test('allows the http barrel', () {
       expect(
         rule.check(
-          'lib/src/http/a.dart',
+          'lib/src/http/package_http_transport.dart',
           "import 'package:http/http.dart' as http;\n",
         ),
         isEmpty,
+      );
+    });
+
+    test('rejects the http barrel outside the package transport', () {
+      expect(
+        rule.check(
+          'lib/src/http/http_link.dart',
+          "import 'package:http/http.dart' as http;\n",
+        ),
+        hasLength(1),
       );
     });
 
