@@ -11,23 +11,33 @@ import 'dart:typed_data';
 /// {@category upload}
 final class UploadFile {
   /// A file of [bytes], copied.
+  ///
+  /// [filename] and [contentType] must not contain a carriage return, a
+  /// line feed or a double quote, which would break the part's headers.
   UploadFile.fromBytes(
     List<int> bytes, {
     required this.filename,
     this.contentType = defaultContentType,
   }) : length = bytes.length,
        marker = _nextMarker(),
-       _open = _opener(Uint8List.fromList(bytes));
+       _open = _opener(Uint8List.fromList(bytes)) {
+    _check(filename, contentType);
+  }
 
   /// A file whose content [open] streams, [length] bytes long. [open] is
   /// called once per attempt, so a retried request sends the file again.
+  /// [length] must not be negative; [filename] and [contentType] follow the
+  /// rule of [UploadFile.fromBytes].
   UploadFile.fromStream(
     Stream<List<int>> Function() open, {
     required this.length,
     required this.filename,
     this.contentType = defaultContentType,
   }) : marker = _nextMarker(),
-       _open = open;
+       _open = open {
+    RangeError.checkNotNegative(length, 'length');
+    _check(filename, contentType);
+  }
 
   /// The content type of a file created without one.
   static const String defaultContentType = 'application/octet-stream';
@@ -54,6 +64,21 @@ final class UploadFile {
 
   /// The content, from the start; a new stream on every call.
   Stream<List<int>> open() => _open();
+
+  static void _check(String filename, String contentType) {
+    for (final (name, value) in [
+      ('filename', filename),
+      ('contentType', contentType),
+    ]) {
+      if (value.contains(RegExp(r'[\r\n"]'))) {
+        throw ArgumentError.value(
+          value,
+          name,
+          'must not contain a line break or a double quote',
+        );
+      }
+    }
+  }
 
   static String _nextMarker() => '$markerPrefix${_markerCount++}';
 

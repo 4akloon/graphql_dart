@@ -33,6 +33,18 @@ void main() {
       expect(opened, 2);
     });
 
+    test('fromStream keeps its length, file name and content type', () {
+      final file = UploadFile.fromStream(
+        Stream<List<int>>.empty,
+        length: 12,
+        filename: 'b.txt',
+        contentType: 'text/plain',
+      );
+      expect(file.length, 12);
+      expect(file.filename, 'b.txt');
+      expect(file.contentType, 'text/plain');
+    });
+
     test('has the default content type', () {
       expect(
         UploadFile.fromBytes(const [], filename: 'a').contentType,
@@ -46,6 +58,44 @@ void main() {
       expect(a.marker, isNot(b.marker));
       expect(a.marker, startsWith(UploadFile.markerPrefix));
     });
+  });
+
+  group('UploadFile checks', () {
+    test('a negative length is a RangeError', () {
+      expect(
+        () => UploadFile.fromStream(
+          Stream<List<int>>.empty,
+          length: -1,
+          filename: 'a',
+        ),
+        throwsRangeError,
+      );
+    });
+
+    for (final bad in ['a\r\nb', 'a\nb', 'a\rb', 'a"b']) {
+      test('a file name ${bad.codeUnits} is an ArgumentError', () {
+        expect(
+          () => UploadFile.fromBytes(const [], filename: bad),
+          throwsArgumentError,
+        );
+      });
+
+      test('a content type ${bad.codeUnits} is an ArgumentError', () {
+        expect(
+          () => UploadFile.fromBytes(const [], filename: 'a', contentType: bad),
+          throwsArgumentError,
+        );
+        expect(
+          () => UploadFile.fromStream(
+            Stream<List<int>>.empty,
+            length: 0,
+            filename: 'a',
+            contentType: bad,
+          ),
+          throwsArgumentError,
+        );
+      });
+    }
   });
 
   group('UploadFileCodec', () {
