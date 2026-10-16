@@ -45,7 +45,7 @@ category with its guide:
 | Folder | Holds | Category, guide | Sub-stage |
 |---|---|---|---|
 | `http/` | the HTTP handler, its values, negotiation, body reading, batching, the GraphiQL page, the SSE modes' wiring | `http`, `doc/http.md` | M7a, M7d, M7e |
-| `upload/` | `Upload`, storage, the multipart reader, the map | `uploads`, `doc/uploads.md` | M7b |
+| `upload/` | `Upload`, storage, the multipart reader, the map | `upload` (a category is its folder's name), `doc/uploads.md` | M7b |
 | `websocket/` | graphql-ws: socket, handler, session, messages | `websocket`, `doc/websocket.md` | M7c |
 | `sse/` | event-stream writing, reservations, the two modes' state | `sse`, `doc/sse.md` | M7d |
 
@@ -159,8 +159,10 @@ the pipeline are transport refusals, written as in section 5):
    lying or absent `content-length` never makes the server buffer more than
    the limit; if the whole body has not arrived after `bodyTimeout` it
    cancels and answers `408` (`GQL427`).
-7. The bytes are decoded as strict UTF-8 (a byte-order mark is not
-   stripped: JSON forbids it), then parsed by the core's `JsonReader` with
+7. The bytes are decoded as strict UTF-8; a body that starts with a UTF-8
+   byte-order mark is `400` `GQL424` (JSON forbids it, and Dart's decoder
+   would drop it silently, so the handler checks the first three bytes
+   itself; verification ruling). Then they are parsed by the core's `JsonReader` with
    `maxJsonDepth` (it measures nesting before `jsonDecode`, so a deep body
    cannot overflow the stack): failures are `400`, `GQL424`, with the
    reader's message.
@@ -224,7 +226,9 @@ as the spec words it (deviation 5): a client that did not accept
 
 A `StreamResponse` reaching the JSON writer (only a user extension can
 produce one, since subscriptions are refused) is cancelled and answered
-`500` `GQL330`.
+`500` `GQL330`; the error names the cause only under the development
+profile, and is the masked "Unexpected error." otherwise (verification
+ruling).
 
 ## 6. Batching (M7a; R5.12, R5.15)
 
@@ -238,7 +242,10 @@ M7b). It is a transport setting, not a `ServerProfile` field (deviation 7).
 - An array is refused whole, before anything runs, when batching is off
   (`422` `GQL428`), when it is empty or longer than `maxRequests` (`422`
   `GQL429`), or when an item does not decode (`422` `GQL425`, the message
-  names the index).
+  names the index). The body decoder only checks that the array's length
+  is within `maxRequests`; the batch runner decodes every item before it
+  runs the first, so a malformed item still refuses the whole batch
+  (verification ruling).
 - Items run one after the other, in order, each through the whole pipeline
   with its own context (a sequential run keeps the server's per-request
   bounds meaningful; a batch is not a way to multiply concurrency).
@@ -347,6 +354,14 @@ so).
   `application/octet-stream`) are passed to the storage as given.
 - Part headers are read by `package:mime`'s `MimeMultipartTransformer`;
   its `MimeMultipartException` and `FormatException` are `400` `GQL440`.
+  `package:mime` 2.x does not report three failures into its stream: a body
+  that ends inside a part (it hangs), a body stream error inside a part,
+  and a header exception thrown in the caller's zone. The reader wraps the
+  body in a watcher (byte limit, timeout, end-of-body check) and runs in a
+  guarded zone, so each becomes a refusal; only `Exception`s do, an `Error`
+  still propagates (verification ruling).
+- Any refusal releases what was already stored and removes its tokens; a
+  `release` that throws does not change the refusal.
 - Multipart requests allow queries and mutations, never subscriptions.
 
 ## 9. graphql-ws (M7c; R5.7)
@@ -389,8 +404,13 @@ question 3.
 upgrade and no preflight, so cross-site WebSocket hijacking is the CSRF of
 this transport. `allowsUpgrade` passes an upgrade with no `Origin` (not a
 browser), with an `Origin` whose host and port equal the `host` header,
-or with an `Origin` in `allowedOrigins` (exact, ignoring case). The host
-calls it before upgrading and answers `403`; `serve` checks it again and
+or with an `Origin` in `allowedOrigins` (exact, ignoring case). The literal
+origin `null` (a sandboxed or `file:` page) is refused unless listed, and
+without a `host` header only a listed `Origin` passes (verification ruling).
+The host
+calls it before upgrading and answers `403`, a JSON `RequestErrorResult`
+whose error has `extensions.code` `GQL403` (verification ruling: the
+WebSocket's CSRF defence reuses M6's CSRF code rather than a new one); `serve` checks it again and
 closes `4403` (defence in depth). M6's `CsrfPrevention` does not apply to
 messages: each message's `RequestInfo` is `POST` with the upgrade's headers
 plus `content-type: application/json`, so the mutation guard and the CSRF
@@ -414,7 +434,8 @@ rule pass (M6 spec §16), and the Origin check is what protects them.
 | `subscribe` with `maxOperations` running | an `error` message for that id with `GQL432`; the socket stays open |
 | `subscribe` | `server.handle` with the message's `GraphQLRequest`, a `RequestInfo` as above, a `CancelSignal` per operation; a `SingleResponse` with a result is `next` then `complete`, a request error is `error` (no `complete`, as the protocol says), a `StreamResponse` is one `next` per result then `complete` |
 | `complete` from the client | cancels the operation (its stream subscription and its `CancelSignal`); nothing more is sent for the id; an unknown id is ignored |
-| `incoming` ends or fails | every operation is cancelled, the timer stopped; `serve` completes |
+| `incoming` ends or fails | every operation is cancelled, the timer stopped; `serve` completes; the session is closed for good, so an `onConnect` still pending sends nothing when it returns |
+| an operation fails unexpectedly (a throw outside the pipeline's own catch) | an `error` message for its id with `GQL330` "Unexpected error."; the operation ends, the socket stays open |
 
 An operation whose `complete` arrives while `server.handle` is pending sends
 nothing when the response comes; a `StreamResponse` that arrives then is
@@ -455,8 +476,9 @@ away) cancels them and their `CancelSignal`s.
 **Distinct connections mode** (on whenever `sse` is set): a `GET` or `POST`
 whose negotiated type is `text/event-stream` and that carries no token.
 Decoding is that of section 4. The pipeline runs with all operation types
-allowed; then a `methodNotAllowed` outcome is `405` and an `internalError`
-`500` (JSON, as section 5); any other `SingleResponse` (a result or a
+allowed; then a `methodNotAllowed` outcome is `405`, an `internalError`
+`500` and a CSRF refusal `403` (JSON, as section 5: a forged request must
+not open a stream; found in verification); any other `SingleResponse` (a result or a
 request error, a parse error included) is one `next` and `complete` in an
 accepted stream (protocol §Distinct: "validation steps ... MUST report
 errors through an accepted SSE connection"; the reference answers a parse
@@ -480,6 +502,23 @@ not listened to until the stream connects, so nothing executes unbounded.
 The token is the CSRF defence of the stream: only a client that could read
 the `PUT` response holds it, and a cross-site `PUT` needs a preflight. The
 operations themselves are ordinary JSON `POST`s and pass M6's CSRF rule.
+
+Verification rulings (M7d): `HttpOptions.sse` defaults to `const
+SseOptions()`, so distinct mode is on and the `406` message names every
+offered type ("The Accept header allows none of
+application/graphql-response+json, application/json and
+text/event-stream."). A batch whose `Accept` prefers the event stream is
+`406` `GQL422` ("A batch cannot be answered as an event stream."); a batch
+posted to a single connection stream is `422` `GQL428` ("A batch cannot
+run on an event stream."). An operation id stays counted until its last
+frame is written, so held results are bounded by `maxOperationsPerStream`.
+An operation's pipeline request does not carry the `POST`'s cancel signal
+(that signal ends with the `POST`); the operation is cancelled by `DELETE`
+or with its stream. A source that fails ends a distinct stream without
+`complete`, and a single connection operation with its `complete` (the
+stream itself goes on). A token with a malformed percent-escape reads as
+absent. A stream that is connected but whose body the host never listens
+to is not timed out: listening is the host's part of the contract.
 
 ## 11. `typed_graphql_shelf` (M7e; R5.9)
 
@@ -511,13 +550,29 @@ final class TempFileUploadStorage implements UploadStorage { ... }
   temporary directory (default `Directory.systemTemp`), deletes it on
   release, and deletes a partial file when the content stream fails.
 
+Verification rulings (M7e): the conversion joins repeated header values with
+`, ` (shelf's `headersAll`), and passes no `cancelSignal`: `shelf_io` gives no
+"client gone" event, it only cancels the response body's subscription, which
+already ends an event stream (section 10). A host that knows when the client
+leaves passes its own signal by converting the request itself. The upgrade
+check runs before `shelf_web_socket`, so a refused `Origin` never reaches the
+`101`. `TempFileUploadStorage` catches only to delete the partial file and
+rethrow; closing the failed sink again is allowed to fail with an
+`Exception`, which is dropped because the original failure is rethrown.
+
 ## 12. GraphiQL (M7e; R5.9, R5.15)
 
 The page lives in the server's `http/` (internal `GraphiQLPage`), so grund
 and any host serve it through `GraphQLHttpHandler`: a `GET` with no `query`
 parameter whose `Accept` prefers `text/html` (over the JSON types) gets the
 page when `server.profile.graphiql` is on; otherwise the request goes on as
-a GraphQL `GET` (and without a query it is `GQL400`).
+a GraphQL `GET` (and without a query it is `GQL400`). "Prefers" is ruled at
+verification: the `q` of the most specific range matching `text/html` must
+be greater than the best `q` of `application/graphql-response+json` and
+`application/json` (a browser's `text/html,...,*/*;q=0.8` passes; `*/*` alone
+does not). The check runs after the method check and before content
+negotiation (`ServerProfile.graphiql`, `withGraphiQL`; `development` has it
+on, `production` off).
 
 - Assets are pinned by version and by Subresource Integrity, loaded from
   jsDelivr with `crossorigin="anonymous"`; no unpinned script:
@@ -579,6 +634,23 @@ of `GraphQLHttpHandler.handle` (or a graphql-ws `error` message).
 
 `GQL439` and `GQL443`-`GQL449` stay free. graphql-ws protocol violations are
 close codes, not diagnostics (the protocol has no message for them).
+
+**Messages** (fixed in verification; tests compare them). A refusal message
+never echoes request content beyond a parameter name from the fixed list
+(`query`, `operationName`, `variables`, `extensions`) or a configured limit:
+"Only GET and POST requests are supported." (`GQL420`); "A POST request
+must have the content type application/json." (`GQL421`); "The Accept
+header allows none of application/graphql-response+json ..." (`GQL422`);
+"The request body is larger than <n> bytes." (`GQL423`); "The request body
+is not valid UTF-8.", "The request body is not valid JSON: <reason>." (a
+byte-order mark is one such reason) (`GQL424`); "The request body must be
+a JSON object." (`GQL425`); for `GET`, "The query string is not valid
+UTF-8.", "The parameter <name> is given more than once.", "The parameter
+<name> is not a JSON object.", "The parameter <name> is not valid JSON:
+<reason>." (`GQL425`); "The request URI is longer than <n> characters."
+(`GQL426`); "The request body did not arrive within ..." (`GQL427`);
+"Batched requests are not enabled." (`GQL428`); "A batch must hold between
+1 and <n> requests." (`GQL429`). The plans give the remaining texts.
 
 ## 14. Hostile input (R0.3)
 
@@ -695,7 +767,7 @@ Each has the recommendation the plans implement until the owner decides.
   merges M7c and resolves each conflict by keeping both sides in id or
   alphabetical order; its plan gives the resolved text.
 - M7c does not touch `CLAUDE.md`, `llms.txt`, `docs/discovery.md` or the
-  root README; M7e adds its paragraph with the merge.
+  root README; M7e's last task writes its parts with M7e's own.
 - Timing tests use short real durations (tens of milliseconds) and
   `Completer`s, not `fake_async` (not a dependency of the server).
 - Every hostile test asserts the response (status, code) and that no
