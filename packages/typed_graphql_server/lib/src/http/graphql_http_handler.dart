@@ -1,6 +1,7 @@
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../server/graphql_server.dart';
+import '../upload/multipart_result.dart';
 import 'accept_negotiation.dart';
 import 'batch_runner.dart';
 import 'get_parameters.dart';
@@ -8,7 +9,9 @@ import 'http_options.dart';
 import 'http_options_check.dart';
 import 'http_request_data.dart';
 import 'http_response_data.dart';
+import 'json_body_decoder.dart';
 import 'json_exchange.dart';
+import 'multipart_post.dart';
 import 'post_body.dart';
 import 'request_decoding.dart';
 import 'response_media_type.dart';
@@ -104,10 +107,45 @@ final class GraphQLHttpHandler<C> {
         'and application/json.',
       );
     }
-    final decoding = method == 'GET'
-        ? GetParameters(options.maxJsonDepth).decode(request.uri)
-        : await PostBody(options).decode(request);
-    return _answer(request, decoding, type);
+    if (method == 'GET') {
+      final decoding = GetParameters(options.maxJsonDepth).decode(request.uri);
+      return _answer(request, decoding, type);
+    }
+    final multipart = _multipart;
+    if (multipart != null && multipart.isMultipart(request)) {
+      return _answerMultipart(request, multipart, type);
+    }
+    return _answer(request, await PostBody(options).decode(request), type);
+  }
+
+  MultipartPost? get _multipart {
+    final uploads = options.uploads;
+    return uploads == null
+        ? null
+        : MultipartPost(options, uploads, server.profile.csrfPrevention);
+  }
+
+  // The files of the request wait in the storage until the response is
+  // built, whatever happened to the request.
+  Future<HttpResponseData> _answerMultipart(
+    HttpRequestData request,
+    MultipartPost multipart,
+    ResponseMediaType type,
+  ) async {
+    switch (await multipart.read(request)) {
+      case MultipartRefusal(:final refusal):
+        return _answer(request, refusal, type);
+      case MultipartContent(:final operations, :final stored):
+        try {
+          final decoding = JsonBodyDecoder(
+            maxJsonDepth: options.maxJsonDepth,
+            batching: options.batching,
+          ).decodeValue(operations);
+          return await _answer(request, decoding, type);
+        } finally {
+          await stored.release();
+        }
+    }
   }
 
   Future<HttpResponseData> _answer(

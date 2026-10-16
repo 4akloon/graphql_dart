@@ -45,7 +45,7 @@ final class JsonBodyDecoder {
       );
     }
     return switch (JsonReader(maxDepth: maxJsonDepth).parse(text)) {
-      DecodeSuccess(:final value) => _decodeValue(value),
+      DecodeSuccess(:final value) => decodeValue(value),
       DecodeFailure(:final message) => DecodingRefusal(
         400,
         DiagnosticCode.malformedRequestBody,
@@ -60,7 +60,9 @@ final class JsonBodyDecoder {
       bytes[1] == 0xBB &&
       bytes[2] == 0xBF;
 
-  RequestDecoding _decodeValue(JsonValue value) => switch (value) {
+  /// Decodes a [value] that is already parsed, such as the `operations` field
+  /// of a multipart request: an object is a request, an array a batch.
+  RequestDecoding decodeValue(JsonValue value) => switch (value) {
     JsonObject() => _decodeRequest(value),
     JsonArray() => _decodeBatch(value),
     _ => const DecodingRefusal(

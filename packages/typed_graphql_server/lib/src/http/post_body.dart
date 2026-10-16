@@ -24,10 +24,13 @@ final class PostBody {
   /// type or the declared length already refuse the request.
   Future<RequestDecoding> decode(HttpRequestData request) async {
     if (!_isJson(ContentType.parse(request.header('content-type')))) {
-      return const DecodingRefusal(
+      return DecodingRefusal(
         415,
         DiagnosticCode.unsupportedMediaType,
-        'A POST request must have the content type application/json.',
+        options.uploads == null
+            ? 'A POST request must have the content type application/json.'
+            : 'A POST request must have the content type application/json or '
+                  'multipart/form-data.',
       );
     }
     final length = int.tryParse(request.header('content-length')?.trim() ?? '');

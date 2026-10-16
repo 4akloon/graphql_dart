@@ -1,4 +1,5 @@
 import '../execution/error_hook.dart';
+import '../upload/uploads.dart';
 import 'batch_policy.dart';
 
 /// The settings of `GraphQLHttpHandler`: the limits on what a client may send
@@ -17,6 +18,7 @@ final class HttpOptions {
     this.maxUriLength = 8192,
     this.usesPartialSuccessStatus = true,
     this.batching,
+    this.uploads,
     this.onError,
   });
 
@@ -47,6 +49,13 @@ final class HttpOptions {
 
   /// How batches are run, or null, the default, to refuse them (`GQL428`).
   final BatchPolicy? batching;
+
+  /// The configuration of multipart uploads, or null, the default, to refuse
+  /// `multipart/form-data` with `415` (`GQL421`).
+  ///
+  /// One [Uploads] value is shared with the schema's `Upload` scalar, so the
+  /// options are not a `const` expression when uploads are on.
+  final Uploads? uploads;
 
   /// Called with a bug in the handler itself (not a refusal, not an error of
   /// the pipeline, which has its own hook) before it is answered with `500`
