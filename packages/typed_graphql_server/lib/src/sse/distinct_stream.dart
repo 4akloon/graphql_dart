@@ -6,6 +6,7 @@ import '../http/http_response_data.dart';
 import '../http/pipeline_requests.dart';
 import '../http/response_media_type.dart';
 import '../http/result_writer.dart';
+import '../http/status_table.dart';
 import '../server/graphql_server.dart';
 import '../server/server_outcome.dart';
 import '../server/server_request.dart';
@@ -32,8 +33,8 @@ final class DistinctStream<C> {
   /// The answer to [params], sent by [http].
   ///
   /// Every operation type is allowed, since a stream can deliver them all. A
-  /// `405` and a `500` are JSON transport refusals; any other single result,
-  /// a request error included, is the one `next` event of an accepted stream
+  /// `405`, a `500` and a `403` from CSRF prevention are JSON refusals; any
+  /// other single result, a request error included, is the one `next` event of an accepted stream
   /// (protocol "Distinct connections mode"); a subscription is one `next` per
   /// result. Each stream ends with `complete`.
   Future<HttpResponseData> run(
@@ -48,8 +49,10 @@ final class DistinctStream<C> {
       ),
     );
     return switch (response) {
-      SingleResponse() && final single when _isRefusal(single.outcome) =>
-        writer.single(single, ResponseMediaType.json),
+      SingleResponse() && final single when _isRefusal(single) => writer.single(
+        single,
+        ResponseMediaType.json,
+      ),
       SingleResponse(:final payload) => _stream(
         Stream.value(payload.toJson()),
         response,
@@ -61,9 +64,16 @@ final class DistinctStream<C> {
     };
   }
 
-  bool _isRefusal(ServerOutcome outcome) =>
-      outcome == ServerOutcome.methodNotAllowed ||
-      outcome == ServerOutcome.internalError;
+  // A request CSRF prevention blocked is a refusal too: its `403` must not
+  // become an accepted stream.
+  bool _isRefusal(SingleResponse single) =>
+      single.outcome == ServerOutcome.methodNotAllowed ||
+      single.outcome == ServerOutcome.internalError ||
+      _blocked.of(single, ResponseMediaType.json) == 403;
+
+  static const StatusTable _blocked = StatusTable(
+    usesPartialSuccessStatus: false,
+  );
 
   HttpResponseData _stream(
     Stream<JsonValue> payloads,
