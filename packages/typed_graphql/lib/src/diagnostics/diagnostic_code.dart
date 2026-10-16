@@ -759,9 +759,10 @@ enum DiagnosticCode(
   /// a response of `GraphQLHttpHandler.handle`.
   requestBodyTimeout('GQL427'),
 
-  /// `GQL428`: reported when a request body is an array and batching is off.
-  /// It is a `GraphQLError`'s `extensions.code` in a response of
-  /// `GraphQLHttpHandler.handle`.
+  /// `GQL428`: reported when a request body is an array and batching is off,
+  /// and when a batch is posted as an operation to a single connection event
+  /// stream, whether batching is on or not. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
   batchingDisabled('GQL428'),
 
   /// `GQL429`: reported when a batch is empty or holds more requests than
