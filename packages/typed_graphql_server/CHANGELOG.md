@@ -212,3 +212,9 @@
   server, a failing store write is checked to be answered as `GQL330`, and
   the wall-clock assertion and most real sleeps of the pipeline tests are
   gone.
+- `ServerRequest.allowedOperationTypes` (default `ServerRequest.allOperationTypes`):
+  a transport that cannot deliver an operation type narrows it, and the
+  pipeline refuses another type with `GQL431` before the cost limit and the
+  context factory (a `GET` mutation is still `GQL402`).
+- `GraphQLServer.profile`: the profile the server was built with, which
+  transports read.

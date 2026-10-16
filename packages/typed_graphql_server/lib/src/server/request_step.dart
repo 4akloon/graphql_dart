@@ -75,6 +75,23 @@ final class RequestStep<C> {
   // unknown or empty method fails closed.
   bool _mayMutate(String method) => method.toUpperCase() == 'POST';
 
+  // No operation selected: the executor reports it.
+  SingleResponse? _typeRefusal(OperationType? type, ServerRequest request) {
+    if (type == null || request.allowedOperationTypes.contains(type)) {
+      return null;
+    }
+    return errors.refusal(
+      DiagnosticCode.operationTypeNotAllowed,
+      'A ${_typeName(type)} is not allowed in this request.',
+    );
+  }
+
+  String _typeName(OperationType type) => switch (type) {
+    OperationType.query => 'query',
+    OperationType.mutation => 'mutation',
+    OperationType.subscription => 'subscription',
+  };
+
   Future<ServerResponse> _accepted(
     DocumentAccepted accepted,
     ServerRequest request,
@@ -93,6 +110,7 @@ final class RequestStep<C> {
         headers: const {'allow': 'POST'},
       );
     }
+    if (_typeRefusal(type, request) case final refusal?) return refusal;
     if (_costRefusal(accepted, operation, request) case final refusal?) {
       return refusal;
     }

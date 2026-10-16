@@ -120,6 +120,7 @@ final class ServerFixture {
     CancelSignal? cancelSignal,
     Map<String, String> headers = const {'content-type': 'application/json'},
     JsonObject? extensions,
+    Set<OperationType> allowedOperationTypes = ServerRequest.allOperationTypes,
   }) => ServerRequest(
     params: GraphQLRequest(
       query: query,
@@ -133,6 +134,7 @@ final class ServerFixture {
       headers: headers,
     ),
     cancelSignal: cancelSignal,
+    allowedOperationTypes: allowedOperationTypes,
   );
 
   /// The lower-case hex SHA-256 of [text], as clients name a document.

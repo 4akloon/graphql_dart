@@ -13,7 +13,15 @@ final class ServerRequest {
     required this.params,
     required this.info,
     this.cancelSignal,
+    this.allowedOperationTypes = allOperationTypes,
   });
+
+  /// The three operation types: what a request allows by default.
+  static const Set<OperationType> allOperationTypes = {
+    OperationType.query,
+    OperationType.mutation,
+    OperationType.subscription,
+  };
 
   /// The query, operation name, variables and extensions.
   final GraphQLRequest params;
@@ -24,4 +32,11 @@ final class ServerRequest {
   /// Owned by the caller, for example cancelled when the client disconnects;
   /// null when nothing cancels the request.
   final CancelSignal? cancelSignal;
+
+  /// The operation types the request may run; another type is refused with
+  /// `GQL431` before the context is built.
+  ///
+  /// A transport that cannot deliver a type narrows it: plain JSON cannot
+  /// stream a subscription, and an item of a batch should not mutate.
+  final Set<OperationType> allowedOperationTypes;
 }
