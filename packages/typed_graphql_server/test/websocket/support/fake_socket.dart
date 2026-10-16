@@ -68,6 +68,7 @@ final class FakeSocket implements GraphQLSocket {
     if (!_closed.isCompleted) {
       _closed.complete();
     }
-    await _incoming.close();
+    // Not awaited: with no listener the controller's close never completes.
+    unawaited(_incoming.close());
   }
 }

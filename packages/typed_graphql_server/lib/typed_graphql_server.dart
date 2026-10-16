@@ -80,4 +80,5 @@ export 'src/subscription/subscription_result.dart';
 export 'src/websocket/connection_decision.dart';
 export 'src/websocket/connection_hook.dart';
 export 'src/websocket/graphql_socket.dart';
+export 'src/websocket/graphql_ws_handler.dart';
 export 'src/websocket/graphql_ws_options.dart';
