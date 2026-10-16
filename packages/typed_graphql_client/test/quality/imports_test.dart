@@ -49,6 +49,55 @@ void main() {
       );
     });
 
+    test('rejects an export of dart:io', () {
+      expect(
+        rule.check('lib/src/link/a.dart', "export 'dart:io';\n"),
+        hasLength(1),
+      );
+    });
+
+    test('rejects any URI of a conditional import', () {
+      expect(
+        rule.check(
+          'lib/src/link/a.dart',
+          "import 'a_stub.dart'\n"
+              "    if (dart.library.io) 'dart:io'\n"
+              "    if (dart.library.js_interop) 'a_web.dart';\n",
+        ),
+        hasLength(1),
+      );
+    });
+
+    test('rejects a relative path that leaves lib', () {
+      expect(
+        rule.check(
+          'lib/src/link/a.dart',
+          "import '../../../test/support/b.dart';\n",
+        ),
+        hasLength(1),
+      );
+    });
+
+    test('allows a relative path that stays in lib', () {
+      expect(
+        rule.check(
+          'lib/src/link/a.dart',
+          "import '../../typed_graphql_client.dart';\n",
+        ),
+        isEmpty,
+      );
+    });
+
+    test('rejects a meta library other than meta.dart', () {
+      expect(
+        rule.check(
+          'lib/src/link/a.dart',
+          "import 'package:meta/meta_meta.dart';\n",
+        ),
+        hasLength(1),
+      );
+    });
+
     test('rejects another package', () {
       expect(
         rule.check(

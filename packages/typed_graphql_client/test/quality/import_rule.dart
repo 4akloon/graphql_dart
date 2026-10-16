@@ -23,15 +23,20 @@ final class ImportRule {
     'package:typed_graphql/typed_graphql.dart',
   };
 
+  /// One directive up to its `;`, so that the URIs of a conditional
+  /// import (`if (dart.library.io) 'x.dart'`) are all found.
   static final RegExp _directive = RegExp(
-    r'''^(?:import|export)\s+['"]([^'"]+)['"]''',
+    r'^(?:import|export)\s[^;]*;',
     multiLine: true,
   );
 
+  static final RegExp _uri = RegExp(r'''['"]([^'"]+)['"]''');
+
   /// The violations in [content], the text of the library at [filePath].
   List<String> check(String filePath, String content) => [
-    for (final match in _directive.allMatches(content))
-      ?_violation(filePath, match.group(1)!),
+    for (final directive in _directive.allMatches(content))
+      for (final uri in _uri.allMatches(directive.group(0)!))
+        ?_violation(filePath, uri.group(1)!),
   ];
 
   String? _violation(String filePath, String target) {
@@ -40,13 +45,33 @@ final class ImportRule {
           ? null
           : '$filePath imports $target: the client is platform independent';
     }
-    if (target.startsWith('package:meta/') || _packages.contains(target)) {
+    if (target == 'package:meta/meta.dart' || _packages.contains(target)) {
       return null;
     }
     if (target.startsWith('package:')) {
-      return '$filePath imports $target: only meta and ${_packages.join(', ')} '
+      return '$filePath imports $target: only package:meta/meta.dart and ${_packages.join(', ')} '
           'are allowed';
     }
-    return null;
+    return _escapes(filePath, target)
+        ? '$filePath imports $target, which leaves lib/'
+        : null;
+  }
+
+  /// Whether the relative [target], read from [filePath], leaves `lib/`.
+  bool _escapes(String filePath, String target) {
+    final parts = [
+      ...filePath.replaceAll(r'\\', '/').split('/').where((p) => p != '.'),
+    ]..removeLast();
+    for (final segment in target.split('/')) {
+      if (segment == '..') {
+        if (parts.length <= 1 || parts.last == 'lib') {
+          return true;
+        }
+        parts.removeLast();
+      } else if (segment != '.') {
+        parts.add(segment);
+      }
+    }
+    return !parts.contains('lib');
   }
 }
