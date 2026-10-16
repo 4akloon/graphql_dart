@@ -97,4 +97,20 @@ void main() {
   test('a request with no answer gets a StateError', () {
     expect(MockLink().request(hello, unterminated).first, throwsStateError);
   });
+
+  test('an answer for an operation serves that operation', () async {
+    final link = MockLink()
+      ..addData(
+        JsonObject({'for': const JsonString('Greet')}),
+        operationName: 'Greet',
+      );
+    final result = await link.request(greet, unterminated).single;
+    expect(dataOf(result), JsonObject({'for': const JsonString('Greet')}));
+    expect(link.pendingAnswerCount, 0);
+  });
+
+  test('the recorded requests cannot be modified', () {
+    final link = MockLink();
+    expect(() => link.requests.add(hello), throwsUnsupportedError);
+  });
 }

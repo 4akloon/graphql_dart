@@ -54,4 +54,19 @@ void main() {
     token.cancel();
     expect(calls, 0);
   });
+
+  test('whenCancelled of a cancelled token is already complete', () async {
+    final token = CancelToken()..cancel();
+    await token.whenCancelled.timeout(const Duration(seconds: 1));
+  });
+
+  test('a listener removed by another during cancel does not run', () {
+    final token = CancelToken();
+    late final void Function() removeSecond;
+    var secondCalls = 0;
+    token.addListener(() => removeSecond());
+    removeSecond = token.addListener(() => secondCalls++);
+    token.cancel();
+    expect(secondCalls, 1, reason: 'listeners are snapshotted at cancel');
+  });
 }
