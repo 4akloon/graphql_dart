@@ -111,7 +111,8 @@ link chain (`Link.from`, `SplitLink`, `ContextLink`, `Backoff`, `MockLink`),
 `SseLink` (graphql-sse, distinct connections), the hostile-input tests, the
 end-to-end tests against `GraphQLServer`, the client suite in Chrome in CI, the
 example and the client guides; the normalized cache and `watchQuery` are M12,
-`@defer` and `@stream` M14, and the tests against the transports of M7 are M11z.
+`@defer` and `@stream` M14, and M11z closes stage M11 with end-to-end tests of the HTTP, graphql-ws and
+graphql-sse links against M7's real handlers, in memory.
 
 ## Documents
 
@@ -1040,6 +1041,9 @@ README that leaves the package folder is an absolute URL.
   `PipelineTransport` in `test/e2e/support/`. Client hostile-input tests:
   `test/http/hostile_response_test.dart`, `test/socket/hostile_socket_test.dart`
   and `test/sse/hostile_stream_test.dart`.
+- Client against M7's handlers (in memory, no port):
+  `packages/typed_graphql_client/test/e2e_m7/` (`HandlerTransport` over
+  `GraphQLHttpHandler`, `SocketPair` for `GraphQLWsHandler`).
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
   round trip, hostile SDL, introspection round trip, hostile
   introspection, coordinates, valid operations, hostile operations and
