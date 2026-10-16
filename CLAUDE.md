@@ -73,7 +73,13 @@ prevention, error masking and the error hook in the pipeline (`GQL400`-
 documents) delivers automatic persisted queries (`PersistedQueryStore`,
 `MemoryPersistedQueryStore`), `TrustedDocuments` read from M10's manifest
 (`GQL410`-`GQL415`), their hostile-input tests and the Persisted Documents
-guide; with it stage M6 (server pipeline) is complete. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+guide; with it stage M6 (server pipeline) is complete. M7a (GraphQL over
+HTTP) delivers `GraphQLHttpHandler`, `HttpOptions`, `BatchPolicy`,
+`HttpRequestData`, `HttpResponseData` and `CostBudget`, content negotiation,
+the status codes of the specification, bounded body reading, batching with a
+shared cost budget, `ServerRequest.allowedOperationTypes`,
+`GraphQLServer.profile`, the codes `GQL420`-`GQL431`, the HTTP hostile-input
+tests and the HTTP guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
 file or a URL, the project's documents as one fragment graph, the planner and
 emitters that generate the schema-types library and a library per document
 (operations, variables, data, fragments, sealed polymorphic classes, the
@@ -431,7 +437,7 @@ only through its barrel. One folder per concern, with no import order
 (`builder/` and `execution/` import each other): `builder/` (M5a),
 `coercion/`, `plan/` and `execution/` (M5b), `introspection/` and
 `subscription/` (M5c), `lookahead/`, `authorization/` and `cancellation/`
-(M5d), `dataloader/` (M6a), `server/` (M6b) and `persisted/` (M6c). The
+(M5d), `dataloader/` (M6a), `server/` (M6b), `persisted/` (M6c) and `http/` (M7a). The
 package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
 or web framework, only `dart:async`, `dart:collection`, `dart:convert`,
@@ -548,6 +554,25 @@ own text: a mismatch is `GQL411`, a text is stored only once the core step
 accepted it, a stored text is length-checked and hashed again on read (a
 mismatch is `GQL410`). `TrustedDocuments.decode` reads the manifest through
 `TrustedManifestReader`, which refuses an id that is not its body's hash.
+`http/` (M7a): `GraphQLHttpHandler.handle` never throws and checks in this
+order: the URI length (`414`), the method (`405`), `Accept` (`406`,
+`AcceptNegotiation` over `MediaRange`; a missing header is
+`application/json`), then `GetParameters` (query string) or `PostBody`
+(content type `415`, declared length, `BodyReader`, `JsonBodyDecoder`: strict
+UTF-8, no byte-order mark, `JsonReader` with `maxJsonDepth`), yielding a
+sealed `RequestDecoding`. `BodyReader` counts the bytes that arrive, not
+`content-length`, races a timer for the whole body and stops when the host's
+cancel signal fires. `JsonExchange` runs one request through the pipeline
+(queries and mutations only: `ServerRequest.allowedOperationTypes`) and
+`ResultWriter` writes it with `StatusTable` (`294` only for
+`graphql-response+json`); every response varies on `Accept`, and a transport
+refusal is `TransportErrors`, always `application/json` and `no-store`.
+`BatchRunner` decodes every item before running the first, then runs them in
+order, each through the pipeline with one shared `CostBudget`, and stops
+between items when the client has gone; an array is counted, not decoded,
+before the size check. The outermost boundary of `handle` is the one place
+that catches `Object`, as `GraphQLServer.handle` does: it reports through
+`HttpOptions.onError` and never rethrows.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine
