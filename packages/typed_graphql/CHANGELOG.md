@@ -308,6 +308,11 @@
   `requestBodyTimeout`, `batchingDisabled`, `invalidBatchSize`,
   `batchCostExceeded`, `operationTypeNotAllowed`), reported by the HTTP
   transport of the server (the last two also by the request pipeline).
+- `DiagnosticCode`: `GQL433`-`GQL438` (`eventStreamNotFound`,
+  `eventStreamAlreadyOpen`, `operationIdRequired`, `operationIdInUse`,
+  `tooManyReservations`, `tooManyStreamOperations`), reported by the
+  single connection mode of GraphQL over server-sent events in the HTTP
+  transport of the server.
 - `DiagnosticCode`: `GQL440`-`GQL442` (`malformedMultipartRequest`,
   `uploadTooLarge`, `tooManyUploads`), reported by the multipart upload
   handling of the HTTP transport of the server.

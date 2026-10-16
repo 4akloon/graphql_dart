@@ -782,6 +782,40 @@ enum DiagnosticCode(
   /// `GraphQLHttpHandler.handle` and `GraphQLServer.handle`.
   operationTypeNotAllowed('GQL431'),
 
+  /// `GQL433`: reported when a request names an event stream token that no
+  /// reservation holds (never issued, dropped or already closed) in
+  /// single connection mode of GraphQL over server-sent events. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  eventStreamNotFound('GQL433'),
+
+  /// `GQL434`: reported when a request connects the event stream of a token
+  /// whose stream is already open. It is a `GraphQLError`'s `extensions.code`
+  /// in a response of `GraphQLHttpHandler.handle`.
+  eventStreamAlreadyOpen('GQL434'),
+
+  /// `GQL435`: reported when an operation or a cancellation on an event
+  /// stream names no operation id (`extensions.operationId` of a `POST`, the
+  /// `operationId` parameter of a `DELETE`), or one that is not a non-empty
+  /// string. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  operationIdRequired('GQL435'),
+
+  /// `GQL436`: reported when an operation id is already running on the event
+  /// stream. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  operationIdInUse('GQL436'),
+
+  /// `GQL437`: reported when a request to reserve an event stream finds the
+  /// maximum number of reservations held. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
+  tooManyReservations('GQL437'),
+
+  /// `GQL438`: reported when an event stream already runs the maximum number
+  /// of operations. It is a `GraphQLError`'s `extensions.code` in a response
+  /// of `GraphQLHttpHandler.handle`.
+  tooManyStreamOperations('GQL438'),
+
   /// `GQL440`: reported when a `multipart/form-data` request is not a valid
   /// GraphQL multipart request: no boundary, fields out of order, an
   /// `operations` or `map` field that is not valid, a map path that does not
