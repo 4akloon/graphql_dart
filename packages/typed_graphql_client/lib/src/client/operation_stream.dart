@@ -25,6 +25,8 @@ final class OperationStream<D extends Object> {
   final ResponseDecoder<D> _decoder;
   final CancelToken? _cancelToken;
 
+  // `late` because the initializer reads `_start` and `_stop`, which a
+  // field initializer cannot reference through `this`.
   late final StreamController<GraphQLResponse<D>> _controller =
       StreamController(
         onListen: _start,
@@ -32,7 +34,7 @@ final class OperationStream<D extends Object> {
         onPause: () => _subscription?.pause(),
         onResume: () => _subscription?.resume(),
       );
-  StreamSubscription<LinkResult>? _subscription;
+  StreamSubscription<GraphQLResponse<D>>? _subscription;
   void Function()? _removeListener;
 
   /// The responses; single-subscription.
@@ -46,13 +48,20 @@ final class OperationStream<D extends Object> {
     }
     // Set before listening: a synchronous link may end inside `listen`.
     _removeListener = token?.addListener(() => _cancel(token));
-    _subscription = _link
-        .request(_request, _unterminated)
-        .listen(
-          (result) => _controller.add(_decoder.decode(result)),
-          onError: _fail,
-          onDone: _finish,
-        );
+    // `asyncExpand` and `map` call the link and the decoder inside the
+    // stream's own try/catch: an error either throws, such as a bug in a
+    // link or in generated code, reaches `_fail` as an error event instead
+    // of escaping `listen` or the data callback. The repo rules forbid
+    // catching `Error`, so no `catch` here does it. The controller is
+    // synchronous so that a link still starts inside `listen`.
+    final requests = StreamController<LinkRequest>(sync: true);
+    _subscription = requests.stream
+        .asyncExpand((request) => _link.request(request, _unterminated))
+        .map(_decoder.decode)
+        .listen(_controller.add, onError: _fail, onDone: _finish);
+    requests
+      ..add(_request)
+      ..close();
   }
 
   /// Cancels the link chain's stream without returning its cancel future:
