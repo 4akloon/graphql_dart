@@ -21,8 +21,8 @@ spec, **six plans and a gated seventh**:
 
 | Plan | Content | Needs |
 |---|---|---|
-| **M11a** Client core | The client diagnostic codes in the core (`GQL460`-`GQL474`, one core commit); `CancelToken`; `ClientFailure` (sealed); `GraphQLResponse<D>` (sealed: `GraphQLData`, `GraphQLErrors`, `GraphQLTransportFailure`); `LinkContext`, `ContextEntry`, `RequestHeaders`, `HttpResponseInfo`; `LinkRequest`, `LinkResult` (sealed: `LinkPayload`, `LinkFailure`); `Link`, `NextLink`, `Link.from`, `SplitLink`, `ContextLink`; `Backoff`; `GraphQLClient` (`query`, `mutate`, `subscribe`); `MockLink`; the client import rule; the Client and Links guides | main |
-| **M11b** HTTP and uploads | The `http` dependency; `HttpTransport`, `TransportRequest`, `TransportResponse`, `PackageHttpTransport`; `HttpLink` (GraphQL over HTTP: POST, GET for queries, media types, status codes, size limit, timeout, cancellation); `UploadFile`, `UploadFileCodec`, `UploadFiles` and multipart requests; the hostile-response tests; the HTTP guide | M11a |
+| **M11a** Client core | The client diagnostic codes in the core (`GQL460`-`GQL474`, one core commit); `CancelToken`; `ClientFailure` (sealed); `GraphQLResponse<D>` (sealed: `GraphQLData`, `GraphQLErrors`, `GraphQLTransportFailure`); `LinkContext`, `ContextEntry`, `RequestHeaders`, `HttpResponseInfo`; `LinkRequest`, `LinkResult` (sealed: `LinkPayload`, `LinkFailure`); `Link`, `NextLink`, `Link.from`, `SplitLink`, `ContextLink`; `Backoff`; `GraphQLClient` (`query`, `mutate`, `subscribe`); `MockLink`; `UploadFile`, `UploadFileCodec`, `UploadFiles` (the context entry every terminating link reads); the client import rule; the Client, Links and Uploads guides; `fake_async` and the fix that lets `query` complete under fake time (task 10) | main |
+| **M11b** HTTP | The `http` dependency; `HttpTransport`, `TransportRequest`, `TransportResponse`, `PackageHttpTransport`; the response reader; `HttpLink` (GraphQL over HTTP: POST, GET for queries, media types, status codes, size limit, timeout, cancellation); multipart requests for `UploadFiles`; the hostile-response tests; the HTTP guide | M11a |
 | **M11c** Request policies | `RetryLink`, `RetryPolicy`, `Idempotent`; `DedupeLink`; `PersistedQueryLink` (automatic persisted queries and trusted documents, matching M6); `AuthLink` (token, single-flight refresh); the Request Policies guide | M11a |
 | **M11d** WebSocket | `ClientSocket`; `WebSocketLink` (graphql-transport-ws: lazy connection, `connection_init`/`connection_ack` with a timeout, ping/pong, keep-alive, multiplexed operations, reconnection with backoff, close codes); the internal message codec; the hostile-socket tests; the WebSocket guide | M11a |
 | **M11e** Server-sent events | `SseLink` (graphql-sse distinct connections mode over `HttpTransport`); the internal event-stream parser; the hostile-stream tests; the SSE guide | M11a, M11b |
@@ -33,9 +33,13 @@ spec, **six plans and a gated seventh**:
 the same time in three worktrees: they create disjoint folders (`http/`,
 `policy/`, `socket/`) and share only these files, where each adds lines and a
 merge keeps both: the barrel `lib/typed_graphql_client.dart` (exports),
-`dartdoc_options.yaml` (one category each), `CHANGELOG.md` (entries) and,
-for M11b only, `pubspec.yaml`. M11e starts when M11b is merged (it uses
-`HttpTransport` and the response reader). M11f comes last.
+`dartdoc_options.yaml` (one category each, and one line each in
+`categoryOrder`), `CHANGELOG.md` (entries) and, for M11b only,
+`pubspec.yaml` and `test/quality/import_rule.dart`. M11e starts when M11b is
+merged (it uses `HttpTransport`, `MediaType`, `ResponseReader` and the
+header merge of `HttpRequestEncoder`). M11f comes last. The category order
+after the merge is: client, link, http, sse, policy, socket, upload,
+operations.
 
 Out of scope: the normalized cache, fetch policies and `watchQuery` (M12;
 the seam is section 13), `@defer`/`@stream` delivery (M14), graphql-sse
@@ -49,12 +53,13 @@ category named after the folder, with its guide:
 
 | Folder | Holds | Category, guide | Plan |
 |---|---|---|---|
-| `client/` | `GraphQLClient`, `GraphQLResponse` family, `ClientFailure` family, `CancelToken`, the internal `ResponseDecoder` and `SingleResult` | `client`, `doc/client.md` | M11a |
-| `link/` | `Link`, `NextLink`, `LinkRequest`, `LinkResult` family, `LinkContext`, `ContextEntry`, `RequestHeaders`, `HttpResponseInfo`, `SplitLink`, `ContextLink`, `Backoff`, `MockLink`; the internal `LinkChain` | `link`, `doc/links.md` | M11a |
-| `http/` | `HttpLink`, `HttpTransport`, `TransportRequest`, `TransportResponse`, `PackageHttpTransport`, `UploadFile`, `UploadFileCodec`, `UploadFiles`; internal `ResponseReader`, `MediaType`, `GetRequestEncoder`, `MultipartEncoder` | `http`, `doc/http.md` | M11b |
-| `policy/` | `RetryLink`, `RetryPolicy`, `Idempotent`, `DedupeLink`, `PersistedQueryLink`, `AuthLink`; internal helpers | `policy`, `doc/policies.md` | M11c |
-| `socket/` | `WebSocketLink`, `ClientSocket`; internal `SocketMessage` codec, `SocketSession`, `SocketOperation` | `socket`, `doc/websocket.md` | M11d |
-| `sse/` | `SseLink`; internal `EventStreamParser`, `ServerSentEvent` | `sse`, `doc/sse.md` | M11e |
+| `client/` | `GraphQLClient`, `GraphQLResponse` family, `ClientFailure` family, `CancelToken`; internal `ResponseDecoder` and `OperationStream` | `client`, `doc/client.md` | M11a |
+| `link/` | `Link`, `NextLink`, `LinkRequest`, `LinkResult` family, `LinkContext`, `ContextEntry`, `RequestHeaders`, `HttpResponseInfo`, `SplitLink`, `ContextLink`, `Backoff`, `MockLink`; internal `LinkChain` | `link`, `doc/links.md` | M11a |
+| `upload/` | `UploadFile`, `UploadFileCodec`, `UploadFiles` | `upload`, `doc/uploads.md` | M11a |
+| `http/` | `HttpLink`, `HttpTransport`, `TransportRequest`, `TransportResponse`, `PackageHttpTransport`; internal `MediaType`, `ResponseReader`, `HttpRequestEncoder` (POST, GET and the header merge), `HttpExchange` (send, read, timeout, abort), `MultipartEncoder` | `http`, `doc/http.md` | M11b |
+| `policy/` | `RetryLink`, `RetryPolicy`, `Idempotent`, `DedupeLink`, `PersistedQueryLink`, `AuthLink`; internal `RetryRun`, `SharedRequest`, `PersistedQueryRun`, `PersistedQueryErrors`, `AuthRun`, `TokenRenewal` | `policy`, `doc/policies.md` | M11c |
+| `socket/` | `WebSocketLink`, `ClientSocket`; internal `SocketMessage`, `SocketMessageCodec`, `SocketConnection`, `SocketDriver`, `SocketOperations`, `OpenOperation`, `ReconnectPolicy`, `SocketSettings`, `SocketEnd`, `CancellableWait` | `socket`, `doc/websocket.md` | M11d |
+| `sse/` | `SseLink`; internal `EventStreamParser`, `ServerSentEvent` and the exchange that reads the stream | `sse`, `doc/sse.md` | M11e |
 
 `operation/` (M10) is unchanged: generated code keeps compiling against it.
 
@@ -63,7 +68,8 @@ category named after the folder, with its guide:
 `dart:html`, `dart:js_interop`, `dart:isolate`, no web framework; only
 `dart:async`, `dart:collection`, `dart:convert`, `dart:core`, `dart:math`,
 `dart:typed_data`, `package:meta`, the core barrel, and from M11b
-`package:http/http.dart`. So the package compiles for the VM, AOT, dart2js
+`package:http/http.dart` (the barrel only: `io_client.dart` and
+`browser_client.dart` stay out). So the package compiles for the VM, AOT, dart2js
 and dart2wasm, and the CI web job runs its suite (M11f).
 
 **Dependencies.**
@@ -86,8 +92,13 @@ and dart2wasm, and the CI web job runs its suite (M11f).
   app implements over whatever socket it has (`web_socket_channel`,
   `dart:io`'s `WebSocket`, the browser's `WebSocket`); the guide shows the
   adapter. Nothing is gained by forcing one socket library on every app.
-- Dev dependencies: `fake_async` `^1.3.1` (M11a) to drive timers
-  (backoff, timeouts, keep-alive) deterministically on every platform;
+- Dev dependencies: `fake_async` `^1.3.1` (M11a task 10) to drive timers
+  (backoff, timeouts, keep-alive) deterministically on every platform.
+  Task 10 also fixes what fake time exposed: `query` awaited the
+  root-zone future that cancelling a subscription returns, which only the
+  real event loop completes, so under `fakeAsync` a query never completed.
+  `GraphQLClient` now takes the first result with `Stream.firstWhere` and
+  `OperationStream` cancels its upstream without awaiting it;
   `typed_graphql_server` (M11f, workspace path) for the end-to-end tests.
   No dependency on `package:gql` or its ecosystem (R0.4).
 
@@ -113,9 +124,9 @@ plans never touch the core:
 | GQL467 | `requestTimedOut` | `RequestTimedOut` | the link's timeout passed before the answer |
 | GQL468 | `operationNotSupportedByLink` | `UnsupportedOperation` | a terminating link that cannot carry the operation: a subscription over `HttpLink`, files over a socket |
 | GQL469 | `linkEndedWithoutResult` | `UnsupportedOperation` | the link chain closed a query's or mutation's stream without a result |
-| GQL470 | `malformedSocketMessage` | `SocketFailure` | a graphql-ws message the protocol does not allow (the link closes the socket with `4004`) |
+| GQL470 | `malformedSocketMessage` | `SocketFailure` | a graphql-ws message the protocol does not allow (the link closes the socket with `4400`) |
 | GQL471 | `socketClosed` | `SocketFailure` | the socket closed with a fatal code, or the reconnection attempts ran out |
-| GQL472 | `connectionAckTimeout` | `SocketFailure` | no `connection_ack` within `ackTimeout` (the link closes with `4504`) |
+| GQL472 | `connectionAckTimeout` | `SocketFailure` | no `connection_ack` within `connectionAckTimeout` (the link closes with `4504` and does not reconnect) |
 | GQL473 | `malformedEventStream` | `EventStreamFailure` | an SSE stream with an unknown event type, or one that ends without `complete` |
 | GQL474 | `authenticationFailed` | `AuthenticationFailure` | `AuthLink`'s token or refresh callback threw |
 
@@ -182,7 +193,7 @@ header without a custom link.
 the library); every variant has `code` (`DiagnosticCode`) and `message`:
 
 ```text
-sealed class ClientFailure { DiagnosticCode get code; String get message; }
+sealed class ClientFailure { DiagnosticCode get code; String get message; }  // toString: '<id>: <message>'
 final class NetworkFailure(Exception cause)                         // GQL460
 final class HttpStatusFailure(int statusCode, Map<String, String> headers)  // GQL461
 final class ResponseFormatFailure(DiagnosticCode code, String message, {List<PathSegment> path}) // GQL462-464
@@ -233,14 +244,16 @@ typedef NextLink = Stream<LinkResult> Function(LinkRequest request);
   sent (no `query` when `sendsDocumentText` is false, no `variables` when
   there are none). Copies: `withContext`, `withExtensions`,
   `withDocumentText`.
-- **`LinkContext`** (immutable, `const`): a list of `ContextEntry` values;
-  `entry<T>()` is the last entry that is a `T`, or null; `withEntry(e)`
-  replaces the entries of `e`'s exact runtime type. Built-in entries:
-  `RequestHeaders(Map<String, String>)` (extra HTTP headers; names compared
-  without case, a later entry wins), `HttpResponseInfo(statusCode,
-  headers)` (written by the HTTP and SSE links on a payload's context),
-  `UploadFiles` (M11b), `Idempotent` (M11c). A user link defines its own
-  entries by extending `ContextEntry`.
+- **`LinkContext`** (immutable): `LinkContext(Iterable<ContextEntry>)`
+  copies the entries, `const LinkContext.empty()` is the default of every
+  `context` parameter; `entry<T>()` is the last entry that is a `T`, or
+  null; `withEntry(e)` replaces the entries of `e`'s exact runtime type.
+  Built-in entries: `RequestHeaders(Map<String, String>)` (extra HTTP
+  headers, names stored in lower case; `withHeader(name, value)` gives a
+  copy; every entry is applied in order, so a later one wins),
+  `HttpResponseInfo(statusCode, headers:)` (written by the HTTP and SSE
+  links on a payload's context), `UploadFiles` (M11a), `Idempotent`
+  (M11c). A user link defines its own entries by extending `ContextEntry`.
 - **`SplitLink({required bool Function(LinkRequest) test, required Link
   whenTrue, required Link whenFalse})`** routes a request, forwarding with
   the chain's `forward` (so a branch can be a middle link).
@@ -249,9 +262,11 @@ typedef NextLink = Stream<LinkResult> Function(LinkRequest request);
   thrown by `update` is a `LinkFailure(NetworkFailure(exception))` and the
   request is not forwarded (`AuthLink` reports its own callbacks'
   exceptions as `AuthenticationFailure` instead, section 10).
-- **`Backoff({initialDelay = 300 ms, maxDelay = 30 s, multiplier = 2})`**
-  (`const`): `delayFor(int retry, Random random)` is "full jitter":
-  a uniform draw in `[0, min(maxDelay, initialDelay * multiplier^retry)]`.
+- **`Backoff({initialDelay = 300 ms, maxDelay = 30 s, double multiplier =
+  2})`** (`const`): `ceilingFor(int retry)` is `min(maxDelay, initialDelay
+  * multiplier^retry)` (computed with a loop that stops at `maxDelay`, so a
+  large `retry` cannot overflow); `delayFor(int retry, Random random)` is
+  "full jitter", a uniform draw in `[0, ceilingFor(retry)]`.
   `RetryLink` and `WebSocketLink` share it; tests pass a seeded `Random`
   and drive time with `fake_async`.
 
@@ -292,8 +307,10 @@ final class GraphQLClient {
 final class MockLink extends Link {
   MockLink();
   List<LinkRequest> get requests;                 // every request, in order
+  int get pendingAnswerCount;                     // queued answers not used yet
   void add(LinkResult result, {String? operationName});
   void addData(JsonObject data, {List<GraphQLError> errors, String? operationName});
+  void addErrors(List<GraphQLError> errors, {String? operationName});   // a RequestErrorResult
   void addFailure(ClientFailure failure, {String? operationName});
   void addStream(Stream<LinkResult> results, {String? operationName});
 }
@@ -311,16 +328,22 @@ answer) and is cancelled when the client cancels.
 abstract interface class HttpTransport {
   Future<TransportResponse> send(TransportRequest request);
 }
-final class TransportRequest({required String method, required Uri uri, Map<String, String> headers, Stream<List<int>>? body, int? contentLength, Future<void>? abortTrigger})
-final class TransportResponse({required int statusCode, Map<String, String> headers /* lower-case */, required Stream<List<int>> body})
+final class TransportRequest({required String method, required Uri uri, Map<String, String> headers /* lower-cased */, Stream<List<int>>? body, int? contentLength, Future<void>? abortTrigger})
+final class TransportResponse({required int statusCode, required Stream<List<int>> body, Map<String, String> headers /* lower-cased */})
 final class PackageHttpTransport(http.Client client) implements HttpTransport
 final class HttpLink extends Link {
   HttpLink({required Uri uri, required HttpTransport transport,
       Map<String, String> headers = const {}, bool usesGetForQueries = false,
-      Duration? timeout, int maxResponseBytes = 16 MiB,
+      Duration? timeout, int maxResponseBytes = defaultMaxResponseBytes /* 16 MiB */,
       int maxResponseDepth = JsonReader.defaultMaxDepth, Random? random});
+  static const int defaultMaxResponseBytes;
 }
 ```
+
+A negative `maxResponseBytes`, or a `maxResponseDepth` outside `1` to
+`JsonReader.maxSupportedDepth`, is a `RangeError`. `TransportResponse`
+puts its required parameters first (the `always_put_required_named_parameters_first`
+lint).
 
 - **Requests** (GraphQL over HTTP, `reference/graphql-over-http`): `POST`
   with `content-type: application/json` and the JSON of `LinkRequest.body`;
@@ -345,6 +368,10 @@ final class HttpLink extends Link {
   strict (`GQL464`); `JsonReader(maxDepth: maxResponseDepth).parse`
   (`GQL464` with the path); `ResponsePayload.decode` (`GQL464` with the
   path). The payload's context gets `HttpResponseInfo(status, headers)`.
+  A leading UTF-8 byte order mark is dropped by Dart's decoder and the
+  body is read (RFC 8259 section 8.1 lets a parser ignore it).
+  `ResponseReader.resultOf(text, context)` is the text-to-result step on
+  its own, which `SseLink` reuses for each `next` event.
 - **Failures:** an `Exception` of the transport (or of the body stream) is
   `NetworkFailure`; `timeout` (per attempt, from sending to the end of the
   body) aborts and is `RequestTimedOut`; cancelling the stream aborts the
@@ -355,7 +382,9 @@ final class HttpLink extends Link {
   headers are already lower-case in `package:http`.
 
 **Uploads** (the jaydenseric multipart request spec,
-`reference/graphql-multipart-request-spec`):
+`reference/graphql-multipart-request-spec`). The types are M11a's
+(`upload/`), because every terminating link reads `UploadFiles`; M11b adds
+the multipart body:
 
 ```text
 final class UploadFile { UploadFile.fromBytes(List<int> bytes, {required String filename, String contentType});
@@ -378,13 +407,19 @@ final class UploadFiles(List<UploadFile> files) extends ContextEntry
   marker by `null` in `operations`, writes `map` (`{"0":
   ["variables.file"]}`, a file used twice is listed with both paths) and
   streams `multipart/form-data` with a boundary drawn from `random` (32
-  letters and digits; injected for tests). A marker with no listed file, or
+  letters and digits; injected for tests). The parts are `operations` and
+  `map` (each with `Content-Type: application/json`), then one part per
+  file named by its index, `filename` escaped as an HTML form does (`"`,
+  CR and LF as `%22`, `%0D`, `%0A`), with the file's content type; the
+  `content-length` is computed from the files' lengths. The variables are
+  walked breadth first with a queue, never recursively. A marker with no listed file, or
   a listed file no variable uses, is an `ArgumentError` (a programmer
   error); `UploadFiles` on a query with `usesGetForQueries` sends `POST`.
 - `WebSocketLink` and `SseLink` answer a request with `UploadFiles`
   `UnsupportedOperation(GQL468)`.
-- `fromStream` opens a new stream per attempt, so `RetryLink` can resend a
-  file; `fromBytes` is the simple case.
+- Every `UploadFile` gives a new stream per `open()` (`fromBytes` replays
+  its copy, `fromStream` calls the caller's function), so `RetryLink` can
+  resend any file.
 
 ## 10. Request policies (M11c; R8.4)
 
@@ -396,10 +431,18 @@ final class UploadFiles(List<UploadFile> files) extends ContextEntry
 - Only queries and mutations whose context has `Idempotent()` are retried;
   a mutation without it and every subscription pass through unchanged
   (the WebSocket link reconnects on its own). A request with
-  `UploadFiles` is retried only if every file was made with `fromStream`.
+  `UploadFiles` is retried like any other: each attempt reopens every file.
 - The attempt is forwarded again after `backoff.delayFor(attempt, random)`;
   cancelling during the delay cancels the timer; the last failure is
-  delivered when the attempts run out.
+  delivered when the attempts run out. `maxAttempts` below 1 is an
+  `ArgumentError`.
+- **Stream errors.** The policy links pass an error event of the upstream
+  stream through untouched, except `RetryLink`, which turns an `Exception`
+  into `LinkFailure(NetworkFailure(exception))` so that its policy can judge
+  it. Anything a caller's callback throws (`retryIf`, `isUnauthorized`, an
+  `Error` from `token` or `refresh`) is delivered as an error event on the
+  caller's stream, which then ends and cancels the upstream; it never
+  escapes as an uncaught error and never leaves a stream open.
 
 **`DedupeLink()`**: identical queries in flight share one forwarded
 request. The key is the request's `body` (JSON values compare by value,
@@ -407,8 +450,9 @@ keys in any order) and its `RequestHeaders`; mutations, subscriptions and
 requests with `UploadFiles` pass through. Each caller gets the shared
 result; a caller that cancels leaves the others; the forwarded request is
 cancelled when the last caller cancels; the entry is removed at the first
-result or the end, so a later identical query is sent again (no caching:
-M12).
+result or the end (also when `forward` throws or its stream ends inside
+`listen`), so a later identical query is sent again (no caching: M12).
+Internally one `SharedRequest` per key fans the forwarded stream out.
 
 **`PersistedQueryLink({bool isAutomatic = true})`** (M6 section 11):
 - Sends `extensions.persistedQuery = {"version": 1, "sha256Hash":
@@ -421,7 +465,8 @@ M12).
   `PERSISTED_QUERY_NOT_SUPPORTED`, it sends again with the text and no
   hash, and sends text only from then on (the link remembers it). The
   server stores the text only after it validated it (M6), so a second
-  request with the hash alone succeeds.
+  request with the hash alone succeeds. The resend happens once: a second
+  "not found" answer is delivered as it is.
 - Trusted documents (`isAutomatic: false`): the hash alone, always; the
   server's `GQL415` comes back as `GraphQLErrors`.
 - Applies to queries and mutations; a subscription and a request with
@@ -437,13 +482,16 @@ Function()? refresh, String headerName = 'authorization', String scheme =
   header when `token` gives null).
 - After the answer: the default `isUnauthorized` is an
   `HttpStatusFailure(401)` or a payload whose `HttpResponseInfo` has
-  status 401. Then, if the token sent is still the current one, `refresh`
-  runs **once for every request waiting on it** (single flight: one shared
-  future until it completes); the request is sent again once with the new
-  token (a 401 is a request-level refusal, so a mutation is safe to
-  resend). If `refresh` is null or gives null, the 401 answer is delivered.
+  status 401. Then `refresh` runs **once for every request waiting on it**
+  (single flight in the internal `TokenRenewal`: a refresh in flight is
+  joined before the current token is read, and a request that sent a token
+  older than the last refreshed one reuses that one without refreshing);
+  the request is sent again once with the new token (a 401 is a
+  request-level refusal, so a mutation is safe to resend). If `refresh` is
+  null the 401 answer is delivered; a refresh that gives null sends the
+  request again without the header, and its 401 is delivered.
 - An `Exception` from `token` or `refresh` is
-  `AuthenticationFailure(GQL474)`.
+  `AuthenticationFailure(GQL474)`; an `Error` is a stream error (above).
 
 ## 11. WebSocket: graphql-transport-ws (M11d; R8.4)
 
