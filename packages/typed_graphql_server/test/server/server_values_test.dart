@@ -31,6 +31,22 @@ void main() {
     test('keeps the method as given', () {
       expect(RequestInfo(method: 'get', uri: Uri()).method, 'get');
     });
+
+    test('has no connection parameters by default', () {
+      expect(info.connectionParams, isNull);
+    });
+
+    test('carries the connection parameters it is given', () {
+      final params = JsonObject({'token': const JsonString('a')});
+      expect(
+        RequestInfo(
+          method: 'GET',
+          uri: Uri(),
+          connectionParams: params,
+        ).connectionParams,
+        params,
+      );
+    });
   });
 
   group('SingleResponse', () {

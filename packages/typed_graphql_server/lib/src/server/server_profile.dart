@@ -14,6 +14,7 @@ final class ServerProfile {
     required this.csrfPrevention,
     required this.limits,
     this.timeout,
+    this.graphiql = false,
   });
 
   /// Open for development: introspection and suggestions on, errors
@@ -24,11 +25,13 @@ final class ServerProfile {
     maskErrors: false,
     csrfPrevention: CsrfPrevention(),
     limits: .development,
+    graphiql: true,
   );
 
   /// Closed for production: introspection and suggestions off, errors
   /// masked, CSRF prevention on, and the limits of [ServerLimits.production]
-  /// (document length, tokens, depth, aliases, directives and cost). It sets
+  /// (document length, tokens, depth, aliases, directives and cost) and no
+  /// GraphiQL page. It sets
   /// no [timeout]: add one with [withTimeout]. `GraphQLServer` defaults to it.
   static const ServerProfile production = ServerProfile(
     introspection: .disabled,
@@ -56,6 +59,10 @@ final class ServerProfile {
   /// The time an execution may take; null is no limit.
   final Duration? timeout;
 
+  /// Whether `GraphQLHttpHandler` serves the GraphiQL page to a browser that
+  /// opens the endpoint.
+  final bool graphiql;
+
   /// A copy with [introspection].
   ServerProfile withIntrospection(IntrospectionPolicy introspection) =>
       _copy(introspection: introspection);
@@ -77,6 +84,7 @@ final class ServerProfile {
         csrfPrevention: csrfPrevention,
         limits: limits,
         timeout: timeout,
+        graphiql: graphiql,
       );
 
   /// A copy with [limits].
@@ -90,7 +98,11 @@ final class ServerProfile {
     csrfPrevention: csrfPrevention,
     limits: limits,
     timeout: timeout,
+    graphiql: graphiql,
   );
+
+  /// A copy with [graphiql].
+  ServerProfile withGraphiQL(bool graphiql) => _copy(graphiql: graphiql);
 
   // Copies the non-nullable fields; the two nullable ones, which a caller
   // may set to null, are copied by their own methods above.
@@ -99,6 +111,7 @@ final class ServerProfile {
     bool? includesSuggestions,
     bool? maskErrors,
     ServerLimits? limits,
+    bool? graphiql,
   }) => ServerProfile(
     introspection: introspection ?? this.introspection,
     includesSuggestions: includesSuggestions ?? this.includesSuggestions,
@@ -106,6 +119,7 @@ final class ServerProfile {
     csrfPrevention: csrfPrevention,
     limits: limits ?? this.limits,
     timeout: timeout,
+    graphiql: graphiql ?? this.graphiql,
   );
 
   @override
@@ -116,7 +130,8 @@ final class ServerProfile {
       other.maskErrors == maskErrors &&
       other.csrfPrevention == csrfPrevention &&
       other.limits == limits &&
-      other.timeout == timeout;
+      other.timeout == timeout &&
+      other.graphiql == graphiql;
 
   @override
   int get hashCode => Object.hash(
@@ -126,5 +141,6 @@ final class ServerProfile {
     csrfPrevention,
     limits,
     timeout,
+    graphiql,
   );
 }

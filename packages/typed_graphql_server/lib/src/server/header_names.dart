@@ -14,6 +14,18 @@ final class HeaderNames {
           key.toLowerCase(): value,
       });
 
+  /// [base] with [name] in its `vary` header, which is created when missing and
+  /// left alone when it already lists [name] or `*`.
+  Map<String, String> varied(Map<String, String> base, String name) {
+    final current = base['vary'];
+    if (current == null) return merged(base, {'vary': name});
+    final listed = current.split(',').map((item) => item.trim().toLowerCase());
+    if (listed.contains('*') || listed.contains(name.toLowerCase())) {
+      return base;
+    }
+    return merged(base, {'vary': '$current, $name'});
+  }
+
   /// [base], whose names are already lower-case, with [additions] on top (names
   /// lower-cased), new values winning.
   Map<String, String> merged(

@@ -1,6 +1,8 @@
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import 'cost_budget.dart';
+
 /// The text of a `GQL238` refusal: `MaxCostRule`'s message to the character.
 ///
 /// The core's `OperationSubject` and `CostNumber` are not exported, so their
@@ -16,14 +18,30 @@ final class CostMessage {
 
   /// The message for [operation] costing [cost] against [maxCost].
   String of(OperationDefinition operation, OperationCost cost, double maxCost) {
-    final subject = switch (operation.name) {
-      final name? => 'The operation "${name.value}"',
-      null => 'The anonymous operation',
-    };
-    return '$subject has a field cost of ${_number(cost.fieldCost)} and a '
-        'type cost of ${_number(cost.typeCost)}, more than the maximum of '
+    return '${_subject(operation)} has a field cost of '
+        '${_number(cost.fieldCost)} and a type cost of '
+        '${_number(cost.typeCost)}, more than the maximum of '
         '${_number(maxCost)}.';
   }
+
+  /// The message for [operation] costing [cost] when [budget] already holds
+  /// the cost of the requests that share its limit (`GQL430`).
+  String ofBatch(
+    OperationDefinition operation,
+    OperationCost cost,
+    CostBudget budget,
+    double maxCost,
+  ) {
+    return '${_subject(operation)} would bring the field cost of the requests '
+        'that share its limit to ${_number(budget.fieldCost + cost.fieldCost)} '
+        'and their type cost to ${_number(budget.typeCost + cost.typeCost)}, '
+        'more than the maximum of ${_number(maxCost)}.';
+  }
+
+  String _subject(OperationDefinition operation) => switch (operation.name) {
+    final name? => 'The operation "${name.value}"',
+    null => 'The anonymous operation',
+  };
 
   // A negative zero prints as "0" on every platform.
   String _number(double value) => switch (value == 0 ? 0.0 : value) {

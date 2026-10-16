@@ -2,13 +2,19 @@
 /// engine, subscriptions, DataLoader and a transport-agnostic request
 /// pipeline.
 ///
-/// Under construction: stages M5 and M6 are complete. The typed schema
-/// builder, execution, introspection, subscriptions, look-ahead,
-/// authorization and cancellation work, and so do DataLoader (`BatchLoader`,
-/// `GroupedLoader`) and the request pipeline (`GraphQLServer`: document
-/// cache, limits and cost limit, CSRF prevention, extensions, error masking,
-/// automatic persisted queries and trusted documents). The transports (HTTP,
-/// graphql-ws, graphql-sse) come with M7. See the package README.
+/// Under construction: stages M5 and M6 are complete, and so are the HTTP
+/// handler of M7a, the multipart uploads of M7b, the graphql-ws handler of
+/// M7c and the server-sent events of M7d. The typed schema builder,
+/// execution, introspection, subscriptions, look-ahead, authorization and
+/// cancellation work, and so do DataLoader (`BatchLoader`, `GroupedLoader`),
+/// the request pipeline (`GraphQLServer`: document cache, limits and cost
+/// limit, CSRF prevention, extensions, error masking, automatic persisted
+/// queries and trusted documents), GraphQL over HTTP (`GraphQLHttpHandler`:
+/// `GET` and `POST`, media types and status codes, size and time limits,
+/// batching, multipart file uploads through `Uploads`, and GraphQL over
+/// server-sent events in both modes of graphql-sse through `SseOptions`)
+/// and graphql-ws (`GraphQLWsHandler` over any `GraphQLSocket`). The shelf
+/// adapter is the package `typed_graphql_shelf`. See the package README.
 library;
 
 export 'src/authorization/authorization.dart';
@@ -53,6 +59,12 @@ export 'src/execution/field_resolver.dart';
 export 'src/execution/field_site.dart';
 export 'src/execution/graphql_exception.dart';
 export 'src/execution/response_path.dart';
+export 'src/http/batch_policy.dart';
+export 'src/http/graphql_http_handler.dart';
+export 'src/http/http_options.dart';
+export 'src/http/http_request_data.dart';
+export 'src/http/http_response_body.dart';
+export 'src/http/http_response_data.dart';
 export 'src/introspection/introspection_policy.dart';
 export 'src/lookahead/column_allowlist.dart';
 export 'src/lookahead/field_selection.dart';
@@ -61,6 +73,7 @@ export 'src/persisted/memory_persisted_query_store.dart';
 export 'src/persisted/persisted_query_store.dart';
 export 'src/persisted/trusted_documents.dart';
 export 'src/server/context_factory.dart';
+export 'src/server/cost_budget.dart';
 export 'src/server/csrf_prevention.dart';
 export 'src/server/document_handler.dart';
 export 'src/server/document_request.dart';
@@ -76,4 +89,17 @@ export 'src/server/server_outcome.dart';
 export 'src/server/server_profile.dart';
 export 'src/server/server_request.dart';
 export 'src/server/server_response.dart';
+export 'src/sse/single_connection_options.dart';
+export 'src/sse/sse_options.dart';
 export 'src/subscription/subscription_result.dart';
+export 'src/upload/memory_upload_storage.dart';
+export 'src/upload/upload.dart';
+export 'src/upload/upload_limits.dart';
+export 'src/upload/upload_storage.dart';
+export 'src/upload/uploads.dart';
+export 'src/websocket/connection_decision.dart';
+export 'src/websocket/connection_hook.dart';
+export 'src/websocket/graphql_socket.dart';
+export 'src/websocket/graphql_ws_handler.dart';
+export 'src/websocket/graphql_ws_options.dart';
+export 'src/websocket/socket_error_hook.dart';

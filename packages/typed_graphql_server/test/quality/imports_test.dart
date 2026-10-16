@@ -32,6 +32,13 @@ void main() {
       );
     });
 
+    test('allows dart:typed_data', () {
+      expect(
+        rule.check('lib/src/http/a.dart', "import 'dart:typed_data';\n"),
+        isEmpty,
+      );
+    });
+
     test('allows package:crypto/crypto.dart', () {
       expect(
         rule.check(
@@ -39,6 +46,26 @@ void main() {
           "import 'package:crypto/crypto.dart';\n",
         ),
         isEmpty,
+      );
+    });
+
+    test('allows package:mime/mime.dart', () {
+      expect(
+        rule.check(
+          'lib/src/upload/a.dart',
+          "import 'package:mime/mime.dart';\n",
+        ),
+        isEmpty,
+      );
+    });
+
+    test('rejects another mime library', () {
+      expect(
+        rule.check(
+          'lib/src/upload/a.dart',
+          "import 'package:mime/src/mime_multipart_transformer.dart';\n",
+        ),
+        hasLength(1),
       );
     });
 

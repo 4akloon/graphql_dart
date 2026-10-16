@@ -49,7 +49,13 @@ adds its row (or turns it to "yes") together with its README line and its
 | GraphQL CSRF prevention dart | M6 | yes |
 | GraphQL persisted queries dart | M6 | yes |
 | GraphQL trusted documents dart | M6 | yes |
-| GraphQL server dart | M7 | no |
+| graphql over http handler dart | M7 | yes |
+| GraphQL multipart file upload dart | M7 | yes |
+| GraphQL server-sent events dart | M7 | yes |
+| GraphQL graphql-ws WebSocket server dart | M7 | yes |
+| GraphQL GraphiQL dart | M7 | yes |
+| GraphQL shelf dart | M7 | yes |
+| GraphQL server dart | M7 | yes |
 | generate a typed GraphQL client dart | M10 | yes |
 | dart graphql client | M11 | yes |
 | graphql subscriptions websocket dart | M11 | yes |

@@ -20,8 +20,16 @@
 > with a document cache, the limits and the cost limit of a production or
 > development profile, CSRF prevention, extensions and error masking, and
 > with automatic persisted queries or trusted documents (M6c); with it stage
-> M6 is complete. The HTTP, graphql-ws and graphql-sse handlers come in M7.
-> See the
+> M6 is complete. The HTTP handler (M7a) works: `GraphQLHttpHandler` serves
+> GraphQL over HTTP (`GET` and `POST`, both media types, the status codes of
+> the specification, size and time limits, opt-in batching) for any web
+> framework through a small adapter, and reads multipart file uploads (M7b)
+> into the `Upload` scalar. The same handler streams results as server-sent
+> events (M7d, both modes of graphql-sse), and `GraphQLWsHandler` (M7c)
+> serves queries, mutations and subscriptions over a WebSocket. The shelf
+> adapter, `typed_graphql_shelf` (M7e), serves all of them from a shelf
+> application, with a GraphiQL page in development; with it stage M7
+> (transports) is complete. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
 ## Contents
@@ -53,9 +61,15 @@ dependencies:
   ([Schema Builder](doc/schema_builder.md#objects-and-fields),
   [Execution](doc/execution.md#executing-a-request)).
 - **You do not need it when** you only call a GraphQL server: that is the
-  client package, not usable yet. Today it also has no HTTP or
-  WebSocket handler: you decode the request yourself and call
-  `GraphQLServer.handle` (the handlers are M7).
+  [client package](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_client)
+  (links for HTTP, WebSocket and server-sent events; its cache is not built
+  yet). Today this package has the HTTP and graphql-ws
+  handlers; for shelf the adapter is
+  [typed_graphql_shelf](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_shelf),
+  and for any other framework a host converts its request into an
+  `HttpRequestData` and calls `GraphQLHttpHandler.handle`
+  ([HTTP](doc/http.md)), or wraps its WebSocket in a `GraphQLSocket` and
+  calls `GraphQLWsHandler.serve` ([WebSocket](doc/websocket.md)).
 - **What it replaces**: resolvers written against `Map<String, dynamic>`, where
   a wrong result type or a misspelled argument name fails at run time in the
   middle of a request. Here the wrong type does not compile, and every error
@@ -152,6 +166,12 @@ executed
 - [Server](doc/server.md): `GraphQLServer`, requests, responses and outcomes,
   profiles, limits and the cost limit, CSRF prevention, the document cache,
   extensions, errors and masking.
+- [HTTP](doc/http.md): `GraphQLHttpHandler`, media types and status codes,
+  limits, batching, writing a host adapter, security notes, the GraphiQL page.
+- [Uploads](doc/uploads.md): the `Upload` scalar, multipart requests, limits,
+  storage of files while a request runs.
+- [Server-sent events](doc/sse.md): GraphQL over `text/event-stream` in both
+  modes of graphql-sse, keep-alive, limits and proxies.
 - [Persisted Documents](doc/persisted_documents.md): automatic persisted
   queries and their store, trusted documents from the codegen manifest.
 - [Schema Builder](doc/schema_builder.md): refs, objects, fields, arguments,
@@ -171,6 +191,9 @@ executed
   `Authorizer`, deny messages, `AuthorizationCoverage`.
 - [Cancellation](doc/cancellation.md): `CancelSignal`, timeouts, what
   resolvers and subscriptions see.
+- [WebSocket](doc/websocket.md): `GraphQLWsHandler` and `GraphQLSocket`,
+  the graphql-ws state machine, close codes, authentication in
+  `connection_init`, Origin checks, limits, writing an adapter.
 
 ## License
 

@@ -85,10 +85,15 @@ final class GraphQLServer<C> {
       persistedQueries: persistedQueries,
       trustedDocuments: trustedDocuments,
     );
-    return GraphQLServer._(assembly.errors, assembly.handler());
+    return GraphQLServer._(assembly.errors, assembly.handler(), profile);
   }
 
-  GraphQLServer._(this._errors, this._request);
+  GraphQLServer._(this._errors, this._request, this.profile);
+
+  /// The profile the server was built with.
+  ///
+  /// Transports read `csrfPrevention` and `maskErrors` from it.
+  final ServerProfile profile;
 
   final PipelineErrors _errors;
   final RequestHandler _request;

@@ -212,3 +212,67 @@
   server, a failing store write is checked to be answered as `GQL330`, and
   the wall-clock assertion and most real sleeps of the pipeline tests are
   gone.
+- `ServerRequest.allowedOperationTypes` (default `ServerRequest.allOperationTypes`):
+  a transport that cannot deliver an operation type narrows it, and the
+  pipeline refuses another type with `GQL431` before the cost limit and the
+  context factory (a `GET` mutation is still `GQL402`).
+- `GraphQLServer.profile`: the profile the server was built with, which
+  transports read.
+- `CostBudget` and `ServerRequest.costBudget`: requests that share a budget
+  also share one `maxCost`, which bounds their summed field cost and summed
+  type cost. The request that would pass it is refused with `GQL430` and is
+  not charged; a request over the limit alone is still `GQL238`.
+- `HttpRequestData`, `HttpResponseData`, `FixedBody` and `StreamedBody`: the
+  values a host adapter exchanges with the HTTP transport (the HTTP guide).
+- `GraphQLHttpHandler<C>` and `HttpOptions`: GraphQL over HTTP for any web
+  framework. It serves `GET` and `POST` with JSON bodies, negotiates
+  `application/graphql-response+json` and `application/json` (a missing
+  `Accept` is the legacy type), writes results with the status codes of the
+  specification (`294` for a partial result, switchable with
+  `usesPartialSuccessStatus`), reads the body within `maxBodyBytes` and
+  `bodyTimeout` whatever `content-length` says, bounds JSON nesting
+  (`maxJsonDepth`) and the URI (`maxUriLength`), and never throws.
+- `BatchPolicy` and `HttpOptions.batching`: opt-in batches of requests (a JSON
+  array), run in order with one shared `CostBudget`; a mutation or
+  subscription item is `GQL431` in its slot.
+- `HttpOptions.onError`: the error hook of the HTTP handler, called with a
+  bug caught at its outermost boundary (answered `500`, `GQL330`) and its
+  stack trace, like the hook of `GraphQLServer`, and with an upload store or
+  release failure.
+- `HttpRequestData.info`: the `RequestInfo` (method, URI, headers, source) the
+  pipeline reads.
+- The responses that depend on `Accept` (JSON, the event stream and the GraphiQL page) vary on it; a transport refusal is
+  `cache-control: no-store`; the echoed text of an unexpected error is cut at
+  500 characters; the body read copies its chunks, stops when the host's
+  cancel signal fires, and starts its timer only once the stream is
+  listened to; a batch stops running items when the client has gone (the
+  rest are `GQL350`).
+- The transport codes `GQL420`-`GQL431`.
+- The HTTP guide, with the dartdoc category `http`.
+- `Upload`, `UploadStorage`, `MemoryUploadStorage`, `UploadLimits` and `Uploads`: the `Upload` scalar for multipart file uploads (its codec is input only), where a file waits during a request, and the limits of a request. The Uploads guide, with the dartdoc category `upload`.
+- The multipart request reader (internal): reads `operations`, `map` and the files in order with `package:mime`, bounds every part and the body, refuses with `GQL440`-`GQL442`, `GQL427` and `GQL424`, and releases stored files on any refusal. Depends on `mime`.
+- `HttpOptions.uploads`: `GraphQLHttpHandler` reads `multipart/form-data` requests of the GraphQL multipart request specification (queries, mutations and batches) when it holds an `Uploads` value; otherwise they stay `415` (`GQL421`), and the message of the `415` names both content types when uploads are on. CSRF prevention runs before the body is read (`403`, `GQL403`), the boundary and the declared length are checked first, and the files are removed from the registry and released in a `finally` after the response is built, whatever happened. The constructor of the handler refuses a non-positive `UploadLimits` value with an `ArgumentError`. The headers of one multipart part may take 8 KiB (`413`, `GQL441`), counted before `package:mime` buffers them for every part (a file that starts like a closing delimiter, transport padding and a preamble do not hide a header); the multipart boundary must be one of RFC 2046 (`400`, `GQL440`); a file name may have 255 characters and a media type 127 (`400`, `GQL440`); a failing `UploadStorage.store` is a server fault (`500`, `GQL330`, stored files released); a failing `release` is reported to `HttpOptions.onError` and the other files are still released, and the first `Error` is rethrown after the last release; a client that disconnects fails the multipart body. The Uploads guide says that file names are client text, sketches a disk storage, and explains that the `Uploads` of the scalar and of the options must be one instance.
+- `SseOptions` and the event stream (internal): the options of server-sent event streams (`keepAliveInterval`) and a response body that writes a first comment, keep-alive comments, `next` and `complete` events, and pauses, resumes and cancels its source with the client. The Server-sent events guide, with the dartdoc category `sse`.
+- `HttpOptions.sse` (default `SseOptions()`, null turns event streams off): a `GET` or `POST` whose `Accept` prefers `text/event-stream` (offered last, never for a multipart `POST`) is answered with its own event stream, the distinct connections mode of graphql-sse: a subscription is one `next` event per result, a query, a mutation or a request error one `next`, each followed by `complete`. `405` and `500` and the refusals before the pipeline stay JSON; a batch is `406` (`GQL422`); cancelling the body cancels the subscription. The `406` message names every offered type. The constructor refuses a non-positive `keepAliveInterval`. A request that CSRF prevention blocks stays a `403` JSON refusal.
+- `SingleConnectionOptions` and `SseOptions.singleConnection`: the single connection mode of graphql-sse, off by default. `PUT` reserves a stream (a token of 32 hex digits from `Random.secure`), a `GET` with the token connects it, a `POST` with the token and `extensions.operationId` runs an operation on it (`202`, its events carry the id and are held until the stream is listened to) and `DELETE ?operationId=` cancels one. Limits: `maxReservations`, `reservationTimeout` and `maxOperationsPerStream`; refusals `GQL433`-`GQL438`; closing the stream cancels its operations and drops the reservation. A stream the host connected but never listens to is dropped after `reservationTimeout`, only a `GET` connects a stream (a `POST` with the token and an event stream `Accept` is an operation), an operation id is freed when its `POST` fails with an exception, and an operation id is at most 256 UTF-16 code units (`GQL435`), the bound of graphql-ws's `maxIdLength`.
+- `RequestInfo.connectionParams`: the payload of the graphql-ws
+  `connection_init` message, for a context factory that reads a token sent there.
+- graphql-ws transport: `GraphQLWsHandler` serves the `graphql-transport-ws`
+  subprotocol over a `GraphQLSocket`: the connection handshake with
+  `onConnect` (`ConnectionHook`, `AcceptConnection`, `RefuseConnection`) and a
+  timeout, `subscribe` through `GraphQLServer.handle` with a `CancelSignal`
+  per operation, the protocol's close codes, and an `Origin` check
+  (`allowsUpgrade`, `allowedOrigins`). `GraphQLWsOptions` bounds a connection:
+  `maxOperations` (`GQL432`, counted until the server stopped working on a
+  cancelled request), `maxMessageLength`, `maxJsonDepth`, `maxIdLength` and
+  `maxConnections`; `onError` (`SocketErrorHook`) sees the errors the handler
+  swallows. The
+  WebSocket guide and the graphql-ws hostile-input tests come with it.
+- `ServerProfile.graphiql` (`true` in `development`, `false` in `production`)
+  and `withGraphiQL` switch the GraphiQL page of `GraphQLHttpHandler`.
+- The GraphiQL page: with `ServerProfile.graphiql` on, `GraphQLHttpHandler`
+  answers a `GET` without a `query` whose `Accept` ranks `text/html` above
+  the JSON types with a page that loads GraphiQL 3.9.0 from jsDelivr, pinned
+  by Subresource Integrity, and sends its queries to the request's path. The
+  page is `cache-control: no-store` and varies on `Accept`; it has no
+  content security policy (its script is inline).

@@ -302,6 +302,22 @@
   `invalidPersistedQuery`, `untrustedDocument`, `unknownTrustedDocument`),
   reported by the server for persisted queries and trusted documents.
 - Documentation: `GQL402` also covers `HEAD`; the cost guide says a resolver must cap a slicing argument itself.
+- `DiagnosticCode`: `GQL420`-`GQL431` (`unsupportedHttpMethod`,
+  `unsupportedMediaType`, `notAcceptable`, `requestBodyTooLarge`,
+  `malformedRequestBody`, `malformedRequestParameters`, `requestUriTooLong`,
+  `requestBodyTimeout`, `batchingDisabled`, `invalidBatchSize`,
+  `batchCostExceeded`, `operationTypeNotAllowed`), reported by the HTTP
+  transport of the server (the last two also by the request pipeline).
+- `DiagnosticCode.tooManySocketOperations` (`GQL432`): a graphql-ws
+  `subscribe` past the socket's operation limit.
+- `DiagnosticCode`: `GQL433`-`GQL438` (`eventStreamNotFound`,
+  `eventStreamAlreadyOpen`, `operationIdRequired`, `operationIdInUse`,
+  `tooManyReservations`, `tooManyStreamOperations`), reported by the
+  single connection mode of GraphQL over server-sent events in the HTTP
+  transport of the server.
+- `DiagnosticCode`: `GQL440`-`GQL442` (`malformedMultipartRequest`,
+  `uploadTooLarge`, `tooManyUploads`), reported by the multipart upload
+  handling of the HTTP transport of the server.
 - `DiagnosticCode`: `GQL460`-`GQL474` (`networkFailure`, `httpErrorStatus`,
   `unsupportedResponseType`, `responseTooLarge`, `malformedResponse`,
   `dataShapeMismatch`, `requestCancelled`, `requestTimedOut`,

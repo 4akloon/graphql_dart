@@ -1,0 +1,77 @@
+import '../execution/error_hook.dart';
+import '../sse/sse_options.dart';
+import '../upload/uploads.dart';
+import 'batch_policy.dart';
+
+/// The settings of `GraphQLHttpHandler`: the limits on what a client may send
+/// and how results are reported (R5.5).
+///
+/// Every limit is checked by the handler's constructor, which throws an
+/// `ArgumentError` naming the option for a value that makes no sense.
+///
+/// {@category http}
+final class HttpOptions {
+  /// Creates the options; the defaults suit a public endpoint.
+  const HttpOptions({
+    this.maxBodyBytes = 1048576,
+    this.bodyTimeout = const Duration(seconds: 30),
+    this.maxJsonDepth = 64,
+    this.maxUriLength = 8192,
+    this.usesPartialSuccessStatus = true,
+    this.batching,
+    this.uploads,
+    this.onError,
+    this.sse = const SseOptions(),
+  });
+
+  /// The longest request body accepted, in bytes; a longer one is refused with
+  /// `413` (`GQL423`), by its `content-length` before it is read or by a
+  /// running count while it is.
+  final int maxBodyBytes;
+
+  /// How long the whole body may take to arrive; a slower client is refused
+  /// with `408` (`GQL427`).
+  final Duration bodyTimeout;
+
+  /// The deepest nesting of arrays and objects accepted in the JSON body and
+  /// in the JSON parameters of a `GET`; a deeper one is refused with `400`
+  /// (`GQL424`).
+  final int maxJsonDepth;
+
+  /// The longest request URI accepted, in characters; a longer one is refused
+  /// with `414` (`GQL426`) before anything else is looked at.
+  final int maxUriLength;
+
+  /// Whether a result that holds errors is sent with status `294` when the
+  /// client accepts `application/graphql-response+json`, which tells a client
+  /// that reads only the status that the result is partial.
+  ///
+  /// A client that does not accept that media type always gets `200`.
+  final bool usesPartialSuccessStatus;
+
+  /// How batches are run, or null, the default, to refuse them (`GQL428`).
+  final BatchPolicy? batching;
+
+  /// The configuration of multipart uploads, or null, the default, to refuse
+  /// `multipart/form-data` with `415` (`GQL421`).
+  ///
+  /// One [Uploads] value is shared with the schema's `Upload` scalar, so the
+  /// options are not a `const` expression when uploads are on.
+  final Uploads? uploads;
+
+  /// Called with a bug in the handler itself (not a refusal, not an error of
+  /// the pipeline, which has its own hook) before it is answered with `500`
+  /// and `GQL330`, like the `onError` of `GraphQLServer`; it may return a
+  /// replacement error, and one that throws is ignored.
+  ///
+  /// It is also called, with the same replacement rule, when [uploads] fails to
+  /// store or release a file.
+  final ErrorHook? onError;
+
+  /// The event streams of GraphQL over server-sent events, or null to refuse
+  /// `Accept: text/event-stream` with `406` (`GQL422`).
+  ///
+  /// With the default, a `GET` or `POST` that asks for `text/event-stream` is
+  /// answered with one event stream for its operation.
+  final SseOptions? sse;
+}

@@ -1,0 +1,8 @@
+dartdoc:
+  categories:
+    shelf:
+      markdown: doc/shelf.md
+      displayName: Shelf
+  categoryOrder:
+    - shelf
+  showUndocumentedCategories: true

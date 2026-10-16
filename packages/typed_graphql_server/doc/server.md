@@ -80,8 +80,8 @@ executed {"data":{"hello":"Hello, Ada!"}}
   subscription. Both have an `outcome` and `headers`, a hint the transport
   adds to its own. `withHeaders` returns a copy with more headers.
 
-`ServerOutcome` is the status-like part, which the HTTP transport (M7) maps
-to a status code:
+`ServerOutcome` is the status-like part, which the HTTP transport (see the
+HTTP guide) maps to a status code:
 
 | Outcome | When |
 |---|---|
@@ -148,6 +148,25 @@ POST requestError {}
 {"errors":[{"message":"Expected Name, found <EOF>.","locations":[{"line":1,"column":8}],"extensions":{"code":"GQL007"}}]}
 ```
 
+### What a transport can ask of the pipeline
+
+Three things exist for the transports; a program that calls `handle` itself
+can use them too.
+
+- `ServerRequest.allowedOperationTypes` (default `ServerRequest.allOperationTypes`)
+  narrows the operation types a request may run. A transport that cannot
+  deliver one, such as a subscription over plain JSON, passes a smaller set,
+  and the pipeline refuses another type with `GQL431` after the `GET` mutation
+  guard (`GQL402`) and before the cost limit and the context factory.
+- `ServerRequest.costBudget` is a `CostBudget` that requests share. They share
+  one `maxCost` too: it bounds their summed field cost and their summed type
+  cost, and the request that would pass it is refused with `GQL430` and is not
+  charged. A request over the limit alone is still `GQL238`. A batch uses it
+  for its items.
+- `GraphQLServer.profile` is the profile the server was built with, so a
+  transport reads the settings it must honour, such as whether errors are
+  masked.
+
 ## Profiles
 
 A `ServerProfile` holds every protection. `GraphQLServer` uses
@@ -162,6 +181,7 @@ does not expose a server; `ServerProfile.development` is chosen explicitly.
 | `csrfPrevention` | `CsrfPrevention()` | `CsrfPrevention()` |
 | `limits` | `ServerLimits.development` | `ServerLimits.production` |
 | `timeout` | none | none |
+| `graphiql` | `true` | `false` (the GraphiQL page is not served) |
 
 `production` sets the limits of `ServerLimits.production` (document length,
 tokens, depth, aliases, directives, cost) but no `timeout`: add one with
@@ -172,7 +192,8 @@ and the limits are on.
 
 Each setting has a `with*` method that returns a copy:
 `withIntrospection`, `withSuggestions`, `withErrorMasking`,
-`withCsrfPrevention` (null turns it off), `withLimits` and `withTimeout`
+`withCsrfPrevention` (null turns it off), `withLimits`, `withGraphiQL` and
+`withTimeout`
 (queries and mutations only: a timeout would end a subscription).
 
 ```dart
@@ -589,6 +610,8 @@ internalError {"errors":[{"message":"Unexpected error.","extensions":{"code":"GQ
 | `GQL403` | CSRF prevention refused the request |
 | `GQL238` | the operation costs more than `maxCost` with the request's variables |
 | `GQL330` | an unexpected error of the context factory, an extension or a persisted query store |
+| `GQL430` | a request sharing a `CostBudget` would pass the shared `maxCost` (HTTP guide) |
+| `GQL431` | an operation type the transport cannot deliver, such as a subscription over plain JSON (HTTP guide) |
 | `GQL410`-`GQL415` | a persisted query or trusted document problem (Persisted Documents guide) |
 
 The parser's `GQL0xx`, the validator's `GQL2xx` and the executor's `GQL3xx`

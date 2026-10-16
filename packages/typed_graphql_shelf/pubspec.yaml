@@ -10,7 +10,12 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
+  meta: ^1.15.0
+  shelf: ^1.4.0
+  stream_channel: ^2.1.0
+  typed_graphql: ^0.0.1
   typed_graphql_server: ^0.0.1
+  web_socket_channel: ^3.0.0
 
 dev_dependencies:
   test: ^1.31.0

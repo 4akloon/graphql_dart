@@ -592,7 +592,8 @@ enum DiagnosticCode(
   /// `GraphQLError`'s `extensions.code` in a response of
   /// `ExecutableSchema.execute`. `GraphQLServer` also reports it for an
   /// unexpected error of its own pipeline (the context factory, an extension
-  /// or a store).
+  /// or a store); `GraphQLHttpHandler` reports it in the `500` it answers for
+  /// an error it did not expect, and in the slot of a batch item that failed.
   unexpectedError('GQL330'),
 
   /// `GQL331`: reported when a resolver returned null for a non-null
@@ -644,6 +645,8 @@ enum DiagnosticCode(
   /// execution finished; the response has no data. It is a
   /// `GraphQLError`'s `extensions.code` in a response of
   /// `ExecutableSchema.execute` or the last result of a subscription.
+  /// `GraphQLHttpHandler` also reports it in the items of a batch that were not
+  /// run because the client had gone away.
   executionCancelled('GQL350'),
 
   /// `GQL351`: reported when the execution's timeout elapsed before it
@@ -677,7 +680,9 @@ enum DiagnosticCode(
 
   /// `GQL403`: reported when CSRF prevention refused the request. It is a
   /// `GraphQLError`'s `extensions.code` in a response of
-  /// `GraphQLServer.handle`.
+  /// `GraphQLServer.handle`, in the `403` of a multipart request that
+  /// `GraphQLHttpHandler` refuses before it reads a file, and in the `403` of
+  /// a WebSocket upgrade whose `Origin` is not allowed.
   csrfRequestBlocked('GQL403'),
 
   /// `GQL410`: reported when a request names a persisted query by its hash
@@ -716,6 +721,137 @@ enum DiagnosticCode(
   /// that names none. It is a `GraphQLError`'s `extensions.code` in a
   /// response of `GraphQLServer.handle`.
   unknownTrustedDocument('GQL415'),
+
+  /// `GQL420`: reported when a request uses an HTTP method other than `GET` or
+  /// `POST`. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  unsupportedHttpMethod('GQL420'),
+
+  /// `GQL421`: reported when a `POST` body has a content type other than
+  /// `application/json`, or a charset other than UTF-8. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  unsupportedMediaType('GQL421'),
+
+  /// `GQL422`: reported when the `Accept` header of a request allows none of
+  /// the media types the handler offers. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
+  notAcceptable('GQL422'),
+
+  /// `GQL423`: reported when a request body is larger than
+  /// `HttpOptions.maxBodyBytes`. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `GraphQLHttpHandler.handle`.
+  requestBodyTooLarge('GQL423'),
+
+  /// `GQL424`: reported when a request body is not UTF-8, is not JSON, is
+  /// nested deeper than `HttpOptions.maxJsonDepth`, or cannot be read to the
+  /// end because its stream failed or the client disconnected. It is a
+  /// `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
+  malformedRequestBody('GQL424'),
+
+  /// `GQL425`: reported when a request is not a GraphQL-over-HTTP request: a
+  /// parameter has the wrong type, a `GET` parameter is repeated or cannot be
+  /// decoded, or a body is not an object. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`, and in the
+  /// `400` of a WebSocket upgrade that lacks what the handshake needs.
+  malformedRequestParameters('GQL425'),
+
+  /// `GQL426`: reported when the URI of a request is longer than
+  /// `HttpOptions.maxUriLength`. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `GraphQLHttpHandler.handle`.
+  requestUriTooLong('GQL426'),
+
+  /// `GQL427`: reported when a request body does not arrive within
+  /// `HttpOptions.bodyTimeout`. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `GraphQLHttpHandler.handle`.
+  requestBodyTimeout('GQL427'),
+
+  /// `GQL428`: reported when a request body is an array and batching is off,
+  /// and when a batch is posted as an operation to a single connection event
+  /// stream, whether batching is on or not. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
+  batchingDisabled('GQL428'),
+
+  /// `GQL429`: reported when a batch is empty or holds more requests than
+  /// `BatchPolicy.maxRequests`. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `GraphQLHttpHandler.handle`.
+  invalidBatchSize('GQL429'),
+
+  /// `GQL430`: reported when the summed cost of the requests of a batch would
+  /// pass the maximum cost of the server; it is the error of the request that
+  /// would pass it, which is not charged. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle` and
+  /// `GraphQLServer.handle`.
+  batchCostExceeded('GQL430'),
+
+  /// `GQL431`: reported when a request selects an operation type its transport
+  /// does not allow, such as a subscription over plain JSON. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle` and `GraphQLServer.handle`.
+  operationTypeNotAllowed('GQL431'),
+
+  /// `GQL432`: reported when a graphql-ws `subscribe` arrives while the
+  /// socket already runs `GraphQLWsOptions.maxOperations` operations; it is
+  /// the `extensions.code` of the `error` message for that id, and the socket
+  /// stays open.
+  tooManySocketOperations('GQL432'),
+
+  /// `GQL433`: reported when a request names an event stream token that no
+  /// reservation holds (never issued, dropped or already closed) in
+  /// single connection mode of GraphQL over server-sent events. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  eventStreamNotFound('GQL433'),
+
+  /// `GQL434`: reported when a request connects the event stream of a token
+  /// whose stream is already open. It is a `GraphQLError`'s `extensions.code`
+  /// in a response of `GraphQLHttpHandler.handle`.
+  eventStreamAlreadyOpen('GQL434'),
+
+  /// `GQL435`: reported when an operation or a cancellation on an event
+  /// stream names no operation id (`extensions.operationId` of a `POST`, the
+  /// `operationId` parameter of a `DELETE`), or one that is not a non-empty
+  /// string. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  operationIdRequired('GQL435'),
+
+  /// `GQL436`: reported when an operation id is already running on the event
+  /// stream. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  operationIdInUse('GQL436'),
+
+  /// `GQL437`: reported when a request to reserve an event stream finds the
+  /// maximum number of reservations held. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
+  tooManyReservations('GQL437'),
+
+  /// `GQL438`: reported when an event stream already runs the maximum number
+  /// of operations. It is a `GraphQLError`'s `extensions.code` in a response
+  /// of `GraphQLHttpHandler.handle`.
+  tooManyStreamOperations('GQL438'),
+
+  /// `GQL440`: reported when a `multipart/form-data` request is not a valid
+  /// GraphQL multipart request: no boundary, fields out of order, an
+  /// `operations` or `map` field that is not valid, a map path that does not
+  /// name a `null` variable, or a file the map does not name. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  malformedMultipartRequest('GQL440'),
+
+  /// `GQL441`: reported when a multipart request body is larger than
+  /// `UploadLimits.maxRequestBytes`, a field is larger than
+  /// `UploadLimits.maxFieldBytes`, a file is larger than
+  /// `UploadLimits.maxFileBytes`, or the headers of a part are longer than
+  /// 8 KiB. It is a `GraphQLError`'s `extensions.code`
+  /// in a response of `GraphQLHttpHandler.handle`.
+  uploadTooLarge('GQL441'),
+
+  /// `GQL442`: reported when a multipart request names more than
+  /// `UploadLimits.maxFiles` files or paths in its map. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  tooManyUploads('GQL442'),
 
   /// `GQL460`: reported by the client when its transport could not send a
   /// request or read the answer: the HTTP client or the socket threw, or

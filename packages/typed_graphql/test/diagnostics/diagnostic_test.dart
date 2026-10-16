@@ -19,6 +19,21 @@ void main() {
       expect(ids, [...ids]..sort());
     });
 
+    test('names the event stream codes', () {
+      expect(DiagnosticCode.eventStreamNotFound.id, 'GQL433');
+      expect(DiagnosticCode.eventStreamAlreadyOpen.id, 'GQL434');
+      expect(DiagnosticCode.operationIdRequired.id, 'GQL435');
+      expect(DiagnosticCode.operationIdInUse.id, 'GQL436');
+      expect(DiagnosticCode.tooManyReservations.id, 'GQL437');
+      expect(DiagnosticCode.tooManyStreamOperations.id, 'GQL438');
+    });
+
+    test('names the multipart upload codes', () {
+      expect(DiagnosticCode.malformedMultipartRequest.id, 'GQL440');
+      expect(DiagnosticCode.uploadTooLarge.id, 'GQL441');
+      expect(DiagnosticCode.tooManyUploads.id, 'GQL442');
+    });
+
     test('keeps the ids already published', () {
       expect(DiagnosticCode.diagnosticLimitReached.id, 'GQL000');
     });

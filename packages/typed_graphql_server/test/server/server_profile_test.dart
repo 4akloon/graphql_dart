@@ -24,6 +24,8 @@ void main() {
     });
 
     test('has no timeout', () => expect(profile.timeout, isNull));
+
+    test('serves GraphiQL', () => expect(profile.graphiql, true));
   });
 
   group('ServerProfile.production', () {
@@ -48,6 +50,8 @@ void main() {
     });
 
     test('has no timeout', () => expect(profile.timeout, isNull));
+
+    test('does not serve GraphiQL', () => expect(profile.graphiql, false));
   });
 
   group('ServerProfile with methods', () {
@@ -88,17 +92,38 @@ void main() {
       expect(copy.timeout, const Duration(seconds: 5));
       expect(copy.withTimeout(null), base);
     });
+
+    test('withGraphiQL changes only the GraphiQL switch', () {
+      final copy = base.withGraphiQL(true);
+      expect(copy.graphiql, true);
+      expect(copy.withGraphiQL(false), base);
+    });
   });
 
   group('ServerProfile with methods keep the other fields', () {
     final base = ServerProfile.production
         .withCsrfPrevention(null)
-        .withTimeout(const Duration(seconds: 5));
+        .withTimeout(const Duration(seconds: 5))
+        .withGraphiQL(true);
 
     void expectKept(ServerProfile copy) {
       expect(copy.timeout, const Duration(seconds: 5));
       expect(copy.csrfPrevention, isNull);
+      expect(copy.graphiql, true);
     }
+
+    test('withCsrfPrevention', () {
+      expectKept(
+        base
+            .withCsrfPrevention(const CsrfPrevention())
+            .withCsrfPrevention(null),
+      );
+    });
+
+    test(
+      'withTimeout',
+      () => expectKept(base.withTimeout(const Duration(seconds: 5))),
+    );
 
     test('withIntrospection', () {
       expectKept(base.withIntrospection(IntrospectionPolicy.enabled));
@@ -126,6 +151,12 @@ void main() {
       );
       expect(copy, ServerProfile.production);
       expect(copy.hashCode, ServerProfile.production.hashCode);
+    });
+
+    test('differ when only GraphiQL differs', () {
+      final other = ServerProfile.production.withGraphiQL(true);
+      expect(other, isNot(ServerProfile.production));
+      expect(other.hashCode, isNot(ServerProfile.production.hashCode));
     });
 
     test('the two constants differ', () {
