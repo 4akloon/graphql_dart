@@ -22,14 +22,25 @@ final class ContextLink(
   this;
 
   @override
-  Stream<LinkResult> request(LinkRequest request, NextLink forward) async* {
-    final LinkContext context;
+  Stream<LinkResult> request(LinkRequest request, NextLink forward) {
+    // `asyncExpand` does not call `forward` once the listener cancelled
+    // while the update was pending.
+    return _updated(request).asyncExpand(
+      (outcome) => switch (outcome) {
+        (:final context?, failure: _) => forward(request.withContext(context)),
+        (context: _, :final failure?) => Stream.value(LinkFailure(failure)),
+        _ => const Stream<LinkResult>.empty(),
+      },
+    );
+  }
+
+  Stream<({LinkContext? context, ClientFailure? failure})> _updated(
+    LinkRequest request,
+  ) async* {
     try {
-      context = await update(request);
+      yield (context: await update(request), failure: null);
     } on Exception catch (exception) {
-      yield LinkFailure(NetworkFailure(exception));
-      return;
+      yield (context: null, failure: NetworkFailure(exception));
     }
-    yield* forward(request.withContext(context));
   }
 }

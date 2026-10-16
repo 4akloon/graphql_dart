@@ -115,5 +115,23 @@ void main() {
       expect(isCancelled, isTrue);
       await controller.close();
     });
+
+    test('a cancel during a pending update forwards nothing', () async {
+      final update = Completer<LinkContext>();
+      var forwardCount = 0;
+      final link = ContextLink((request) => update.future);
+      final subscription = link
+          .request(LinkRequest.of(const HelloQuery()), (request) {
+            forwardCount++;
+            return const Stream<LinkResult>.empty();
+          })
+          .listen((_) {});
+      await Future<void>.delayed(Duration.zero);
+      // The cancel future completes only when the update does.
+      final cancelled = subscription.cancel();
+      update.complete(const LinkContext.empty());
+      await cancelled;
+      expect(forwardCount, 0);
+    });
   });
 }
