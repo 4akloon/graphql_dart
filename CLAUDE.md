@@ -576,7 +576,9 @@ order, each through the pipeline with one shared `CostBudget`, and stops
 between items when the client has gone; an array is counted, not decoded,
 before the size check. The outermost boundary of `handle` is the one place
 that catches `Object`, as `GraphQLServer.handle` does: it reports through
-`HttpOptions.onError` and never rethrows.
+`HttpOptions.onError` and never rethrows. `StoredUploads.release` also
+catches `Object`, only to release the remaining files and rethrow the first
+`Error`, like a `try`/`finally`.
 `upload/` (M7b): the scalar codec has no request context, so `MultipartReader`
 (over `package:mime`, `WatchedBody` for the byte limit, the timeout, the
 client's cancel signal and, through `PartHeaderScanner`, the 8 KiB limit on a

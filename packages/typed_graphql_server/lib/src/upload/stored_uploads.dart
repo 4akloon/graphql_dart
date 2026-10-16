@@ -32,6 +32,10 @@ final class StoredUploads {
   /// Forgets every token and releases every file, whatever a release does:
   /// an exception is reported and does not stop the other releases, and the
   /// first [Error] (a bug) is thrown once every file has been released.
+  ///
+  /// This is the documented exception to "never catch `Error`": it only
+  /// finishes the remaining releases and rethrows the first `Error`, as a
+  /// `try`/`finally` would.
   Future<void> release() async {
     final entries = [..._entries];
     _entries.clear();
