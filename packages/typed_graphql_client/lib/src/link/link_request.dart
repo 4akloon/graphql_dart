@@ -41,7 +41,7 @@ final class LinkRequest({
          context: context,
        );
 
-  /// Whether the operation is a query, a mutation or a subscription.
+  /// The kind of the operation.
   OperationType get type => document.type;
 
   /// The request as it is sent: without `query` when [sendsDocumentText]

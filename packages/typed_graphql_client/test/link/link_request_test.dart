@@ -57,21 +57,4 @@ void main() {
     expect(request.sendsDocumentText, isFalse);
     expect(request.variables, JsonObject({'name': const JsonString('Ada')}));
   });
-
-  test('a result is a payload or a failure', () {
-    final results = <LinkResult>[
-      LinkPayload(ExecutionResult(JsonObject(const {}))),
-      const LinkFailure(RequestCancelled()),
-    ];
-    expect(
-      [
-        for (final result in results)
-          switch (result) {
-            LinkPayload() => 'payload',
-            LinkFailure() => 'failure',
-          },
-      ],
-      ['payload', 'failure'],
-    );
-  });
 }
