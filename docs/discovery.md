@@ -51,6 +51,11 @@ adds its row (or turns it to "yes") together with its README line and its
 | GraphQL trusted documents dart | M6 | yes |
 | GraphQL server dart | M7 | no |
 | generate a typed GraphQL client dart | M10 | yes |
+| dart graphql client | M11 | yes |
+| graphql subscriptions websocket dart | M11 | yes |
+| graphql over http client dart | M11 | yes |
+| graphql persisted queries client dart | M11 | yes |
+| graphql sse dart client | M11 | yes |
 
 ## Metadata
 
@@ -104,7 +109,7 @@ linked.
 
 `llms.txt` at the repository root has the [llmstxt.org](https://llmstxt.org)
 shape: one `#` title, one `>` summary, then the sections *Packages* (each with
-its README status), *Guides* (every `packages/typed_graphql/doc/*.md`) and
+its README status), *Guides* (every `doc/*.md` of `packages/typed_graphql` and `packages/typed_graphql_client`) and
 *Reference*. Every link is an absolute
 `https://github.com/4akloon/graphql_dart/blob/main/<path>` URL to a file of
 the repository. pub.dev package URLs are added at M16.

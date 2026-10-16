@@ -1,8 +1,36 @@
 dartdoc:
   categories:
+    client:
+      markdown: doc/client.md
+      displayName: Client
+    link:
+      markdown: doc/links.md
+      displayName: Links
+    http:
+      markdown: doc/http.md
+      displayName: HTTP
+    sse:
+      markdown: doc/sse.md
+      displayName: Server-sent events
+    policy:
+      markdown: doc/policies.md
+      displayName: Request Policies
+    socket:
+      markdown: doc/websocket.md
+      displayName: WebSocket
+    upload:
+      markdown: doc/uploads.md
+      displayName: Uploads
     operations:
       markdown: doc/operations.md
       displayName: Generated Operations
   categoryOrder:
+    - client
+    - link
+    - http
+    - sse
+    - policy
+    - socket
+    - upload
     - operations
   showUndocumentedCategories: true

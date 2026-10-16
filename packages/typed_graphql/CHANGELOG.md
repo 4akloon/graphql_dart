@@ -302,3 +302,10 @@
   `invalidPersistedQuery`, `untrustedDocument`, `unknownTrustedDocument`),
   reported by the server for persisted queries and trusted documents.
 - Documentation: `GQL402` also covers `HEAD`; the cost guide says a resolver must cap a slicing argument itself.
+- `DiagnosticCode`: `GQL460`-`GQL474` (`networkFailure`, `httpErrorStatus`,
+  `unsupportedResponseType`, `responseTooLarge`, `malformedResponse`,
+  `dataShapeMismatch`, `requestCancelled`, `requestTimedOut`,
+  `operationNotSupportedByLink`, `linkEndedWithoutResult`,
+  `malformedSocketMessage`, `socketClosed`, `connectionAckTimeout`,
+  `malformedEventStream`, `authenticationFailed`), the codes of the
+  client's failures.

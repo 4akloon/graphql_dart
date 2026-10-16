@@ -7,8 +7,7 @@
 **Generate typed Dart client code from a GraphQL schema and `.graphql` operations, from the command line or in code, with every problem reported at its file, line and column.** It reads `typed_graphql.yaml`, loads the schema from a file or a URL, validates the documents and writes the library of the enums and input objects the operations use and, per document, the classes of its operations, variables, data and fragments, with the minified document, its SHA-256 and the persisted-operations manifest. Part of [typed_graphql](https://github.com/4akloon/graphql_dart).
 
 > **Status: under construction.** The client generator and its command line
-> work; the classes need `typed_graphql_client`, which holds only the contract
-> the generated code compiles against until M11. The SDL-first server
+> work; the classes need `typed_graphql_client`, which sends them. The SDL-first server
 > generator (M8) and the `build_runner` builder (M9) are not built yet (see the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md)).
 

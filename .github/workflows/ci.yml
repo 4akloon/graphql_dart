@@ -42,6 +42,11 @@ jobs:
         working-directory: packages/typed_graphql
         run: dart doc 2>&1 | tee "$RUNNER_TEMP/doc.log" && grep -q "Found 0 warnings and 0 errors" "$RUNNER_TEMP/doc.log"
 
+      - name: Client API reference has no warnings
+        shell: bash
+        working-directory: packages/typed_graphql_client
+        run: dart doc 2>&1 | tee "$RUNNER_TEMP/client-doc.log" && grep -q "Found 0 warnings and 0 errors" "$RUNNER_TEMP/client-doc.log"
+
   test:
     name: Test (${{ matrix.os }}, ${{ matrix.sdk }})
     timeout-minutes: 30
@@ -103,7 +108,7 @@ jobs:
           done
 
   web:
-    name: Core on the web (${{ matrix.compiler }})
+    name: Core and client on the web (${{ matrix.compiler }})
     timeout-minutes: 20
     runs-on: ubuntu-latest
     strategy:
@@ -120,11 +125,13 @@ jobs:
       - name: Install dependencies (workspace)
         run: dart pub get
 
-      # The client joins this job when it has code that runs in a browser
-      # (M11); until then its only tests are VM-only.
       - name: Test typed_graphql in Chrome
         run: dart test -p chrome --compiler ${{ matrix.compiler }}
         working-directory: packages/typed_graphql
+
+      - name: Test typed_graphql_client in Chrome
+        run: dart test -p chrome --compiler ${{ matrix.compiler }}
+        working-directory: packages/typed_graphql_client
 
   publish-dry-run:
     name: Publish dry-run
