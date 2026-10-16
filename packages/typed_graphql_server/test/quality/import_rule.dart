@@ -4,7 +4,7 @@
 /// The server runs on the VM, AOT, dart2js and dart2wasm, so it imports pure
 /// Dart, `dart:convert`, `dart:typed_data` (the bytes of a request body),
 /// `meta`, `package:crypto/crypto.dart` (SHA-256 of
-/// documents), the core's barrel and its own files, never `src/` of the core
+/// documents), `package:mime/mime.dart` (the multipart parser), the core's barrel and its own files, never `src/` of the core
 /// and never a web framework.
 final class ImportRule {
   /// Creates the rule.
@@ -21,6 +21,8 @@ final class ImportRule {
   };
 
   static const String _crypto = 'package:crypto/crypto.dart';
+
+  static const String _mime = 'package:mime/mime.dart';
 
   static const String _coreBarrel = 'package:typed_graphql/typed_graphql.dart';
 
@@ -43,12 +45,13 @@ final class ImportRule {
     }
     if (target.startsWith('package:meta/') ||
         target == _coreBarrel ||
-        target == _crypto) {
+        target == _crypto ||
+        target == _mime) {
       return null;
     }
     if (target.startsWith('package:')) {
-      return '$filePath imports $target: only meta, crypto and the core '
-          'barrel ($_coreBarrel) are allowed';
+      return '$filePath imports $target: only meta, crypto, mime and the '
+          'core barrel ($_coreBarrel) are allowed';
     }
     return null;
   }

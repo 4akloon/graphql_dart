@@ -247,3 +247,4 @@
 - The transport codes `GQL420`-`GQL431`.
 - The HTTP guide, with the dartdoc category `http`.
 - `Upload`, `UploadStorage`, `MemoryUploadStorage`, `UploadLimits` and `Uploads`: the `Upload` scalar for multipart file uploads (its codec is input only), where a file waits during a request, and the limits of a request. The Uploads guide, with the dartdoc category `upload`.
+- The multipart request reader (internal): reads `operations`, `map` and the files in order with `package:mime`, bounds every part and the body, refuses with `GQL440`-`GQL442`, `GQL427` and `GQL424`, and releases stored files on any refusal. Depends on `mime`.
