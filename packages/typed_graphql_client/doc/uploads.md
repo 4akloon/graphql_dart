@@ -24,7 +24,8 @@ response.
 
 `UploadFile.fromBytes(bytes, filename:)` holds a copy of the bytes;
 `UploadFile.fromStream(open, length:, filename:)` calls `open` for each
-attempt, so a retried request sends the file again. Both take a
+attempt, so a retried request sends the file again; `length` must equal the
+number of bytes the stream gives. Both take a
 `contentType` (default `application/octet-stream`).
 
 The variables of a generated operation are JSON, where a file is only its

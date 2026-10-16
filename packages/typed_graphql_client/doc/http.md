@@ -105,7 +105,9 @@ data: world (HTTP 200)
 Headers come from three places, each over the one before: the link's own
 (`accept`, `content-type`), the `headers` given to the link, and the
 `RequestHeaders` entries of the request's context. Names are compared in
-lower case.
+lower case. The exception is a multipart request: its `content-type` carries
+the boundary of the body, so it is set last and no other header can replace
+it.
 
 With `usesGetForQueries: true`, a query goes as a `GET` request whose
 `query`, `operationName`, `variables` and `extensions` (the last two as
@@ -113,6 +115,17 @@ JSON) are query parameters added to the URI's own, so a cache or a CDN can
 keep the answer. A mutation is always a `POST`. A `GET` carries the header
 `graphql-require-preflight: true`, which a server's CSRF prevention asks of
 requests a browser could send from another site.
+
+A `GET` puts the variables in the URL, so proxies and servers may log them:
+keep secrets out of the variables of queries sent this way. A server or a
+proxy that refuses a URL that is too long answers `414`, which arrives as an
+`HttpStatusFailure`.
+
+Redirects are the business of the `http.Client`, not of the link.
+`PackageHttpTransport` sets nothing, so `package:http`'s defaults apply on
+the VM: a `GET` follows up to five redirects, and a `POST` follows none, so a
+`307` or `308` answer to a `POST` is an `HttpStatusFailure`. A browser
+client follows redirects by the rules of `fetch`.
 
 A subscription needs a streaming transport: `HttpLink` answers it with
 `UnsupportedOperation` (`GQL468`) without sending anything. Send
@@ -137,9 +150,13 @@ request with `GQL463`. Bytes that are not UTF-8, text that is not JSON,
 JSON nested deeper than `maxResponseDepth` (512 by default) and JSON that
 is not a GraphQL response are `GQL464`, with the path of the bad value.
 The response's context holds an `HttpResponseInfo` with the status and
-headers.
+headers. The body of a `TransportResponse` is copied while it is read, so a
+transport may reuse its chunks. The limits cannot protect the caller's own
+variables: a variable value nested deeply enough overflows the stack of
+`jsonEncode` before anything is sent.
 
 An `Exception` of the transport, or of the body stream, is a
-`NetworkFailure` (`GQL460`). With a `timeout`, a request that has not
+`NetworkFailure` (`GQL460`); the query string of any URL in its text is
+removed, because `package:http` prints the whole URL of a `GET`. With a `timeout`, a request that has not
 finished in time is aborted with `RequestTimedOut` (`GQL467`). Cancelling
 the call aborts the request through the transport's `abortTrigger`.

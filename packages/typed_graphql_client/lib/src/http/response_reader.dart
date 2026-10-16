@@ -110,7 +110,7 @@ final class const ResponseReader({
   /// The body's bytes, or null as soon as they pass [maxBytes]; leaving
   /// the loop cancels the body stream.
   Future<Uint8List?> _collect(Stream<List<int>> body) async {
-    final bytes = BytesBuilder(copy: false);
+    final bytes = BytesBuilder(copy: true);
     await for (final chunk in body) {
       if (bytes.length + chunk.length > maxBytes) {
         return null;
