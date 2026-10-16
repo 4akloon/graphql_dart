@@ -753,7 +753,8 @@ enum DiagnosticCode(
   /// `GQL425`: reported when a request is not a GraphQL-over-HTTP request: a
   /// parameter has the wrong type, a `GET` parameter is repeated or cannot be
   /// decoded, or a body is not an object. It is a `GraphQLError`'s
-  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`, and in the
+  /// `400` of a WebSocket upgrade that lacks what the handshake needs.
   malformedRequestParameters('GQL425'),
 
   /// `GQL426`: reported when the URI of a request is longer than
