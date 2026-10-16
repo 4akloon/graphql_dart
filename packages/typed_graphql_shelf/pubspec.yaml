@@ -10,6 +10,8 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
+  meta: ^1.15.0
+  shelf: ^1.4.0
   typed_graphql_server: ^0.0.1
 
 dev_dependencies:
