@@ -83,10 +83,18 @@ tests and the HTTP guide. M7b (multipart uploads) delivers `Upload`,
 `UploadStorage`, `MemoryUploadStorage`, `UploadLimits` and `Uploads` (the
 `Upload` scalar, input only), `HttpOptions.uploads`, the multipart reader on
 `package:mime`, the codes `GQL440`-`GQL442`, the upload hostile-input tests and
-the Uploads guide. M7d (GraphQL over SSE) delivers `SseOptions`,
+the Uploads guide. M7c (graphql-ws) delivers `GraphQLWsHandler`,
+`GraphQLSocket`, `GraphQLWsOptions`, `ConnectionHook` with `AcceptConnection`
+and `RefuseConnection`, `RequestInfo.connectionParams`, the code `GQL432`, the
+WebSocket hostile-input tests and the WebSocket guide. M7d (GraphQL over SSE) delivers `SseOptions`,
 `SingleConnectionOptions`, `HttpOptions.sse`, the distinct connections mode
 and the single connection mode of graphql-sse, the codes `GQL433`-`GQL438`,
-the SSE hostile-input tests and the Server-sent events guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+the SSE hostile-input tests and the Server-sent events guide. M7e (shelf
+adapter) delivers `ServerProfile.graphiql` and the GraphiQL page of
+`GraphQLHttpHandler`, and in `typed_graphql_shelf` `GraphQLShelfHandler`
+(HTTP, uploads, server-sent events and graphql-ws), `TempFileUploadStorage`,
+the end-to-end tests over `shelf_io`, the shelf guide and the example; with it
+stage M7 (transports) is complete. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
 file or a URL, the project's documents as one fragment graph, the planner and
 emitters that generate the schema-types library and a library per document
 (operations, variables, data, fragments, sealed polymorphic classes, the
@@ -444,7 +452,7 @@ only through its barrel. One folder per concern, with no import order
 (`builder/` and `execution/` import each other): `builder/` (M5a),
 `coercion/`, `plan/` and `execution/` (M5b), `introspection/` and
 `subscription/` (M5c), `lookahead/`, `authorization/` and `cancellation/`
-(M5d), `dataloader/` (M6a), `server/` (M6b), `persisted/` (M6c), `http/` (M7a), `upload/` (M7b) and `sse/` (M7d). The
+(M5d), `dataloader/` (M6a), `server/` (M6b), `persisted/` (M6c), `http/` (M7a), `upload/` (M7b), `sse/` (M7d) and `websocket/` (M7c). The
 package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
 or web framework, only `dart:async`, `dart:collection`, `dart:convert`,
@@ -606,6 +614,52 @@ frame controller and its `StreamOperation`s: an operation is admitted at its
 `POST` but its source is listened to only once the stream is, so held work
 runs nothing; the host closing the body cancels all of them. State is in the
 handler, so a deployment needs sticky sessions.
+`websocket/` (M7c): `GraphQLWsHandler.serve(GraphQLSocket, RequestInfo)` is
+the whole transport and imports no WebSocket library; an adapter implements
+`GraphQLSocket` (text frames in `incoming`, binary frames decoded as UTF-8,
+`incoming` done on any close, `send`, `close`). `serve` never throws: it
+refuses over `maxConnections` (`1013`), a subprotocol other than
+`graphql-transport-ws` (`4406`) and a foreign Origin (`4403`; the adapter
+answers `403` earlier through `allowsUpgrade`, `OriginPolicy`), then runs one
+`SocketSession` that owns the `ConnectionHandshake` (the `connection_init`
+timer, the parameters, `ConnectionHook` as `onConnect`), the frame reader
+(`ClientMessageReader`, `maxMessageLength` before parsing, `maxJsonDepth`) and
+`SocketOperations`. Each `subscribe` is a `SocketOperation` that runs a `POST`
+`ServerRequest` with the upgrade's headers, so the context factory, CSRF and
+the limits see an ordinary request; it writes `next`, `error` and `complete`
+through `ServerMessages` and is cancelled by its `CancelSignal` on `complete`
+or on close. `WsClose` holds the fixed close codes and reasons (never the
+client's text); `4409` for a reused id comes from `DuplicateSubscriber`. A
+session that ended is closed for good, so a hook still pending cannot
+acknowledge it. Ping frames are the adapter's job.
+`http/` (M7e): `GraphiQLRequest` decides whether a request opens the endpoint
+in a browser (a `GET` without `query` whose `Accept` ranks `text/html` above
+both JSON types); only `ServerProfile.graphiql` (on in `development`) lets
+`GraphQLHttpHandler` answer it with `GraphiQLPage`, a fixed page that loads
+React 18.3.1 and GraphiQL 3.9.0 from jsDelivr with Subresource Integrity and
+sends its queries to the request's own path (escaped as a JSON string).
+
+**Shelf** (`packages/typed_graphql_shelf/lib/src/`; M7e). Depends on
+`typed_graphql_server`, `shelf`, `shelf_web_socket` and `web_socket_channel`;
+it is the only transport package that imports `dart:io`, and only for
+`TempFileUploadStorage`. `GraphQLShelfHandler<C>` is a shelf `Handler`
+(`call`) over a `GraphQLHttpHandler`: `RequestConversion` makes the
+`HttpRequestData` (lower-case headers joined with `, `, `request.read()` as the
+body, `source: request`, no `CancelSignal`) and `ResponseConversion` the
+`Response` (a `StreamedBody` with `shelf.io.buffer_output` off, so an event
+reaches the client when written). `shelf_io` reports no client that went away
+outside a streamed body, so no `cancelSignal` is given; for an event stream it
+cancels the body's subscription, which stops the work. With `webSocket` set,
+`WebSocketUpgrade` takes a `GET` with `upgrade: websocket`: the Origin check
+first (`allowsUpgrade`, else a `403` JSON refusal with `GQL403`, before
+`shelf_web_socket` is reached), then `webSocketHandler` with the one
+subprotocol and `webSocketPingInterval`, whose connection becomes a
+`WebSocketChannelSocket` for `GraphQLWsHandler.serve`. `TempFileUploadStorage`
+writes each upload to an exclusive file with a random name (never the
+client's), deletes a partial file when the content stream fails and the file
+on `release`; its `FileUpload` reads it back. The tests run the transports end
+to end over `shelf_io` on a loopback port (`test/end_to_end_*_test.dart`, with
+`LoopbackServer`); the guide's program is run by `test/doc/`.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine
@@ -803,6 +857,18 @@ Learned in M5:
   may become one argument per line; run the formatter on the fence before
   trusting the guide test.
 
+Learned in M7:
+- A transport that commits to a response before a check (an event stream
+  accepted, then a CSRF error written into it) answers the wrong status; run
+  every refusal that has its own status before the body starts.
+- A connection that ends while an async hook is pending must stay closed: the
+  hook's late answer may not acknowledge it.
+- `shelf_io` gives a plain request no client-gone signal; only the
+  subscription to a streamed body is cancelled. Do not promise a
+  `CancelSignal` from it.
+- An end-to-end subscription test cannot emit once: the source is listened to
+  after the response starts, so emit until the client hears an event.
+
 **Dart style the lints do not check.** Acronyms longer than two letters are
 words (`Json`, `Sse`); doc comments start with a one-sentence summary and
 refer to identifiers in `[brackets]`; a boolean property starts with
@@ -894,6 +960,13 @@ README that leaves the package folder is an absolute URL.
   `RulePort` for the validation rule suites, `ExecutionPort` for the
   execution, variables and input-coercion suites).
 - Hostile-document tests: `packages/typed_graphql/test/validation/hostile_*_test.dart`.
+- Hostile transport tests in `packages/typed_graphql_server/test/`:
+  `http/hostile_http_test.dart`, `http/hostile_batch_test.dart`,
+  `upload/hostile_upload_test.dart`, `sse/hostile_sse_test.dart` and
+  `websocket/hostile_websocket_test.dart`.
+- Shelf tests: `packages/typed_graphql_shelf/test/`, with the end-to-end tests
+  `end_to_end_http_test.dart` and `end_to_end_streams_test.dart` and the
+  fixtures in `test/support/`.
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
   round trip, hostile SDL, introspection round trip, hostile
   introspection, coordinates, valid operations, hostile operations and

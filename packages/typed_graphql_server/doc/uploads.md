@@ -190,7 +190,9 @@ too, so the program above sends a header.
 
 `MemoryUploadStorage`, the default, keeps each file in memory, which is right
 for small files and tests. Anything larger belongs on disk or in an object
-store, and you write that storage yourself.
+store: `TempFileUploadStorage` of `typed_graphql_shelf` writes each file to a
+temporary file and deletes it on release; for an object store you write that
+storage yourself.
 
 The file name and the media type that reach `store` are what the client wrote:
 unchecked text of at most 255 and 127 characters. A storage must generate its

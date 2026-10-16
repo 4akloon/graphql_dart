@@ -24,7 +24,7 @@ Decisions: [research/README.md](research/README.md).
 |---|---|---|---|---|
 | M5 | Execution | Typed `SchemaBuilder`, `ExecutableSchema`, variable coercion, `OperationPlan` and its cache, the `FutureOr` executor with the pure lane, error behaviours, masking, field middleware, introspection resolvers, subscriptions; look-ahead (`info.selection`), the `Authorizer` hook and its coverage lint, `CancelSignal` and execution timeout; graphql-js execution suites ported; benchmarks | R4.1–R4.14, R4.17–R4.20 | M4 |
 | M6 | Server pipeline | `GraphQLServer`, document caches, `ServerExtension`, limits, APQ, trusted documents, CSRF prevention, the cost limit, `ServerProfile` (`development` / `production`), DataLoader | R4.15, R5.1–R5.4, R5.14, R5.15 | M5 |
-| M7 | Transports | GraphQL over HTTP (CSRF protection and the batching policy applied at the transport), multipart uploads, graphql-ws, graphql-sse, `typed_graphql_shelf` with the GraphiQL page | R5.5–R5.9 | M6 |
+| M7 | Transports | GraphQL over HTTP (CSRF protection and the batching policy applied at the transport), multipart uploads, graphql-ws, graphql-sse, `typed_graphql_shelf` with the GraphiQL page. Done in five parts: M7a HTTP, M7b uploads, M7c graphql-ws, M7d SSE, M7e the shelf adapter, TempFileUploadStorage and GraphiQL | R5.5–R5.9 | M6 |
 | M8 | SDL-first generator | The shared server emitter in `typed_graphql_codegen`; type and field binding; abstract resolver classes; directive slots; generated selection classes for look-ahead; goldens | R6.1, R6.2 | M5, M10 |
 | M9 | `build_runner` and annotations | `typed_graphql_builder`: builders for the client engine and the SDL-first generator, the annotation front end, `schema.graphql` emission | R6.3–R6.5, R7.10 | M8 |
 

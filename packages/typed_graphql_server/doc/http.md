@@ -302,7 +302,8 @@ write and flush chunk by chunk, and cancel when the client goes away.
 ## Writing a host adapter
 
 An adapter for a framework does three things: convert the request, call the
-handler, write the response.
+handler, write the response. For shelf it is written: `typed_graphql_shelf`
+ships `GraphQLShelfHandler`.
 
 ```text
 Future<void> serve(FrameworkRequest request, FrameworkResponse out) async {

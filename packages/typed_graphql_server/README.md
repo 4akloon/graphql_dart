@@ -27,7 +27,9 @@
 > into the `Upload` scalar. The same handler streams results as server-sent
 > events (M7d, both modes of graphql-sse), and `GraphQLWsHandler` (M7c)
 > serves queries, mutations and subscriptions over a WebSocket. The shelf
-> adapter comes in the rest of M7. See the
+> adapter, `typed_graphql_shelf` (M7e), serves all of them from a shelf
+> application, with a GraphiQL page in development; with it stage M7
+> (transports) is complete. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
 ## Contents
@@ -60,7 +62,9 @@ dependencies:
   [Execution](doc/execution.md#executing-a-request)).
 - **You do not need it when** you only call a GraphQL server: that is the
   client package, not usable yet. Today it has the HTTP and graphql-ws
-  handlers but no framework adapter: a host converts its request into an
+  handlers; for shelf the adapter is
+  [typed_graphql_shelf](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_shelf),
+  and for any other framework a host converts its request into an
   `HttpRequestData` and calls `GraphQLHttpHandler.handle`
   ([HTTP](doc/http.md)), or wraps its WebSocket in a `GraphQLSocket` and
   calls `GraphQLWsHandler.serve` ([WebSocket](doc/websocket.md)).
@@ -161,7 +165,7 @@ executed
   profiles, limits and the cost limit, CSRF prevention, the document cache,
   extensions, errors and masking.
 - [HTTP](doc/http.md): `GraphQLHttpHandler`, media types and status codes,
-  limits, batching, writing a host adapter, security notes.
+  limits, batching, writing a host adapter, security notes, the GraphiQL page.
 - [Uploads](doc/uploads.md): the `Upload` scalar, multipart requests, limits,
   storage of files while a request runs.
 - [Server-sent events](doc/sse.md): GraphQL over `text/event-stream` in both

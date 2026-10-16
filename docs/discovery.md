@@ -52,7 +52,10 @@ adds its row (or turns it to "yes") together with its README line and its
 | graphql over http handler dart | M7 | yes |
 | GraphQL multipart file upload dart | M7 | yes |
 | GraphQL server-sent events dart | M7 | yes |
-| GraphQL server dart | M7 | no |
+| GraphQL graphql-ws WebSocket server dart | M7 | yes |
+| GraphQL GraphiQL dart | M7 | yes |
+| GraphQL shelf dart | M7 | yes |
+| GraphQL server dart | M7 | yes |
 | generate a typed GraphQL client dart | M10 | yes |
 
 ## Metadata

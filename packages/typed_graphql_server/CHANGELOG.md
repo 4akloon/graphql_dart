@@ -275,3 +275,4 @@
   answers a `GET` without a `query` whose `Accept` ranks `text/html` above
   the JSON types with a page that loads GraphiQL 3.9.0 from jsDelivr, pinned
   by Subresource Integrity, and sends its queries to the request's path.
+- The README and the HTTP, Uploads and WebSocket guides point to `typed_graphql_shelf`, the shelf adapter that completes stage M7.

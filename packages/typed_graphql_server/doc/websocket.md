@@ -235,3 +235,6 @@ abstract interface class GraphQLSocket {
 - End `incoming` when the connection closes, from either side.
 - Call `allowsUpgrade` before upgrading and answer `403`, then call `serve`
   with a `RequestInfo` of the upgrade request.
+
+For shelf there is nothing to write: `GraphQLShelfHandler` of
+`typed_graphql_shelf` does all of this when its `webSocket` option is set.
