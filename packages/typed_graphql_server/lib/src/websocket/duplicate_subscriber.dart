@@ -10,7 +10,7 @@ final class DuplicateSubscriber {
   const DuplicateSubscriber();
 
   /// The WebSocket close code.
-  int get code => 4409;
+  static const int code = 4409;
 
   /// The most UTF-8 bytes a close reason may hold (RFC 6455 section 5.5).
   static const int maxReasonBytes = 123;

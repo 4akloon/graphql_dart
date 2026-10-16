@@ -7,15 +7,20 @@ import 'client_message.dart';
 /// null, never an exception).
 @internal
 final class ClientMessageReader {
-  /// Creates a reader that accepts JSON nested at most [maxJsonDepth] deep.
-  const ClientMessageReader(this.maxJsonDepth);
+  /// Creates a reader that accepts JSON nested at most [maxJsonDepth] deep
+  /// and ids of at most [maxIdLength] UTF-16 code units.
+  const ClientMessageReader(this.maxJsonDepth, this.maxIdLength);
 
   /// The nesting limit of the frame's JSON.
   final int maxJsonDepth;
 
+  /// The longest operation id accepted.
+  final int maxIdLength;
+
   /// The message in [text], or null when it is not a valid client message:
   /// not JSON, too deep, not an object, no string `type`, a field of the
-  /// wrong type, or a type only a server sends. The caller closes `4400`.
+  /// wrong type, an id that is empty or too long, or a type only a server
+  /// sends. The caller closes `4400`.
   ClientMessage? read(String text) {
     final parsed = JsonReader(maxDepth: maxJsonDepth).parse(text);
     if (parsed case DecodeSuccess(value: final JsonObject json)) {
@@ -61,7 +66,9 @@ final class ClientMessageReader {
   }
 
   String? _id(JsonObject json) => switch (json['id']) {
-    JsonString(value: final id) when id.isNotEmpty => id,
+    JsonString(value: final id)
+        when id.isNotEmpty && id.length <= maxIdLength =>
+      id,
     _ => null,
   };
 }

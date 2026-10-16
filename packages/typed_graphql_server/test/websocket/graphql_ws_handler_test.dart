@@ -173,6 +173,19 @@ void main() {
       expect(await socket.nextSent(), {'type': 'complete', 'id': '7'});
     });
 
+    test('reports what it swallowed to onError', () async {
+      final fixture = WsFixture();
+      final seen = <Object>[];
+      final handler = GraphQLWsHandler(
+        fixture.server(),
+        options: GraphQLWsOptions(
+          onError: (error, stackTrace) => seen.add(error),
+        ),
+      );
+      await handler.serve(ThrowingSocket(), fixture.upgrade());
+      expect(seen.single, isA<StateError>());
+    });
+
     test('does not throw when the socket cannot be closed', () async {
       final fixture = WsFixture();
       final handler = GraphQLWsHandler(fixture.server());
@@ -198,6 +211,10 @@ void main() {
 
     test('rejects a zero message length', () {
       rejects(const GraphQLWsOptions(maxMessageLength: 0));
+    });
+
+    test('rejects a zero id length', () {
+      rejects(const GraphQLWsOptions(maxIdLength: 0));
     });
 
     test('rejects zero connections', () {

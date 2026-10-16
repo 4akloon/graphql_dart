@@ -1,4 +1,5 @@
 import 'connection_hook.dart';
+import 'socket_error_hook.dart';
 
 /// The limits and hooks of a `GraphQLWsHandler` (R5.7).
 ///
@@ -11,9 +12,11 @@ final class GraphQLWsOptions {
     this.maxOperations = 100,
     this.maxMessageLength = 1048576,
     this.maxJsonDepth = 64,
+    this.maxIdLength = 256,
     this.maxConnections = 10000,
     this.allowedOrigins,
     this.onConnect,
+    this.onError,
   });
 
   /// How long a connection may stay open without being acknowledged; past it
@@ -32,6 +35,11 @@ final class GraphQLWsOptions {
   /// deeper one closes `4400`.
   final int maxJsonDepth;
 
+  /// The longest operation id accepted, in UTF-16 code units; a `subscribe`
+  /// or `complete` with a longer one closes `4400`. Each running operation
+  /// keeps its id, so this bounds what `maxOperations` operations hold.
+  final int maxIdLength;
+
   /// The most connections one handler serves at once; past it a new one is
   /// closed `1013`.
   final int maxConnections;
@@ -45,4 +53,8 @@ final class GraphQLWsOptions {
   /// Runs when `connection_init` arrives and decides whether to acknowledge;
   /// null acknowledges every connection.
   final ConnectionHook? onConnect;
+
+  /// Sees the unexpected errors the handler swallows, with their stack
+  /// traces; null reports nowhere. See [SocketErrorHook].
+  final SocketErrorHook? onError;
 }

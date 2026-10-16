@@ -8,6 +8,7 @@ import '../server/graphql_server.dart';
 import '../server/request_info.dart';
 import '../server/server_request.dart';
 import 'client_message.dart';
+import 'socket_error_reporter.dart';
 import 'socket_operation.dart';
 
 /// The operations a graphql-ws connection is running, by id.
@@ -19,6 +20,7 @@ final class SocketOperations<C> {
     required this.upgrade,
     required this.maxOperations,
     required this.send,
+    this.reporter = const SocketErrorReporter(null),
   });
 
   /// The server that runs the operations.
@@ -27,22 +29,27 @@ final class SocketOperations<C> {
   /// The upgrade request the connection came on.
   final RequestInfo upgrade;
 
-  /// How many operations may run at once.
+  /// How many operations may be in flight at once.
   final int maxOperations;
 
   /// Writes a message to the socket.
   final void Function(String text) send;
 
-  final Map<String, SocketOperation<C>> _running = {};
+  /// Told about the errors the operations swallow.
+  final SocketErrorReporter reporter;
 
-  /// How many operations are running.
-  int get length => _running.length;
+  final Map<String, SocketOperation> _running = {};
+  int _inFlight = 0;
 
-  /// Whether an operation with [id] is running.
+  /// Whether an operation with [id] is running (not cancelled).
   bool contains(String id) => _running.containsKey(id);
 
-  /// Whether [maxOperations] operations are running.
-  bool get isFull => _running.length >= maxOperations;
+  /// Whether [maxOperations] operations are in flight.
+  ///
+  /// A cancelled operation stays in flight until the server stops working on
+  /// its request, so a client that subscribes and completes in a loop cannot
+  /// start more than [maxOperations] executions.
+  bool get isFull => _inFlight >= maxOperations;
 
   /// Registers and starts the operation of [message].
   ///
@@ -52,25 +59,25 @@ final class SocketOperations<C> {
   /// (spec section 9).
   void start(SubscribeMessage message, JsonObject? connectionParams) {
     final signal = CancelSignal();
-    final operation = SocketOperation<C>(
+    final operation = SocketOperation(
       id: message.id,
-      server: server,
+      handle: server.handle,
       request: ServerRequest(
         params: message.request,
-        info: RequestInfo(
+        info: upgrade.withConnection(
+          connectionParams,
           method: 'POST',
-          uri: upgrade.uri,
-          headers: {...upgrade.headers, 'content-type': 'application/json'},
-          source: upgrade.source,
-          connectionParams: connectionParams,
+          headers: const {'content-type': 'application/json'},
         ),
         cancelSignal: signal,
       ),
       signal: signal,
       send: send,
-      onEnded: _remove,
+      onReleased: _release,
+      reporter: reporter,
     );
     _running[message.id] = operation;
+    _inFlight++;
     unawaited(operation.run());
   }
 
@@ -87,7 +94,8 @@ final class SocketOperations<C> {
   }
 
   // The id may already belong to a newer operation after a `complete`.
-  void _remove(SocketOperation<C> operation) {
+  void _release(SocketOperation operation) {
+    _inFlight--;
     if (identical(_running[operation.id], operation)) {
       _running.remove(operation.id);
     }

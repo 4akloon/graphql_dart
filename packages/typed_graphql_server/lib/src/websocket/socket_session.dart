@@ -13,6 +13,7 @@ import 'duplicate_subscriber.dart';
 import 'graphql_socket.dart';
 import 'graphql_ws_options.dart';
 import 'server_messages.dart';
+import 'socket_error_reporter.dart';
 import 'socket_operations.dart';
 import 'ws_close.dart';
 
@@ -27,12 +28,17 @@ final class SocketSession<C> {
     required this.socket,
     required this.upgrade,
   }) : _handshake = ConnectionHandshake(options, upgrade),
-       _reader = ClientMessageReader(options.maxJsonDepth) {
+       _reader = ClientMessageReader(
+         options.maxJsonDepth,
+         options.maxIdLength,
+       ),
+       _reporter = SocketErrorReporter(options.onError) {
     _operations = SocketOperations<C>(
       server: server,
       upgrade: upgrade,
       maxOperations: options.maxOperations,
       send: _send,
+      reporter: _reporter,
     );
   }
 
@@ -50,16 +56,20 @@ final class SocketSession<C> {
 
   final ConnectionHandshake _handshake;
   final ClientMessageReader _reader;
+  final SocketErrorReporter _reporter;
   // Set by the constructor body, which needs `_send` of this instance.
   late final SocketOperations<C> _operations;
   final ServerMessages _messages = const ServerMessages();
   final Completer<void> _ended = Completer<void>();
+  StreamSubscription<String>? _frames;
   bool _isClosed = false;
 
-  /// Serves the connection; completes when `incoming` ends or fails.
+  /// Serves the connection; completes when `incoming` ends or fails, or
+  /// when a close the server asked for finished (or failed): a peer that
+  /// never answers the closing handshake must not hold the session open.
   Future<void> run() {
     _handshake.startTimer(() => _close(WsClose.initTimeout));
-    socket.incoming.listen(
+    _frames = socket.incoming.listen(
       _onFrame,
       onError: (Object _) => _end(),
       onDone: _end,
@@ -74,6 +84,7 @@ final class SocketSession<C> {
     _isClosed = true;
     _handshake.stopTimer();
     _operations.cancelAll();
+    _frames?.cancel().ignore();
     if (!_ended.isCompleted) {
       _ended.complete();
     }
@@ -112,7 +123,11 @@ final class SocketSession<C> {
     final ConnectionDecision decision;
     try {
       decision = await _handshake.decide(payload);
-    } on Object {
+    } on Object catch (error, stackTrace) {
+      // A boundary: the hook is host code and may throw anything. It is
+      // reported (an Error too, never rethrown into the zone) and the client
+      // gets only the fixed 4500.
+      _reporter.report(error, stackTrace);
       _close(WsClose.internalError);
       return;
     }
@@ -132,8 +147,10 @@ final class SocketSession<C> {
     if (!_handshake.isAcknowledged) {
       _close(WsClose.unauthorized);
     } else if (_operations.contains(message.id)) {
-      const duplicate = DuplicateSubscriber();
-      _closeWith(duplicate.code, duplicate.reason(message.id));
+      _closeWith(
+        DuplicateSubscriber.code,
+        const DuplicateSubscriber().reason(message.id),
+      );
     } else if (_operations.isFull) {
       _send(_messages.error(message.id, [_tooManyOperations()]));
     } else {
@@ -164,14 +181,12 @@ final class SocketSession<C> {
     _handshake.stopTimer();
     _operations.cancelAll();
     try {
-      socket
-          .close(code, reason)
-          .then<void>(
-            (_) {},
-            onError: (Object _) {},
-          );
+      socket.close(code, reason).then<void>((_) => _end(), onError: _endAfter);
     } on Object {
-      // A socket that fails to close is gone already; nothing is left to do.
+      // A socket that fails to close is gone already.
+      _end();
     }
   }
+
+  void _endAfter(Object _) => _end();
 }

@@ -78,7 +78,7 @@ void main() {
     const duplicate = DuplicateSubscriber();
 
     test('uses the code 4409', () {
-      expect(duplicate.code, 4409);
+      expect(DuplicateSubscriber.code, 4409);
     });
 
     test('names a short id in full', () {

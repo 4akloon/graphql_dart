@@ -5,6 +5,7 @@ import '../server/request_info.dart';
 import 'graphql_socket.dart';
 import 'graphql_ws_options.dart';
 import 'origin_policy.dart';
+import 'socket_error_reporter.dart';
 import 'socket_session.dart';
 import 'ws_close.dart';
 
@@ -69,7 +70,10 @@ final class GraphQLWsHandler<C> {
       } finally {
         _openSessions--;
       }
-    } on Object {
+    } on Object catch (error, stackTrace) {
+      // The outermost boundary of a connection, as `GraphQLServer.handle`
+      // is of a request: it must report an Error, not rethrow it.
+      SocketErrorReporter(options.onError).report(error, stackTrace);
       await _closeAfterFailure(socket);
     }
   }
@@ -110,6 +114,11 @@ final class GraphQLWsHandler<C> {
       'maxMessageLength',
       options.maxMessageLength,
       options.maxMessageLength > 0,
+    );
+    _positive(
+      'maxIdLength',
+      options.maxIdLength,
+      options.maxIdLength > 0,
     );
     _positive(
       'maxConnections',

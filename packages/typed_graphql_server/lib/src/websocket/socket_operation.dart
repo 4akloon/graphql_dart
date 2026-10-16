@@ -5,31 +5,33 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../cancellation/cancel_signal.dart';
 import '../execution/masked_message.dart';
-import '../server/graphql_server.dart';
 import '../server/server_request.dart';
 import '../server/server_response.dart';
 import 'server_messages.dart';
+import 'socket_error_reporter.dart';
 
 /// One `subscribe` of a graphql-ws connection: runs the request through the
 /// server and writes its `next`, `error` and `complete` messages.
 @internal
-final class SocketOperation<C> {
-  /// Creates the operation [id]; [send] writes a message to the socket and
-  /// [onEnded] tells the registry the operation finished by itself.
+final class SocketOperation {
+  /// Creates the operation [id]. [handle] is the server's `handle`, [send]
+  /// writes a message to the socket and [onReleased] tells the registry that
+  /// the operation holds nothing any more.
   SocketOperation({
     required this.id,
-    required this.server,
+    required this.handle,
     required this.request,
     required this.signal,
     required this.send,
-    required this.onEnded,
+    required this.onReleased,
+    this.reporter = const SocketErrorReporter(null),
   });
 
   /// The id the client chose.
   final String id;
 
-  /// The server that runs the request.
-  final GraphQLServer<C> server;
+  /// Runs [request] through the server.
+  final Future<ServerResponse> Function(ServerRequest request) handle;
 
   /// The request, carrying [signal].
   final ServerRequest request;
@@ -40,26 +42,39 @@ final class SocketOperation<C> {
   /// Writes a message to the socket.
   final void Function(String text) send;
 
-  /// Called once when the operation ends without being cancelled.
-  final void Function(SocketOperation<C> operation) onEnded;
+  /// Called once when the operation holds nothing any more: it ended, or it
+  /// was cancelled and the server stopped working on it. A cancelled
+  /// operation whose request is still running is not released yet, so the
+  /// registry counts it against `maxOperations`.
+  final void Function(SocketOperation operation) onReleased;
+
+  /// Told about the errors the operation swallows.
+  final SocketErrorReporter reporter;
 
   final ServerMessages _messages = const ServerMessages();
   StreamSubscription<ExecutionResult>? _subscription;
   bool _isCancelled = false;
+  bool _isHandling = true;
+  bool _isReleased = false;
 
   /// Runs the request and sends what it produces.
   Future<void> run() async {
     final ServerResponse response;
     try {
-      response = await server.handle(request);
-    } on Object {
-      // The server reports its own failures as responses; this guards the
-      // socket against a bug there without leaking its text.
+      response = await handle(request);
+    } on Object catch (error, stackTrace) {
+      // A boundary: the server answers its own failures, so this is a bug
+      // there; it is reported (an Error too, never rethrown into the zone)
+      // and the client gets the masked message.
+      _isHandling = false;
+      reporter.report(error, stackTrace);
       _sendUnexpected();
       return;
     }
+    _isHandling = false;
     if (_isCancelled) {
       _discard(response);
+      _release();
       return;
     }
     switch (response) {
@@ -78,6 +93,9 @@ final class SocketOperation<C> {
     _isCancelled = true;
     _subscription?.cancel().ignore();
     signal.cancel();
+    if (!_isHandling) {
+      _release();
+    }
   }
 
   // A stream that arrives after `complete` was never wanted: listening and
@@ -96,16 +114,19 @@ final class SocketOperation<C> {
       case RequestErrorResult(:final errors):
         send(_messages.error(id, errors));
     }
-    onEnded(this);
+    _release();
   }
 
   void _forward(Stream<ExecutionResult> results) {
     _subscription = results.listen(
       (result) => send(_messages.next(id, result)),
-      onError: (Object _) => _sendUnexpected(),
+      onError: (Object error, StackTrace stackTrace) {
+        reporter.report(error, stackTrace);
+        _sendUnexpected();
+      },
       onDone: () {
         send(_messages.complete(id));
-        onEnded(this);
+        _release();
       },
       cancelOnError: true,
     );
@@ -124,6 +145,13 @@ final class SocketOperation<C> {
         ]),
       );
     }
-    onEnded(this);
+    _release();
+  }
+
+  void _release() {
+    if (!_isReleased) {
+      _isReleased = true;
+      onReleased(this);
+    }
   }
 }

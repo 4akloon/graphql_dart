@@ -4,7 +4,7 @@ import 'package:typed_graphql_server/src/websocket/client_message.dart';
 import 'package:typed_graphql_server/src/websocket/client_message_reader.dart';
 
 void main() {
-  const reader = ClientMessageReader(8);
+  const reader = ClientMessageReader(8, 16);
   final payload = JsonObject({'token': const JsonString('a')});
 
   group('connection_init, ping and pong', () {
@@ -176,6 +176,33 @@ void main() {
     test('JSON deeper than the limit', () {
       final deep = '[' * 9 + ']' * 9;
       expect(reader.read('{"type":"ping","payload":{"a":$deep}}'), isNull);
+    });
+  });
+
+  group('id length', () {
+    final longest = 'a' * 16;
+    final tooLong = 'a' * 17;
+
+    test('accepts a subscribe id of maxIdLength', () {
+      expect(
+        reader.read(
+          '{"id":"$longest","type":"subscribe","payload":{"query":"{a}"}}',
+        ),
+        isA<SubscribeMessage>(),
+      );
+    });
+
+    test('rejects a subscribe id past maxIdLength', () {
+      expect(
+        reader.read(
+          '{"id":"$tooLong","type":"subscribe","payload":{"query":"{a}"}}',
+        ),
+        isNull,
+      );
+    });
+
+    test('rejects a complete id past maxIdLength', () {
+      expect(reader.read('{"id":"$tooLong","type":"complete"}'), isNull);
     });
   });
 }

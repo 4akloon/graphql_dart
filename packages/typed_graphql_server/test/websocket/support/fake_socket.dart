@@ -5,7 +5,21 @@ import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 /// An in-memory [GraphQLSocket] that records what the server sends.
 final class FakeSocket implements GraphQLSocket {
-  FakeSocket({this.protocol = 'graphql-transport-ws'});
+  /// A socket that closes at once. With [endsIncomingOnClose] false, `close`
+  /// leaves `incoming` open, as a peer that never finishes the closing
+  /// handshake does; [closeGate], when given, is awaited before `close`
+  /// completes.
+  FakeSocket({
+    this.protocol = 'graphql-transport-ws',
+    this.endsIncomingOnClose = true,
+    this.closeGate,
+  });
+
+  /// Whether `close` ends `incoming`.
+  final bool endsIncomingOnClose;
+
+  /// Awaited by `close` before it completes; null completes at once.
+  final Future<void>? closeGate;
 
   @override
   final String? protocol;
@@ -68,7 +82,10 @@ final class FakeSocket implements GraphQLSocket {
     if (!_closed.isCompleted) {
       _closed.complete();
     }
-    // Not awaited: with no listener the controller's close never completes.
-    unawaited(_incoming.close());
+    if (endsIncomingOnClose) {
+      // Not awaited: with no listener the controller's close never completes.
+      unawaited(_incoming.close());
+    }
+    await closeGate;
   }
 }

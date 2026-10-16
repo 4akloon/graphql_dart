@@ -83,3 +83,4 @@ export 'src/websocket/connection_hook.dart';
 export 'src/websocket/graphql_socket.dart';
 export 'src/websocket/graphql_ws_handler.dart';
 export 'src/websocket/graphql_ws_options.dart';
+export 'src/websocket/socket_error_hook.dart';

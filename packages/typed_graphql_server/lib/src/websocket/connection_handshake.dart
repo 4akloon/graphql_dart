@@ -20,23 +20,26 @@ final class ConnectionHandshake {
   /// The upgrade request the connection came on.
   final RequestInfo upgrade;
 
+  bool _hasInit = false;
+  bool _isAcknowledged = false;
+  JsonObject? _connectionParams;
+  Timer? _timer;
+
   /// Whether a `connection_init` was received, also one still being decided.
-  bool hasInit = false;
+  bool get hasInit => _hasInit;
 
   /// Whether `connection_ack` was sent; operations need it.
-  bool isAcknowledged = false;
+  bool get isAcknowledged => _isAcknowledged;
 
   /// The payload of the `connection_init` message; null until one arrives
   /// or when it carried none.
-  JsonObject? connectionParams;
-
-  Timer? _timer;
+  JsonObject? get connectionParams => _connectionParams;
 
   /// Calls [onExpired] when the connection is not acknowledged within
-  /// `connectionInitTimeout`.
+  /// `connectionInitTimeout`; it covers a slow `onConnect` hook too.
   void startTimer(void Function() onExpired) {
     _timer = Timer(options.connectionInitTimeout, () {
-      if (!isAcknowledged) {
+      if (!_isAcknowledged) {
         onExpired();
       }
     });
@@ -50,29 +53,21 @@ final class ConnectionHandshake {
 
   /// Records the `connection_init` and asks the hook (if any) what to do.
   ///
-  /// [hasInit] is set before the hook runs, so a second message that
+  /// [hasInit] is true before the hook runs, so a second message that
   /// arrives while the hook is pending is a second initialisation.
   Future<ConnectionDecision> decide(JsonObject? payload) async {
-    hasInit = true;
-    connectionParams = payload;
+    _hasInit = true;
+    _connectionParams = payload;
     final hook = options.onConnect;
     if (hook == null) {
       return const AcceptConnection();
     }
-    return hook(
-      RequestInfo(
-        method: upgrade.method,
-        uri: upgrade.uri,
-        headers: upgrade.headers,
-        source: upgrade.source,
-        connectionParams: payload,
-      ),
-    );
+    return hook(upgrade.withConnection(payload));
   }
 
   /// Marks the connection acknowledged and stops the timer.
   void acknowledge() {
-    isAcknowledged = true;
+    _isAcknowledged = true;
     stopTimer();
   }
 }
