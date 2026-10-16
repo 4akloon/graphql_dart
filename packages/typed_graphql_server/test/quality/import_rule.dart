@@ -2,7 +2,8 @@
 /// one library under `lib/`.
 ///
 /// The server runs on the VM, AOT, dart2js and dart2wasm, so it imports pure
-/// Dart, `dart:convert`, `meta`, `package:crypto/crypto.dart` (SHA-256 of
+/// Dart, `dart:convert`, `dart:typed_data` (the bytes of a request body),
+/// `meta`, `package:crypto/crypto.dart` (SHA-256 of
 /// documents), the core's barrel and its own files, never `src/` of the core
 /// and never a web framework.
 final class ImportRule {
@@ -16,6 +17,7 @@ final class ImportRule {
     'dart:convert',
     'dart:core',
     'dart:math',
+    'dart:typed_data',
   };
 
   static const String _crypto = 'package:crypto/crypto.dart';

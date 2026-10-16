@@ -32,6 +32,13 @@ void main() {
       );
     });
 
+    test('allows dart:typed_data', () {
+      expect(
+        rule.check('lib/src/http/a.dart', "import 'dart:typed_data';\n"),
+        isEmpty,
+      );
+    });
+
     test('allows package:crypto/crypto.dart', () {
       expect(
         rule.check(
