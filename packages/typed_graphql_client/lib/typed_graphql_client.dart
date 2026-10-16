@@ -8,6 +8,7 @@
 library;
 
 export 'src/client/cancel_token.dart';
+export 'src/client/client_failure.dart';
 export 'src/operation/data_codec.dart';
 export 'src/operation/data_context.dart';
 export 'src/operation/data_enum.dart';
