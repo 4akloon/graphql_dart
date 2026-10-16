@@ -9,3 +9,6 @@
 - `GraphQLShelfHandler`: a shelf `Handler` that serves GraphQL over HTTP
   through `GraphQLHttpHandler` (`HttpOptions` as `http`), with streamed bodies
   written unbuffered. The shelf guide is `doc/shelf.md`.
+- WebSocket: `GraphQLShelfHandler(webSocket:, webSocketPingInterval:)` serves
+  graphql-ws over a shelf WebSocket upgrade, after the Origin check (`403`
+  with `GQL403` for a foreign origin).

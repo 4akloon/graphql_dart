@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 /// A small executable schema and the server over it, for the adapter tests.
@@ -12,7 +14,22 @@ final class ShelfFixture {
       'Mutation',
       fields: (t) => [t.field('bump', b.string).pure((_) => 'bumped')],
     );
-    schema = b.build(query: query, mutation: mutation);
+    final subscription = b.object<Object?>(
+      'Subscription',
+      fields: (t) => [
+        t
+            .field('ticks', b.string)
+            .subscribeWith<int>(
+              (parent, args, context, info) => Stream.fromIterable([1, 2]),
+              (event, args, context, info) => 'tick $event',
+            ),
+      ],
+    );
+    schema = b.build(
+      query: query,
+      mutation: mutation,
+      subscription: subscription,
+    );
   }
 
   // Set by the constructor body, before anything reads it.

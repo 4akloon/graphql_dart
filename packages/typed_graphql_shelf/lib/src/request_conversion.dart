@@ -20,11 +20,22 @@ final class RequestConversion {
   HttpRequestData convert(Request request) => HttpRequestData(
     method: request.method,
     uri: request.requestedUri,
-    headers: {
-      for (final MapEntry(:key, :value) in request.headersAll.entries)
-        key: value.join(', '),
-    },
+    headers: _joinedHeaders(request),
     body: request.read(),
     source: request,
   );
+
+  /// What the graphql-ws handler reads of the upgrade [request], whose body
+  /// is not touched.
+  RequestInfo info(Request request) => RequestInfo(
+    method: request.method,
+    uri: request.requestedUri,
+    headers: _joinedHeaders(request),
+    source: request,
+  );
+
+  static Map<String, String> _joinedHeaders(Request request) => {
+    for (final MapEntry(:key, :value) in request.headersAll.entries)
+      key: value.join(', '),
+  };
 }
