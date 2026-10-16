@@ -2,6 +2,8 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../server/graphql_server.dart';
 import 'accept_negotiation.dart';
+import 'batch_policy.dart';
+import 'batch_runner.dart';
 import 'get_parameters.dart';
 import 'http_options.dart';
 import 'http_options_check.dart';
@@ -36,6 +38,15 @@ final class GraphQLHttpHandler<C> {
         ResultWriter(
           usesPartialSuccessStatus: options.usesPartialSuccessStatus,
         ),
+      ),
+      // The decoder refuses a batch when there is no policy, so the default
+      // here is never used to run one.
+      _batches = BatchRunner<C>(
+        server,
+        options.batching ?? const BatchPolicy(),
+        ResultWriter(
+          usesPartialSuccessStatus: options.usesPartialSuccessStatus,
+        ),
       ) {
     const HttpOptionsCheck().check(options);
   }
@@ -48,6 +59,7 @@ final class GraphQLHttpHandler<C> {
 
   final TransportErrors _errors;
   final JsonExchange<C> _exchange;
+  final BatchRunner<C> _batches;
 
   static const List<ResponseMediaType> _offered = [
     ResponseMediaType.graphqlResponseJson,
@@ -109,11 +121,7 @@ final class GraphQLHttpHandler<C> {
       params,
       type,
     ),
-    DecodedBatch() => _errors.refusal(
-      422,
-      DiagnosticCode.batchingDisabled,
-      'Batched requests are not enabled.',
-    ),
+    DecodedBatch(:final items) => await _batches.run(request, items, type),
     DecodingRefusal(:final status, :final code, :final message) =>
       _errors.refusal(status, code, message),
   };

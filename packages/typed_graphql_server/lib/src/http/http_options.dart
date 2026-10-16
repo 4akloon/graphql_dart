@@ -1,3 +1,5 @@
+import 'batch_policy.dart';
+
 /// The settings of `GraphQLHttpHandler`: the limits on what a client may send
 /// and how results are reported (R5.5).
 ///
@@ -13,6 +15,7 @@ final class HttpOptions {
     this.maxJsonDepth = 64,
     this.maxUriLength = 8192,
     this.usesPartialSuccessStatus = true,
+    this.batching,
   });
 
   /// The longest request body accepted, in bytes; a longer one is refused with
@@ -39,4 +42,7 @@ final class HttpOptions {
   ///
   /// A client that does not accept that media type always gets `200`.
   final bool usesPartialSuccessStatus;
+
+  /// How batches are run, or null, the default, to refuse them (`GQL428`).
+  final BatchPolicy? batching;
 }

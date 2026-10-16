@@ -20,6 +20,10 @@ final class HttpOptionsCheck {
       'bodyTimeout',
     );
     _positive(options.maxUriLength > 0, options.maxUriLength, 'maxUriLength');
+    final batching = options.batching;
+    if (batching != null) {
+      _positive(batching.maxRequests > 0, batching.maxRequests, 'maxRequests');
+    }
     if (options.maxJsonDepth < 1 ||
         options.maxJsonDepth > JsonReader.maxSupportedDepth) {
       throw ArgumentError.value(

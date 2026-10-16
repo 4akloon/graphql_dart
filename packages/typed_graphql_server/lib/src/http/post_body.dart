@@ -39,6 +39,7 @@ final class PostBody {
     return switch (result) {
       BodyBytes(:final bytes) => JsonBodyDecoder(
         maxJsonDepth: options.maxJsonDepth,
+        batching: options.batching,
       ).decode(bytes),
       BodyTooLarge() => _tooLarge(),
       BodyTimedOut() => DecodingRefusal(

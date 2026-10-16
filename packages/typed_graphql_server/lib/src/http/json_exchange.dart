@@ -4,11 +4,10 @@ import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../server/graphql_server.dart';
-import '../server/request_info.dart';
-import '../server/server_request.dart';
 import '../server/server_response.dart';
 import 'http_request_data.dart';
 import 'http_response_data.dart';
+import 'pipeline_requests.dart';
 import 'response_media_type.dart';
 import 'result_writer.dart';
 import 'transport_errors.dart';
@@ -41,15 +40,9 @@ final class JsonExchange<C> {
     ResponseMediaType type,
   ) async {
     final response = await server.handle(
-      ServerRequest(
-        params: params,
-        info: RequestInfo(
-          method: http.method,
-          uri: http.uri,
-          headers: http.headers,
-          source: http.source,
-        ),
-        cancelSignal: http.cancelSignal,
+      const PipelineRequests().of(
+        http,
+        params,
         allowedOperationTypes: allowedOperationTypes,
       ),
     );

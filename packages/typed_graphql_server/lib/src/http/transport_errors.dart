@@ -54,8 +54,20 @@ final class TransportErrors {
   HttpResponseData unexpected(Object error) => refusal(
     500,
     DiagnosticCode.unexpectedError,
-    maskErrors ? const MaskedMessage().text : _describe(error),
+    _unexpectedText(error),
   );
+
+  /// The `GQL330` error of [error] as [unexpected] writes it, for a place
+  /// that is not a whole response, such as the slot of a batch.
+  GraphQLError unexpectedError(Object error) => GraphQLError(
+    _unexpectedText(error),
+    extensions: JsonObject({
+      'code': JsonString(DiagnosticCode.unexpectedError.id),
+    }),
+  );
+
+  String _unexpectedText(Object error) =>
+      maskErrors ? const MaskedMessage().text : _describe(error);
 
   // A `toString()` that throws must not turn the report into a failure.
   String _describe(Object error) {

@@ -5,9 +5,14 @@ import 'package:test/test.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_server/src/http/json_body_decoder.dart';
 import 'package:typed_graphql_server/src/http/request_decoding.dart';
+import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 void main() {
-  const decoder = JsonBodyDecoder(maxJsonDepth: 8);
+  const decoder = JsonBodyDecoder(maxJsonDepth: 8, batching: null);
+  const batchingDecoder = JsonBodyDecoder(
+    maxJsonDepth: 8,
+    batching: BatchPolicy(maxRequests: 2),
+  );
 
   Uint8List bytes(String text) => Uint8List.fromList(utf8.encode(text));
 
@@ -152,6 +157,42 @@ void main() {
         DiagnosticCode.batchingDisabled,
         'Batched requests are not enabled.',
       );
+    });
+  });
+
+  group('a batch', () {
+    test('keeps the items of an array when batching is on', () {
+      final decoded = batchingDecoder.decode(
+        bytes('[{"query":"{a}"},{"query":"{b}"}]'),
+      );
+      expect((decoded as DecodedBatch).items, hasLength(2));
+    });
+
+    test('does not decode the items yet', () {
+      expect(batchingDecoder.decode(bytes('[1,"x"]')), isA<DecodedBatch>());
+    });
+
+    test('is 422 when it is empty', () {
+      final result = batchingDecoder.decode(bytes('[]')) as DecodingRefusal;
+      expect(
+        (result.status, result.code, result.message),
+        (
+          422,
+          DiagnosticCode.invalidBatchSize,
+          'A batch must hold between 1 and 2 requests.',
+        ),
+      );
+    });
+
+    test('is 422 when it holds more than maxRequests items', () {
+      expect(
+        (batchingDecoder.decode(bytes('[1,2,3]')) as DecodingRefusal).code,
+        DiagnosticCode.invalidBatchSize,
+      );
+    });
+
+    test('is accepted at exactly maxRequests items', () {
+      expect(batchingDecoder.decode(bytes('[1,2]')), isA<DecodedBatch>());
     });
   });
 }

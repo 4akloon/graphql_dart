@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import 'batch_policy.dart';
 import 'failure_description.dart';
 import 'request_decoding.dart';
 
@@ -11,11 +12,15 @@ import 'request_decoding.dart';
 /// or a refusal (spec section 4, steps 7 and 8).
 @internal
 final class JsonBodyDecoder {
-  /// Creates a decoder that accepts JSON nested at most [maxJsonDepth] deep.
-  const JsonBodyDecoder({required this.maxJsonDepth});
+  /// Creates a decoder that accepts JSON nested at most [maxJsonDepth] deep
+  /// and arrays as the [batching] policy allows, or not at all when it is null.
+  const JsonBodyDecoder({required this.maxJsonDepth, required this.batching});
 
   /// The deepest nesting of arrays and objects accepted.
   final int maxJsonDepth;
+
+  /// The policy for an array of requests, or null to refuse arrays.
+  final BatchPolicy? batching;
 
   /// Decodes [bytes], never throwing.
   RequestDecoding decode(Uint8List bytes) {
@@ -57,17 +62,34 @@ final class JsonBodyDecoder {
 
   RequestDecoding _decodeValue(JsonValue value) => switch (value) {
     JsonObject() => _decodeRequest(value),
-    JsonArray() => const DecodingRefusal(
-      422,
-      DiagnosticCode.batchingDisabled,
-      'Batched requests are not enabled.',
-    ),
+    JsonArray() => _decodeBatch(value),
     _ => const DecodingRefusal(
       422,
       DiagnosticCode.malformedRequestParameters,
       'The request body must be a JSON object.',
     ),
   };
+
+  // The items are not decoded here: a batch over the size limit must cost
+  // nothing more than counting them.
+  RequestDecoding _decodeBatch(JsonArray array) {
+    final policy = batching;
+    if (policy == null) {
+      return const DecodingRefusal(
+        422,
+        DiagnosticCode.batchingDisabled,
+        'Batched requests are not enabled.',
+      );
+    }
+    if (array.items.isEmpty || array.items.length > policy.maxRequests) {
+      return DecodingRefusal(
+        422,
+        DiagnosticCode.invalidBatchSize,
+        'A batch must hold between 1 and ${policy.maxRequests} requests.',
+      );
+    }
+    return DecodedBatch(array.items);
+  }
 
   RequestDecoding _decodeRequest(JsonObject object) =>
       switch (GraphQLRequest.decode(object)) {
