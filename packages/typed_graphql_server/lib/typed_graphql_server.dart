@@ -53,6 +53,8 @@ export 'src/execution/field_resolver.dart';
 export 'src/execution/field_site.dart';
 export 'src/execution/graphql_exception.dart';
 export 'src/execution/response_path.dart';
+export 'src/http/graphql_http_handler.dart';
+export 'src/http/http_options.dart';
 export 'src/http/http_request_data.dart';
 export 'src/http/http_response_body.dart';
 export 'src/http/http_response_data.dart';
