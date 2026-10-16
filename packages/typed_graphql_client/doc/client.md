@@ -1,8 +1,81 @@
 # Client
 
 `GraphQLClient` sends the operations `typed_graphql_codegen` generates and
-returns typed responses. This guide grows with the client; these sections
-cover failures and cancellation.
+returns typed responses. A client holds one `Link`, the chain its requests
+go through (see the Links guide).
+
+## Sending an operation
+
+`query`, `mutate` and `subscribe` take a generated operation of the
+matching kind. `query` and `mutate` complete with one `GraphQLResponse`;
+`subscribe` returns a stream that starts the subscription when it is
+listened to and gives one response per event. The response is a sealed
+family:
+
+| Response | When |
+|---|---|
+| `GraphQLData(data, errors)` | the operation ran; `errors` is not empty for partial data |
+| `GraphQLErrors(errors)` | the request was refused, or an error left no data (`"data": null`) |
+| `GraphQLTransportFailure(failure)` | no GraphQL response: see Failures below |
+
+The program below stands a hand-written operation in for a generated one
+and a `MockLink` in for a server. The second answer has a number where the
+operation expects a string, so it does not fit the operation's classes.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_client/typed_graphql_client.dart';
+
+final class HelloQuery extends GraphQLQuery<String> {
+  const HelloQuery();
+
+  @override
+  OperationDocument get document => const OperationDocument(
+    name: 'Hello',
+    type: OperationType.query,
+    text: 'query Hello{hello}',
+    sha256: 'f6004747575e6561b67c600f28196e3c7648ef73797a3078da3e4658ddf6b623',
+  );
+
+  @override
+  JsonObject get variablesJson => JsonObject({});
+
+  @override
+  DecodeResult<String> decodeData(JsonObject data) => switch (data['hello']) {
+    JsonString(:final value) => DecodeSuccess(value),
+    _ => const DecodeFailure('expected a string', path: [PathKey('hello')]),
+  };
+}
+
+Future<void> main() async {
+  final link = MockLink()
+    ..addData(JsonObject({'hello': JsonString('world')}))
+    ..addData(JsonObject({'hello': JsonNumber(1)}))
+    ..addErrors([GraphQLError('Cannot query field "hello".')]);
+  final client = GraphQLClient(link: link);
+  for (var i = 0; i < 3; i++) {
+    switch (await client.query(const HelloQuery())) {
+      case GraphQLData(:final data):
+        print('data: $data');
+      case GraphQLErrors(:final errors):
+        print('errors: ${errors.first.message}');
+      case GraphQLTransportFailure(:final failure):
+        print('failure: $failure');
+    }
+  }
+}
+```
+
+It prints:
+
+```text
+data: world
+failure: GQL465: The data does not fit the operation: $.hello: expected a string
+errors: Cannot query field "hello".
+```
+
+A response carries the `context` its terminating link wrote, such as the
+HTTP status in `HttpResponseInfo`, and the response's `extensions`.
 
 ## Failures
 
@@ -39,3 +112,13 @@ token.reason;      // 'the user left the page'
 
 Only the first `cancel` has an effect, and `whenCancelled` completes, never
 with an error, once the token is cancelled.
+
+Cancelling completes a pending `query` or `mutate` at once with
+`GraphQLTransportFailure(RequestCancelled(reason))`, and ends a `subscribe`
+stream with that failure as its last event. The client then cancels its
+subscription to the link chain, which ends the request in every link: an
+HTTP request is aborted, a WebSocket subscription is completed. A token
+already cancelled answers without calling the link at all.
+
+Cancelling the subscription to a `subscribe` stream ends the subscription
+the same way, without a last event.

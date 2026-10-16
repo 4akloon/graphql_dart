@@ -26,3 +26,6 @@
 - `Link`, `NextLink` and `Link.from` (a chain), and `MockLink`, a
   terminating link for tests that records requests and serves queued
   answers (R8.5).
+- `GraphQLClient` (`query`, `mutate`, `subscribe`, with a context and a
+  cancel token) and the sealed `GraphQLResponse` (`GraphQLData`,
+  `GraphQLErrors`, `GraphQLTransportFailure`) (R8.1, R8.2).

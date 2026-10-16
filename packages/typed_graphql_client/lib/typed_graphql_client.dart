@@ -9,6 +9,8 @@ library;
 
 export 'src/client/cancel_token.dart';
 export 'src/client/client_failure.dart';
+export 'src/client/graphql_client.dart';
+export 'src/client/graphql_response.dart';
 export 'src/link/context_entry.dart';
 export 'src/link/http_response_info.dart';
 export 'src/link/link.dart';
