@@ -1,6 +1,7 @@
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 import 'test_schema.dart';
+import 'tick_source.dart';
 
 /// Builds the M6 server the end-to-end tests talk to.
 final class TestServer {
@@ -12,8 +13,9 @@ final class TestServer {
   GraphQLServer<Object?> build({
     PersistedQueryStore? persistedQueries,
     TrustedDocuments? trustedDocuments,
+    TickSource? ticks,
   }) => GraphQLServer<Object?>(
-    schema: const TestSchema().build(),
+    schema: const TestSchema().build(ticks: ticks),
     contextFactory: (request) => null,
     persistedQueries: persistedQueries,
     trustedDocuments: trustedDocuments,

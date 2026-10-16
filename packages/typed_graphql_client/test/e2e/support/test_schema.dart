@@ -1,6 +1,8 @@
 import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
+import 'tick_source.dart';
+
 /// The schema the client's hand-written test operations run against.
 final class TestSchema {
   /// Creates the description.
@@ -10,8 +12,10 @@ final class TestSchema {
   static const String brokenCode = 'BROKEN';
 
   /// Builds the schema: `hello`, `greet(name:)`, a `broken` field that
-  /// fails, and the mutation `rename(name:)`.
-  ExecutableSchema<Object?> build() {
+  /// fails, the mutation `rename(name:)` and the subscription `ticks`, whose
+  /// events come from [ticks] (a fresh [TickSource] when null).
+  ExecutableSchema<Object?> build({TickSource? ticks}) {
+    final source = ticks ?? TickSource();
     final b = ExecutableSchemaBuilder<Object?>();
     final name = Arg('name', b.string);
     final query = b.object<Object?>(
@@ -41,6 +45,18 @@ final class TestSchema {
             .resolve((parent, args, context, info) => args.get(name)),
       ],
     );
-    return b.build(query: query, mutation: mutation);
+    final subscription = b.object<Object?>(
+      'Subscription',
+      fields: (t) => [
+        t
+            .field('ticks', b.int)
+            .subscribe((parent, args, context, info) => source.stream()),
+      ],
+    );
+    return b.build(
+      query: query,
+      mutation: mutation,
+      subscription: subscription,
+    );
   }
 }

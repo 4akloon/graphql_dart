@@ -5,6 +5,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_client/typed_graphql_client.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
+import 'event_stream_writer.dart';
 import 'request_params_reader.dart';
 import 'served_request.dart';
 
@@ -61,9 +62,31 @@ final class PipelineTransport implements HttpTransport {
     );
     return switch (response) {
       SingleResponse() => _write(response),
-      StreamResponse() => throw StateError('Streams need M7 (M11z).'),
+      StreamResponse() when _acceptsEventStream(request) => _stream(
+        response,
+        request,
+      ),
+      StreamResponse() => throw StateError('A stream needs text/event-stream.'),
     };
   }
+
+  bool _acceptsEventStream(TransportRequest request) =>
+      request.headers['accept']?.contains('text/event-stream') ?? false;
+
+  TransportResponse _stream(
+    StreamResponse response,
+    TransportRequest request,
+  ) => TransportResponse(
+    statusCode: 200,
+    headers: {
+      ...response.headers,
+      'content-type': 'text/event-stream; charset=utf-8',
+    },
+    body: const EventStreamWriter().write(
+      response.results,
+      request.abortTrigger,
+    ),
+  );
 
   TransportResponse _write(SingleResponse response) => _answer(
     switch (response.outcome) {
