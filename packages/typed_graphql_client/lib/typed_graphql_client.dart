@@ -7,6 +7,7 @@
 /// stage M11; see the package README.
 library;
 
+export 'src/client/cancel_token.dart';
 export 'src/operation/data_codec.dart';
 export 'src/operation/data_context.dart';
 export 'src/operation/data_enum.dart';

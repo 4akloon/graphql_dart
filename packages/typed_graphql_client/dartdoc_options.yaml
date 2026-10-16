@@ -1,8 +1,12 @@
 dartdoc:
   categories:
+    client:
+      markdown: doc/client.md
+      displayName: Client
     operations:
       markdown: doc/operations.md
       displayName: Generated Operations
   categoryOrder:
+    - client
     - operations
   showUndocumentedCategories: true

@@ -14,3 +14,5 @@
 - `JsonMerger` merges the JSON of a class and its fragments deeply (objects by
   key, arrays by index), so generated `toJson` keeps every field of
   overlapping nested selections; a null never replaces a value.
+- `CancelToken`: the caller's request to stop a call; the start of the
+  Client guide.
