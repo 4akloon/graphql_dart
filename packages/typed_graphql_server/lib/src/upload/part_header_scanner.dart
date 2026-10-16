@@ -16,23 +16,31 @@ import 'sequence_matcher.dart';
 final class PartHeaderScanner {
   /// Creates a scanner for a body whose parts are separated by [boundary],
   /// allowing [maxHeaderBytes] bytes for the headers of each part.
+  ///
+  /// [boundary] is restricted to ASCII by the caller, so its bytes are its
+  /// code units, as `package:mime` reads it.
   PartHeaderScanner(String boundary, this.maxHeaderBytes)
-    : _delimiter = SequenceMatcher(utf8.encode('\r\n--$boundary')),
-      _headerEnd = SequenceMatcher(const [13, 10, 13, 10]) {
-    _startLine();
-  }
+    : _opening = SequenceMatcher(utf8.encode('--$boundary')),
+      _delimiter = SequenceMatcher(utf8.encode('\r\n--$boundary')),
+      _headerEnd = SequenceMatcher(const [13, 10, 13, 10]);
 
   /// The most bytes the headers of one part may take, delimiter line
   /// excluded.
   final int maxHeaderBytes;
 
+  // The parser looks for the first delimiter anywhere, without a line break
+  // before it (a preamble may precede it); after a part's headers it needs
+  // the whole `CRLF--boundary`, because the blank line's CRLF is the end of
+  // the headers, not the start of the delimiter.
+  final SequenceMatcher _opening;
   final SequenceMatcher _delimiter;
   final SequenceMatcher _headerEnd;
   bool _isInHeaders = false;
   bool _isClosed = false;
   bool _hasStarted = false;
+  bool _isOnDelimiterLine = false;
+  int _dashes = 0;
   int _headerBytes = 0;
-  int _previousByte = 0;
 
   /// Whether a delimiter has begun a part and the closing delimiter has not
   /// come: a body that ends now is cut.
@@ -49,9 +57,12 @@ final class PartHeaderScanner {
   }
 
   bool _skipBody(int byte) {
-    if (_delimiter.feed(byte)) {
+    final matcher = _hasStarted ? _delimiter : _opening;
+    if (matcher.feed(byte)) {
       _hasStarted = true;
       _isInHeaders = true;
+      _isOnDelimiterLine = true;
+      _dashes = 0;
       _headerBytes = 0;
       _headerEnd.reset();
     }
@@ -60,26 +71,24 @@ final class PartHeaderScanner {
 
   bool _admitHeaderByte(int byte) {
     _headerBytes++;
-    // `--` straight after the delimiter is the closing delimiter.
-    if (_headerBytes == 2 && _previousByte == 0x2d && byte == 0x2d) {
+    if (_isOnDelimiterLine && _closesAt(byte)) {
       _isClosed = true;
       return true;
     }
-    _previousByte = byte;
     if (_headerEnd.feed(byte)) {
       _isInHeaders = false;
-      _startLine();
+      _delimiter.reset();
       return true;
     }
     return _headerBytes <= maxHeaderBytes;
   }
 
-  // The blank line that ends the headers also ends a line, so a delimiter
-  // may follow it at once (the same for the start of the body).
-  void _startLine() {
-    _delimiter
-      ..reset()
-      ..feed(13)
-      ..feed(10);
+  // The parser allows spaces and tabs (transport padding) after a delimiter,
+  // so `--` after them is the closing delimiter.
+  bool _closesAt(int byte) {
+    if (_dashes == 0 && (byte == 0x20 || byte == 0x09)) return false;
+    if (byte == 0x2d && ++_dashes == 2) return true;
+    if (byte != 0x2d) _isOnDelimiterLine = false;
+    return false;
   }
 }

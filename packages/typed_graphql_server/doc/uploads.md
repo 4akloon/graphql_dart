@@ -163,8 +163,10 @@ before the pipeline, so no context is built and no resolver runs:
   multiply a request.
 
 - The headers of one part may take 8 KiB (`413` `GQL441`): `package:mime`
-  buffers a header whole, so the bytes are counted before the parser sees
-  them.
+  buffers a header whole, so the bytes before each part body are counted
+  before the parser sees them. The boundary must be one of RFC 2046 (1 to 70
+  characters of `0-9A-Za-z'()+_,-./:=?` and space, not ending with a space);
+  any other is `400` `GQL440`.
 - A file name may have 255 characters and a media type 127; more is `400`
   `GQL440`.
 

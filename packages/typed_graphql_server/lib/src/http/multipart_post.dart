@@ -3,6 +3,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../server/csrf_prevention.dart';
 import '../server/request_info.dart';
+import '../upload/boundary_syntax.dart';
 import '../upload/multipart_reader.dart';
 import '../upload/multipart_result.dart';
 import '../upload/uploads.dart';
@@ -57,16 +58,13 @@ final class MultipartPost {
         prevention.refusal,
       );
     }
-    final boundary = ContentType.parse(
-      request.header('content-type'),
-    )?.parameters['boundary'];
-    if (boundary == null || boundary.isEmpty) {
-      return _refused(
-        400,
-        DiagnosticCode.malformedMultipartRequest,
-        'The multipart request has no boundary.',
-      );
-    }
+    final boundary =
+        ContentType.parse(
+          request.header('content-type'),
+        )?.parameters['boundary'] ??
+        '';
+    final boundaryRefusal = _refusalOfBoundary(boundary);
+    if (boundaryRefusal != null) return boundaryRefusal;
     final length = int.tryParse(request.header('content-length')?.trim() ?? '');
     final maxBytes = uploads.limits.maxRequestBytes;
     if (length != null && length > maxBytes) {
@@ -82,6 +80,24 @@ final class MultipartPost {
       bodyTimeout: options.bodyTimeout,
       onReleaseError: onReleaseError,
     ).read(request.body, boundary, cancelSignal: request.cancelSignal);
+  }
+
+  // The syntax is RFC 2046's: package:mime and the header scanner read a
+  // boundary byte by byte, so a character outside it could make them disagree.
+  Future<MultipartResult>? _refusalOfBoundary(String boundary) {
+    if (boundary.isEmpty) {
+      return _refused(
+        400,
+        DiagnosticCode.malformedMultipartRequest,
+        'The multipart request has no boundary.',
+      );
+    }
+    if (const BoundarySyntax().allows(boundary)) return null;
+    return _refused(
+      400,
+      DiagnosticCode.malformedMultipartRequest,
+      'The multipart boundary is not valid.',
+    );
   }
 
   RequestInfo _info(HttpRequestData request) => RequestInfo(

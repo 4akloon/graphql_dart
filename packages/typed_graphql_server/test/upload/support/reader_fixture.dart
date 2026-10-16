@@ -55,12 +55,13 @@ final class ReaderFixture {
     Duration timeout = const Duration(seconds: 5),
     int maxJsonDepth = 64,
     CancelSignal? cancelSignal,
+    String boundary = 'testBoundary',
   }) => MultipartReader(
     uploads,
     maxJsonDepth: maxJsonDepth,
     bodyTimeout: timeout,
     onReleaseError: (error, stackTrace) => releaseErrors.add(error),
-  ).read(body, 'testBoundary', cancelSignal: cancelSignal);
+  ).read(body, boundary, cancelSignal: cancelSignal);
 
   Future<MultipartResult> readBody(MultipartBody body, {int? chunkSize}) =>
       read(body.stream(chunkSize: chunkSize));
