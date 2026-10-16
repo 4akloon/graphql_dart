@@ -783,6 +783,12 @@ enum DiagnosticCode(
   /// `GraphQLHttpHandler.handle` and `GraphQLServer.handle`.
   operationTypeNotAllowed('GQL431'),
 
+  /// `GQL432`: reported when a graphql-ws `subscribe` arrives while the
+  /// socket already runs `GraphQLWsOptions.maxOperations` operations; it is
+  /// the `extensions.code` of the `error` message for that id, and the socket
+  /// stays open.
+  tooManySocketOperations('GQL432'),
+
   /// `GQL433`: reported when a request names an event stream token that no
   /// reservation holds (never issued, dropped or already closed) in
   /// single connection mode of GraphQL over server-sent events. It is a

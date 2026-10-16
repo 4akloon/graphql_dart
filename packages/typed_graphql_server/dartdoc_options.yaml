@@ -39,6 +39,9 @@ dartdoc:
     upload:
       markdown: doc/uploads.md
       displayName: Uploads
+    websocket:
+      markdown: doc/websocket.md
+      displayName: WebSocket
   categoryOrder:
     - authorization
     - builder
@@ -53,4 +56,5 @@ dartdoc:
     - sse
     - subscription
     - upload
+    - websocket
   showUndocumentedCategories: true

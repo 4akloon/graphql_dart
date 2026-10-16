@@ -3,18 +3,18 @@
 /// pipeline.
 ///
 /// Under construction: stages M5 and M6 are complete, and so are the HTTP
-/// handler of M7a, the multipart uploads of M7b and the server-sent events of
-/// M7d. The typed schema builder, execution, introspection,
-/// subscriptions, look-ahead, authorization and cancellation work, and so do
-/// DataLoader (`BatchLoader`, `GroupedLoader`), the request pipeline
-/// (`GraphQLServer`: document cache, limits and cost limit, CSRF prevention,
-/// extensions, error masking, automatic persisted queries and trusted
-/// documents) and GraphQL over HTTP (`GraphQLHttpHandler`: `GET` and `POST`,
-/// media types and status codes, size and time limits, batching, and
-/// multipart file uploads through `Uploads`, and GraphQL over server-sent
-/// events in both modes of graphql-sse through `SseOptions`). The graphql-ws
-/// transport comes with the rest of M7. See the
-/// package README.
+/// handler of M7a, the multipart uploads of M7b, the graphql-ws handler of
+/// M7c and the server-sent events of M7d. The typed schema builder,
+/// execution, introspection, subscriptions, look-ahead, authorization and
+/// cancellation work, and so do DataLoader (`BatchLoader`, `GroupedLoader`),
+/// the request pipeline (`GraphQLServer`: document cache, limits and cost
+/// limit, CSRF prevention, extensions, error masking, automatic persisted
+/// queries and trusted documents), GraphQL over HTTP (`GraphQLHttpHandler`:
+/// `GET` and `POST`, media types and status codes, size and time limits,
+/// batching, multipart file uploads through `Uploads`, and GraphQL over
+/// server-sent events in both modes of graphql-sse through `SseOptions`)
+/// and graphql-ws (`GraphQLWsHandler` over any `GraphQLSocket`). The shelf
+/// adapter comes with the rest of M7. See the package README.
 library;
 
 export 'src/authorization/authorization.dart';
@@ -97,3 +97,9 @@ export 'src/upload/upload.dart';
 export 'src/upload/upload_limits.dart';
 export 'src/upload/upload_storage.dart';
 export 'src/upload/uploads.dart';
+export 'src/websocket/connection_decision.dart';
+export 'src/websocket/connection_hook.dart';
+export 'src/websocket/graphql_socket.dart';
+export 'src/websocket/graphql_ws_handler.dart';
+export 'src/websocket/graphql_ws_options.dart';
+export 'src/websocket/socket_error_hook.dart';

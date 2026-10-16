@@ -256,3 +256,16 @@
 - The Server-sent events guide is complete (both modes, the flow, limits, keep-alive, proxies, a runnable program), the HTTP guide points to it and the SSE hostile-input tests cover reservations, tokens, floods, slow and departing clients and cross-site requests.
 - Uploads hardening: the headers of one multipart part may take 8 KiB (`413`, `GQL441`), counted before `package:mime` buffers them for every part (a file that starts like a closing delimiter, transport padding and a preamble do not hide a header), and the multipart boundary must be one of RFC 2046 (`400`, `GQL440`); a file name may have 255 characters and a media type 127 (`400`, `GQL440`); a failing `UploadStorage.store` is a server fault (`500`, `GQL330`, reported to `HttpOptions.onError`, stored files released) instead of a `400` or `408`; a failing `release` is reported to `HttpOptions.onError` and the other files are still released (an `Error` is no longer swallowed); a client that disconnects fails the multipart body; the map's "at most N files" message says "1 file" for one. The Uploads guide says that file names are client text, sketches a disk storage, and explains that the `Uploads` of the scalar and of the options must be one instance.
 - Server-sent events fixes: a single connection stream that the host connected but never listens to is dropped after `reservationTimeout` (it held its reservation for ever), only a `GET` connects a stream (a `POST` with the token and an event stream `Accept` is an operation, as the guide says), and an operation id is freed when its `POST` fails with an exception. The Server-sent events guide says how `Accept` ties, a `?token=` parameter, the CSRF preflight header and an unauthenticated `PUT` behave; the HTTP guide names the three offered media types and the `allow` header of both modes; the README lists the Uploads and Server-sent events guides.
+- `RequestInfo.connectionParams`: the payload of the graphql-ws
+  `connection_init` message, for a context factory that reads a token sent there.
+- graphql-ws transport: `GraphQLWsHandler` serves the `graphql-transport-ws`
+  subprotocol over a `GraphQLSocket`: the connection handshake with
+  `onConnect` (`ConnectionHook`, `AcceptConnection`, `RefuseConnection`) and a
+  timeout, `subscribe` through `GraphQLServer.handle` with a `CancelSignal`
+  per operation, the protocol's close codes, and an `Origin` check
+  (`allowsUpgrade`, `allowedOrigins`). `GraphQLWsOptions` bounds a connection:
+  `maxOperations` (`GQL432`, counted until the server stopped working on a
+  cancelled request), `maxMessageLength`, `maxJsonDepth`, `maxIdLength` and
+  `maxConnections`; `onError` (`SocketErrorHook`) sees the errors the handler
+  swallows. A close the peer never answers still ends the session. The
+  WebSocket guide and the graphql-ws hostile-input tests come with it.

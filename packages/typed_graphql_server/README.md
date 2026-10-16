@@ -25,8 +25,9 @@
 > the specification, size and time limits, opt-in batching) for any web
 > framework through a small adapter, and reads multipart file uploads (M7b)
 > into the `Upload` scalar. The same handler streams results as server-sent
-> events (M7d, both modes of graphql-sse). The graphql-ws handler
-> comes in the rest of M7. See the
+> events (M7d, both modes of graphql-sse), and `GraphQLWsHandler` (M7c)
+> serves queries, mutations and subscriptions over a WebSocket. The shelf
+> adapter comes in the rest of M7. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
 ## Contents
@@ -58,10 +59,11 @@ dependencies:
   ([Schema Builder](doc/schema_builder.md#objects-and-fields),
   [Execution](doc/execution.md#executing-a-request)).
 - **You do not need it when** you only call a GraphQL server: that is the
-  client package, not usable yet. Today it has an HTTP handler
-  but no framework adapter and no WebSocket handler: a host converts its
-  request into an `HttpRequestData` and calls `GraphQLHttpHandler.handle`
-  ([HTTP](doc/http.md)).
+  client package, not usable yet. Today it has the HTTP and graphql-ws
+  handlers but no framework adapter: a host converts its request into an
+  `HttpRequestData` and calls `GraphQLHttpHandler.handle`
+  ([HTTP](doc/http.md)), or wraps its WebSocket in a `GraphQLSocket` and
+  calls `GraphQLWsHandler.serve` ([WebSocket](doc/websocket.md)).
 - **What it replaces**: resolvers written against `Map<String, dynamic>`, where
   a wrong result type or a misspelled argument name fails at run time in the
   middle of a request. Here the wrong type does not compile, and every error
@@ -183,6 +185,9 @@ executed
   `Authorizer`, deny messages, `AuthorizationCoverage`.
 - [Cancellation](doc/cancellation.md): `CancelSignal`, timeouts, what
   resolvers and subscriptions see.
+- [WebSocket](doc/websocket.md): `GraphQLWsHandler` and `GraphQLSocket`,
+  the graphql-ws state machine, close codes, authentication in
+  `connection_init`, Origin checks, limits, writing an adapter.
 
 ## License
 
