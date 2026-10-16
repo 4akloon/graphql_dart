@@ -51,9 +51,7 @@ final class GraphQLHttpHandler<C> {
         limits: limits,
         keepAliveInterval: sse.keepAliveInterval,
         errors: _errors,
-        writer: ResultWriter(
-          usesPartialSuccessStatus: options.usesPartialSuccessStatus,
-        ),
+        writer: _writer,
       );
     }
   }

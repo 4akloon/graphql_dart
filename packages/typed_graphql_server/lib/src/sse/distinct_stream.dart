@@ -34,9 +34,9 @@ final class DistinctStream<C> {
   ///
   /// Every operation type is allowed, since a stream can deliver them all. A
   /// `405`, a `500` and a `403` from CSRF prevention are JSON refusals; any
-  /// other single result, a request error included, is the one `next` event of an accepted stream
-  /// (protocol "Distinct connections mode"); a subscription is one `next` per
-  /// result. Each stream ends with `complete`.
+  /// other single result, a request error included, is the one `next` event
+  /// of an accepted stream (protocol "Distinct connections mode"); a
+  /// subscription is one `next` per result. Each stream ends with `complete`.
   Future<HttpResponseData> run(
     HttpRequestData http,
     GraphQLRequest params,

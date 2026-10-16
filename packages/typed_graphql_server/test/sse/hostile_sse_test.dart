@@ -104,13 +104,21 @@ void main() {
   });
 
   group('a stream', () {
-    test('connected twice is 409 GQL434 and the first keeps working', () async {
+    test('connected twice is 409 GQL434', () async {
       final handler = single();
       final token = await sse.reserve(handler);
       final first = StreamReader(await handler.handle(sse.connect(token)));
       final second = await handler.handle(sse.connect(token));
       expect(second.status, 409);
       expect(await sse.http.code(second), 'GQL434');
+      await first.cancel();
+    });
+
+    test('connected twice leaves the first connection working', () async {
+      final handler = single();
+      final token = await sse.reserve(handler);
+      final first = StreamReader(await handler.handle(sse.connect(token)));
+      await handler.handle(sse.connect(token));
       await handler.handle(sse.operation(token, '{ hello }'));
       expect(await first.waitFor(2), [
         'event: next\ndata: {"id":"op","payload":{"data":{"hello":"world"}}}',
@@ -136,6 +144,17 @@ void main() {
       expect(statuses.where((status) => status == 202), hasLength(3));
       expect(statuses.where((status) => status == 409), hasLength(47));
       expect(lastCode, 'GQL438');
+    });
+
+    test('runs nothing for the operations a full stream refuses', () async {
+      final handler = single(
+        limits: const SingleConnectionOptions(maxOperationsPerStream: 1),
+      );
+      final token = await sse.reserve(handler);
+      await handler.handle(sse.operation(token, 'subscription { count }'));
+      await handler.handle(
+        sse.operation(token, 'subscription { count }', id: 'second'),
+      );
       expect(counting.resolved, 0);
     });
 
@@ -154,6 +173,17 @@ void main() {
       await expectStopped();
     });
 
+    test('answers 200 to a DELETE of a stranger without cancelling', () async {
+      final handler = single();
+      final owner = await sse.reserve(handler);
+      final stranger = await sse.reserve(handler);
+      final reader = StreamReader(await handler.handle(sse.connect(owner)));
+      await handler.handle(sse.operation(owner, 'subscription { count }'));
+      final response = await handler.handle(sse.cancel(stranger, id: 'op'));
+      expect(response.status, 200);
+      await reader.cancel();
+    });
+
     test('keeps the operations of another reservation on DELETE', () async {
       final handler = single();
       final owner = await sse.reserve(handler);
@@ -161,8 +191,7 @@ void main() {
       final reader = StreamReader(await handler.handle(sse.connect(owner)));
       await handler.handle(sse.operation(owner, 'subscription { count }'));
       await reader.waitFor(1);
-      final response = await handler.handle(sse.cancel(stranger, id: 'op'));
-      expect(response.status, 200);
+      await handler.handle(sse.cancel(stranger, id: 'op'));
       final resolved = counting.resolved;
       await Future<void>.delayed(_settle);
       expect(counting.resolved, greaterThan(resolved));
@@ -194,6 +223,19 @@ void main() {
       expect(resolved, lessThanOrEqualTo(2));
       await Future<void>.delayed(_settle);
       expect(counting.resolved, resolved);
+      await subscription.cancel();
+    });
+
+    test('that reads again resumes the resolvers', () async {
+      final handler = sse.http.handlerOver(counting.server);
+      final response = await handler.handle(
+        sse.getStream({'query': 'subscription { count }'}),
+      );
+      final subscription = (response.body as StreamedBody).chunks.listen(
+        (_) {},
+      )..pause();
+      await Future<void>.delayed(_settle);
+      final resolved = counting.resolved;
       subscription.resume();
       await Future<void>.delayed(_settle);
       expect(counting.resolved, greaterThan(resolved));

@@ -182,7 +182,8 @@ void main() {
       final subscription = (response.body as StreamedBody).chunks.listen(
         (chunk) => seen.add(utf8.decode(chunk)),
       );
-      while (counting.resolved == 0) {
+      for (var attempt = 0; attempt < 300; attempt++) {
+        if (counting.resolved > 0) break;
         await Future<void>.delayed(const Duration(milliseconds: 10));
       }
       await subscription.cancel();

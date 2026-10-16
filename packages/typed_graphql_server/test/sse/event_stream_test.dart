@@ -1,42 +1,22 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:test/test.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 import 'package:typed_graphql_server/src/sse/event_stream.dart';
-import 'package:typed_graphql_server/typed_graphql_server.dart';
 
-/// A reader of the chunks of an event stream body.
-final class ChunkReader {
-  ChunkReader(HttpResponseData response) {
-    final body = response.body as StreamedBody;
-    _subscription = body.chunks.listen(
-      (chunk) => chunks.add(utf8.decode(chunk)),
-    );
-  }
+import 'support/manual_timers.dart';
+import 'support/sse_fixture.dart';
 
-  // Late: set in the constructor body, before anything reads it.
-  late final StreamSubscription<List<int>> _subscription;
-  final List<String> chunks = [];
-
-  /// Completes when the body is done.
-  Future<void> get finished => _subscription.asFuture<void>();
-
-  Future<void> cancel() => _subscription.cancel();
-
-  void pause() => _subscription.pause();
-
-  void resume() => _subscription.resume();
-}
-
-const Duration _tick = Duration(milliseconds: 20);
+const Duration _keepAlive = Duration(seconds: 15);
 
 void main() {
   late StreamController<JsonValue> source;
   late bool isSourceCancelled;
   late bool isSourcePaused;
+  late ManualTimers timers;
 
   setUp(() {
+    timers = ManualTimers();
     isSourceCancelled = false;
     isSourcePaused = false;
     source = StreamController<JsonValue>(
@@ -46,12 +26,8 @@ void main() {
     );
   });
 
-  EventStream stream({bool sendsComplete = true, Duration? keepAlive}) =>
-      EventStream(
-        source.stream,
-        keepAliveInterval: keepAlive ?? const Duration(hours: 1),
-        sendsComplete: sendsComplete,
-      );
+  EventStream stream() =>
+      EventStream(source.stream, keepAliveInterval: _keepAlive);
 
   group('EventStream', () {
     test('answers 200 with the event stream headers and no connection', () {
@@ -71,35 +47,59 @@ void main() {
     });
 
     test('writes a comment before anything else', () async {
-      final reader = ChunkReader(stream().response());
+      final reader = StreamReader(stream().response());
       await Future<void>.delayed(Duration.zero);
       expect(reader.chunks, [':\n\n']);
       await reader.cancel();
     });
 
     test('writes a comment every keep-alive interval while idle', () async {
-      final reader = ChunkReader(stream(keepAlive: _tick).response());
-      while (reader.chunks.length < 3) {
-        await Future<void>.delayed(_tick);
-      }
-      expect(reader.chunks.length, greaterThanOrEqualTo(3));
-      expect(reader.chunks, everyElement(':\n\n'));
-      await reader.cancel();
+      await timers.run(() async {
+        final reader = StreamReader(stream().response());
+        await timers.settle();
+        for (var i = 0; i < 3; i++) {
+          timers.armed.single.fire();
+          await timers.settle();
+        }
+        expect(reader.chunks, [':\n\n', ':\n\n', ':\n\n', ':\n\n']);
+        expect(timers.armed.single.duration, _keepAlive);
+        await reader.cancel();
+      });
     });
 
-    test('an event postpones the next keep-alive comment', () async {
-      final reader = ChunkReader(
-        stream(keepAlive: _tick * 10).response(),
-      );
-      await Future<void>.delayed(_tick * 2);
-      source.add(const JsonString('x'));
-      await Future<void>.delayed(_tick * 2);
-      expect(reader.chunks, [':\n\n', 'event: next\ndata: "x"\n\n']);
-      await reader.cancel();
+    test('an event cancels the armed keep-alive and arms another', () async {
+      await timers.run(() async {
+        final reader = StreamReader(stream().response());
+        await timers.settle();
+        final first = timers.armed.single;
+        source.add(const JsonString('x'));
+        await timers.settle();
+        expect(first.isActive, isFalse);
+        expect(timers.armed, hasLength(1));
+        expect(reader.chunks, [':\n\n', 'event: next\ndata: "x"\n\n']);
+        await reader.cancel();
+      });
+    });
+
+    test('writes no keep-alive comment while the client is paused', () async {
+      await timers.run(() async {
+        final reader = StreamReader(stream().response());
+        await timers.settle();
+        reader.pause();
+        timers.armed.single.fire();
+        await timers.settle();
+        expect(reader.chunks, [':\n\n']);
+        expect(timers.armed, hasLength(1));
+        reader.resume();
+        timers.armed.single.fire();
+        await timers.settle();
+        expect(reader.chunks, [':\n\n', ':\n\n']);
+        await reader.cancel();
+      });
     });
 
     test('writes the events in order and then complete', () async {
-      final reader = ChunkReader(stream().response());
+      final reader = StreamReader(stream().response());
       source
         ..add(JsonNumber(1))
         ..add(JsonNumber(2));
@@ -113,16 +113,22 @@ void main() {
       ]);
     });
 
-    test('ends without complete when it is not asked to send one', () async {
-      final reader = ChunkReader(stream(sendsComplete: false).response());
-      source.add(JsonNumber(1));
-      await source.close();
+    test('a frames stream ends without complete', () async {
+      final frames = StreamController<List<int>>();
+      final reader = StreamReader(
+        EventStream.frames(
+          frames.stream,
+          keepAliveInterval: _keepAlive,
+        ).response(),
+      );
+      frames.add([65]);
+      await frames.close();
       await reader.finished;
-      expect(reader.chunks, [':\n\n', 'event: next\ndata: 1\n\n']);
+      expect(reader.chunks, [':\n\n', 'A']);
     });
 
     test('ends without complete when the source fails', () async {
-      final reader = ChunkReader(stream().response());
+      final reader = StreamReader(stream().response());
       source.addError(StateError('boom'));
       await reader.finished;
       expect(reader.chunks, [':\n\n']);
@@ -130,23 +136,23 @@ void main() {
     });
 
     test('cancelling the body cancels the source', () async {
-      final reader = ChunkReader(stream().response());
+      final reader = StreamReader(stream().response());
       await Future<void>.delayed(Duration.zero);
       await reader.cancel();
       expect(isSourceCancelled, isTrue);
     });
 
-    test('cancelling the body stops the keep-alive comments', () async {
-      final reader = ChunkReader(stream(keepAlive: _tick).response());
-      await Future<void>.delayed(_tick * 2);
-      await reader.cancel();
-      final seen = reader.chunks.length;
-      await Future<void>.delayed(_tick * 3);
-      expect(reader.chunks, hasLength(seen));
+    test('cancelling the body cancels the armed keep-alive', () async {
+      await timers.run(() async {
+        final reader = StreamReader(stream().response());
+        await timers.settle();
+        await reader.cancel();
+        expect(timers.armed, isEmpty);
+      });
     });
 
     test('pausing the body pauses the source and resuming resumes', () async {
-      final reader = ChunkReader(stream().response());
+      final reader = StreamReader(stream().response());
       await Future<void>.delayed(Duration.zero);
       reader.pause();
       expect(isSourcePaused, isTrue);

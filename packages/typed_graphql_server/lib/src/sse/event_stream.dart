@@ -19,13 +19,11 @@ import 'event_stream_writer.dart';
 final class EventStream {
   /// Creates a stream of the payloads of [source].
   ///
-  /// A comment is written every [keepAliveInterval] while the stream is idle.
-  /// With [sendsComplete], a `complete` event follows the last payload.
-  EventStream(
-    Stream<JsonValue> source, {
-    required this.keepAliveInterval,
-    this.sendsComplete = true,
-  }) : _frames = source.map(_writer.next);
+  /// A comment is written every [keepAliveInterval] while the stream is idle,
+  /// and a `complete` event follows the last payload.
+  EventStream(Stream<JsonValue> source, {required this.keepAliveInterval})
+    : _frames = source.map(_writer.next),
+      sendsComplete = true;
 
   /// Creates a stream that writes [frames] as they are, already encoded, and
   /// never ends by itself.
@@ -82,6 +80,9 @@ final class EventStream {
     _write(_writer.comment());
     _subscription = _frames.listen(
       _write,
+      // Unreachable today: the pipeline turns a failing source into a `GQL340`
+      // result. If one ever fails, the stream ends without `complete`, so the
+      // client does not read a clean end.
       onError: (Object _) => _finish(withComplete: false),
       onDone: () => _finish(withComplete: sendsComplete),
       cancelOnError: true,

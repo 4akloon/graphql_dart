@@ -152,17 +152,31 @@ final class SseFixture {
 final class StreamReader {
   StreamReader(HttpResponseData response) {
     _subscription = (response.body as StreamedBody).chunks.listen(
-      (chunk) => _text += utf8.decode(chunk),
-      onDone: () => isDone = true,
+      (chunk) {
+        final text = utf8.decode(chunk);
+        chunks.add(text);
+        _text += text;
+      },
+      onDone: () {
+        isDone = true;
+        _finished.complete();
+      },
     );
   }
 
   // Set in the constructor body, which runs before any chunk can arrive.
   late final StreamSubscription<List<int>> _subscription;
+  final Completer<void> _finished = Completer<void>();
   String _text = '';
+
+  /// The chunks received so far, comments included.
+  final List<String> chunks = [];
 
   /// Whether the body has ended.
   bool isDone = false;
+
+  /// Completes when the body is done.
+  Future<void> get finished => _finished.future;
 
   /// The frames received so far, without the comments.
   List<String> get frames => [
@@ -170,10 +184,10 @@ final class StreamReader {
       if (frame.isNotEmpty && !frame.startsWith(':')) frame,
   ];
 
-  /// The frames once at least [count] have arrived (or three seconds passed).
+  /// The frames once at least [count] have arrived (or about three seconds
+  /// passed).
   Future<List<String>> waitFor(int count) async {
-    final clock = Stopwatch()..start();
-    while (frames.length < count && clock.elapsedMilliseconds < 3000) {
+    for (var attempt = 0; attempt < 600 && frames.length < count; attempt++) {
       await Future<void>.delayed(const Duration(milliseconds: 5));
     }
     return frames;
@@ -181,4 +195,10 @@ final class StreamReader {
 
   /// Stops reading, as a client that goes away.
   Future<void> cancel() => _subscription.cancel();
+
+  /// Pauses reading, as a slow client.
+  void pause() => _subscription.pause();
+
+  /// Resumes reading.
+  void resume() => _subscription.resume();
 }

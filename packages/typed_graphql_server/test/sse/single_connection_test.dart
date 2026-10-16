@@ -31,15 +31,18 @@ void main() {
       expect(response.status, 201);
     });
 
-    test('accepts text/* and refuses text/plain with a quality of 0', () async {
-      final allowed = await handler.handle(
+    test('accepts text/*', () async {
+      final response = await handler.handle(
         sse.put(headers: const {'accept': 'text/*'}),
       );
-      final refused = await handler.handle(
+      expect(response.status, 201);
+    });
+
+    test('refuses text/plain with a quality of 0', () async {
+      final response = await handler.handle(
         sse.put(headers: const {'accept': 'text/plain;q=0, */*'}),
       );
-      expect(allowed.status, 201);
-      expect(refused.status, 406);
+      expect(response.status, 406);
     });
 
     test('refuses an Accept that excludes text/plain with GQL422', () async {

@@ -115,8 +115,24 @@ final class StreamOperations<C> {
   }
 
   // The id is taken before the pipeline answers, so a second `POST` with it
-  // meanwhile is refused.
+  // meanwhile is refused. A throw after that frees it again; the handler
+  // answers `500`.
   Future<HttpResponseData> _execute(
+    SingleConnection connection,
+    StreamOperation operation,
+    HttpRequestData http,
+    GraphQLRequest params,
+    ResponseMediaType type,
+  ) async {
+    try {
+      return await _run(connection, operation, http, params, type);
+    } on Object {
+      connection.release(operation);
+      rethrow;
+    }
+  }
+
+  Future<HttpResponseData> _run(
     SingleConnection connection,
     StreamOperation operation,
     HttpRequestData http,
