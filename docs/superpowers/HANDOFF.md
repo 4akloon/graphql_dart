@@ -1,6 +1,6 @@
 # Handoff: where typed_graphql stands and how to continue
 
-Last updated: 2026-10-16 (M11 built on branch `m11-impl`, not merged; M3a, M3c and M3b merged into `main` locally, not pushed; M4a and M4b merged too; M5 (a-d), M10 and M6 merged into `main` too (M6 merge 1fe4b2e); local `main` is ahead of `origin/main`, push needs the owner's yes). Read this
+Last updated: 2026-10-16 (M11 (client runtime a-f) merged into `main` locally (f9d753e); M3a, M3c and M3b merged into `main` locally, not pushed; M4a and M4b merged too; M5 (a-d), M10 and M6 merged into `main` too (M6 merge 1fe4b2e); local `main` is ahead of `origin/main`, push needs the owner's yes). Read this
 first on a new device or in a new Claude session. Session memory and scratch
 directories do not travel; this file and the repository hold everything
 needed.
