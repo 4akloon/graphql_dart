@@ -302,3 +302,9 @@
   `invalidPersistedQuery`, `untrustedDocument`, `unknownTrustedDocument`),
   reported by the server for persisted queries and trusted documents.
 - Documentation: `GQL402` also covers `HEAD`; the cost guide says a resolver must cap a slicing argument itself.
+- `DiagnosticCode`: `GQL420`-`GQL431` (`unsupportedHttpMethod`,
+  `unsupportedMediaType`, `notAcceptable`, `requestBodyTooLarge`,
+  `malformedRequestBody`, `malformedRequestParameters`, `requestUriTooLong`,
+  `requestBodyTimeout`, `batchingDisabled`, `invalidBatchSize`,
+  `batchCostExceeded`, `operationTypeNotAllowed`), reported by the HTTP
+  transport of the server (the last two also by the request pipeline).

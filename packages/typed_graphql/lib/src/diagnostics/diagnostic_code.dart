@@ -717,6 +717,71 @@ enum DiagnosticCode(
   /// response of `GraphQLServer.handle`.
   unknownTrustedDocument('GQL415'),
 
+  /// `GQL420`: reported when a request uses an HTTP method other than `GET` or
+  /// `POST`. It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  unsupportedHttpMethod('GQL420'),
+
+  /// `GQL421`: reported when a `POST` body has a content type other than
+  /// `application/json`, or a charset other than UTF-8. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  unsupportedMediaType('GQL421'),
+
+  /// `GQL422`: reported when the `Accept` header of a request allows none of
+  /// the media types the handler offers. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
+  notAcceptable('GQL422'),
+
+  /// `GQL423`: reported when a request body is larger than
+  /// `HttpOptions.maxBodyBytes`. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `GraphQLHttpHandler.handle`.
+  requestBodyTooLarge('GQL423'),
+
+  /// `GQL424`: reported when a request body is not UTF-8, is not JSON, or is
+  /// nested deeper than `HttpOptions.maxJsonDepth`. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
+  malformedRequestBody('GQL424'),
+
+  /// `GQL425`: reported when a request is not a GraphQL-over-HTTP request: a
+  /// parameter has the wrong type, a `GET` parameter is repeated or cannot be
+  /// decoded, or a body is not an object. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
+  malformedRequestParameters('GQL425'),
+
+  /// `GQL426`: reported when the URI of a request is longer than
+  /// `HttpOptions.maxUriLength`. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `GraphQLHttpHandler.handle`.
+  requestUriTooLong('GQL426'),
+
+  /// `GQL427`: reported when a request body does not arrive within
+  /// `HttpOptions.bodyTimeout`. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `GraphQLHttpHandler.handle`.
+  requestBodyTimeout('GQL427'),
+
+  /// `GQL428`: reported when a request body is an array and batching is off.
+  /// It is a `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle`.
+  batchingDisabled('GQL428'),
+
+  /// `GQL429`: reported when a batch is empty or holds more requests than
+  /// `BatchPolicy.maxRequests`. It is a `GraphQLError`'s `extensions.code` in
+  /// a response of `GraphQLHttpHandler.handle`.
+  invalidBatchSize('GQL429'),
+
+  /// `GQL430`: reported when the summed cost of the requests of a batch would
+  /// pass the maximum cost of the server; it is the error of the request that
+  /// would pass it, which is not charged. It is a `GraphQLError`'s
+  /// `extensions.code` in a response of `GraphQLHttpHandler.handle` and
+  /// `GraphQLServer.handle`.
+  batchCostExceeded('GQL430'),
+
+  /// `GQL431`: reported when a request selects an operation type its transport
+  /// does not allow, such as a subscription over plain JSON. It is a
+  /// `GraphQLError`'s `extensions.code` in a response of
+  /// `GraphQLHttpHandler.handle` and `GraphQLServer.handle`.
+  operationTypeNotAllowed('GQL431'),
+
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
   /// the YAML parser's.
   configSyntax('GQL500'),
