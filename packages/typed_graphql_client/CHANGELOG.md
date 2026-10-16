@@ -36,3 +36,7 @@
 - `UploadFile`, `UploadFileCodec` (the `Upload` scalar's codec, which
   writes a file as its marker) and `UploadFiles` (the files of a request,
   in its context); the start of the Uploads guide.
+- `RetryLink`, `RetryPolicy` and `Idempotent`: queries, and mutations marked
+  idempotent, are sent again after a network failure, a timeout or a
+  retryable HTTP status, after the backoff's delay; the start of the Request
+  Policies guide.

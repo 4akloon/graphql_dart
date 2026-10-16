@@ -6,6 +6,9 @@ dartdoc:
     link:
       markdown: doc/links.md
       displayName: Links
+    policy:
+      markdown: doc/policies.md
+      displayName: Request Policies
     upload:
       markdown: doc/uploads.md
       displayName: Uploads
@@ -15,6 +18,7 @@ dartdoc:
   categoryOrder:
     - client
     - link
+    - policy
     - upload
     - operations
   showUndocumentedCategories: true
