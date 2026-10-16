@@ -30,7 +30,7 @@ final class ImportRule {
     multiLine: true,
   );
 
-  static final RegExp _uri = RegExp(r'''['"]([^'"]+)['"]''');
+  static final RegExp _uri = RegExp('''['"]([^'"]+)['"]''');
 
   /// The violations in [content], the text of the library at [filePath].
   List<String> check(String filePath, String content) => [

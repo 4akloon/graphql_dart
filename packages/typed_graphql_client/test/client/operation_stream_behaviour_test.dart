@@ -46,6 +46,7 @@ void main() {
       expect(source.isPaused, isFalse);
       expect(events, hasLength(1));
       await subscription.cancel();
+      await source.close();
     });
 
     test('a link stream error that is not an Exception is an error event', () {
