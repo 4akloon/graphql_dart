@@ -7,8 +7,9 @@
 /// authorization and cancellation work, and so do DataLoader (`BatchLoader`,
 /// `GroupedLoader`) and the request pipeline (`GraphQLServer`: document
 /// cache, limits and cost limit, CSRF prevention, extensions, error masking,
-/// automatic persisted queries and trusted documents). The transports (HTTP,
-/// graphql-ws, graphql-sse) come with M7. See the package README.
+/// automatic persisted queries and trusted documents). `GraphQLWsHandler`
+/// serves the graphql-ws protocol over any `GraphQLSocket`; the HTTP and
+/// graphql-sse transports come with M7. See the package README.
 library;
 
 export 'src/authorization/authorization.dart';

@@ -20,7 +20,9 @@
 > with a document cache, the limits and the cost limit of a production or
 > development profile, CSRF prevention, extensions and error masking, and
 > with automatic persisted queries or trusted documents (M6c); with it stage
-> M6 is complete. The HTTP, graphql-ws and graphql-sse handlers come in M7.
+> M6 is complete. The graphql-ws handler (`GraphQLWsHandler`, M7c) serves
+> queries, mutations and subscriptions over a WebSocket; the HTTP and
+> graphql-sse handlers come in M7.
 > See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
@@ -53,9 +55,9 @@ dependencies:
   ([Schema Builder](doc/schema_builder.md#objects-and-fields),
   [Execution](doc/execution.md#executing-a-request)).
 - **You do not need it when** you only call a GraphQL server: that is the
-  client package, not usable yet. Today it also has no HTTP or
-  WebSocket handler: you decode the request yourself and call
-  `GraphQLServer.handle` (the handlers are M7).
+  client package, not usable yet. Today it has a graphql-ws handler but no
+  HTTP handler: you decode an HTTP request yourself and call
+  `GraphQLServer.handle` (the HTTP handler is M7).
 - **What it replaces**: resolvers written against `Map<String, dynamic>`, where
   a wrong result type or a misspelled argument name fails at run time in the
   middle of a request. Here the wrong type does not compile, and every error
@@ -171,6 +173,9 @@ executed
   `Authorizer`, deny messages, `AuthorizationCoverage`.
 - [Cancellation](doc/cancellation.md): `CancelSignal`, timeouts, what
   resolvers and subscriptions see.
+- [WebSocket](doc/websocket.md): `GraphQLWsHandler` and `GraphQLSocket`,
+  the graphql-ws state machine, close codes, authentication in
+  `connection_init`, Origin checks, limits, writing an adapter.
 
 ## License
 
