@@ -20,19 +20,23 @@ final class PartHeaderScanner {
   /// [boundary] is restricted to ASCII by the caller, so its bytes are its
   /// code units, as `package:mime` reads it.
   PartHeaderScanner(String boundary, this.maxHeaderBytes)
-    : _opening = SequenceMatcher(utf8.encode('--$boundary')),
-      _delimiter = SequenceMatcher(utf8.encode('\r\n--$boundary')),
-      _headerEnd = SequenceMatcher(const [13, 10, 13, 10]);
+    : _delimiter = SequenceMatcher(utf8.encode('\r\n--$boundary')),
+      _headerEnd = SequenceMatcher(const [13, 10, 13, 10]) {
+    // The parser starts as if a CRLF had come before the body, so the first
+    // delimiter is `--boundary` at byte 0 or after a CRLF, never in the
+    // middle of a preamble line.
+    _delimiter
+      ..feed(13)
+      ..feed(10);
+  }
 
   /// The most bytes the headers of one part may take, delimiter line
   /// excluded.
   final int maxHeaderBytes;
 
-  // The parser looks for the first delimiter anywhere, without a line break
-  // before it (a preamble may precede it); after a part's headers it needs
-  // the whole `CRLF--boundary`, because the blank line's CRLF is the end of
-  // the headers, not the start of the delimiter.
-  final SequenceMatcher _opening;
+  // After a part's headers it needs the whole `CRLF--boundary`, because the
+  // blank line's CRLF is the end of the headers, not the start of the
+  // delimiter.
   final SequenceMatcher _delimiter;
   final SequenceMatcher _headerEnd;
   bool _isInHeaders = false;
@@ -57,8 +61,7 @@ final class PartHeaderScanner {
   }
 
   bool _skipBody(int byte) {
-    final matcher = _hasStarted ? _delimiter : _opening;
-    if (matcher.feed(byte)) {
+    if (_delimiter.feed(byte)) {
       _hasStarted = true;
       _isInHeaders = true;
       _isOnDelimiterLine = true;
@@ -75,12 +78,12 @@ final class PartHeaderScanner {
       _isClosed = true;
       return true;
     }
+    if (_headerBytes > maxHeaderBytes) return false;
     if (_headerEnd.feed(byte)) {
       _isInHeaders = false;
       _delimiter.reset();
-      return true;
     }
-    return _headerBytes <= maxHeaderBytes;
+    return true;
   }
 
   // The parser allows spaces and tabs (transport padding) after a delimiter,
