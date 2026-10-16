@@ -49,6 +49,72 @@ Cancelling the subscription to a link's stream must end what the link
 started: a link built from stream operations (`map`, `asyncExpand`,
 `async*`) does so by itself.
 
+## Routing and context
+
+`SplitLink(test:, whenTrue:, whenFalse:)` sends each request down one of
+two links; the usual split sends subscriptions over a socket and the rest
+over HTTP. `ContextLink(update)` rewrites the context of each request
+before forwarding it, for headers computed at the time of the request; an
+exception of `update` is a `NetworkFailure` result.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_client/typed_graphql_client.dart';
+
+final class HelloQuery extends GraphQLQuery<String> {
+  const HelloQuery();
+
+  @override
+  OperationDocument get document => const OperationDocument(
+    name: 'Hello',
+    type: OperationType.query,
+    text: 'query Hello{hello}',
+    sha256: 'f6004747575e6561b67c600f28196e3c7648ef73797a3078da3e4658ddf6b623',
+  );
+
+  @override
+  JsonObject get variablesJson => JsonObject({});
+
+  @override
+  DecodeResult<String> decodeData(JsonObject data) => switch (data['hello']) {
+    JsonString(:final value) => DecodeSuccess(value),
+    _ => const DecodeFailure('expected a string', path: [PathKey('hello')]),
+  };
+}
+
+Future<void> main() async {
+  final http = MockLink()
+    ..addData(JsonObject({'hello': JsonString('over HTTP')}));
+  final sockets = MockLink();
+  final client = GraphQLClient(
+    link: Link.from([
+      ContextLink(
+        (request) =>
+            request.context.withEntry(RequestHeaders({'X-Trace': 'abc'})),
+      ),
+      SplitLink(
+        test: (request) => request.type == OperationType.subscription,
+        whenTrue: sockets,
+        whenFalse: http,
+      ),
+    ]),
+  );
+  if (await client.query(const HelloQuery()) case GraphQLData(:final data)) {
+    print(data);
+  }
+  print(http.requests.single.context.entry<RequestHeaders>()?.values);
+  print(sockets.requests.length);
+}
+```
+
+It prints:
+
+```text
+over HTTP
+{x-trace: abc}
+0
+```
+
 ## Testing with MockLink
 
 `MockLink` is a terminating link for tests: it records every request in
