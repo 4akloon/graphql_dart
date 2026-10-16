@@ -308,7 +308,8 @@
   `requestBodyTimeout`, `batchingDisabled`, `invalidBatchSize`,
   `batchCostExceeded`, `operationTypeNotAllowed`), reported by the HTTP
   transport of the server (the last two also by the request pipeline).
-- `DiagnosticCode.tooManySocketOperations` (`GQL432`): a graphql-ws `subscribe` past the socket's operation limit.
+- `DiagnosticCode.tooManySocketOperations` (`GQL432`): a graphql-ws
+  `subscribe` past the socket's operation limit.
 - `DiagnosticCode`: `GQL433`-`GQL438` (`eventStreamNotFound`,
   `eventStreamAlreadyOpen`, `operationIdRequired`, `operationIdInUse`,
   `tooManyReservations`, `tooManyStreamOperations`), reported by the

@@ -592,7 +592,8 @@ enum DiagnosticCode(
   /// `GraphQLError`'s `extensions.code` in a response of
   /// `ExecutableSchema.execute`. `GraphQLServer` also reports it for an
   /// unexpected error of its own pipeline (the context factory, an extension
-  /// or a store).
+  /// or a store); `GraphQLHttpHandler` reports it in the `500` it answers for
+  /// an error it did not expect, and in the slot of a batch item that failed.
   unexpectedError('GQL330'),
 
   /// `GQL331`: reported when a resolver returned null for a non-null
@@ -644,6 +645,8 @@ enum DiagnosticCode(
   /// execution finished; the response has no data. It is a
   /// `GraphQLError`'s `extensions.code` in a response of
   /// `ExecutableSchema.execute` or the last result of a subscription.
+  /// `GraphQLHttpHandler` also reports it in the items of a batch that were not
+  /// run because the client had gone away.
   executionCancelled('GQL350'),
 
   /// `GQL351`: reported when the execution's timeout elapsed before it
@@ -677,7 +680,9 @@ enum DiagnosticCode(
 
   /// `GQL403`: reported when CSRF prevention refused the request. It is a
   /// `GraphQLError`'s `extensions.code` in a response of
-  /// `GraphQLServer.handle`.
+  /// `GraphQLServer.handle`, in the `403` of a multipart request that
+  /// `GraphQLHttpHandler` refuses before it reads a file, and in the `403` of
+  /// a WebSocket upgrade whose `Origin` is not allowed.
   csrfRequestBlocked('GQL403'),
 
   /// `GQL410`: reported when a request names a persisted query by its hash
@@ -738,8 +743,10 @@ enum DiagnosticCode(
   /// a response of `GraphQLHttpHandler.handle`.
   requestBodyTooLarge('GQL423'),
 
-  /// `GQL424`: reported when a request body is not UTF-8, is not JSON, or is
-  /// nested deeper than `HttpOptions.maxJsonDepth`. It is a `GraphQLError`'s
+  /// `GQL424`: reported when a request body is not UTF-8, is not JSON, is
+  /// nested deeper than `HttpOptions.maxJsonDepth`, or cannot be read to the
+  /// end because its stream failed or the client disconnected. It is a
+  /// `GraphQLError`'s
   /// `extensions.code` in a response of `GraphQLHttpHandler.handle`.
   malformedRequestBody('GQL424'),
 
@@ -833,8 +840,9 @@ enum DiagnosticCode(
 
   /// `GQL441`: reported when a multipart request body is larger than
   /// `UploadLimits.maxRequestBytes`, a field is larger than
-  /// `UploadLimits.maxFieldBytes`, or a file is larger than
-  /// `UploadLimits.maxFileBytes`. It is a `GraphQLError`'s `extensions.code`
+  /// `UploadLimits.maxFieldBytes`, a file is larger than
+  /// `UploadLimits.maxFileBytes`, or the headers of a part are longer than
+  /// 8 KiB. It is a `GraphQLError`'s `extensions.code`
   /// in a response of `GraphQLHttpHandler.handle`.
   uploadTooLarge('GQL441'),
 
