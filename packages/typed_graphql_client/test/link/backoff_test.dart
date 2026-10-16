@@ -64,4 +64,16 @@ void main() {
     expect(custom.ceilingFor(1), const Duration(seconds: 3));
     expect(custom.ceilingFor(2), const Duration(seconds: 5));
   });
+
+  test('a multiplier of one never loops over a huge retry number', () {
+    const flat = Backoff(multiplier: 1);
+    final watch = Stopwatch()..start();
+    expect(flat.ceilingFor(1000000000), const Duration(milliseconds: 300));
+    expect(watch.elapsedMilliseconds, lessThan(500));
+  });
+
+  test('a zero maximum gives a zero ceiling at once', () {
+    const none = Backoff(maxDelay: Duration.zero);
+    expect(none.ceilingFor(1000000000), Duration.zero);
+  });
 }

@@ -19,14 +19,29 @@ final class const Backoff({
   final double multiplier = 2,
 }) {
   /// Creates a backoff.
-  this;
+  this
+    // A const constructor cannot assert on a [Duration]: negative delays
+    // are clamped in [ceilingFor].
+    : assert(multiplier >= 1, 'The multiplier must be at least 1.');
 
   /// The longest wait before retry [retry] (from 0).
   Duration ceilingFor(int retry) {
-    final max = maxDelay.inMicroseconds;
-    var ceiling = initialDelay.inMicroseconds.toDouble();
+    final max = maxDelay.inMicroseconds < 0 ? 0 : maxDelay.inMicroseconds;
+    final initial = initialDelay.inMicroseconds < 0
+        ? 0
+        : initialDelay.inMicroseconds;
+    // Without growth or room the ceiling is known at once, however large
+    // [retry] is.
+    if (multiplier <= 1 || max <= 0 || initial >= max) {
+      return Duration(microseconds: min(initial, max));
+    }
+    var ceiling = initial.toDouble();
     for (var step = 0; step < retry && ceiling < max; step++) {
-      ceiling *= multiplier;
+      final grown = ceiling * multiplier;
+      if (grown <= ceiling) {
+        break; // A multiplier so close to 1 that it no longer grows.
+      }
+      ceiling = grown;
     }
     return Duration(microseconds: min(ceiling, max.toDouble()).round());
   }
