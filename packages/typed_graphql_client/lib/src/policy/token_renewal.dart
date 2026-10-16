@@ -53,15 +53,22 @@ final class TokenRenewal {
       return Future<String?>.value();
     }
     _refreshCount++;
-    return _refreshing ??= refresh().then(_remember).whenComplete(() {
-      _refreshing = null;
-    });
+    return _refreshing ??= refresh()
+        .then(_remember, onError: _forget)
+        .whenComplete(() {
+          _refreshing = null;
+        });
   }
 
+  // A null token or a failure clears it: the last token was refused, and
+  // a caller that read the count meanwhile must not be given it again.
   String? _remember(String? token) {
-    if (token != null) {
-      _lastRefreshed = token;
-    }
+    _lastRefreshed = token;
     return token;
+  }
+
+  String? _forget(Object error, StackTrace stackTrace) {
+    _lastRefreshed = null;
+    Error.throwWithStackTrace(error, stackTrace);
   }
 }

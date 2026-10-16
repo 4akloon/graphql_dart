@@ -4,7 +4,10 @@ import '../client/client_failure.dart';
 import '../link/link_request.dart';
 import '../link/link_result.dart';
 import '../link/next_link.dart';
+import 'guarded_start.dart';
 import 'token_renewal.dart';
+
+typedef _Judged = ({LinkResult result, bool isRefused});
 
 /// The attempts of one request for `AuthLink`: the request with the token,
 /// and once more with a renewed token when the first answer is a 401.
@@ -39,33 +42,42 @@ final class AuthRun {
 
   final StreamController<LinkResult> _controller =
       StreamController<LinkResult>();
-  StreamSubscription<LinkResult>? _subscription;
+  StreamSubscription<Object?>? _subscription;
   bool _isCancelled = false;
 
   /// What the caller listens to: the answer of the attempt that was kept.
   Stream<LinkResult> get results => _controller.stream;
 
-  Future<void> _begin() async {
-    final String? token;
-    try {
-      token = await renewal.current();
-    } on Exception catch (exception) {
-      _fail(exception);
-      return;
-    } on Object catch (error, stackTrace) {
+  void _begin() {
+    unawaited(
+      renewal.current().then(
+        (token) => _send(token, isRetry: false),
+        onError: _onTokenError,
+      ),
+    );
+  }
+
+  // `then` with `onError` sees what a callback of the caller threw, an
+  // Exception or not, without a catch clause.
+  void _onTokenError(Object error, StackTrace stackTrace) {
+    if (error is Exception) {
+      _fail(error);
+    } else {
       _abort(error, stackTrace);
-      return;
     }
-    _send(token, isRetry: false);
   }
 
   void _send(String? token, {required bool isRetry}) {
     if (_isCancelled) {
       return;
     }
-    _subscription = forward(authorize(request, token)).listen(
-      (result) => _onResult(result, token, isRetry: isRetry),
-      onError: _controller.addError,
+    // The chain, `authorize` and `isUnauthorized` run inside stream
+    // operators: a throw is an error event for `_abort`.
+    _subscription = const GuardedStart().listen<_Judged>(
+      () => forward(authorize(request, token)),
+      convert: (result) => _judge(result, isRetry: isRetry),
+      onData: (judged) => _onResult(judged, token),
+      onError: _abort,
       onDone: () {
         _subscription = null;
         unawaited(_controller.close());
@@ -73,46 +85,37 @@ final class AuthRun {
     );
   }
 
-  void _onResult(
-    LinkResult result,
-    String? sentToken, {
+  _Judged _judge(
+    LinkResult result, {
     required bool isRetry,
-  }) {
-    final bool isRefused;
-    try {
-      isRefused = !isRetry && renewal.canRefresh && isUnauthorized(result);
-    } on Object catch (error, stackTrace) {
-      // The caller's `isUnauthorized` threw: deliver it, or the stream hangs.
-      _abort(error, stackTrace);
-      return;
-    }
-    if (isRefused) {
-      unawaited(_renew(result, sentToken));
+  }) => (
+    result: result,
+    isRefused: !isRetry && renewal.canRefresh && isUnauthorized(result),
+  );
+
+  void _onResult(_Judged judged, String? sent) {
+    if (judged.isRefused) {
+      _renew(judged.result, sent);
     } else {
-      _controller.add(result);
+      _controller.add(judged.result);
     }
   }
 
   /// Drops the refused attempt and sends the request again with a renewed
   /// token; with none, [refused] is the answer.
-  Future<void> _renew(LinkResult refused, String? sentToken) async {
+  void _renew(LinkResult refused, String? sentToken) {
     unawaited(_subscription?.cancel());
     _subscription = null;
-    final String? token;
-    try {
-      token = await renewal.renewed(sentToken);
-    } on Exception catch (exception) {
-      _fail(exception);
-      return;
-    } on Object catch (error, stackTrace) {
-      _abort(error, stackTrace);
-      return;
-    }
-    if (token == null) {
-      _deliverAndEnd(refused);
-    } else {
-      _send(token, isRetry: true);
-    }
+    unawaited(
+      renewal
+          .renewed(sentToken)
+          .then(
+            (token) => token == null
+                ? _deliverAndEnd(refused)
+                : _send(token, isRetry: true),
+            onError: _onTokenError,
+          ),
+    );
   }
 
   void _fail(Exception exception) =>

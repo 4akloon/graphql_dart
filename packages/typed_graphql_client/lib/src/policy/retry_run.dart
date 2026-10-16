@@ -5,7 +5,10 @@ import '../client/client_failure.dart';
 import '../link/link_request.dart';
 import '../link/link_result.dart';
 import '../link/next_link.dart';
+import 'guarded_start.dart';
 import 'retry_policy.dart';
+
+typedef _Decision = ({LinkResult result, bool isRetried});
 
 /// The attempts of one request for `RetryLink`: it forwards the request,
 /// waits after a failure the policy accepts, and forwards it again.
@@ -23,36 +26,61 @@ final class RetryRun {
   final StreamController<LinkResult> _controller =
       StreamController<LinkResult>();
 
-  StreamSubscription<LinkResult>? _subscription;
+  StreamSubscription<Object?>? _subscription;
   Timer? _timer;
   int _attemptCount = 0;
+  bool _hasDeliveredPayload = false;
 
   /// What the caller listens to: the delivered results.
   Stream<LinkResult> get results => _controller.stream;
 
   void _attempt() {
     _attemptCount++;
-    _subscription = _forward(
-      _request,
-    ).listen(_onResult, onError: _onError, onDone: _finish);
+    // Every callback of the caller and of the chain runs inside a stream
+    // operator, so a throw is an error event for `_abort`, not an
+    // exception in the zone.
+    _subscription = const GuardedStart().listen<_Decision>(
+      () => _forward(_request).transform<LinkResult>(_failuresOfLinks),
+      convert: _decide,
+      onData: _onDecision,
+      onError: _abort,
+      onDone: _finish,
+    );
   }
 
-  void _onResult(LinkResult result) {
-    if (result case LinkFailure(:final failure)) {
-      final bool isRetried;
-      try {
-        isRetried = _willRetry(failure);
-      } on Object catch (error, stackTrace) {
-        // The caller's `retryIf` threw: deliver it, or the stream would hang.
-        _abort(error, stackTrace);
-        return;
-      }
-      if (isRetried) {
-        _wait();
-        return;
-      }
+  // A link must not fail its stream (spec section 6); an Exception that
+  // does arrive is a network failure, an Error is a bug and ends the run.
+  final StreamTransformer<LinkResult, LinkResult> _failuresOfLinks =
+      StreamTransformer<LinkResult, LinkResult>.fromHandlers(
+        handleError: (error, stackTrace, sink) {
+          if (error is Exception) {
+            sink.add(LinkFailure(NetworkFailure(error)));
+          } else {
+            sink.addError(error, stackTrace);
+          }
+        },
+      );
+
+  _Decision _decide(LinkResult result) {
+    switch (result) {
+      case LinkPayload():
+        _hasDeliveredPayload = true;
+        return (result: result, isRetried: false);
+      case LinkFailure(:final failure):
+        // A payload already delivered would be delivered twice.
+        return (
+          result: result,
+          isRetried: !_hasDeliveredPayload && _willRetry(failure),
+        );
     }
-    _controller.add(result);
+  }
+
+  void _onDecision(_Decision decision) {
+    if (decision.isRetried) {
+      _wait();
+    } else {
+      _controller.add(decision.result);
+    }
   }
 
   void _abort(Object error, StackTrace stackTrace) {
@@ -60,16 +88,6 @@ final class RetryRun {
     _subscription = null;
     _controller.addError(error, stackTrace);
     unawaited(_controller.close());
-  }
-
-  // A link must not fail its stream (spec section 6); an Exception that
-  // does arrive is a network failure, an Error is a bug and passes on.
-  void _onError(Object error, StackTrace stackTrace) {
-    if (error is Exception) {
-      _onResult(LinkFailure(NetworkFailure(error)));
-    } else {
-      _controller.addError(error, stackTrace);
-    }
   }
 
   bool _willRetry(ClientFailure failure) =>

@@ -22,5 +22,6 @@ final class RequestHeaders extends ContextEntry {
       RequestHeaders({...values, name.toLowerCase(): value});
 
   @override
-  String toString() => 'RequestHeaders($values)';
+  // Names only: a value may be a token that must not reach a log.
+  String toString() => 'RequestHeaders(${values.keys.join(', ')})';
 }

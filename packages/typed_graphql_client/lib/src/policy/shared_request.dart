@@ -3,6 +3,7 @@ import 'dart:async';
 import '../link/link_request.dart';
 import '../link/link_result.dart';
 import '../link/next_link.dart';
+import 'guarded_start.dart';
 
 /// One forwarded request and the callers of `DedupeLink` waiting for its
 /// answer.
@@ -30,16 +31,10 @@ final class SharedRequest {
       return;
     }
     _isStarted = true;
-    final Stream<LinkResult> results;
-    try {
-      results = _forward(_request);
-    } on Object catch (error, stackTrace) {
-      _onError(error, stackTrace);
-      _onDone();
-      return;
-    }
-    _upstream = results.listen(
-      _onResult,
+    _upstream = const GuardedStart().listen<LinkResult>(
+      () => _forward(_request),
+      convert: (result) => result,
+      onData: _onResult,
       onError: _onError,
       onDone: _onDone,
     );

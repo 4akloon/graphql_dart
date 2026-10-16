@@ -5,6 +5,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 import '../link/link_request.dart';
 import '../link/link_result.dart';
 import '../link/next_link.dart';
+import 'guarded_start.dart';
 import 'persisted_query_errors.dart';
 
 /// The attempts of one request for `PersistedQueryLink`: the hash alone,
@@ -48,8 +49,10 @@ final class PersistedQueryRun {
     LinkRequest request, {
     required void Function(LinkResult result) onResult,
   }) {
-    _subscription = _forward(request).listen(
-      onResult,
+    _subscription = const GuardedStart().listen<LinkResult>(
+      () => _forward(request),
+      convert: (result) => result,
+      onData: onResult,
       onError: _controller.addError,
       onDone: () {
         _subscription = null;
