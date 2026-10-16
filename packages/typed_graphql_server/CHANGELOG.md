@@ -271,3 +271,7 @@
   WebSocket guide and the graphql-ws hostile-input tests come with it.
 - `ServerProfile.graphiql` (`true` in `development`, `false` in `production`)
   and `withGraphiQL` switch the GraphiQL page of `GraphQLHttpHandler`.
+- The GraphiQL page: with `ServerProfile.graphiql` on, `GraphQLHttpHandler`
+  answers a `GET` without a `query` whose `Accept` ranks `text/html` above
+  the JSON types with a page that loads GraphiQL 3.9.0 from jsDelivr, pinned
+  by Subresource Integrity, and sends its queries to the request's path.

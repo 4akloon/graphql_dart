@@ -354,3 +354,15 @@ buffering, and cancel the subscription when the client goes away.
   an unexpected failure in the handler is `GQL330` with a generic message.
 - **Subscriptions are refused** over plain JSON (`GQL431`), before the context
   is built; they have their own transports.
+
+## GraphiQL
+
+With `ServerProfile.graphiql` on (the default of `ServerProfile.development`,
+off in `production`), a `GET` without a `query` whose `Accept` ranks
+`text/html` above both JSON types gets the GraphiQL page instead of an error.
+A missing `Accept` or `*/*` ranks them equally, so it is still a GraphQL
+request. The page loads React and GraphiQL 3.9.0 from jsDelivr, each pinned
+by version and Subresource Integrity, sends its queries to the path it was
+opened at, and is served with `nosniff`, `no-referrer` and `x-frame-options:
+DENY`. Subscriptions are not run from the page. With the switch off, the same
+request is an ordinary one and, with no query, `GQL400`.

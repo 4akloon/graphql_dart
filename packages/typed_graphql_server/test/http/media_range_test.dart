@@ -90,4 +90,18 @@ void main() {
       );
     });
   });
+
+  group('MediaRange.specificityForName', () {
+    test('matches a type that is not a ResponseMediaType', () {
+      expect(
+        MediaRange.parse('text/html')!.specificityForName('text', 'html'),
+        2,
+      );
+      expect(MediaRange.parse('text/*')!.specificityForName('text', 'html'), 1);
+      expect(
+        MediaRange.parse('application/*')!.specificityForName('text', 'html'),
+        isNull,
+      );
+    });
+  });
 }

@@ -41,11 +41,16 @@ final class MediaRange {
 
   /// How closely this range names [offered]: 2 for the exact type, 1 for
   /// `type/*`, 0 for `*/*`, null when it does not match.
-  int? specificityFor(ResponseMediaType offered) {
+  int? specificityFor(ResponseMediaType offered) =>
+      specificityForName(offered.type, offered.subtype);
+
+  /// [specificityFor] for a media type that is not a [ResponseMediaType], such
+  /// as the GraphiQL page's `text/html`.
+  int? specificityForName(String offeredType, String offeredSubtype) {
     if (type == '*') return 0;
-    if (type != offered.type) return null;
+    if (type != offeredType) return null;
     if (subtype == '*') return 1;
-    return subtype == offered.subtype ? 2 : null;
+    return subtype == offeredSubtype ? 2 : null;
   }
 
   static bool _isToken(String text) =>

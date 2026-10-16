@@ -9,6 +9,8 @@ import 'accept_negotiation.dart';
 import 'batch_runner.dart';
 import 'content_type.dart';
 import 'get_parameters.dart';
+import 'graphiql_page.dart';
+import 'graphiql_request.dart';
 import 'http_options.dart';
 import 'http_options_check.dart';
 import 'http_request_data.dart';
@@ -132,6 +134,9 @@ final class GraphQLHttpHandler<C> {
     final early = _routes?.early(request, method);
     if (early != null) return early;
     if (method != 'GET' && method != 'POST') return _unsupportedMethod();
+    if (server.profile.graphiql && const GraphiQLRequest().wants(request)) {
+      return const GraphiQLPage().response(request.uri.path);
+    }
     final negotiation = AcceptNegotiation(_offeredFor(request, method));
     final type = negotiation.choose(request.header('accept'));
     if (type == null) {

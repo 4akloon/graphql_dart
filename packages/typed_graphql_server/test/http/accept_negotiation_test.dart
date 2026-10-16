@@ -142,4 +142,25 @@ void main() {
       'application/graphql-response+json and application/json',
     );
   });
+
+  group('qualityOfName', () {
+    test('is 0 for a missing header', () {
+      expect(negotiation.qualityOfName('text', 'html', null), 0);
+    });
+
+    test('takes the quality of the most specific range', () {
+      expect(
+        negotiation.qualityOfName('text', 'html', '*/*;q=0.8, text/html'),
+        1,
+      );
+      expect(
+        negotiation.qualityOfName('text', 'html', 'text/*;q=0.5, */*'),
+        0.5,
+      );
+    });
+
+    test('is 0 for a type the header does not name', () {
+      expect(negotiation.qualityOfName('text', 'html', 'application/json'), 0);
+    });
+  });
 }

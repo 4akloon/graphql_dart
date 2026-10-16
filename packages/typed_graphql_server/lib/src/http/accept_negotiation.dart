@@ -36,13 +36,11 @@ final class AcceptNegotiation {
           ? ResponseMediaType.json
           : null;
     }
-    final ranges = [
-      for (final element in accept.split(',')) ?MediaRange.parse(element),
-    ];
+    final ranges = _rangesOf(accept);
     ResponseMediaType? best;
     var bestQuality = 0.0;
     for (final candidate in offered) {
-      final quality = _qualityOf(candidate, ranges);
+      final quality = _qualityOf(candidate.type, candidate.subtype, ranges);
       if (quality > bestQuality) {
         best = candidate;
         bestQuality = quality;
@@ -51,11 +49,23 @@ final class AcceptNegotiation {
     return best;
   }
 
-  double _qualityOf(ResponseMediaType candidate, List<MediaRange> ranges) {
+  /// The quality [accept] gives to `type/subtype`, or 0 when it is missing,
+  /// blank or excludes it.
+  ///
+  /// Unlike [choose], a missing header gives nothing: the caller decides what
+  /// a client that did not say means.
+  double qualityOfName(String type, String subtype, String? accept) =>
+      accept == null ? 0 : _qualityOf(type, subtype, _rangesOf(accept));
+
+  static List<MediaRange> _rangesOf(String accept) => [
+    for (final element in accept.split(',')) ?MediaRange.parse(element),
+  ];
+
+  double _qualityOf(String type, String subtype, List<MediaRange> ranges) {
     var specificity = -1;
     var quality = 0.0;
     for (final range in ranges) {
-      final match = range.specificityFor(candidate);
+      final match = range.specificityForName(type, subtype);
       if (match == null || match < specificity) continue;
       if (match > specificity) quality = 0;
       specificity = match;
