@@ -13,6 +13,9 @@ final class HttpRequestEncoder({
   /// The GraphQL endpoint.
   required final Uri uri,
   required Map<String, String> headers,
+
+  /// Whether queries go as `GET` requests.
+  required final bool usesGetForQueries,
 }) {
   /// Creates an encoder; [headers] is copied with its names in lower case.
   this;
@@ -28,8 +31,12 @@ final class HttpRequestEncoder({
       key.toLowerCase(): value,
   });
 
-  /// [request] as a `POST` with a JSON body, aborted by [abortTrigger].
+  /// [request] as a `GET` (a query, with [usesGetForQueries]) or a `POST`
+  /// with a JSON body, aborted by [abortTrigger].
   TransportRequest encode(LinkRequest request, Future<void> abortTrigger) {
+    if (usesGetForQueries && request.type == .query) {
+      return _get(request, abortTrigger);
+    }
     final body = utf8.encode(jsonEncode(request.body.toJson().toJson()));
     return TransportRequest(
       method: 'POST',
@@ -37,6 +44,29 @@ final class HttpRequestEncoder({
       headers: headersFor(request, const {'content-type': 'application/json'}),
       body: Stream.value(body),
       contentLength: body.length,
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// [request] as a `GET`: its fields are query parameters, added to the
+  /// endpoint's own, and the preflight header lets it pass the server's
+  /// CSRF prevention.
+  TransportRequest _get(LinkRequest request, Future<void> abortTrigger) {
+    final body = request.body;
+    return TransportRequest(
+      method: 'GET',
+      uri: uri.replace(
+        queryParameters: {
+          ...uri.queryParametersAll,
+          'query': ?body.query,
+          'operationName': ?body.operationName,
+          if (body.variables case final variables?)
+            'variables': jsonEncode(variables.toJson()),
+          if (body.extensions case final extensions?)
+            'extensions': jsonEncode(extensions.toJson()),
+        },
+      ),
+      headers: headersFor(request, const {'graphql-require-preflight': 'true'}),
       abortTrigger: abortTrigger,
     );
   }

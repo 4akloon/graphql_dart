@@ -13,7 +13,8 @@ import 'response_reader.dart';
 /// A terminating link that sends queries and mutations over GraphQL over
 /// HTTP through an [HttpTransport] (spec section 9, R8.4).
 ///
-/// Every request is a `POST` with a JSON body and asks for
+/// A request is a `POST` with a JSON body, or with [usesGetForQueries] a
+/// query is a `GET` with query parameters; every request asks for
 /// `application/graphql-response+json`. The answer is read by the GraphQL
 /// over HTTP rules: a GraphQL response whatever the status, plain JSON only
 /// with a 2xx status, at most [maxResponseBytes] bytes and
@@ -25,15 +26,21 @@ import 'response_reader.dart';
 /// {@category http}
 final class HttpLink extends Link {
   /// Creates a link that sends to [uri] through [transport], adding
-  /// [headers] to every request and giving up after [timeout].
+  /// [headers] to every request and giving up after [timeout]; with
+  /// [usesGetForQueries], queries go as `GET` requests.
   HttpLink({
     required Uri uri,
     required HttpTransport transport,
     Map<String, String> headers = const {},
+    bool usesGetForQueries = false,
     Duration? timeout,
     int maxResponseBytes = defaultMaxResponseBytes,
     int maxResponseDepth = JsonReader.defaultMaxDepth,
-  }) : _encoder = HttpRequestEncoder(uri: uri, headers: headers),
+  }) : _encoder = HttpRequestEncoder(
+         uri: uri,
+         headers: headers,
+         usesGetForQueries: usesGetForQueries,
+       ),
        _exchange = HttpExchange(
          transport: transport,
          reader: ResponseReader(

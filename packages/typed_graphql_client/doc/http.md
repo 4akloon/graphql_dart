@@ -107,6 +107,13 @@ Headers come from three places, each over the one before: the link's own
 `RequestHeaders` entries of the request's context. Names are compared in
 lower case.
 
+With `usesGetForQueries: true`, a query goes as a `GET` request whose
+`query`, `operationName`, `variables` and `extensions` (the last two as
+JSON) are query parameters added to the URI's own, so a cache or a CDN can
+keep the answer. A mutation is always a `POST`. A `GET` carries the header
+`graphql-require-preflight: true`, which a server's CSRF prevention asks of
+requests a browser could send from another site.
+
 A subscription needs a streaming transport: `HttpLink` answers it with
 `UnsupportedOperation` (`GQL468`) without sending anything. Send
 subscriptions to the WebSocket or SSE link with a `SplitLink` (see the

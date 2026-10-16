@@ -44,3 +44,6 @@
   spec's rules, a byte limit counted while the body streams, strict UTF-8,
   bounded nesting, a timeout, cancellation that aborts the request, the
   HTTP status in `HttpResponseInfo`) (R8.4).
+- `HttpLink(usesGetForQueries: true)` sends queries as `GET` requests, with
+  the preflight header the server's CSRF prevention asks for; mutations
+  stay `POST`.
