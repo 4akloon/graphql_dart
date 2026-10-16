@@ -4,15 +4,11 @@ import 'package:meta/meta.dart';
 import 'package:mime/mime.dart';
 
 import '../cancellation/cancel_signal.dart';
+import 'body_failure.dart';
 import 'byte_limit.dart';
 import 'byte_limit_exceeded.dart';
 import 'part_header_scanner.dart';
 import 'part_header_too_large.dart';
-
-/// The failure of a body whose client went away.
-final class _Disconnected implements Exception {
-  const _Disconnected();
-}
 
 /// A request body that reports what goes wrong with it, so that a reader
 /// waiting on a part of it never waits forever.
@@ -129,12 +125,12 @@ final class WatchedBody {
     _timer = Timer(_timeout, () => fail(TimeoutException(null, _timeout)));
     _subscription = _source.listen(
       _onChunk,
-      onError: fail,
+      onError: (Object error) => fail(BodyFailure(error)),
       onDone: _onSourceDone,
       cancelOnError: true,
     );
     _removeCancelListener = _cancelSignal?.addListener(
-      () => fail(const _Disconnected()),
+      () => fail(const BodyFailure()),
     );
   }
 

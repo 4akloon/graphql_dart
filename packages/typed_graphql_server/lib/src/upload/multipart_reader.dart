@@ -6,6 +6,7 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../cancellation/cancel_signal.dart';
 import '../http/request_decoding.dart';
+import 'body_failure.dart';
 import 'byte_limit.dart';
 import 'byte_limit_exceeded.dart';
 import 'multipart_result.dart';
@@ -92,17 +93,20 @@ final class MultipartReader {
       // The server's fault, not the request's: the handler's outermost
       // boundary answers it.
       rethrow;
-    } on Exception catch (error) {
-      // What is left is the failure of the body, which the host's stream may
-      // word with any exception.
-      return MultipartRefusal(_refusalFor(error));
+    } on Exception catch (error, stackTrace) {
+      return MultipartRefusal(_refusalFor(error, stackTrace));
     } finally {
       watch.cancel();
       if (!isKept) await run.stored.release();
     }
   }
 
-  DecodingRefusal _refusalFor(Exception error) => switch (error) {
+  // An exception that is none of the failures of a body is a bug of the
+  // server, not of the request: it goes up to the handler's boundary.
+  DecodingRefusal _refusalFor(
+    Exception error,
+    StackTrace stackTrace,
+  ) => switch (error) {
     ByteLimitExceeded() => DecodingRefusal(
       413,
       DiagnosticCode.uploadTooLarge,
@@ -125,10 +129,11 @@ final class MultipartReader {
       DiagnosticCode.malformedMultipartRequest,
       'The multipart request is malformed.',
     ),
-    _ => const DecodingRefusal(
+    BodyFailure() => const DecodingRefusal(
       400,
       DiagnosticCode.malformedRequestBody,
       'The request body could not be read.',
     ),
+    _ => Error.throwWithStackTrace(error, stackTrace),
   };
 }
