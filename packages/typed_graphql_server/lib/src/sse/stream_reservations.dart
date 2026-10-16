@@ -11,7 +11,9 @@ import 'single_connection_options.dart';
 /// to come (spec section 10).
 ///
 /// A reservation lives until its stream closes, or until
-/// [SingleConnectionOptions.reservationTimeout] passes without a connection.
+/// [SingleConnectionOptions.reservationTimeout] passes without the host
+/// listening to the connected stream (a response the host dropped would
+/// otherwise hold its slot for ever).
 @internal
 final class StreamReservations {
   /// Creates an empty store; connected streams send a keep-alive comment every
@@ -31,9 +33,6 @@ final class StreamReservations {
   // 10).
   static final Random _random = Random.secure();
 
-  /// How many reservations are held.
-  int get length => _connections.length;
-
   /// A new token, or null when [SingleConnectionOptions.maxReservations]
   /// reservations are held.
   String? reserve() {
@@ -42,6 +41,7 @@ final class StreamReservations {
     _connections[token] = SingleConnection(
       options.maxOperationsPerStream,
       onClosed: () => _drop(token),
+      onListening: () => _timeouts.remove(token)?.cancel(),
     );
     _timeouts[token] = Timer(
       options.reservationTimeout,
@@ -58,7 +58,6 @@ final class StreamReservations {
     final connection = _connections[token];
     if (connection == null) return const UnknownToken();
     if (connection.isConnected) return const AlreadyOpen();
-    _timeouts.remove(token)?.cancel();
     return Connected(connection.connect(keepAliveInterval));
   }
 

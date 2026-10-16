@@ -117,6 +117,29 @@ void main() {
       await reader.cancel();
     });
 
+    test(
+      'a POST with the token and an event stream Accept is an operation',
+      () async {
+        final token = await sse.reserve(handler);
+        final post = await handler.handle(
+          sse.http.post(
+            {
+              'query': '{ hello }',
+              'extensions': {'operationId': 'a'},
+            },
+            headers: {
+              ...SseFixture.eventStreamClient,
+              SseFixture.tokenHeader: token,
+            },
+          ),
+        );
+        final get = await handler.handle(sse.connect(token));
+        expect(post.status, 202);
+        expect(get.status, 200);
+        await StreamReader(get).cancel();
+      },
+    );
+
     test('drops a reservation nobody connects within the timeout', () async {
       handler = sse.http.handler(
         options: sse.singleOptions(

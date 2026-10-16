@@ -17,13 +17,20 @@ import 'stream_operation.dart';
 final class SingleConnection {
   /// Creates a connection that runs at most [maxOperations] operations and
   /// calls [onClosed] once, when the stream ends or is abandoned.
-  SingleConnection(this.maxOperations, {required this.onClosed});
+  SingleConnection(
+    this.maxOperations, {
+    required this.onClosed,
+    required this.onListening,
+  });
 
   /// The most operations run or held at once.
   final int maxOperations;
 
   /// Called once, when the stream ends or is abandoned.
   final void Function() onClosed;
+
+  /// Called when the host starts listening to the stream.
+  final void Function() onListening;
   final Map<String, StreamOperation> _operations = {};
 
   static const EventStreamWriter _writer = EventStreamWriter();
@@ -99,6 +106,7 @@ final class SingleConnection {
 
   void _startOperations() {
     isListening = true;
+    onListening();
     for (final operation in _operations.values.toList()) {
       operation.start();
     }

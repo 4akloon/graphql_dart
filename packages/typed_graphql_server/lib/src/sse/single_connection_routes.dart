@@ -70,14 +70,17 @@ final class SingleConnectionRoutes<C> {
   ) => _operations.run(request, decoding, type);
 
   /// The answer to a request that needs nothing from the body, or null when
-  /// the request is an ordinary one: `PUT`, `DELETE`, a request that connects
+  /// the request is an ordinary one: `PUT`, `DELETE`, a `GET` that connects
   /// a stream and a `POST` whose token no reservation holds.
   HttpResponseData? early(HttpRequestData request, String method) {
     if (method == 'PUT') return _reserve(request);
     if (method == 'DELETE') return _cancel(request);
     final token = _tokens.tokenOf(request);
     if (token == null || (method != 'GET' && method != 'POST')) return null;
-    if (_asksForEventStream(request)) return _connect(token);
+    // Only a `GET` connects; a `POST` with a token is an operation.
+    if (method == 'GET' && _asksForEventStream(request)) {
+      return _connect(token);
+    }
     if (method == 'POST' && _reservations.lookup(token) == null) {
       return StreamRefusals(errors).notFound();
     }

@@ -65,6 +65,15 @@ void main() {
       await reader.cancel();
     });
 
+    test('a connected stream nobody listens to is dropped', () async {
+      final store = reservations(max: 1);
+      final token = store.reserve()!;
+      expect(store.connect(token), isA<Connected>());
+      await Future<void>.delayed(_timeout * 3);
+      expect(store.connect(token), isA<UnknownToken>());
+      expect(store.reserve(), isNotNull);
+    });
+
     test('closing a connected stream drops the reservation', () async {
       final store = reservations();
       final token = store.reserve()!;
