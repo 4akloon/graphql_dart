@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:meta/meta.dart';
 
 import '../link/link_request.dart';
 import '../link/request_headers.dart';
+import '../upload/upload_files.dart';
+import 'multipart_encoder.dart';
 import 'transport_request.dart';
 
 /// Writes a [LinkRequest] as the HTTP request GraphQL over HTTP describes
@@ -16,6 +19,9 @@ final class HttpRequestEncoder({
 
   /// Whether queries go as `GET` requests.
   required final bool usesGetForQueries,
+
+  /// Draws the boundaries of multipart bodies.
+  required final Random random,
 }) {
   /// Creates an encoder; [headers] is copied with its names in lower case.
   this;
@@ -31,9 +37,13 @@ final class HttpRequestEncoder({
       key.toLowerCase(): value,
   });
 
-  /// [request] as a `GET` (a query, with [usesGetForQueries]) or a `POST`
-  /// with a JSON body, aborted by [abortTrigger].
+  /// [request] as a multipart `POST` (with `UploadFiles` in its context),
+  /// a `GET` (a query, with [usesGetForQueries]) or a `POST` with a JSON
+  /// body, aborted by [abortTrigger].
   TransportRequest encode(LinkRequest request, Future<void> abortTrigger) {
+    if (request.context.entry<UploadFiles>() case final files?) {
+      return _multipart(request, files, abortTrigger);
+    }
     if (usesGetForQueries && request.type == .query) {
       return _get(request, abortTrigger);
     }
@@ -67,6 +77,28 @@ final class HttpRequestEncoder({
         },
       ),
       headers: headersFor(request, const {'graphql-require-preflight': 'true'}),
+      abortTrigger: abortTrigger,
+    );
+  }
+
+  /// [request] with [files] as a multipart `POST`; the preflight header
+  /// lets it pass the server's CSRF prevention, since a browser form can
+  /// send the same content type.
+  TransportRequest _multipart(
+    LinkRequest request,
+    UploadFiles files,
+    Future<void> abortTrigger,
+  ) {
+    final multipart = MultipartEncoder(random).encode(request.body, files);
+    return TransportRequest(
+      method: 'POST',
+      uri: uri,
+      headers: headersFor(request, {
+        'content-type': multipart.contentType,
+        'graphql-require-preflight': 'true',
+      }),
+      body: multipart.body,
+      contentLength: multipart.length,
       abortTrigger: abortTrigger,
     );
   }

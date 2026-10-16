@@ -47,3 +47,6 @@
 - `HttpLink(usesGetForQueries: true)` sends queries as `GET` requests, with
   the preflight header the server's CSRF prevention asks for; mutations
   stay `POST`.
+- `HttpLink` sends a request with `UploadFiles` as a multipart request
+  (the GraphQL multipart request specification), with the preflight header;
+  the Uploads guide shows the body.

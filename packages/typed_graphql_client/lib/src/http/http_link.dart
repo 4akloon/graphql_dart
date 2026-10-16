@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../client/client_failure.dart';
@@ -20,14 +22,16 @@ import 'response_reader.dart';
 /// with a 2xx status, at most [maxResponseBytes] bytes and
 /// [maxResponseDepth] levels of nesting. The payload's context holds an
 /// `HttpResponseInfo` with the status and headers. Cancelling the result
-/// stream aborts the request. A subscription is refused: route it to a
+/// stream aborts the request. A request with `UploadFiles` in its context
+/// is a multipart `POST`. A subscription is refused: route it to a
 /// streaming link with a `SplitLink`.
 ///
 /// {@category http}
 final class HttpLink extends Link {
   /// Creates a link that sends to [uri] through [transport], adding
   /// [headers] to every request and giving up after [timeout]; with
-  /// [usesGetForQueries], queries go as `GET` requests.
+  /// [usesGetForQueries], queries go as `GET` requests; [random] draws the
+  /// boundaries of multipart bodies.
   HttpLink({
     required Uri uri,
     required HttpTransport transport,
@@ -36,10 +40,12 @@ final class HttpLink extends Link {
     Duration? timeout,
     int maxResponseBytes = defaultMaxResponseBytes,
     int maxResponseDepth = JsonReader.defaultMaxDepth,
+    Random? random,
   }) : _encoder = HttpRequestEncoder(
          uri: uri,
          headers: headers,
          usesGetForQueries: usesGetForQueries,
+         random: random ?? Random(),
        ),
        _exchange = HttpExchange(
          transport: transport,
