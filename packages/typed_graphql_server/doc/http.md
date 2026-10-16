@@ -130,10 +130,13 @@ application/graphql-response+json; charset=utf-8
 ## Media types and status codes
 
 `Accept` is read as media ranges with quality values. The handler offers
-`application/graphql-response+json` first and `application/json` second;
-`*/*` and `application/*` therefore give the first. A missing or blank `Accept`
-is treated as `application/json`, so a client that does not know the new media
-type keeps working; an `Accept` that allows neither is a `406`.
+`application/graphql-response+json` first, `application/json` second and,
+unless `HttpOptions.sse` is null (and never for a multipart `POST`),
+`text/event-stream` third; `*/*` and `application/*` therefore give the first.
+A missing or blank `Accept` is treated as `application/json`, so a client that
+does not know the new media type keeps working; an `Accept` that allows none
+of the offered types is a `406`, and its message names all of them (see the
+Server-sent events guide for the event stream).
 
 A result of the pipeline is written in the chosen type with `charset=utf-8`.
 A refusal the transport itself makes (a size limit, a wrong content type, a bad
@@ -160,7 +163,7 @@ the pipeline's own, for a request that reached it):
 | Check | Status | Code |
 |---|---|---|
 | URI longer than `maxUriLength` | `414` | `GQL426` |
-| method other than `GET` and `POST` | `405`, `allow: GET, POST` | `GQL420` |
+| method other than `GET` and `POST` | `405`, `allow: GET, POST` (`GET, POST, PUT, DELETE` with single connection mode on) | `GQL420` |
 | `Accept` allows nothing offered | `406` | `GQL422` |
 | `GET`: a repeated parameter, bad UTF-8, `variables` or `extensions` not a JSON object | `422` | `GQL425` |
 | `POST`: content type is not `application/json` (only `charset=utf-8` is allowed as a parameter) | `415` | `GQL421` |

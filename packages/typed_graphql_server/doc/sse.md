@@ -46,8 +46,24 @@ error included) sends one `next` event; each stream ends with `complete`.
 A mutation is allowed over `POST` only, as everywhere. These stay JSON
 refusals instead of a stream: `405`, `500`, the refusals that precede the
 pipeline (`415`, `413`, `400`) and a request blocked by CSRF prevention
-(`403`). A batch cannot be answered as an event stream (`406`), and a
-multipart `POST` does not offer one.
+(`403`). A batch cannot be answered as an event stream (`406`, `GQL422`; in
+single connection mode a batch is `422`, `GQL428`), and a multipart `POST`
+does not offer one.
+
+When `Accept` lists several media types at the same quality, the order of the
+handler's offer wins: `text/event-stream, application/json` gets JSON, while
+`text/*` gets the stream. A client that wants a stream should send
+`text/event-stream` alone, as `EventSource` and the graphql-sse client do.
+
+A native browser `EventSource` cannot set request headers, and CSRF prevention
+refuses a `GET` that has none of its preflight headers (`403`, `GQL403`; see
+the Server guide). A browser client therefore uses a fetch-based client that
+sends `graphql-require-preflight: true`, or the server runs a profile with
+`withCsrfPrevention` relaxed (null turns the check off, which is safe only for
+an endpoint that carries no cookies). The same holds for the `GET` that
+connects a single connection stream. While the mode is on, a distinct-mode
+client that passes its credentials as a `?token=` parameter is not served: any
+request with a `token` parameter is read as a stream token (`404`, `GQL433`).
 
 This program runs a subscription through the handler with an event stream
 `Accept`:
@@ -156,13 +172,20 @@ Refusals:
 | `409` | `GQL438` | the stream runs more than `maxOperationsPerStream` operations |
 | `503` | `GQL437` | the server holds `maxReservations` reservations |
 
-A batch cannot run on an event stream (`422`, `GQL428`). While the mode is on,
+A batch cannot run on an event stream (`422`, `GQL428`, also when batching is
+on). Only a `GET` connects a stream; a `POST` with the token is an operation
+whatever its `Accept` says. While the mode is on,
 a `405` lists `allow: GET, POST, PUT, DELETE`; while it is off, a token is
 ignored and `PUT` and `DELETE` are `405`.
 
 The reservations live in the handler, in memory. A deployment with several
 instances needs sticky sessions, so that the `PUT`, the `GET` and the `POST`s
 of one client reach the same instance.
+
+`PUT` runs before any context factory, so it has no authentication hook:
+anyone who can reach the endpoint can hold reservations for
+`reservationTimeout` each, and `maxReservations` is what bounds that. This is
+inherent in the protocol.
 
 The token is what protects the stream: only a client that read the answer to
 the `PUT` holds it, and a cross-site `PUT` needs a preflight. The operations
@@ -208,11 +231,14 @@ connection mode is for.
 `SingleConnectionOptions` bounds the mode:
 
 - `maxReservations` (1000): reservations held at once; more is `503`;
-- `reservationTimeout` (30 seconds): a reservation that no `GET` connects in
-  this time is dropped with the operations it held;
+- `reservationTimeout` (30 seconds): a reservation that no `GET` connects, or
+  whose connected stream the host does not listen to, in this time is dropped
+  with the operations it held;
 - `maxOperationsPerStream` (100): operations running or held on one stream.
 
-A stream whose body the host never listens to is not dropped by the handler:
-the host must cancel or listen to every body it gets. The limits of the
+A single connection stream the host never listens to is dropped by that
+timeout, so a lost response does not hold its slot for ever. A distinct stream
+starts its work when the host listens, so the host must still cancel or listen
+to every body it gets. The limits of the
 pipeline (`ServerLimits`, cost, cancellation and timeouts) apply to every
 operation as for any request.

@@ -160,6 +160,10 @@ executed
   extensions, errors and masking.
 - [HTTP](doc/http.md): `GraphQLHttpHandler`, media types and status codes,
   limits, batching, writing a host adapter, security notes.
+- [Uploads](doc/uploads.md): the `Upload` scalar, multipart requests, limits,
+  storage of files while a request runs.
+- [Server-sent events](doc/sse.md): GraphQL over `text/event-stream` in both
+  modes of graphql-sse, keep-alive, limits and proxies.
 - [Persisted Documents](doc/persisted_documents.md): automatic persisted
   queries and their store, trusted documents from the codegen manifest.
 - [Schema Builder](doc/schema_builder.md): refs, objects, fields, arguments,
