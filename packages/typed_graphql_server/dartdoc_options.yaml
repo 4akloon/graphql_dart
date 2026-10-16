@@ -30,6 +30,9 @@ dartdoc:
     subscription:
       markdown: doc/subscriptions.md
       displayName: Subscriptions
+    websocket:
+      markdown: doc/websocket.md
+      displayName: WebSocket
   categoryOrder:
     - authorization
     - builder
@@ -41,4 +44,5 @@ dartdoc:
     - persisted
     - server
     - subscription
+    - websocket
   showUndocumentedCategories: true

@@ -214,3 +214,5 @@
   gone.
 - `RequestInfo.connectionParams`: the payload of the graphql-ws
   `connection_init` message, for a context factory that reads a token sent there.
+- graphql-ws types: `GraphQLSocket`, `GraphQLWsOptions`, `ConnectionHook`,
+  `AcceptConnection` and `RefuseConnection`, and a first WebSocket guide.
