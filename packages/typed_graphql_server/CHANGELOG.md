@@ -246,3 +246,4 @@
   rest are `GQL350`).
 - The transport codes `GQL420`-`GQL431`.
 - The HTTP guide, with the dartdoc category `http`.
+- `Upload`, `UploadStorage`, `MemoryUploadStorage`, `UploadLimits` and `Uploads`: the `Upload` scalar for multipart file uploads (its codec is input only), where a file waits during a request, and the limits of a request. The Uploads guide, with the dartdoc category `upload`.

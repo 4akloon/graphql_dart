@@ -33,6 +33,9 @@ dartdoc:
     subscription:
       markdown: doc/subscriptions.md
       displayName: Subscriptions
+    upload:
+      markdown: doc/uploads.md
+      displayName: Uploads
   categoryOrder:
     - authorization
     - builder
@@ -45,4 +48,5 @@ dartdoc:
     - persisted
     - server
     - subscription
+    - upload
   showUndocumentedCategories: true
