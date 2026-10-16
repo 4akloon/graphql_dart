@@ -185,6 +185,24 @@ void main() {
       await done;
       expect(socket.closeCode, 4500);
     });
+
+    test('an async onError that throws reaches no zone handler', () async {
+      final escaped = <Object>[];
+      await runZonedGuarded(() async {
+        final fixture = WsFixture(
+          options: GraphQLWsOptions(
+            onConnect: (info) => throw StateError('bug'),
+            onError: (error, stackTrace) async => throw StateError('hook'),
+          ),
+        );
+        final socket = FakeSocket();
+        final done = fixture.run(socket);
+        socket.receive(initText);
+        await done;
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }, (error, stackTrace) => escaped.add(error));
+      expect(escaped, isEmpty);
+    });
   });
 
   group('operation ids', () {

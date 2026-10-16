@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:meta/meta.dart';
 
 import 'socket_error_hook.dart';
@@ -19,10 +21,15 @@ final class SocketErrorReporter {
       return;
     }
     try {
-      target(error, stackTrace);
+      final result = target(error, stackTrace);
+      if (result is Future<void>) {
+        result.ignore();
+      }
     } on Object {
-      // A boundary: a hook that fails must not break the connection that
-      // was already being closed or answered because of another error.
+      // (guard: a hook that fails must not break the connection that was
+      // already being closed or answered because of another error; the
+      // error it throws is the hook's own, and the one being reported has
+      // already been passed to it, so no Error is hidden.)
     }
   }
 }
