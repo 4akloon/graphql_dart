@@ -43,3 +43,5 @@
   supplies, with the handshake and its timeout, ping and pong, an optional
   keep-alive, reconnection with backoff that subscribes again, and `dispose`
   (R8.4); the codes `GQL470`-`GQL472`.
+- The WebSocket guide: a runnable in-memory subscription, the reconnection
+  rules, the final close codes, and subscriptions over a socket beside HTTP.
