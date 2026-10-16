@@ -42,3 +42,6 @@
   Policies guide.
 - `DedupeLink`: identical queries in flight share one forwarded request, each
   caller keeping its own stream and its own cancellation.
+- `PersistedQueryLink`: sends the document's hash instead of its text; in the
+  automatic mode it falls back to the text when the server does not know the
+  hash or stores no queries, in the trusted mode it never sends the text.

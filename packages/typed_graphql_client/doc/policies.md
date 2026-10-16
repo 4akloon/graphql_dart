@@ -149,3 +149,78 @@ world
 sent 1 time
 sent 2 times
 ```
+
+## Persisted queries
+
+`PersistedQueryLink({isAutomatic: true})` sends the hash of the document
+instead of its text, to a server that stores persisted documents (the
+Persisted Documents guide of `typed_graphql_server`). The request carries
+`extensions.persistedQuery` with `version` 1 and the document's `sha256Hash`,
+merged into any extensions the request has, and no `query`.
+
+In the automatic mode (APQ) the first request of a query is the hash alone:
+
+- The server answers `PersistedQueryNotFound` (or `extensions.code` `GQL410`
+  or `PERSISTED_QUERY_NOT_FOUND`): the link sends the request again with the
+  text and the hash, and delivers that answer. The server stores the text
+  once it has validated it, so the next request can be the hash alone.
+- The server answers `PersistedQueryNotSupported` (`GQL412`,
+  `PERSISTED_QUERY_NOT_SUPPORTED`): the link sends the text alone, and sends
+  text alone for every later request.
+- Anything else is delivered as it is.
+
+With `isAutomatic: false` (trusted documents) the link sends the hash alone
+and delivers whatever comes back, such as the server's `GQL415` for a hash it
+does not know. The link applies to queries and mutations; a subscription and a
+request with `UploadFiles` pass through. Cancelling the call cancels whichever
+attempt is running.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_client/typed_graphql_client.dart';
+
+final class HelloQuery extends GraphQLQuery<String> {
+  const HelloQuery();
+
+  @override
+  OperationDocument get document => const OperationDocument(
+    name: 'Hello',
+    type: OperationType.query,
+    text: 'query Hello{hello}',
+    sha256: 'f6004747575e6561b67c600f28196e3c7648ef73797a3078da3e4658ddf6b623',
+  );
+
+  @override
+  JsonObject get variablesJson => JsonObject({});
+
+  @override
+  DecodeResult<String> decodeData(JsonObject data) => switch (data['hello']) {
+    JsonString(:final value) => DecodeSuccess(value),
+    _ => const DecodeFailure('expected a string', path: [PathKey('hello')]),
+  };
+}
+
+Future<void> main() async {
+  final mock = MockLink()
+    ..addErrors([GraphQLError('PersistedQueryNotFound')])
+    ..addData(JsonObject({'hello': JsonString('world')}));
+  final client = GraphQLClient(link: Link.from([PersistedQueryLink(), mock]));
+  if (await client.query(const HelloQuery()) case GraphQLData(:final data)) {
+    print(data);
+  }
+  for (final request in mock.requests) {
+    print(
+      '${request.body.query ?? '<no text>'} | '
+      '${request.extensions?['persistedQuery']}',
+    );
+  }
+}
+```
+
+It prints:
+
+```text
+world
+<no text> | {"version":1,"sha256Hash":"f6004747575e6561b67c600f28196e3c7648ef73797a3078da3e4658ddf6b623"}
+query Hello{hello} | {"version":1,"sha256Hash":"f6004747575e6561b67c600f28196e3c7648ef73797a3078da3e4658ddf6b623"}
+```
