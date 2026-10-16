@@ -89,3 +89,5 @@
   ends without `complete` is `GQL473`, an event limit (`GQL463`), strict
   incremental UTF-8, cancellation that closes the connection; the
   Server-sent events guide (R8.4).
+- `example/example.dart`: a query and a subscription over `MockLink`; the
+  README lists what works.

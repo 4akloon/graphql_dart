@@ -80,7 +80,17 @@ emitters that generate the schema-types library and a library per document
 minified document with its SHA-256, the persisted-operations manifest), the
 codes `GQL500`-`GQL511`, the `generate` and `check` command line, `Optional`
 in the core, the generated-code contract in `typed_graphql_client`, the goldens
-and the Client Code Generation guide.
+and the Client Code Generation guide. M11 (client runtime) delivers
+`GraphQLClient` (`query`, `mutate`, `subscribe`) with the sealed
+`GraphQLResponse` and `ClientFailure` (`GQL460`-`GQL474`), `CancelToken`, the
+link chain (`Link.from`, `SplitLink`, `ContextLink`, `Backoff`, `MockLink`),
+`HttpLink` (GraphQL over HTTP, `GET` for queries, multipart uploads) over an
+`HttpTransport`, `RetryLink`, `DedupeLink`, `PersistedQueryLink` and `AuthLink`,
+`WebSocketLink` (graphql-transport-ws over an app-supplied `ClientSocket`) and
+`SseLink` (graphql-sse, distinct connections), the hostile-input tests, the
+end-to-end tests against `GraphQLServer`, the client suite in Chrome in CI, the
+example and the client guides; the normalized cache and `watchQuery` are M12,
+`@defer` and `@stream` M14, and the tests against the transports of M7 are M11z.
 
 ## Documents
 
@@ -615,6 +625,42 @@ scalar); `read` throws `DataFormatException`, `decode` turns it into a
 `DataEquality` compares lists and `Optional`s by value, and `JsonMerger`
 merges what a class and its fragments write for one object.
 
+**Client runtime** (`typed_graphql_client/lib/src/`; M11). Depends on `meta`,
+`http` and the core; `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
+or web framework (`test/quality/imports_test.dart`), so the package runs on the
+VM, AOT, dart2js and dart2wasm, and CI runs its suite in Chrome. Folders, each
+a dartdoc category with its guide: `client/`, `link/`, `upload/`, `http/`,
+`policy/`, `socket/`, `sse/` (and `operation/`, the contract above).
+`GraphQLClient` calls the link chain, decodes each result with the internal
+`ResponseDecoder` into `GraphQLData` | `GraphQLErrors` |
+`GraphQLTransportFailure`, and never throws for what a server or a network
+does; a link reports a failure as a `LinkFailure` value (`ClientFailure`, one
+code each), not with `addError`. `query` and `mutate` take the first result and
+cancel the chain; `subscribe` is a single-subscription stream that calls the
+chain on `listen`; `OperationStream` cancels upstream without awaiting it (a
+cancel future only the real event loop completes would hang `fakeAsync`). A
+`Link` returns `Stream<LinkResult>` and gets `forward`; `LinkContext` holds
+typed `ContextEntry`s (`RequestHeaders`, `HttpResponseInfo`, `UploadFiles`,
+`Idempotent`). `http/`: `HttpLink` talks to the `HttpTransport` seam, never to
+`package:http` types (`PackageHttpTransport` is the one adapter);
+`HttpRequestEncoder` builds POST, `GET` and multipart requests and merges
+headers (protocol, link, then context), `ResponseReader` picks the reader by
+media type under a byte and depth limit, `HttpExchange` sends, times out and
+aborts through `TransportRequest.abortTrigger`. `policy/`: `RetryLink` retries
+only queries and mutations marked `Idempotent` (never a GraphQL error),
+`DedupeLink` shares identical queries in flight through `SharedRequest`,
+`PersistedQueryLink` sends the hash and resends once with the text (APQ) or
+sends the hash alone (trusted documents), `AuthLink` adds a token and, on a 401, refreshes it once and resends once; a
+callback of the caller that throws ends the caller's stream with that error and
+cancels upstream. `socket/`: `WebSocketLink` is lazy, one socket for every
+operation, `connection_init`/`connection_ack`, keep-alive, reconnection with
+`Backoff` (the loop in `SocketDriver`, the operations in `SocketOperations`); a
+`ClientSocket` is three members the app implements, so no socket library is
+imposed. `sse/`: `SseLink` runs one `POST` per operation; the internal
+`EventStreamParser` is a stream transformer over `EventAssembler` (WHATWG
+rules, bounded by `maxEventBytes`), `next` is a result, `complete` ends the
+stream, anything else is `GQL473`; cancelling closes the connection.
+
 **Error model.** Bad input never throws (R0.3): it becomes diagnostics or a
 `DecodeFailure` in a sealed result. Exceptions are for programmer errors only:
 `ArgumentError`, `RangeError`, `StateError`.
@@ -838,6 +884,12 @@ README that leaves the package folder is an absolute URL.
   `RulePort` for the validation rule suites, `ExecutionPort` for the
   execution, variables and input-coercion suites).
 - Hostile-document tests: `packages/typed_graphql/test/validation/hostile_*_test.dart`.
+- Client end-to-end tests against `GraphQLServer` (queries, `GET`, persisted
+  queries, the policy links, a subscription over server-sent events):
+  `packages/typed_graphql_client/test/e2e/`, over the in-memory
+  `PipelineTransport` in `test/e2e/support/`. Client hostile-input tests:
+  `test/http/hostile_response_test.dart`, `test/socket/hostile_socket_test.dart`
+  and `test/sse/hostile_stream_test.dart`.
 - Fuzzers: `packages/typed_graphql_conformance/test/fuzz/` (language, SDL
   round trip, hostile SDL, introspection round trip, hostile
   introspection, coordinates, valid operations, hostile operations and
