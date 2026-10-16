@@ -302,3 +302,4 @@
   `invalidPersistedQuery`, `untrustedDocument`, `unknownTrustedDocument`),
   reported by the server for persisted queries and trusted documents.
 - Documentation: `GQL402` also covers `HEAD`; the cost guide says a resolver must cap a slicing argument itself.
+- `DiagnosticCode.tooManySocketOperations` (`GQL432`): a graphql-ws `subscribe` past the socket's operation limit.

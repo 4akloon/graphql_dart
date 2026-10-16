@@ -717,6 +717,12 @@ enum DiagnosticCode(
   /// response of `GraphQLServer.handle`.
   unknownTrustedDocument('GQL415'),
 
+  /// `GQL432`: reported when a graphql-ws `subscribe` arrives while the
+  /// socket already runs `GraphQLWsOptions.maxOperations` operations; it is
+  /// the `extensions.code` of the `error` message for that id, and the socket
+  /// stays open.
+  tooManySocketOperations('GQL432'),
+
   /// `GQL500`: a `typed_graphql.yaml` that is not valid YAML; the message is
   /// the YAML parser's.
   configSyntax('GQL500'),
