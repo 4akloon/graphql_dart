@@ -9,9 +9,11 @@ import 'client_message.dart';
 import 'client_message_reader.dart';
 import 'connection_decision.dart';
 import 'connection_handshake.dart';
+import 'duplicate_subscriber.dart';
 import 'graphql_socket.dart';
 import 'graphql_ws_options.dart';
 import 'server_messages.dart';
+import 'socket_operations.dart';
 import 'ws_close.dart';
 
 /// One graphql-ws connection: reads its frames, answers them and closes the
@@ -25,7 +27,14 @@ final class SocketSession<C> {
     required this.socket,
     required this.upgrade,
   }) : _handshake = ConnectionHandshake(options, upgrade),
-       _reader = ClientMessageReader(options.maxJsonDepth);
+       _reader = ClientMessageReader(options.maxJsonDepth) {
+    _operations = SocketOperations<C>(
+      server: server,
+      upgrade: upgrade,
+      maxOperations: options.maxOperations,
+      send: _send,
+    );
+  }
 
   /// The server that runs the operations.
   final GraphQLServer<C> server;
@@ -41,6 +50,8 @@ final class SocketSession<C> {
 
   final ConnectionHandshake _handshake;
   final ClientMessageReader _reader;
+  // Set by the constructor body, which needs `_send` of this instance.
+  late final SocketOperations<C> _operations;
   final ServerMessages _messages = const ServerMessages();
   final Completer<void> _ended = Completer<void>();
   bool _isClosed = false;
@@ -59,6 +70,7 @@ final class SocketSession<C> {
 
   void _end() {
     _handshake.stopTimer();
+    _operations.cancelAll();
     if (!_ended.isCompleted) {
       _ended.complete();
     }
@@ -84,8 +96,8 @@ final class SocketSession<C> {
         break;
       case SubscribeMessage():
         _subscribe(message);
-      case CompleteMessage():
-        break;
+      case CompleteMessage(:final id):
+        _operations.cancel(id);
     }
   }
 
@@ -116,8 +128,22 @@ final class SocketSession<C> {
   void _subscribe(SubscribeMessage message) {
     if (!_handshake.isAcknowledged) {
       _close(WsClose.unauthorized);
+    } else if (_operations.contains(message.id)) {
+      const duplicate = DuplicateSubscriber();
+      _closeWith(duplicate.code, duplicate.reason(message.id));
+    } else if (_operations.isFull) {
+      _send(_messages.error(message.id, [_tooManyOperations()]));
+    } else {
+      _operations.start(message, _handshake.connectionParams);
     }
   }
+
+  GraphQLError _tooManyOperations() => GraphQLError(
+    'Too many operations are running on this connection.',
+    extensions: JsonObject({
+      'code': JsonString(DiagnosticCode.tooManySocketOperations.id),
+    }),
+  );
 
   void _send(String text) {
     if (!_isClosed) {
@@ -125,15 +151,18 @@ final class SocketSession<C> {
     }
   }
 
-  void _close(WsClose reason) {
+  void _close(WsClose reason) => _closeWith(reason.code, reason.reason);
+
+  void _closeWith(int code, String reason) {
     if (_isClosed) {
       return;
     }
     _isClosed = true;
     _handshake.stopTimer();
+    _operations.cancelAll();
     try {
       socket
-          .close(reason.code, reason.reason)
+          .close(code, reason)
           .then<void>(
             (_) {},
             onError: (Object _) {},
