@@ -68,7 +68,10 @@ final class SocketSession<C> {
     return _ended.future;
   }
 
+  // A connection that ended is closed for good: a hook still pending must
+  // not acknowledge it.
   void _end() {
+    _isClosed = true;
     _handshake.stopTimer();
     _operations.cancelAll();
     if (!_ended.isCompleted) {
