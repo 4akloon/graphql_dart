@@ -25,3 +25,114 @@ and an `abortTrigger`) and returns a `TransportResponse` (status, headers,
 body stream). It reports a lost connection by throwing an `Exception`, and
 closes the connection when `abortTrigger` completes. Tests and in-memory
 servers implement it directly.
+
+## HttpLink
+
+`HttpLink` is the terminating link for queries and mutations. It sends
+each as a `POST` with a JSON body to its `uri`, asking for
+`application/graphql-response+json` first and plain JSON second. The
+program below answers from memory with a transport of its own:
+
+```dart
+import 'dart:convert';
+
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_client/typed_graphql_client.dart';
+
+final class HelloQuery extends GraphQLQuery<String> {
+  const HelloQuery();
+
+  @override
+  OperationDocument get document => const OperationDocument(
+    name: 'Hello',
+    type: OperationType.query,
+    text: 'query Hello{hello}',
+    sha256: 'f6004747575e6561b67c600f28196e3c7648ef73797a3078da3e4658ddf6b623',
+  );
+
+  @override
+  JsonObject get variablesJson => JsonObject({});
+
+  @override
+  DecodeResult<String> decodeData(JsonObject data) => switch (data['hello']) {
+    JsonString(:final value) => DecodeSuccess(value),
+    _ => const DecodeFailure('expected a string', path: [PathKey('hello')]),
+  };
+}
+
+final class InMemoryServer implements HttpTransport {
+  @override
+  Future<TransportResponse> send(TransportRequest request) async {
+    final body = await utf8.decodeStream(request.body ?? const Stream.empty());
+    print('${request.method} ${request.uri} ${request.headers['accept']}');
+    print(body);
+    return TransportResponse(
+      statusCode: 200,
+      headers: {'content-type': 'application/graphql-response+json'},
+      body: Stream.value(utf8.encode('{"data":{"hello":"world"}}')),
+    );
+  }
+}
+
+Future<void> main() async {
+  final client = GraphQLClient(
+    link: HttpLink(
+      uri: Uri.parse('https://example.com/graphql'),
+      transport: InMemoryServer(),
+      timeout: const Duration(seconds: 30),
+    ),
+  );
+  switch (await client.query(const HelloQuery())) {
+    case GraphQLData(:final data, :final context):
+      final status = context.entry<HttpResponseInfo>()?.statusCode;
+      print('data: $data (HTTP $status)');
+    case GraphQLErrors(:final errors):
+      print('errors: ${errors.first.message}');
+    case GraphQLTransportFailure(:final failure):
+      print('failure: $failure');
+  }
+}
+```
+
+It prints:
+
+```text
+POST https://example.com/graphql application/graphql-response+json, application/json;q=0.9
+{"query":"query Hello{hello}","operationName":"Hello"}
+data: world (HTTP 200)
+```
+
+Headers come from three places, each over the one before: the link's own
+(`accept`, `content-type`), the `headers` given to the link, and the
+`RequestHeaders` entries of the request's context. Names are compared in
+lower case.
+
+A subscription needs a streaming transport: `HttpLink` answers it with
+`UnsupportedOperation` (`GQL468`) without sending anything. Send
+subscriptions to the WebSocket or SSE link with a `SplitLink` (see the
+Links guide).
+
+## Reading the answer
+
+The link reads the answer by the GraphQL over HTTP rules:
+
+| Content type | Status | Result |
+|---|---|---|
+| `application/graphql-response+json` | any | the GraphQL response |
+| `application/json` | 2xx | the GraphQL response |
+| `application/json` | other | `HttpStatusFailure` (`GQL461`) |
+| another or none | other than 2xx | `HttpStatusFailure` (`GQL461`) |
+| another or none | 2xx | `ResponseFormatFailure` (`GQL462`) |
+
+A charset other than UTF-8 is `GQL462`. The body is counted while it
+arrives: past `maxResponseBytes` (16 MiB by default) the link aborts the
+request with `GQL463`. Bytes that are not UTF-8, text that is not JSON,
+JSON nested deeper than `maxResponseDepth` (512 by default) and JSON that
+is not a GraphQL response are `GQL464`, with the path of the bad value.
+The response's context holds an `HttpResponseInfo` with the status and
+headers.
+
+An `Exception` of the transport, or of the body stream, is a
+`NetworkFailure` (`GQL460`). With a `timeout`, a request that has not
+finished in time is aborted with `RequestTimedOut` (`GQL467`). Cancelling
+the call aborts the request through the transport's `abortTrigger`.

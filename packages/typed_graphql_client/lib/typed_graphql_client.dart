@@ -11,6 +11,7 @@ export 'src/client/cancel_token.dart';
 export 'src/client/client_failure.dart';
 export 'src/client/graphql_client.dart';
 export 'src/client/graphql_response.dart';
+export 'src/http/http_link.dart';
 export 'src/http/http_transport.dart';
 export 'src/http/package_http_transport.dart';
 export 'src/http/transport_request.dart';
