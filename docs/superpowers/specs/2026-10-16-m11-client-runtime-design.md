@@ -59,7 +59,7 @@ category named after the folder, with its guide:
 | `http/` | `HttpLink`, `HttpTransport`, `TransportRequest`, `TransportResponse`, `PackageHttpTransport`; internal `MediaType`, `ResponseReader`, `HttpRequestEncoder` (POST, GET and the header merge), `HttpExchange` (send, read, timeout, abort), `MultipartEncoder` | `http`, `doc/http.md` | M11b |
 | `policy/` | `RetryLink`, `RetryPolicy`, `Idempotent`, `DedupeLink`, `PersistedQueryLink`, `AuthLink`; internal `RetryRun`, `SharedRequest`, `PersistedQueryRun`, `PersistedQueryErrors`, `AuthRun`, `TokenRenewal` | `policy`, `doc/policies.md` | M11c |
 | `socket/` | `WebSocketLink`, `ClientSocket`; internal `SocketMessage`, `SocketMessageCodec`, `SocketConnection`, `SocketDriver`, `SocketOperations`, `OpenOperation`, `ReconnectPolicy`, `SocketSettings`, `SocketEnd`, `CancellableWait` | `socket`, `doc/websocket.md` | M11d |
-| `sse/` | `SseLink`; internal `EventStreamParser`, `ServerSentEvent` and the exchange that reads the stream | `sse`, `doc/sse.md` | M11e |
+| `sse/` | `SseLink`; internal `EventStreamParser`, `EventAssembler`, `ServerSentEvent`, `EventStreamError`, `SseExchange`, `SseRun` | `sse`, `doc/sse.md` | M11e |
 
 `operation/` (M10) is unchanged: generated code keeps compiling against it.
 
@@ -155,7 +155,7 @@ final class CancelToken {
   sees the token: when the client (or `DedupeLink`, or `RetryLink`) cancels
   its `StreamSubscription`, each link cancels what it holds: `HttpLink`
   aborts the HTTP request (`TransportRequest.abortTrigger`), `WebSocketLink`
-  sends `complete` and closes an idle socket, `SseLink` aborts the
+  sends `complete` for the operation, `SseLink` aborts the
   connection, `RetryLink` cancels its backoff timer. A user link written
   with stream transformers (`asyncExpand`, `map`) propagates the cancel for
   free; the Links guide says so.
@@ -483,106 +483,154 @@ Function()? refresh, String headerName = 'authorization', String scheme =
 - After the answer: the default `isUnauthorized` is an
   `HttpStatusFailure(401)` or a payload whose `HttpResponseInfo` has
   status 401. Then `refresh` runs **once for every request waiting on it**
-  (single flight in the internal `TokenRenewal`: a refresh in flight is
-  joined before the current token is read, and a request that sent a token
-  older than the last refreshed one reuses that one without refreshing);
-  the request is sent again once with the new token (a 401 is a
-  request-level refusal, so a mutation is safe to resend). If `refresh` is
-  null the 401 answer is delivered; a refresh that gives null sends the
-  request again without the header, and its 401 is delivered.
+  (single flight in the internal `TokenRenewal`, in this order: a refresh
+  in flight is joined; a refresh that finished while this request read the
+  current token is reused (a refresh counter tells); a current token that
+  is non-null and differs from the refused one is used (someone else
+  renewed it); otherwise a new refresh starts, which every request waiting
+  at the same time shares). The request is sent again once with the new
+  token (a 401 is a request-level refusal, so a mutation is safe to
+  resend). If `refresh` is null, or a refresh gives null, the 401 answer is
+  delivered as it is.
 - An `Exception` from `token` or `refresh` is
-  `AuthenticationFailure(GQL474)`; an `Error` is a stream error (above).
+  `AuthenticationFailure(GQL474)`; anything else they throw is a stream
+  error (above).
 
 ## 11. WebSocket: graphql-transport-ws (M11d; R8.4)
 
 ```text
 abstract interface class ClientSocket {
-  Stream<String> get messages;     // done when the socket closes
-  void send(String message);
-  void close(int code, String reason);
-  int? get closeCode;              // read after `messages` is done
+  Stream<String> get messages;                  // done when the socket closes
+  void send(String text);
+  Future<void> close([int? code, String? reason]);
+  int? get closeCode;                           // read after `messages` is done
   String? get closeReason;
 }
 final class WebSocketLink extends Link {
   WebSocketLink({required Future<ClientSocket> Function() connect,
-      FutureOr<JsonObject?> Function()? connectionPayload,
-      Duration ackTimeout = 10 s, Duration? keepAlive,
-      Duration lazyCloseTimeout = Duration.zero, int reconnectAttempts = 5,
+      FutureOr<JsonObject?> Function()? connectionParams,
+      Duration connectionAckTimeout = 10 s, Duration? keepAlive,
+      int retryAttempts = 5,
       Backoff backoff = const Backoff(initialDelay: 1 s), Random? random});
   Future<void> dispose();
 }
 ```
 
+`ClientSocket.close` has the optional parameters and the `Future` of
+`WebSocketSink.close`, so an adapter over `web_socket_channel` is a
+forwarding call (the doc comment shows it, and the guide shows the browser
+one). A `connectionAckTimeout` or `keepAlive` that is not longer than zero,
+or a negative `retryAttempts`, is an `ArgumentError`. The names follow the
+reference client (`connectionParams`, `connectionAckWaitTimeout` shortened,
+`retryAttempts`).
+
 The protocol is `reference/graphql-ws/PROTOCOL.md`; the behaviour mirrors
 the reference client (`reference/graphql-ws/src/client.ts`):
 
-- **Lazy.** The first operation connects (`connect()` must open the socket
-  with the sub-protocol `graphql-transport-ws`; the app's adapter does
-  that) and sends `connection_init` with `connectionPayload()`; operations
-  wait for `connection_ack`. When the last operation ends, the socket is
-  closed with `1000` after `lazyCloseTimeout`.
-- **Ack timeout.** No ack within `ackTimeout` closes with `4504` and fails
-  the waiting operations with `SocketFailure(GQL472)`.
+- **Lazy, then open.** The first operation connects (`connect()` must open
+  the socket with the sub-protocol `graphql-transport-ws`; the app's
+  adapter does that) and sends `connection_init` with
+  `connectionParams()` (called at each connection, so a refreshed token is
+  sent after a reconnection); operations wait for `connection_ack`. One
+  socket carries every operation. The socket stays open after the last
+  operation ends, until `dispose()` (ruling: the reference client's
+  `lazyCloseTimeout` is left out; an app that wants the socket closed
+  disposes the link). A socket that arrives after every operation has
+  left, or while the link is being disposed, is closed at once.
+- **Ack timeout.** No ack within `connectionAckTimeout` closes with `4504`
+  and fails the waiting operations with `SocketFailure(GQL472)`, without
+  reconnecting. A `4504` close sent *by a server* is retried like any
+  other code.
 - **Operations.** Each gets an id unique for the link's life (`"1"`, `"2"`,
   ...); `subscribe` carries `LinkRequest.body`. `next` is a `LinkPayload`
-  (decoded with `ResponsePayload.decode`, `GQL464` on failure), `error` is a
+  (decoded with `ResponsePayload.decode`), `error` is a
   `LinkPayload(RequestErrorResult(errors))` and ends the stream, `complete`
-  ends it. Cancelling a stream sends `complete` for its id. A message for an
-  unknown or finished id is ignored (the protocol allows it).
-- **Ping/pong.** A server `ping` is answered with `pong` at once. With
-  `keepAlive`, the link sends `ping` every interval after the ack; if no
-  `pong` arrived since the previous ping, the socket is considered dead,
-  closed with `4499` and reconnected.
+  ends it. Cancelling a stream sends `complete` for its id when the
+  `subscribe` was sent. A message for an unknown or finished id is ignored
+  (the protocol allows it), in constant memory.
+- **Ping/pong.** A server `ping` is answered with `pong` at once. With `keepAlive`, the link sends `ping` every interval
+  after the ack; if no `pong` arrived since the previous ping, the socket
+  is considered dead, closed with `4499` and reconnected.
 - **Invalid server messages** (not JSON, not an object, unknown `type`, a
   missing or non-string `id`, a payload of the wrong shape, a second
-  `connection_ack`, `next` before the ack) close the socket with `4004`
-  ("Bad response", the reference client's code; the protocol text says
-  4400 for both directions, deviation 3) and fail every operation with
-  `SocketFailure(GQL470)`; there is no reconnection after it.
-- **Reconnection.** A socket that closes or fails to open while operations
-  are active is reopened up to `reconnectAttempts` times, waiting
-  `backoff.delayFor(n, random)`; the count resets after an ack. Close codes
-  that are never retried (the reference client's list): `4500`, `4005`,
-  `4400`, `4004`, `4401`, `4406`, `4409`, `4429`, and `1002`-`1999` except
-  `1000`, `1001`, `1005`, `1006`, `1012`, `1013`, `1014`. After a
-  reconnection, queries and subscriptions are subscribed again with new
-  ids; **a mutation in flight is never resent**: it fails with
-  `NetworkFailure`. When the attempts run out or the code is fatal, every
-  operation gets `SocketFailure(GQL471, closeCode, closeReason)`.
-- `connect()` throwing an `Exception` counts as a failed attempt; the last
-  one is a `NetworkFailure`.
-- `dispose()` closes the socket with `1000` and ends every operation's
-  stream; later requests get `SocketFailure(GQL471)`.
-- Hostile input is bounded: the link keeps one entry per active operation
-  and nothing per message; a flood of `next` for unknown ids is ignored in
-  constant memory; a message is parsed with `JsonReader` (depth limit).
+  `connection_ack`, `next` before the ack) close the socket with `4400`,
+  the protocol's code (deviation 3), and fail every operation with
+  `SocketFailure(GQL470)`; there is no reconnection after it. A message is
+  parsed with `JsonReader` (depth limit).
+- **Reconnection.** A socket that closes, errors or fails to open while
+  operations are open is reopened after `backoff.delayFor(n - 1, random)`,
+  up to `retryAttempts` failed attempts in a row; an acknowledged
+  connection gives the count back. A socket whose stream errors is closed
+  with `4499` before the next one is opened. Close codes that are never
+  retried (the reference client's list, internal `ReconnectPolicy`):
+  `4500`, `4005`, `4400`, `4004`, `4401`, `4406`, `4409`, `4429`, and
+  `1000`-`1999` except `1000`, `1001`, `1005`, `1006`, `1012`, `1013`,
+  `1014`. After a reconnection, open queries and subscriptions are
+  subscribed again **under the same id** (ruling: the reference client
+  keeps its ids, and the protocol only forbids reusing an id that is still
+  open on the same socket); **a mutation already sent is never resent**: it
+  fails with `NetworkFailure`. When the attempts run out or the code is
+  fatal, every operation gets `SocketFailure(GQL471, closeCode,
+  closeReason)`, or the `NetworkFailure` of the last `connect()` that
+  threw. `connectionParams` throwing closes the socket with `4005`, as the
+  reference client does, which is fatal (`GQL471`). The backoff wait is
+  cancellable: `dispose()` during it leaves no timer.
+- **`dispose()`** ends every open operation with `RequestCancelled`,
+  closes the socket with `1000`, and answers later requests with
+  `UnsupportedOperation(GQL468)`.
+- A request with `UploadFiles` is `UnsupportedOperation(GQL468)`.
+- **Inside.** `WebSocketLink` is a thin face: `SocketOperations` holds the
+  open operations (`OpenOperation`: the request, its controller, whether
+  its `subscribe` was sent), `SocketDriver` runs the connect-and-retry
+  loop over `SocketConnection` (one socket: handshake, ack timeout,
+  keep-alive, dispatch), `SocketEnd` says how a connection ended,
+  `ReconnectPolicy` and `SocketSettings` hold the configuration,
+  `CancellableWait` is the backoff timer, and `SocketMessage` with
+  `SocketMessageCodec` is the message model (deviation 8).
 
 ## 12. Server-sent events: graphql-sse (M11e; R8.4)
 
 ```text
 final class SseLink extends Link {
   SseLink({required Uri uri, required HttpTransport transport,
-      Map<String, String> headers = const {}, int maxEventBytes = 16 MiB,
+      Map<String, String> headers = const {},
+      int maxEventBytes = defaultMaxEventBytes,      // 16 MiB
       int maxResponseDepth = JsonReader.defaultMaxDepth});
+  static const int defaultMaxEventBytes;
 }
 ```
 
-- Distinct connections mode (`reference/graphql-sse/PROTOCOL.md`): `POST`
-  with the JSON body, `accept: text/event-stream`, the same header order as
-  `HttpLink`. Cancelling aborts the connection (the protocol's way to stop
-  a subscription).
-- A 2xx `text/event-stream` answer is parsed by `EventStreamParser` (the
-  WHATWG rules: lines end with CRLF, LF or CR, also across chunks; `:`
-  lines are comments, `data` lines join with `\n`, a blank line dispatches,
-  `id` and `retry` are ignored): `next` carries a GraphQL response
-  (`LinkPayload`, with `HttpResponseInfo`), `complete` ends the stream. An
-  event of another type, or the end of the body before `complete`, is
-  `EventStreamFailure(GQL473)`; an event longer than `maxEventBytes`
-  (counted in bytes as they arrive) is `GQL463`; bytes that are not UTF-8
-  are `GQL464`.
+- Distinct connections mode (`reference/graphql-sse/PROTOCOL.md`): every
+  operation is a `POST` with the JSON body and `accept: text/event-stream`;
+  the headers merge as `HttpLink`'s do (`HttpRequestEncoder.headersFor`).
+  Cancelling aborts the connection (the protocol's way to stop a
+  subscription); pausing the result stream pauses the body. A negative
+  `maxEventBytes` or a `maxResponseDepth` out of range is a `RangeError`, as
+  in `HttpLink`. A request with `UploadFiles` is
+  `UnsupportedOperation(GQL468)` and nothing is sent.
+- A 2xx `text/event-stream` answer is parsed by the internal
+  `EventStreamParser` over `EventAssembler` (the WHATWG rules: lines end
+  with CRLF, LF or CR, also across chunks; a leading byte-order mark is
+  dropped; `:` lines are comments, `data` lines join with `\n`, a blank
+  line dispatches an event that has a type or data, an empty `event:` is
+  `message`, `id` and `retry` are ignored). It is a stream transformer, not
+  an `async*` generator, so cancelling stops a stalled body at once.
+  `next` carries a GraphQL response (`LinkPayload`, with
+  `HttpResponseInfo`), `complete` ends the stream. An event of another
+  type, or the end of the body before `complete` (an unfinished event is
+  dropped, as a browser does), is `EventStreamFailure(GQL473)`. An event
+  whose `data` and `event` lines pass `maxEventBytes` (UTF-8 bytes as they
+  arrive; comments do not count, so a keep-alive stream runs in constant
+  memory) is `ResponseFormatFailure(GQL463)`; bytes that are not UTF-8 are
+  `GQL464`; a 2xx event stream in another charset is `GQL462`. The parser's
+  own errors are the internal sealed `EventStreamError`
+  (`EventStreamTooLarge`, `EventStreamNotUtf8`).
 - Any other answer is read as `HttpLink` reads it (`ResponseReader`), so a
   server that refuses the request with a JSON error body gives
   `GraphQLErrors`.
+- **Inside.** `SseLink` is a thin face over `SseExchange` (configuration)
+  and `SseRun` (one request: send, choose stream or single answer, relay
+  events, own the result controller and the abort).
 - Single connection mode is not built (open question 7).
 
 ## 13. The seam for M12 (normalized cache)
@@ -617,31 +665,49 @@ bounded in memory. Tests (one file per transport):
   ids, an `error` whose payload is not a list, a socket that closes
   mid-handshake, a server that never acks, a server ping flood.
 - **SSE** (`test/sse/hostile_stream_test.dart`): an unknown event, an event
-  without a type, a `next` with invalid JSON, an event split across every
-  byte boundary, a never-ending line, `\r` line ends, a stream that ends
-  without `complete`, a 2xx `application/json` answer.
+  without a type, a `next` with invalid JSON, one that is not a GraphQL
+  response, one nested past the depth limit, a stream that ends without
+  `complete`, an empty stream, an event split across every byte boundary,
+  `\r` line ends, 10 000 comment lines, endless comments in constant space,
+  a never-ending line (the body cancelled), endless `data` lines, a 2xx
+  `application/json` answer (one result), 2xx `text/html` or no content
+  type, an event stream with status 500, invalid UTF-8, a character cut by
+  the end of the body, a body stream that throws after some events.
 
 ## 15. End-to-end tests
 
 - **M11f (now):** the client against M6's `GraphQLServer` with no network:
   a test-only `HttpTransport` (`test/e2e/support/pipeline_transport.dart`)
-  decodes the `TransportRequest`, calls `GraphQLServer.handle`, and writes
-  the `ServerResponse` as `application/graphql-response+json` with the
-  status GraphQL over HTTP gives each `ServerOutcome`. Scenarios: a query
-  with variables; partial data; a validation error; a `GET` query (CSRF
-  passes with the preflight header); a mutation refused over `GET` is never
-  sent (the link uses POST); automatic persisted queries (miss, then text,
-  then hash alone hits M6's store); trusted documents from M10's manifest;
-  `AuthLink` refreshing against a context factory that refuses a stale
-  token. `typed_graphql_server` becomes a dev dependency of the client
-  (architecture section 1 allows it).
+  decodes the `TransportRequest` (the JSON body of a `POST`, the parameters
+  of a `GET`), calls `GraphQLServer.handle`, and writes a `SingleResponse`
+  as `application/graphql-response+json` (`executed` 200, `requestError`
+  400, `methodNotAllowed` 405, `internalError` 500: a test double, since
+  M7 owns the real mapping, which M11z checks) and a `StreamResponse` as a
+  `text/event-stream` of `next` events and `complete`. Scenarios: a query
+  with variables; partial data; a validation error (`GQL205`); a `GET`
+  query (CSRF passes with the preflight header) beside a `POST` mutation
+  on the same link; automatic persisted queries (miss, then text, then the
+  hash alone hits M6's store); a server without a store (the link falls
+  back to text for good); trusted documents from a manifest in M10's
+  format (an untrusted query is `GQL415`); `AuthLink` refreshing once,
+  also for two concurrent queries (ruling: the stale token is refused by
+  the transport with a 401, as a gateway in front of the server would,
+  because M6's context factory can only turn a refusal into a request
+  error); `DedupeLink` sending two concurrent identical queries once;
+  `SseLink` receiving a server subscription to its end, a cancel that
+  reaches the server's source, and a query. `typed_graphql_server`
+  becomes a dev dependency of the client (architecture section 1 allows
+  it).
 - **M11z (gated on M7):** the same scenarios through M7's own HTTP handler
   (status codes, media types, body limits from M7), plus graphql-ws and
   graphql-sse through M7's handlers over an in-memory `ClientSocket` and
-  `HttpTransport`. Its plan
-  (`2026-10-16-m11z-end-to-end-over-m7.md`) is written now and is to be
-  run only after M7 merges; its first task re-checks the M7 names it uses
-  and adjusts them (section 18).
+  `HttpTransport` (`HandlerTransport` over `GraphQLHttpHandler`;
+  `SocketPair`, whose ends are a `ClientSocket` and a `GraphQLSocket`).
+  Its plan (`2026-10-16-m11z-end-to-end-over-m7.md`) is written now
+  against the M7 spec's names and is to be run only after M7 merges; its
+  code could not be compiled, so its first task re-checks every M7 name it
+  uses and adjusts them (section 18). Not covered there: uploads end to
+  end (the test schema has no `Upload` scalar; add with M7b's API).
 
 ## 16. Deviations from the architecture spec and the requirements
 
@@ -650,8 +716,11 @@ bounded in memory. Tests (one file per transport):
    ships with the cache (open question 1).
 2. **No `web_socket_channel` dependency.** The architecture names it; the
    link takes a `ClientSocket` the app implements (section 2).
-3. **Close code `4004` for a bad server message**, as the reference
-   client, not the `4400` of the protocol text.
+3. **Close code `4400` for a bad server message**, the code the protocol
+   text gives for an invalid message in either direction; the reference
+   client closes with `4004` ("Bad response") instead. Both are in the
+   never-retried list, so the only visible difference is the code a server
+   logs.
 4. **Files travel in the context.** `UploadFiles` lists the files of a
    request; the generated variables carry markers (section 9). Apollo iOS
    takes files beside the operation the same way.
@@ -675,6 +744,15 @@ bounded in memory. Tests (one file per transport):
     is placed by the client itself (section 13).
 11. **Time in tests is faked with `fake_async`**, not an injected clock;
     randomness is injected (`Random`).
+12. **All fifteen client codes arrive in one core commit** (M11a Task 1),
+    not each "in the commit that first reports it" as CLAUDE.md's design
+    rules ask: the later plans run in parallel and must not touch the
+    core's catalog, where their changes would collide. Every code is
+    reported by the end of M11e, so none stays unused.
+13. **No `lazyCloseTimeout`.** The reference client closes an idle socket
+    after a delay; `WebSocketLink` keeps it open until `dispose()`, so a
+    subscription started right after another ended reuses the connection
+    and no timer outlives the operations (section 11).
 
 ## 17. Open questions for the owner
 
@@ -704,7 +782,7 @@ Each has the recommendation the plans follow until the owner decides.
 7. **graphql-sse single connection mode.** Recommended: later; HTTP/2 makes
    distinct connections cheap. Alternative: build it in M11e.
 8. **Default limits.** `maxResponseBytes` 16 MiB, `maxEventBytes` 16 MiB,
-   depth 512 (the core's default), `ackTimeout` 10 s, 5 reconnection
+   depth 512 (the core's default), `connectionAckTimeout` 10 s, 5 reconnection
    attempts, 3 retry attempts. Recommended as listed.
 9. **Retrying mutations.** Recommended: never, unless the context has
    `Idempotent()`. Alternative: retry a mutation after a failure that
