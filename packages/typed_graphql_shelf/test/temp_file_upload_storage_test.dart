@@ -165,6 +165,52 @@ void main() {
     skip: Platform.isWindows ? 'POSIX modes only' : false,
   );
 
+  Future<void> expectsNoDirectoryLeft(
+    Future<ProcessResult> Function(List<String> arguments) chmod,
+  ) async {
+    String? made;
+    final failing = TempFileUploadStorage(
+      runChmod: (arguments) {
+        made = arguments.last;
+        return chmod(arguments);
+      },
+    );
+    await expectLater(
+      failing.store('a', 'b', Stream.value([1])),
+      throwsA(isA<FileSystemException>()),
+    );
+    expect(Directory(made!).existsSync(), isFalse);
+  }
+
+  test('passes -- before the path to chmod', () async {
+    List<String>? seen;
+    final spying = TempFileUploadStorage(
+      runChmod: (arguments) {
+        seen = arguments;
+        return Process.run('chmod', arguments);
+      },
+    );
+    final upload = await spying.store('a', 'b', Stream.value([1]));
+    final parent = (upload as FileUpload).file.parent;
+    addTearDown(() async {
+      await spying.release(upload);
+      parent.deleteSync();
+    });
+    expect(seen, ['700', '--', parent.path]);
+  }, skip: Platform.isWindows ? 'POSIX modes only' : false);
+
+  test('removes the directory when chmod exits non-zero', () async {
+    await expectsNoDirectoryLeft(
+      (arguments) async => ProcessResult(1, 1, '', 'denied'),
+    );
+  }, skip: Platform.isWindows ? 'POSIX modes only' : false);
+
+  test('removes the directory when chmod cannot be run', () async {
+    await expectsNoDirectoryLeft(
+      (arguments) => throw const ProcessException('chmod', []),
+    );
+  }, skip: Platform.isWindows ? 'POSIX modes only' : false);
+
   test('uses one default directory for every upload', () async {
     final byDefault = TempFileUploadStorage();
     final first = await byDefault.store('a', 'b', Stream.value([1]));

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:shelf/shelf.dart';
+import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 import 'package:typed_graphql_shelf/typed_graphql_shelf.dart';
@@ -135,6 +136,58 @@ void main() {
       ),
     );
     expect(response.statusCode, 400);
+  });
+
+  for (final entry in {
+    'an empty key': '',
+    'a key that is not base64': '!!!!!!!!!!!!!!!!!!!!!!!!',
+    'a 15 byte key': base64Encode(List.filled(15, 1)),
+    'a 17 byte key': base64Encode(List.filled(17, 1)),
+  }.entries) {
+    test('refuses ${entry.key} with 400 GQL425', () async {
+      final response = await upgrading()(
+        upgrade(headers: {'sec-websocket-key': entry.value}),
+      );
+      expect(response.statusCode, 400);
+      expect(codeOf(await body(response)), 'GQL425');
+    });
+  }
+
+  test('lets the sample key of RFC 6455 reach the hijack', () async {
+    final callbacks = <Object>[];
+    final request = Request(
+      'GET',
+      queryUri,
+      headers: upgrade().headers,
+      onHijack: callbacks.add,
+    );
+    await expectLater(upgrading()(request), throwsA(isA<HijackException>()));
+    expect(callbacks, hasLength(1));
+  });
+
+  test('reports a hijack that fails and closes the sink', () async {
+    Object? reported;
+    void Function(StreamChannel<List<int>>)? callback;
+    final request = Request(
+      'GET',
+      queryUri,
+      headers: upgrade().headers,
+      onHijack: (hijack) => callback = hijack,
+    );
+    final handler = upgrading(
+      http: HttpOptions(
+        onError: (error, stackTrace, standard) {
+          reported = error;
+          return null;
+        },
+      ),
+    );
+    await expectLater(handler(request), throwsA(isA<HijackException>()));
+    final controller = StreamChannelController<List<int>>();
+    // The sink is not a Socket, which the upgrade cannot serve.
+    callback!(controller.foreign);
+    await controller.local.stream.toList().timeout(const Duration(seconds: 5));
+    expect(reported, isA<ArgumentError>());
   });
 
   test('answers 500 GQL330 when the request cannot be hijacked', () async {

@@ -30,11 +30,15 @@ final class TempFileUploadStorage implements UploadStorage {
   TempFileUploadStorage({
     this.directory,
     @visibleForTesting Random? random,
-  }) : _random = random ?? Random.secure();
+    @visibleForTesting
+    Future<ProcessResult> Function(List<String> arguments)? runChmod,
+  }) : _random = random ?? Random.secure(),
+       _runChmod = runChmod ?? ((arguments) => Process.run('chmod', arguments));
 
   /// The directory given to the constructor, or null for the private one.
   final Directory? directory;
   final Random _random;
+  final Future<ProcessResult> Function(List<String> arguments) _runChmod;
   Future<Directory>? _privateDirectory;
 
   @override
@@ -106,8 +110,12 @@ final class TempFileUploadStorage implements UploadStorage {
   }
 
   Future<void> _restrict(Directory directory) async {
-    final result = await Process.run('chmod', ['700', directory.path]);
-    if (result.exitCode == 0) return;
+    try {
+      final result = await _runChmod(['700', '--', directory.path]);
+      if (result.exitCode == 0) return;
+    } on ProcessException {
+      // No `chmod` to run (a minimal image): the directory is not private.
+    }
     await directory.delete();
     throw FileSystemException(
       'Cannot make the upload directory private',

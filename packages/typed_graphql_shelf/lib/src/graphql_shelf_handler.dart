@@ -38,7 +38,12 @@ final class GraphQLShelfHandler<C> {
     Duration webSocketPingInterval = const Duration(seconds: 12),
   }) : _http = GraphQLHttpHandler<C>(server, options: http),
        _onError = http.onError,
-       _upgrade = _upgradeFor<C>(server, webSocket, webSocketPingInterval);
+       _upgrade = _upgradeFor<C>(
+         server,
+         webSocket,
+         webSocketPingInterval,
+         http.onError,
+       );
 
   final GraphQLHttpHandler<C> _http;
   final ErrorHook? _onError;
@@ -48,6 +53,7 @@ final class GraphQLShelfHandler<C> {
     GraphQLServer<C> server,
     GraphQLWsOptions? options,
     Duration pingInterval,
+    ErrorHook? onError,
   ) {
     if (pingInterval <= Duration.zero) {
       throw ArgumentError.value(
@@ -61,6 +67,7 @@ final class GraphQLShelfHandler<C> {
       GraphQLWsHandler<C>(server, options: options),
       pingInterval,
       options.maxMessageLength,
+      onError,
     );
   }
 

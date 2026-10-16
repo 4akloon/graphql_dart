@@ -29,11 +29,13 @@ final class WebSocketUpgrade<C> {
   WebSocketUpgrade(
     this._handler,
     this._pingInterval,
-    int maxMessageLength,
-  ) : maxFrameBytes = maxMessageLength * 3 + 1024;
+    int maxMessageLength, [
+    this._onError,
+  ]) : maxFrameBytes = maxMessageLength * 3 + 1024;
 
   final GraphQLWsHandler<C> _handler;
   final Duration _pingInterval;
+  final ErrorHook? _onError;
 
   /// The largest frame payload `dart:io` accepts; a larger frame closes the
   /// socket (`dart:io` sends `1002`) before the payload is buffered. A UTF-16
@@ -75,7 +77,44 @@ final class WebSocketUpgrade<C> {
     }
     final protocol = handshake.subprotocol(GraphQLWsHandler.protocol);
     final accept = WebSocketChannel.signKey(handshake.key!);
-    request.hijack((channel) => _start(channel, accept, protocol, info));
+    request.hijack((channel) => _guarded(channel, accept, protocol, info));
+  }
+
+  // A boundary: the callback runs where nobody catches, so what it throws is
+  // reported to the hook and the connection is closed, never rethrown.
+  void _guarded(
+    StreamChannel<List<int>> channel,
+    String accept,
+    String? protocol,
+    RequestInfo info,
+  ) {
+    try {
+      _start(channel, accept, protocol, info);
+    } on Object catch (error, stackTrace) {
+      _report(error, stackTrace);
+      try {
+        channel.sink.close().ignore();
+      } on Object {
+        // The sink is already unusable; there is nothing left to close.
+      }
+    }
+  }
+
+  void _report(Object error, StackTrace stackTrace) {
+    final hook = _onError;
+    if (hook == null) return;
+    try {
+      hook(
+        error,
+        stackTrace,
+        const JsonRefusal().error(
+          DiagnosticCode.unexpectedError,
+          'The WebSocket upgrade could not be completed.',
+        ),
+      );
+    } on Object {
+      // A faulty hook must not turn the report into a failure.
+    }
   }
 
   void _start(

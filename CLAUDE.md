@@ -674,10 +674,10 @@ outside a streamed body, so no `cancelSignal` is given; for an event stream it
 cancels the body's subscription, which stops the work. With `webSocket` set,
 `WebSocketUpgrade` takes a `GET` with `upgrade: websocket`: the Origin check
 first (`allowsUpgrade`, else a `403` JSON refusal with `GQL403`), then
-`UpgradeHandshake` (a `400` with `GQL425`), then the adapter hijacks, writes
+`UpgradeHandshake` (a `400` with `GQL425`, also for a key that is not 16 bytes in base64), then the adapter hijacks, writes
 the `101` itself and wraps the socket in `WebSocket.fromUpgradedSocket` with
 `maxPayloadLength` (`3 * maxMessageLength + 1024`; `shelf_web_socket` gives no
-limit) and `webSocketPingInterval`; the connection becomes a
+limit; per frame only, a fragmented message is not bounded in total) and `webSocketPingInterval`; the connection becomes a
 `WebSocketChannelSocket` for `GraphQLWsHandler.serve`. `call` is the shelf
 package's one `on Object` BOUNDARY (a 500 `GQL330` through `JsonRefusal`,
 reported to `HttpOptions.onError`; `HijackException` is rethrown). `TempFileUploadStorage`

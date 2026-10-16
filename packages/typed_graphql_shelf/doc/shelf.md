@@ -101,7 +101,8 @@ The same schema with a subscription, a WebSocket and the GraphiQL page is
 - A handler that fails in a way it did not expect, for example a request whose
   body a middleware already read (`StateError`) or a WebSocket upgrade on a
   host that cannot hijack, answers `500` with `GQL330` as JSON and reports to
-  `HttpOptions.onError`; `call` never throws.
+  `HttpOptions.onError`; `call` never throws. With no `onError` hook such an
+  error is answered `500` and is not logged anywhere.
 
 ## Behind a proxy
 
@@ -149,9 +150,11 @@ GraphQLShelfHandler<Object?>(
 - A frame may carry at most `3 * maxMessageLength + 1024` bytes: the adapter
   writes the `101` itself and gives `dart:io` that limit, so a frame header that
   declares more closes the socket (`dart:io` sends `1002`) before any payload is
-  buffered. The limit is per frame: a message split into many frames is
-  checked as a whole only after `dart:io` has assembled it, so a proxy that
-  caps the total is still advisable.
+  buffered. The limit is per frame only: a message split into many frames
+  (`FIN=0`) is not bounded in total, because `dart:io` appends every frame to
+  one buffer until the last one arrives (a probe buffered 60 frames of 3 MiB
+  against a `maxMessageLength` of 1 MiB). Run the server behind a proxy that
+  caps the size of a message.
 - Limits, the `onConnect` hook and the close codes are the WebSocket guide's
   of `typed_graphql_server`.
 

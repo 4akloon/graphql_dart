@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:meta/meta.dart';
 import 'package:shelf/shelf.dart';
 
@@ -20,8 +22,12 @@ final class UpgradeHandshake {
     if (_request.protocolVersion != '1.1') {
       return 'A WebSocket upgrade needs HTTP/1.1.';
     }
+    final key = this.key;
     if (key == null) {
       return 'The Sec-WebSocket-Key header is missing.';
+    }
+    if (!_isNonce(key)) {
+      return 'The Sec-WebSocket-Key header must be 16 bytes in base64.';
     }
     return null;
   }
@@ -37,6 +43,17 @@ final class UpgradeHandshake {
       if (candidate.trim() == supported) return supported;
     }
     return null;
+  }
+
+  // RFC 6455 section 4.2.1: the nonce is 16 bytes, base64 encoded (24
+  // characters with padding).
+  bool _isNonce(String key) {
+    if (key.length != 24) return false;
+    try {
+      return base64.decode(key).length == 16;
+    } on FormatException {
+      return false;
+    }
   }
 
   bool _listsUpgrade() {

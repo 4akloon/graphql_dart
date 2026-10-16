@@ -46,6 +46,10 @@ dependencies:
 - **You do not need it when** you use another web framework: the HTTP and
   graphql-ws handlers of `typed_graphql_server` take a small adapter, which
   this package is for shelf.
+- **Know before you deploy**: the WebSocket frame limit is per frame; a
+  message split into many frames is not bounded in total, so run it behind a
+  proxy that caps the size of a message. Without `HttpOptions.onError` an
+  unexpected error is a `500` that is not logged.
 - **Which package**: this one next to
   [typed_graphql_server](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_server),
   which builds the schema and runs the requests.

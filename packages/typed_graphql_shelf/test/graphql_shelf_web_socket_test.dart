@@ -182,4 +182,20 @@ void main() {
     });
     expect((await client.next())['type'], 'connection_ack');
   });
+
+  test(
+    'accepts a frame of three bytes per code unit up to the limit',
+    () async {
+      // The slack of 1024 bytes hides the multiple in a small message, so the
+      // message is big: 800 euro signs are about 2.4 KB in UTF-8 but 850 code
+      // units, within the limit, and over a frame limit of one byte per unit.
+      await serve(options: const GraphQLWsOptions(maxMessageLength: 1000));
+      final client = await connect();
+      client.send({
+        'type': 'connection_init',
+        'payload': {'k': '\u20AC' * 800},
+      });
+      expect((await client.next())['type'], 'connection_ack');
+    },
+  );
 }
