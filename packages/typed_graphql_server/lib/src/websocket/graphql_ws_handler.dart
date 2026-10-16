@@ -95,7 +95,8 @@ final class GraphQLWsHandler<C> {
         WsClose.internalError.reason,
       );
     } on Object {
-      // The socket is gone; nothing is left to tell the client.
+      // (guard: the socket is gone and nothing is left to tell the client;
+      // the failure that led here was already reported to the hook.)
     }
   }
 

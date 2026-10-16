@@ -182,7 +182,9 @@ What the limits do not cover:
 - The `4408` timer also covers a slow `onConnect`: a hook that takes longer
   than `connectionInitTimeout` gets the connection closed.
 - A subscription whose source fails after it started sends its earlier
-  `next` messages, then an `error` message with `GQL330`.
+  `next` messages, then a `next` carrying the error with `GQL340` and a
+  `complete`; an `error` message with `GQL330` follows only when the result
+  stream itself fails.
 
 The limits of the pipeline (`ServerLimits`: document length, tokens, depth,
 aliases, cost) apply to each `subscribe` as to any request.
@@ -200,11 +202,18 @@ handler: `maxOperations` and the schema's own rate are the only bounds.
 
 `GraphQLWsOptions.onError` receives the errors the handler swallows, with
 their stack traces: a throw of `onConnect` (the client gets `4500`), a throw
-of the server pipeline and a failing result stream (the client gets an
-`error` message with `GQL330`), and a failure of the connection itself. An
+of the server pipeline and a result stream that itself fails (the client
+gets an `error` message with `GQL330`; a failing subscription source is not
+this case, it ends as a `GQL340` result), and a failure of the connection itself. An
 `Error` is reported like any other object and is never rethrown into the
 zone; these are boundary catches, so one broken connection cannot take the
-process down. A hook that throws is ignored.
+process down. A hook that throws is ignored, and so is the failure of the
+`Future` an `async` hook returns. Exactly six places catch `Object`: the
+three boundaries above (the `onConnect` call, the operation's request and the
+connection's outermost run) report through the hook; the other three are
+guards (the hook call itself, a `close` that throws synchronously and the
+close after a failure) that only end the connection and cannot hide an
+`Error` nobody saw.
 
 ## Writing an adapter
 

@@ -183,7 +183,8 @@ final class SocketSession<C> {
     try {
       socket.close(code, reason).then<void>((_) => _end(), onError: _endAfter);
     } on Object {
-      // A socket that fails to close is gone already.
+      // (guard: `close` threw synchronously, so the socket is gone already;
+      // the session ends either way, and nothing of ours can be an Error.)
       _end();
     }
   }
