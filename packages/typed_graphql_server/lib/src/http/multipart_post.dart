@@ -18,8 +18,13 @@ import 'request_decoding.dart';
 final class MultipartPost {
   /// Creates the reader for a handler configured with [options], whose files
   /// go where [uploads] says and which [csrfPrevention] guards, if it is not
-  /// null.
-  const MultipartPost(this.options, this.uploads, this.csrfPrevention);
+  /// null; a release that fails is handed to [onReleaseError].
+  const MultipartPost(
+    this.options,
+    this.uploads,
+    this.csrfPrevention,
+    this.onReleaseError,
+  );
 
   /// The depth and time limits to apply.
   final HttpOptions options;
@@ -29,6 +34,9 @@ final class MultipartPost {
 
   /// The rule a request passes before its body is read, or null.
   final CsrfPrevention? csrfPrevention;
+
+  /// Where the failure of a release is reported.
+  final void Function(Object error, StackTrace stackTrace) onReleaseError;
 
   /// Whether [request] says its body is `multipart/form-data`.
   bool isMultipart(HttpRequestData request) =>
@@ -72,7 +80,8 @@ final class MultipartPost {
       uploads,
       maxJsonDepth: options.maxJsonDepth,
       bodyTimeout: options.bodyTimeout,
-    ).read(request.body, boundary);
+      onReleaseError: onReleaseError,
+    ).read(request.body, boundary, cancelSignal: request.cancelSignal);
   }
 
   RequestInfo _info(HttpRequestData request) => RequestInfo(

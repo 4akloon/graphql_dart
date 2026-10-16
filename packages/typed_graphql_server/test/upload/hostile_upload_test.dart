@@ -225,7 +225,7 @@ void main() {
         response,
         413,
         'GQL442',
-        'The map may name at most 1 files.',
+        'The map may name at most 1 file.',
       );
       fixture.expectUntouched();
     });

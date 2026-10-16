@@ -11,7 +11,7 @@ void main() {
 
   group('the files', () {
     test('a slow storage does not make a complete body look cut', () async {
-      fixture = ReaderFixture(chunkDelay: const Duration(milliseconds: 20));
+      // Each chunk takes the storage a turn of the event loop.
       final content = await fixture.contentOf(
         fixture.readBody(fixture.valid(), chunkSize: 8),
       );

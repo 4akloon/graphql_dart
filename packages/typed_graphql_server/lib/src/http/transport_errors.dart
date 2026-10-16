@@ -69,6 +69,17 @@ final class TransportErrors {
     return _response(500, replacement ?? standard, const {});
   }
 
+  /// Tells [onError] about an [error] that does not change the response (a
+  /// release that failed); a hook that throws is ignored.
+  void notify(Object error, StackTrace stackTrace, ErrorHook? onError) {
+    if (onError == null) return;
+    try {
+      onError(error, stackTrace, unexpectedError(error));
+    } on Object {
+      // A faulty hook must not turn the report into a failure.
+    }
+  }
+
   /// The `GQL330` error of [error] as [unexpected] writes it, for a place
   /// that is not a whole response, such as the slot of a batch.
   GraphQLError unexpectedError(Object error) => GraphQLError(

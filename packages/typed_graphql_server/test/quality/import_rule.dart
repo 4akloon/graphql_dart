@@ -3,9 +3,9 @@
 ///
 /// The server runs on the VM, AOT, dart2js and dart2wasm, so it imports pure
 /// Dart, `dart:convert`, `dart:typed_data` (the bytes of a request body),
-/// `meta`, `package:crypto/crypto.dart` (SHA-256 of
-/// documents), `package:mime/mime.dart` (the multipart parser), the core's barrel and its own files, never `src/` of the core
-/// and never a web framework.
+/// `meta`, `package:crypto/crypto.dart` (SHA-256 of documents),
+/// `package:mime/mime.dart` (the multipart parser), the core's barrel and its
+/// own files, never `src/` of the core and never a web framework.
 final class ImportRule {
   /// Creates the rule.
   const ImportRule();

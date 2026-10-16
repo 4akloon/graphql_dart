@@ -1,14 +1,25 @@
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
+/// What a storage throws when it cannot release a file.
+final class ReleaseFailed implements Exception {
+  const ReleaseFailed();
+}
+
 /// A storage that wraps [MemoryUploadStorage] and counts what it is asked.
 final class CountingStorage implements UploadStorage {
   CountingStorage({
     this.releaseThrows = false,
-    this.chunkDelay = Duration.zero,
+    this.storeFailure,
+    this.failingCall = 1,
   });
 
-  /// How long the storage takes to handle each chunk of a file.
-  final Duration chunkDelay;
+  /// What [store] throws on call number [failingCall], or null to never fail.
+  final Exception? storeFailure;
+
+  /// The 1-based call of [store] that throws [storeFailure].
+  final int failingCall;
+
+  int _calls = 0;
 
   /// Whether [release] throws after it forgot the upload.
   final bool releaseThrows;
@@ -42,12 +53,16 @@ final class CountingStorage implements UploadStorage {
   ) async {
     filenames.add(filename);
     mediaTypes.add(mediaType);
+    _calls++;
+    final failure = storeFailure;
     try {
+      if (_calls == failingCall && failure != null) throw failure;
       final upload = await _inner.store(
         filename,
         mediaType,
         content.asyncMap((chunk) async {
-          await Future<void>.delayed(chunkDelay);
+          // A turn of the event loop per chunk, as a storage that writes to disk.
+          await Future<void>.delayed(Duration.zero);
           return chunk;
         }),
       );
@@ -64,6 +79,6 @@ final class CountingStorage implements UploadStorage {
   Future<void> release(Upload upload) async {
     released++;
     _held.remove(upload);
-    if (releaseThrows) throw StateError('release failed');
+    if (releaseThrows) throw const ReleaseFailed();
   }
 }

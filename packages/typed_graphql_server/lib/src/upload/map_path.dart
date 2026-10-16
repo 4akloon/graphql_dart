@@ -36,37 +36,38 @@ final class MapPath {
   /// A copy of [operations] with [replacement] at this path; the other values
   /// are shared with [operations]. The path must pass [isNullIn].
   ///
-  /// It recurses once per segment, and a path that passed [isNullIn] is no
-  /// longer than the nesting of the JSON it names.
-  JsonValue replace(JsonValue operations, JsonValue replacement) =>
-      _replaceAt(operations, 0, replacement);
-
-  JsonValue _replaceAt(JsonValue node, int depth, JsonValue replacement) {
-    if (depth == segments.length) return replacement;
-    final segment = segments[depth];
-    return switch (node) {
-      JsonObject(:final fields) => JsonObject({
-        ...fields,
-        segment: _replaceAt(
-          fields[segment] ?? const JsonNull(),
-          depth + 1,
-          replacement,
-        ),
-      }),
-      JsonArray(:final items) => _replaceItem(items, depth, replacement),
-      _ => node,
-    };
+  /// It walks down the path keeping the nodes it passes, then rebuilds them
+  /// from the bottom, so a deep path cannot overflow the stack.
+  JsonValue replace(JsonValue operations, JsonValue replacement) {
+    final passed = <JsonValue>[];
+    var node = operations;
+    for (final segment in segments) {
+      passed.add(node);
+      node = _child(node, segment) ?? const JsonNull();
+    }
+    var rebuilt = replacement;
+    for (var depth = segments.length - 1; depth >= 0; depth--) {
+      rebuilt = _withChild(passed[depth], segments[depth], rebuilt);
+    }
+    return rebuilt;
   }
+
+  JsonValue _withChild(JsonValue node, String segment, JsonValue child) =>
+      switch (node) {
+        JsonObject(:final fields) => JsonObject({...fields, segment: child}),
+        JsonArray(:final items) => _replaceItem(items, segment, child),
+        _ => node,
+      };
 
   JsonArray _replaceItem(
     List<JsonValue> items,
-    int depth,
-    JsonValue replacement,
+    String segment,
+    JsonValue child,
   ) {
-    final target = int.parse(segments[depth]);
+    final target = int.parse(segment);
     return JsonArray([
       for (final (index, item) in items.indexed)
-        if (index == target) _replaceAt(item, depth + 1, replacement) else item,
+        if (index == target) child else item,
     ]);
   }
 

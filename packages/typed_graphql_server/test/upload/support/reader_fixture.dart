@@ -15,7 +15,6 @@ import 'multipart_body.dart';
 final class ReaderFixture {
   ReaderFixture({
     bool releaseThrows = false,
-    Duration chunkDelay = Duration.zero,
     UploadLimits limits = const UploadLimits(
       maxFiles: 3,
       maxFileBytes: 20,
@@ -24,7 +23,6 @@ final class ReaderFixture {
     ),
   }) : storage = CountingStorage(
          releaseThrows: releaseThrows,
-         chunkDelay: chunkDelay,
        ) {
     uploads = Uploads(storage: storage, limits: limits);
   }
@@ -40,6 +38,9 @@ final class ReaderFixture {
 
   final CountingStorage storage;
 
+  /// The release failures the reader reported.
+  final List<Object> releaseErrors = [];
+
   // `late`: assigned in the constructor body, which needs `storage` first.
   late final Uploads uploads;
 
@@ -53,11 +54,13 @@ final class ReaderFixture {
     Stream<List<int>> body, {
     Duration timeout = const Duration(seconds: 5),
     int maxJsonDepth = 64,
+    CancelSignal? cancelSignal,
   }) => MultipartReader(
     uploads,
     maxJsonDepth: maxJsonDepth,
     bodyTimeout: timeout,
-  ).read(body, 'testBoundary');
+    onReleaseError: (error, stackTrace) => releaseErrors.add(error),
+  ).read(body, 'testBoundary', cancelSignal: cancelSignal);
 
   Future<MultipartResult> readBody(MultipartBody body, {int? chunkSize}) =>
       read(body.stream(chunkSize: chunkSize));

@@ -11,6 +11,7 @@ import 'byte_limit.dart';
 import 'byte_limit_exceeded.dart';
 import 'content_disposition.dart';
 import 'multipart_result.dart';
+import 'storage_failure.dart';
 import 'stored_uploads.dart';
 import 'upload_map.dart';
 import 'upload_map_parser.dart';
@@ -37,9 +38,19 @@ final class _Refused implements Exception {
 @internal
 final class MultipartRun {
   /// Creates a run that stores files in [uploads], reads [watch]'s parts and
-  /// parses JSON nested at most [maxJsonDepth] deep.
-  MultipartRun(this._uploads, this._watch, this._maxJsonDepth)
-    : stored = StoredUploads(_uploads);
+  /// parses JSON nested at most [maxJsonDepth] deep; a release that fails is
+  /// handed to [onReleaseError].
+  MultipartRun(
+    this._uploads,
+    this._watch,
+    this._maxJsonDepth,
+    void Function(Object error, StackTrace stackTrace) onReleaseError,
+  ) : stored = StoredUploads(_uploads, onReleaseError);
+
+  // File names and media types are the client's text and reach the storage,
+  // so they are bounded (RFC 6838 allows 127 characters in a media type).
+  static const int _maxFilenameLength = 255;
+  static const int _maxMediaTypeLength = 127;
 
   final Uploads _uploads;
   final WatchedBody _watch;
@@ -146,12 +157,25 @@ final class MultipartRun {
     MimeMultipart part,
     ContentDisposition disposition,
   ) async {
+    final filename = disposition.filename ?? '';
+    final mediaType =
+        part.headers['content-type'] ?? 'application/octet-stream';
+    if (filename.length > _maxFilenameLength) {
+      throw _Refused.malformed(
+        'A file name is longer than $_maxFilenameLength characters.',
+      );
+    }
+    if (mediaType.length > _maxMediaTypeLength) {
+      throw _Refused.malformed(
+        'A media type is longer than $_maxMediaTypeLength characters.',
+      );
+    }
     final maxBytes = _uploads.limits.maxFileBytes;
     final limit = ByteLimit(maxBytes);
     try {
       final upload = await _uploads.storage.store(
-        disposition.filename ?? '',
-        part.headers['content-type'] ?? 'application/octet-stream',
+        filename,
+        mediaType,
         limit.bind(_watch.track(part)),
       );
       return stored.add(upload);
@@ -162,6 +186,11 @@ final class MultipartRun {
         DiagnosticCode.uploadTooLarge,
         'A file is larger than $maxBytes bytes.',
       );
+    } on Exception catch (error, stackTrace) {
+      // The body's own failure reaches the storage through the content and
+      // comes back out of it; anything else is the storage's.
+      if (_watch.hasFailed) rethrow;
+      Error.throwWithStackTrace(StorageFailure(error), stackTrace);
     }
   }
 

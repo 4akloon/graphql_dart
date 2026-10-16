@@ -14,11 +14,15 @@ import 'request_decoding.dart';
 /// (spec section 4, steps 5 to 8).
 @internal
 final class PostBody {
-  /// Creates the reader for a handler configured with [options].
-  const PostBody(this.options);
+  /// Creates the reader for a handler configured with [options], which
+  /// decodes the JSON with [decoder].
+  const PostBody(this.options, this.decoder);
 
   /// The limits to apply.
   final HttpOptions options;
+
+  /// Decodes the JSON the body holds.
+  final JsonBodyDecoder decoder;
 
   /// Decodes the body of [request]; the body is not touched when the content
   /// type or the declared length already refuse the request.
@@ -40,10 +44,7 @@ final class PostBody {
       options.bodyTimeout,
     ).read(request.body, cancelSignal: request.cancelSignal);
     return switch (result) {
-      BodyBytes(:final bytes) => JsonBodyDecoder(
-        maxJsonDepth: options.maxJsonDepth,
-        batching: options.batching,
-      ).decode(bytes),
+      BodyBytes(:final bytes) => decoder.decode(bytes),
       BodyTooLarge() => _tooLarge(),
       BodyTimedOut() => DecodingRefusal(
         408,

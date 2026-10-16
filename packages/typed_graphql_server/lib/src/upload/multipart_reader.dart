@@ -4,11 +4,15 @@ import 'package:meta/meta.dart';
 import 'package:mime/mime.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../cancellation/cancel_signal.dart';
 import '../http/request_decoding.dart';
 import 'byte_limit.dart';
 import 'byte_limit_exceeded.dart';
 import 'multipart_result.dart';
 import 'multipart_run.dart';
+import 'part_header_scanner.dart';
+import 'part_header_too_large.dart';
+import 'storage_failure.dart';
 import 'uploads.dart';
 import 'watched_body.dart';
 
@@ -24,12 +28,16 @@ import 'watched_body.dart';
 final class MultipartReader {
   /// Creates a reader that stores files as [uploads] says, parses JSON nested
   /// at most [maxJsonDepth] deep and waits at most [bodyTimeout] for the
-  /// whole body.
+  /// whole body; a release that fails is handed to [onReleaseError].
   const MultipartReader(
     this.uploads, {
     required this.maxJsonDepth,
     required this.bodyTimeout,
+    required this.onReleaseError,
   });
+
+  /// The most bytes the headers of one part may take.
+  static const int maxHeaderBytes = 8192;
 
   /// The storage and the limits.
   final Uploads uploads;
@@ -40,16 +48,26 @@ final class MultipartReader {
   /// How long the whole body may take to arrive.
   final Duration bodyTimeout;
 
-  /// Reads [body], whose parts are separated by [boundary].
+  /// Where the failure of a release is reported.
+  final void Function(Object error, StackTrace stackTrace) onReleaseError;
+
+  /// Reads [body], whose parts are separated by [boundary]; the body fails
+  /// when [cancelSignal] fires.
   ///
   /// The package:mime parser throws on a malformed header inside the zone
   /// that calls it, not into its stream, so the read runs in a guarded zone
   /// whose errors become the failure of the body.
-  Future<MultipartResult> read(Stream<List<int>> body, String boundary) {
+  Future<MultipartResult> read(
+    Stream<List<int>> body,
+    String boundary, {
+    CancelSignal? cancelSignal,
+  }) {
     final watch = WatchedBody(
       body,
       ByteLimit(uploads.limits.maxRequestBytes),
       bodyTimeout,
+      PartHeaderScanner(boundary, maxHeaderBytes),
+      cancelSignal: cancelSignal,
     );
     final completer = Completer<MultipartResult>();
     runZonedGuarded(
@@ -63,14 +81,20 @@ final class MultipartReader {
   }
 
   Future<MultipartResult> _consume(WatchedBody watch, String boundary) async {
-    final run = MultipartRun(uploads, watch, maxJsonDepth);
+    final run = MultipartRun(uploads, watch, maxJsonDepth, onReleaseError);
     var isKept = false;
     try {
       final parts = MimeMultipartTransformer(boundary).bind(watch.stream);
       final result = await run.consume(parts);
       isKept = result is MultipartContent;
       return result;
+    } on StorageFailure {
+      // The server's fault, not the request's: the handler's outermost
+      // boundary answers it.
+      rethrow;
     } on Exception catch (error) {
+      // What is left is the failure of the body, which the host's stream may
+      // word with any exception.
       return MultipartRefusal(_refusalFor(error));
     } finally {
       watch.cancel();
@@ -84,6 +108,11 @@ final class MultipartReader {
       DiagnosticCode.uploadTooLarge,
       'The request body is larger than ${uploads.limits.maxRequestBytes} '
       'bytes.',
+    ),
+    PartHeaderTooLarge() => const DecodingRefusal(
+      413,
+      DiagnosticCode.uploadTooLarge,
+      'A part header is larger than $maxHeaderBytes bytes.',
     ),
     TimeoutException() => DecodingRefusal(
       408,

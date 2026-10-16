@@ -50,6 +50,16 @@ final class GraphQLHttpHandler<C> {
   final TransportErrors _errors;
   final ResultWriter _writer;
 
+  // `late`: built on first use, from `options`, which the initializer list
+  // cannot read.
+  late final JsonBodyDecoder _decoder = JsonBodyDecoder(
+    maxJsonDepth: options.maxJsonDepth,
+    batching: options.batching,
+  );
+
+  // `late`: built on first use, from the `_decoder` above.
+  late final PostBody _postBody = PostBody(options, _decoder);
+
   // `late`: built on first use, from the `_writer` that the initializer list
   // cannot read.
   late final JsonExchange<C> _exchange = JsonExchange<C>(server, _writer);
@@ -115,15 +125,20 @@ final class GraphQLHttpHandler<C> {
     if (multipart != null && multipart.isMultipart(request)) {
       return _answerMultipart(request, multipart, type);
     }
-    return _answer(request, await PostBody(options).decode(request), type);
+    return _answer(request, await _postBody.decode(request), type);
   }
 
-  MultipartPost? get _multipart {
-    final uploads = options.uploads;
-    return uploads == null
-        ? null
-        : MultipartPost(options, uploads, server.profile.csrfPrevention);
-  }
+  // Null without `HttpOptions.uploads`; `late` for the same reason as
+  // `_exchange`.
+  late final MultipartPost? _multipart = switch (options.uploads) {
+    final uploads? => MultipartPost(
+      options,
+      uploads,
+      server.profile.csrfPrevention,
+      (error, stackTrace) => _errors.notify(error, stackTrace, options.onError),
+    ),
+    null => null,
+  };
 
   // The files of the request wait in the storage until the response is
   // built, whatever happened to the request.
@@ -137,11 +152,7 @@ final class GraphQLHttpHandler<C> {
         return _answer(request, refusal, type);
       case MultipartContent(:final operations, :final stored):
         try {
-          final decoding = JsonBodyDecoder(
-            maxJsonDepth: options.maxJsonDepth,
-            batching: options.batching,
-          ).decodeValue(operations);
-          return await _answer(request, decoding, type);
+          return await _answer(request, _decoder.decodeValue(operations), type);
         } finally {
           await stored.release();
         }
