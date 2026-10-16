@@ -181,6 +181,7 @@ does not expose a server; `ServerProfile.development` is chosen explicitly.
 | `csrfPrevention` | `CsrfPrevention()` | `CsrfPrevention()` |
 | `limits` | `ServerLimits.development` | `ServerLimits.production` |
 | `timeout` | none | none |
+| `graphiql` | `true` | `false` (the GraphiQL page is not served) |
 
 `production` sets the limits of `ServerLimits.production` (document length,
 tokens, depth, aliases, directives, cost) but no `timeout`: add one with
@@ -191,7 +192,8 @@ and the limits are on.
 
 Each setting has a `with*` method that returns a copy:
 `withIntrospection`, `withSuggestions`, `withErrorMasking`,
-`withCsrfPrevention` (null turns it off), `withLimits` and `withTimeout`
+`withCsrfPrevention` (null turns it off), `withLimits`, `withGraphiQL` and
+`withTimeout`
 (queries and mutations only: a timeout would end a subscription).
 
 ```dart

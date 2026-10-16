@@ -269,3 +269,5 @@
   `maxConnections`; `onError` (`SocketErrorHook`) sees the errors the handler
   swallows. A close the peer never answers still ends the session. The
   WebSocket guide and the graphql-ws hostile-input tests come with it.
+- `ServerProfile.graphiql` (`true` in `development`, `false` in `production`)
+  and `withGraphiQL` switch the GraphiQL page of `GraphQLHttpHandler`.
