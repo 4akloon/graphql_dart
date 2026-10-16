@@ -65,7 +65,10 @@ final class SseRun({
       _finish(LinkFailure(NetworkFailure(error)));
       return;
     }
-    if (_isFinished) return;
+    if (_isFinished) {
+      unawaited(response.body.listen((_) {}).cancel());
+      return;
+    }
     final type = MediaType.parse(response.headers['content-type']);
     final isStream =
         response.statusCode >= 200 &&
@@ -116,6 +119,8 @@ final class SseRun({
           ),
           cancelOnError: true,
         );
+    // Paused before the answer arrived: there was no body to pause yet.
+    if (_controller.isPaused) _events?.pause();
   }
 
   void _onEvent(ServerSentEvent event, LinkContext context) {

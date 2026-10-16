@@ -23,7 +23,7 @@ import 'sse_exchange.dart';
 /// Each operation is a `POST` with a JSON body that asks for
 /// `text/event-stream`; the answer is an event stream whose `next` events
 /// are the results, delivered as they arrive, and whose `complete` event
-/// ends the stream. A answer that is not an event stream is read as
+/// ends the stream. An answer that is not an event stream is read as
 /// [HttpLink] reads it, so a request the server refuses with a GraphQL
 /// response is an errors response. An event is bounded by `maxEventBytes`.
 /// Cancelling the result stream closes the connection, which is how the
