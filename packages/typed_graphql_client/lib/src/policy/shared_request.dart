@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
+
 import '../link/link_request.dart';
 import '../link/link_result.dart';
 import '../link/next_link.dart';
@@ -7,6 +9,7 @@ import 'guarded_start.dart';
 
 /// One forwarded request and the callers of `DedupeLink` waiting for its
 /// answer.
+@internal
 final class SharedRequest {
   /// Creates the request to forward when the first caller joins;
   /// [_onEnded] removes it from the link's table, once.

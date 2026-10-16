@@ -97,7 +97,7 @@ final class SseLink extends Link {
       return TransportRequest(
         method: 'POST',
         uri: _uri,
-        headers: _encoder.headersFor(request, _protocolHeaders),
+        headers: _encoder.headersFor(request, fixed: _protocolHeaders),
         body: Stream.value(body),
         contentLength: body.length,
         abortTrigger: abortTrigger,

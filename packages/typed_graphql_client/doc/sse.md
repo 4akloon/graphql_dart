@@ -89,10 +89,11 @@ done
 
 Every operation, a query or a mutation too, is a `POST` with the JSON body
 `{"query": ..., "operationName": ..., "variables": ...}` and the headers
-`accept: text/event-stream` and `content-type: application/json`. Headers
-come from three places, each over the one before: the protocol's own, the
-`headers` given to the link, and the `RequestHeaders` entries of the
-request's context; names are compared in lower case.
+`accept: text/event-stream` and `content-type: application/json`. Other
+headers come from the `headers` given to the link and the `RequestHeaders`
+entries of the request's context, the second over the first; names are
+compared in lower case. These two headers describe the stream and the body,
+so no configured header replaces them.
 
 A request with `UploadFiles` in its context is not sent: the link answers
 `UnsupportedOperation` (`GQL468`). Send files over `HttpLink` with a

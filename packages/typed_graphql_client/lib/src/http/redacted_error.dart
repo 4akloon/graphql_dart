@@ -1,6 +1,9 @@
+import 'package:meta/meta.dart';
+
 /// An exception of the transport with the query strings removed from its
 /// text, since a `GET` request carries the variables in its URL and
 /// `package:http` prints the full URL in its exceptions.
+@internal
 final class RedactedError implements Exception {
   /// Hides the query string of every URL in the text of [cause].
   RedactedError(Object cause)

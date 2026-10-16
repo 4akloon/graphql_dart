@@ -51,7 +51,10 @@ final class HttpRequestEncoder({
     return TransportRequest(
       method: 'POST',
       uri: uri,
-      headers: headersFor(request, const {'content-type': 'application/json'}),
+      headers: headersFor(
+        request,
+        fixed: const {'content-type': 'application/json'},
+      ),
       body: Stream.value(body),
       contentLength: body.length,
       abortTrigger: abortTrigger,
@@ -76,7 +79,10 @@ final class HttpRequestEncoder({
             'extensions': jsonEncode(extensions.toJson()),
         },
       ),
-      headers: headersFor(request, const {'graphql-require-preflight': 'true'}),
+      headers: headersFor(
+        request,
+        protocol: const {'graphql-require-preflight': 'true'},
+      ),
       abortTrigger: abortTrigger,
     );
   }
@@ -93,11 +99,12 @@ final class HttpRequestEncoder({
     return TransportRequest(
       method: 'POST',
       uri: uri,
-      headers: {
-        ...headersFor(request, const {'graphql-require-preflight': 'true'}),
-        // Last, so no configured header can contradict the boundary.
-        'content-type': multipart.contentType,
-      },
+      headers: headersFor(
+        request,
+        protocol: const {'graphql-require-preflight': 'true'},
+        // The boundary of the body: no configured header may contradict it.
+        fixed: {'content-type': multipart.contentType},
+      ),
       body: multipart.body,
       contentLength: multipart.length,
       abortTrigger: abortTrigger,
@@ -105,16 +112,19 @@ final class HttpRequestEncoder({
   }
 
   /// The headers of [request], lowest priority first: `accept`, the
-  /// [protocol] headers, the link's [headers], then every `RequestHeaders`
-  /// entry of the request's context.
+  /// [protocol] headers, the link's [headers], every `RequestHeaders` entry
+  /// of the request's context, then the [fixed] headers, which describe the
+  /// body and so cannot be replaced.
   Map<String, String> headersFor(
-    LinkRequest request,
-    Map<String, String> protocol,
-  ) => {
+    LinkRequest request, {
+    Map<String, String> protocol = const {},
+    Map<String, String> fixed = const {},
+  }) => {
     'accept': accept,
     ...protocol,
     ...headers,
     for (final entry in request.context.entries.whereType<RequestHeaders>())
       ...entry.values,
+    ...fixed,
   };
 }

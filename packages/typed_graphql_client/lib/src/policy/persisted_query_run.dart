@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../link/link_request.dart';
@@ -10,6 +11,7 @@ import 'persisted_query_errors.dart';
 
 /// The attempts of one request for `PersistedQueryLink`: the hash alone,
 /// then, when the server asks for it, the text.
+@internal
 final class PersistedQueryRun {
   /// Creates the run of [_request]; nothing starts before the first
   /// listener. [onNotSupported] tells the link to stop sending hashes.

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:meta/meta.dart';
+
 import '../client/client_failure.dart';
 import '../link/link_request.dart';
 import '../link/link_result.dart';
@@ -12,6 +14,7 @@ typedef _Decision = ({LinkResult result, bool isRetried});
 
 /// The attempts of one request for `RetryLink`: it forwards the request,
 /// waits after a failure the policy accepts, and forwards it again.
+@internal
 final class RetryRun {
   /// Creates the run of [_request]; nothing starts before the first listener.
   RetryRun(this._policy, this._random, this._request, this._forward) {

@@ -105,9 +105,9 @@ data: world (HTTP 200)
 Headers come from three places, each over the one before: the link's own
 (`accept`, `content-type`), the `headers` given to the link, and the
 `RequestHeaders` entries of the request's context. Names are compared in
-lower case. The exception is a multipart request: its `content-type` carries
-the boundary of the body, so it is set last and no other header can replace
-it.
+lower case. The exception is the `content-type` of a body: `application/json`
+for a JSON `POST`, and the one with the boundary for a multipart request. It
+is set last, so no configured header can contradict the body.
 
 With `usesGetForQueries: true`, a query goes as a `GET` request whose
 `query`, `operationName`, `variables` and `extensions` (the last two as
@@ -157,6 +157,10 @@ variables: a variable value nested deeply enough overflows the stack of
 
 An `Exception` of the transport, or of the body stream, is a
 `NetworkFailure` (`GQL460`); the query string of any URL in its text is
-removed, because `package:http` prints the whole URL of a `GET`. With a `timeout`, a request that has not
-finished in time is aborted with `RequestTimedOut` (`GQL467`). Cancelling
-the call aborts the request through the transport's `abortTrigger`.
+removed, because `package:http` prints the whole URL of a `GET`. So
+`NetworkFailure.cause` is a redacted copy of the exception (its text is the
+original's, without query strings), not the original: do not test it with
+`is SocketException`. `SseLink` redacts the same way. With a `timeout`, a
+request that has not finished in time is aborted with `RequestTimedOut`
+(`GQL467`). Cancelling the call aborts the request through the transport's
+`abortTrigger`.

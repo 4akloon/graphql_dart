@@ -1,7 +1,10 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
+
 /// Reads the current token and renews it for `AuthLink`, with one refresh
 /// in flight at a time.
+@internal
 final class TokenRenewal {
   /// Creates the renewal over the caller's [_token] and [_refresh].
   TokenRenewal(this._token, this._refresh);

@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
+
 import '../link/link_result.dart';
 
 /// Listens to a stream of results so that a throwing call becomes an error
 /// event followed by the end of the stream (spec section 10, "Stream
 /// errors"), not an exception that escapes to the zone.
+@internal
 final class GuardedStart {
   /// Creates the starter.
   const GuardedStart();

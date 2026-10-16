@@ -1,9 +1,12 @@
+import 'package:meta/meta.dart';
+
 import 'link.dart';
 import 'link_request.dart';
 import 'link_result.dart';
 import 'next_link.dart';
 
 /// Links run in order, built by [Link.from].
+@internal
 final class LinkChain extends Link {
   /// Creates the chain of [links], copied.
   LinkChain(List<Link> links) : _links = List.unmodifiable(links);

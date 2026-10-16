@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../link/link_context.dart';
@@ -8,6 +9,7 @@ import 'graphql_response.dart';
 
 /// Turns the untyped results of a link chain into typed responses of one
 /// operation (spec section 5).
+@internal
 final class ResponseDecoder<D extends Object> {
   /// Creates the decoder of [_operation]'s results.
   const ResponseDecoder(this._operation);

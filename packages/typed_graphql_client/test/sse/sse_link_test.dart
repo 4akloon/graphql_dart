@@ -52,7 +52,7 @@ void main() {
       expect(request.contentLength, bytes(transport.bodies.single).length);
     });
 
-    test('the link headers over its own and the context over both', () async {
+    test('the protocol headers over the link and the context ones', () async {
       transport.answer(twoTicks, contentType: 'text/event-stream');
       await send(
         LinkRequest.of(
@@ -64,11 +64,16 @@ void main() {
         SseLink(
           uri: uri,
           transport: transport,
-          headers: {'Accept': 'text/plain', 'X-User': 'b', 'X-App': 'a'},
+          headers: {
+            'Accept': 'text/plain',
+            'Content-Type': 'text/plain',
+            'X-User': 'b',
+            'X-App': 'a',
+          },
         ),
       );
       expect(transport.requests.single.headers, {
-        'accept': 'text/plain',
+        'accept': 'text/event-stream',
         'content-type': 'application/json',
         'x-user': 'c',
         'x-app': 'a',

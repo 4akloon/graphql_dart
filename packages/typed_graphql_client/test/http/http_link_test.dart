@@ -71,6 +71,26 @@ void main() {
       });
     });
 
+    test('the JSON content type over a configured one', () async {
+      transport.answer('{"data":{"hello":"world"}}');
+      await clientOf(
+        HttpLink(
+          uri: uri,
+          transport: transport,
+          headers: {'Content-Type': 'text/plain'},
+        ),
+      ).query(
+        const HelloQuery(),
+        context: LinkContext([
+          RequestHeaders({'CONTENT-TYPE': 'text/xml'}),
+        ]),
+      );
+      expect(
+        transport.requests.single.headers['content-type'],
+        'application/json',
+      );
+    });
+
     test('no query text when the request sends the hash alone', () async {
       transport.answer('{"data":{"hello":"world"}}');
       final link = HttpLink(uri: uri, transport: transport);

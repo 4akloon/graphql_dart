@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
+
 import '../link/link.dart';
 import '../link/link_request.dart';
 import '../link/link_result.dart';
@@ -11,6 +13,7 @@ import 'response_decoder.dart';
 /// The typed responses of one request: it calls the link chain when
 /// listened to, decodes each result, and ends with [RequestCancelled] when
 /// the caller's token fires (spec sections 4 and 7).
+@internal
 final class OperationStream<D extends Object> {
   /// Creates the stream of [_request] through [_link].
   OperationStream(

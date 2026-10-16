@@ -644,15 +644,19 @@ typed `ContextEntry`s (`RequestHeaders`, `HttpResponseInfo`, `UploadFiles`,
 `Idempotent`). `http/`: `HttpLink` talks to the `HttpTransport` seam, never to
 `package:http` types (`PackageHttpTransport` is the one adapter);
 `HttpRequestEncoder` builds POST, `GET` and multipart requests and merges
-headers (protocol, link, then context), `ResponseReader` picks the reader by
+headers (protocol, link, then context; the body's `content-type`, and an
+`SseLink`'s `accept`, last, so a configured header cannot contradict the body),
+`ResponseReader` picks the reader by
 media type under a byte and depth limit, `HttpExchange` sends, times out and
 aborts through `TransportRequest.abortTrigger`. `policy/`: `RetryLink` retries
-only queries and mutations marked `Idempotent` (never a GraphQL error),
+queries always and mutations only when marked `Idempotent` (never a GraphQL
+error),
 `DedupeLink` shares identical queries in flight through `SharedRequest`,
 `PersistedQueryLink` sends the hash and resends once with the text (APQ) or
-sends the hash alone (trusted documents), `AuthLink` adds a token and, on a 401, refreshes it once and resends once; a
-callback of the caller that throws ends the caller's stream with that error and
-cancels upstream. `socket/`: `WebSocketLink` is lazy, one socket for every
+sends the hash alone (trusted documents), `AuthLink` adds a token and, on a
+401, refreshes it once and resends once; a callback of the caller that throws
+an `Exception` is an `AuthenticationFailure` (`GQL474`), and one that throws
+anything else ends the caller's stream with that error; both cancel upstream. `socket/`: `WebSocketLink` is lazy, one socket for every
 operation, `connection_init`/`connection_ack`, keep-alive, reconnection with
 `Backoff` (the loop in `SocketDriver`, the operations in `SocketOperations`); a
 `ClientSocket` is three members the app implements, so no socket library is

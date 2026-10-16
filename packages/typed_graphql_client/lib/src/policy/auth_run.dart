@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
+
 import '../client/client_failure.dart';
 import '../link/link_request.dart';
 import '../link/link_result.dart';
@@ -11,6 +13,7 @@ typedef _Judged = ({LinkResult result, bool isRefused});
 
 /// The attempts of one request for `AuthLink`: the request with the token,
 /// and once more with a renewed token when the first answer is a 401.
+@internal
 final class AuthRun {
   /// Creates the run of [request]; nothing starts before the first listener.
   /// [authorize] gives the request with a token's header.
