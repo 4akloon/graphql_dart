@@ -36,3 +36,6 @@
 - `UploadFile`, `UploadFileCodec` (the `Upload` scalar's codec, which
   writes a file as its marker) and `UploadFiles` (the files of a request,
   in its context); the start of the Uploads guide.
+- `HttpTransport`, `TransportRequest` and `TransportResponse`, the seam
+  between the HTTP links and an HTTP library, and `PackageHttpTransport`
+  over any `http.Client` (abortable); the start of the HTTP guide.

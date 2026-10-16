@@ -2,8 +2,8 @@
 /// one library under `lib/`.
 ///
 /// The client runs on the VM, AOT, dart2js and dart2wasm, so it imports pure
-/// Dart, `meta`, the core's barrel and its own files, never `src/` of the
-/// core, never `dart:io` or a web-only library.
+/// Dart, `meta`, the barrels of `http` and of the core and its own files,
+/// never `src/` of the core, never `dart:io` or a web-only library.
 final class ImportRule {
   /// Creates the rule.
   const ImportRule();
@@ -20,6 +20,7 @@ final class ImportRule {
 
   /// The package libraries the client may import.
   static const Set<String> _packages = {
+    'package:http/http.dart',
     'package:typed_graphql/typed_graphql.dart',
   };
 

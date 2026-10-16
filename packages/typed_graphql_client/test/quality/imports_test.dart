@@ -25,6 +25,26 @@ void main() {
       );
     });
 
+    test('allows the http barrel', () {
+      expect(
+        rule.check(
+          'lib/src/http/a.dart',
+          "import 'package:http/http.dart' as http;\n",
+        ),
+        isEmpty,
+      );
+    });
+
+    test('rejects a library of http other than its barrel', () {
+      expect(
+        rule.check(
+          'lib/src/http/a.dart',
+          "import 'package:http/io_client.dart';\n",
+        ),
+        hasLength(1),
+      );
+    });
+
     test('rejects dart:io', () {
       expect(
         rule.check('lib/src/link/a.dart', "import 'dart:io';\n"),
