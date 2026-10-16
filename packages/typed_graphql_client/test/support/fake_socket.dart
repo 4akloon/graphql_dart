@@ -19,8 +19,9 @@ final class FakeSocket implements ClientSocket {
   /// The close reason the client gave.
   String? clientCloseReason;
 
-  /// What [send] throws, as a socket that is closing may; null for nothing.
-  Exception? sendFailure;
+  /// What [send] throws, an [Exception] or an [Error], as a socket that is
+  /// closing may; null for nothing.
+  Object? sendFailure;
 
   /// When set, [close] completes only after this does.
   Completer<void>? closeGate;
@@ -49,9 +50,12 @@ final class FakeSocket implements ClientSocket {
 
   @override
   void send(String text) {
-    final failure = sendFailure;
-    if (failure != null) {
-      throw failure;
+    switch (sendFailure) {
+      case final Exception failure:
+        throw failure;
+      case final Error failure:
+        throw failure;
+      case _:
     }
     sent.add(text);
   }
@@ -103,7 +107,7 @@ final class FakeSocket implements ClientSocket {
 /// The `connect` callback of a link under test: it hands out [FakeSocket]s
 /// in order and counts the connections.
 final class FakeSocketServer {
-  final List<Exception> _failures = [];
+  final List<Object> _failures = [];
 
   /// The sockets handed out, in order.
   final List<FakeSocket> sockets = [];
@@ -114,14 +118,22 @@ final class FakeSocketServer {
   /// The socket of the latest connection.
   FakeSocket get latest => sockets.last;
 
-  /// Makes the next call to [connect] throw [failure].
-  void failNext(Exception failure) => _failures.add(failure);
+  /// Makes the next call to [connect] throw [failure], an [Exception] or an
+  /// [Error].
+  void failNext(Object failure) => _failures.add(failure);
 
   /// The callback to give a link.
   Future<ClientSocket> connect() async {
     connectionCount++;
     if (_failures.isNotEmpty) {
-      throw _failures.removeAt(0);
+      switch (_failures.removeAt(0)) {
+        case final Exception failure:
+          throw failure;
+        case final Error failure:
+          throw failure;
+        case final other:
+          throw ArgumentError.value(other, 'failure', 'not an Exception');
+      }
     }
     final socket = FakeSocket();
     sockets.add(socket);

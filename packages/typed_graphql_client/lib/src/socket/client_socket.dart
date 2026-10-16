@@ -35,8 +35,9 @@ abstract interface class ClientSocket {
   Stream<String> get messages;
 
   /// Sends one text frame. The link only calls it on an open socket; a
-  /// socket that is already closing may ignore the call or throw an
-  /// [Exception].
+  /// socket that is already closing may ignore the call or throw, an
+  /// [Exception] or an [Error] such as a [StateError] from a closed sink: the
+  /// link drops the failure and waits for [messages] to report the loss.
   void send(String text);
 
   /// Closes the socket with [code] and [reason], and completes once it is

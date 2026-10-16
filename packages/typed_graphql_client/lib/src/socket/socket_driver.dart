@@ -12,8 +12,8 @@ import 'socket_operations.dart';
 import 'socket_settings.dart';
 
 /// Why an attempt failed in a way the loop may try again, and whether the
-/// server had accepted the connection before it did.
-typedef _Loss = ({ClientFailure cause, bool hadAcknowledgement});
+/// connection had delivered a result before it did.
+typedef _Loss = ({ClientFailure cause, bool hadProgress});
 
 /// Keeps one socket alive for as long as operations are open: it connects,
 /// serves the socket, and after a loss reconnects by the policy's rules.
@@ -76,7 +76,7 @@ final class SocketDriver {
       if (loss == null || _operations.isEmpty) {
         return;
       }
-      failedAttempts = (loss.hadAcknowledgement ? 0 : failedAttempts) + 1;
+      failedAttempts = (loss.hadProgress ? 0 : failedAttempts) + 1;
       if (!_settings.policy.allowsRetry(failedAttempts)) {
         _operations.failAll(loss.cause);
         return;
@@ -90,12 +90,21 @@ final class SocketDriver {
   /// One attempt: null when the loop must stop (the operations have been
   /// told why, or the link is disposed), else what to try again after.
   Future<_Loss?> _connectAndServe() async {
-    final ClientSocket socket;
-    try {
-      socket = await _settings.connect();
-    } on Exception catch (error) {
-      return (cause: NetworkFailure(error), hadAcknowledgement: false);
+    // `then` with `onError` takes whatever `connect` throws, an `Error`
+    // included, without a `catch` (the rules forbid catching `Error`).
+    final attempt = await Future.sync(_settings.connect).then<Object>(
+      (socket) => socket,
+      onError: (Object error) => error,
+    );
+    if (attempt is! ClientSocket) {
+      return (
+        cause: NetworkFailure(
+          attempt is Exception ? attempt : Exception('$attempt'),
+        ),
+        hadProgress: false,
+      );
     }
+    final socket = attempt;
     if (_isStopped || _operations.isEmpty) {
       await _closeUnused(socket);
       return null;
@@ -104,19 +113,20 @@ final class SocketDriver {
     _connection = connection;
     final end = await connection.run();
     _connection = null;
-    return _lossFor(end, connection.isAcknowledged);
+    return _lossFor(end, connection.hasReceivedResult);
   }
 
   /// A socket that opened after the link was disposed or no longer needed.
   Future<void> _closeUnused(ClientSocket socket) async {
-    try {
-      await socket.close(1000, 'Normal Closure');
-    } on Exception {
-      // The socket is already gone; there is nothing left to close.
-    }
+    // The socket may already be gone, and a failing close must not escape;
+    // `then` with `onError` also takes an `Error`, which a `catch` may not.
+    await Future.sync(() => socket.close(1000, 'Normal Closure')).then<void>(
+      (_) {},
+      onError: (Object _) {},
+    );
   }
 
-  _Loss? _lossFor(SocketEnd end, bool wasAcknowledged) {
+  _Loss? _lossFor(SocketEnd end, bool hadResult) {
     switch (end) {
       case AckTimedOut():
         _operations.failAll(
@@ -132,11 +142,11 @@ final class SocketDriver {
         );
         return null;
       case final ConnectionLost lost:
-        return _lossAfter(lost, wasAcknowledged);
+        return _lossAfter(lost, hadResult);
     }
   }
 
-  _Loss? _lossAfter(ConnectionLost lost, bool wasAcknowledged) {
+  _Loss? _lossAfter(ConnectionLost lost, bool hadResult) {
     if (_isStopped) {
       return null;
     }
@@ -153,6 +163,6 @@ final class SocketDriver {
     _operations
       ..failSentMutations(NetworkFailure(Exception(lost.message)))
       ..markAllUnsent();
-    return (cause: failure, hadAcknowledgement: wasAcknowledged);
+    return (cause: failure, hadProgress: hadResult);
   }
 }

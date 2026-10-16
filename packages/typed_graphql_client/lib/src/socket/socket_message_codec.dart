@@ -50,10 +50,15 @@ final class const SocketMessageCodec() {
           path: const [PathKey('type')],
         ),
         _ => DecodeFailure(
-          'unknown message type "$kind"',
+          'unknown message type "${_clip(kind)}"',
           path: const [PathKey('type')],
         ),
       };
+
+  /// Server text is echoed into a message, so it is cut: a hostile server
+  /// could otherwise put megabytes into every failure.
+  String _clip(String text) =>
+      text.length <= 100 ? text : '${text.substring(0, 100)}...';
 
   DecodeResult<SocketMessage> _withPayload(
     JsonObject message,

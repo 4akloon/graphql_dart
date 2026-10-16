@@ -31,9 +31,15 @@ final class SocketConnection {
   Timer? _keepAliveTimer;
   bool _isAwaitingPong = false;
   bool _isAcknowledged = false;
+  bool _hasReceivedResult = false;
 
   /// Whether the server sent `connection_ack`.
   bool get isAcknowledged => _isAcknowledged;
+
+  /// Whether a `next` arrived: the proof that the connection was useful, so
+  /// that a server which acknowledges and then drops the socket does not
+  /// reset the reconnection count.
+  bool get hasReceivedResult => _hasReceivedResult;
 
   /// Starts reading and sends `connection_init`; completes when the socket
   /// ends.
@@ -108,6 +114,7 @@ final class SocketConnection {
       case _ when !isAcknowledged:
         _reject('"${message.type}" came before "connection_ack"');
       case NextMessage(:final id, :final result):
+        _hasReceivedResult = true;
         _operations.emit(id, LinkPayload(result));
       case ErrorMessage(:final id, :final errors):
         _operations.finish(
@@ -179,18 +186,19 @@ final class SocketConnection {
   }
 
   void _send(SocketMessage message) {
-    try {
-      _socket.send(message.encode());
-    } on Exception {
-      // The socket is closing; its messages stream reports the loss.
-    }
+    // `Future.sync` turns anything `send` throws, an `Error` from a closed
+    // sink included, into a future error, which `ignore` drops; the rules
+    // forbid catching `Error`. The socket is closing, and its messages stream
+    // reports the loss.
+    Future<void>.sync(() => _socket.send(message.encode())).ignore();
   }
 
   Future<void> _closeSocket(int code, String reason) async {
-    try {
-      await _socket.close(code, reason);
-    } on Exception {
-      // The socket is already gone; there is nothing left to close.
-    }
+    // As in `_send`: the socket may already be gone, and an `Error` from
+    // its `close` must not escape either.
+    await Future.sync(() => _socket.close(code, reason)).then<void>(
+      (_) {},
+      onError: (Object _) {},
+    );
   }
 }

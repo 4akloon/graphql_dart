@@ -215,10 +215,17 @@ void main() {
       expect(failure.closeCode, 1013);
     }, retryAttempts: 1);
 
-    run('an acknowledgement gives the attempts back', (async, rig) {
+    run('a result gives the attempts back', (async, rig) {
       final probe = rig.request(const TicksSubscription());
       for (var i = 0; i < 4; i++) {
         rig.acknowledge(rig.server.latest);
+        rig.serverSends(rig.server.latest, {
+          'type': 'next',
+          'id': '1',
+          'payload': {
+            'data': {'ticks': 1},
+          },
+        });
         rig.server.latest.serverDrops();
         rig.elapse(pause);
       }

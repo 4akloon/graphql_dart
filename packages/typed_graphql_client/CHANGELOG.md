@@ -45,3 +45,6 @@
   (R8.4); the codes `GQL470`-`GQL472`.
 - The WebSocket guide: a runnable in-memory subscription, the reconnection
   rules, the final close codes, and subscriptions over a socket beside HTTP.
+- `WebSocketLink` fails its operations when `connect` throws an `Error`, drops a
+  `send` that throws, clips server text in a failure, and resets the
+  reconnection count only after a result arrived; the guide lists its limits.

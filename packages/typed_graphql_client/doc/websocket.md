@@ -174,7 +174,7 @@ When the socket closes, or `connect` throws, while operations are open,
 the link tries again after `backoff.delayFor(n, random)`: the default
 `Backoff` starts at one second, doubles up to thirty and draws a random
 wait below that ceiling. `retryAttempts` (default 5) failed attempts in a
-row are retried; an acknowledged connection resets the count. A new socket
+row are retried; a connection that delivered a result resets the count. A new socket
 does the handshake again, and the link subscribes again to every open
 subscription and query under the same id. A mutation that was already sent
 is not sent again, since the server may have run it: it ends with a
@@ -218,8 +218,8 @@ loss: it fails the operations with `GQL472` and does not reconnect.
 ## Subscriptions over a socket, the rest over HTTP
 
 `SplitLink` sends each request down one of two links. The usual
-arrangement keeps queries and mutations on HTTP, where they get retries,
-files and caching, and sends subscriptions over the socket:
+arrangement keeps queries and mutations on HTTP, which can send files, and
+sends subscriptions over the socket:
 
 ```text
 final link = SplitLink(
@@ -231,3 +231,16 @@ final client = GraphQLClient(link: link);
 ```
 
 `HttpLink` is the subject of the HTTP guide.
+
+## Limits
+
+- The link sets no limit on the size of a message or on the buffer of a
+  paused subscriber; bound them in the socket adapter or the server.
+- `connect()` has no timeout: the acknowledgement timer starts after it
+  returns, so a `connect` that never completes needs its own timeout.
+- `dispose()` awaits `ClientSocket.close` without a timeout.
+- After an acknowledgement timeout, a 4400 or a 4499, an old socket may
+  still be closing when the next one opens.
+- A connection resets the reconnection count only once it delivered a
+  `next`; a server that acknowledges and then closes with a code that is
+  retried (1001, 1012) is retried `retryAttempts` times, not for ever.
