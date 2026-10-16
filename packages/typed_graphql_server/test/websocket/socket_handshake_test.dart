@@ -10,7 +10,7 @@ import 'support/ws_fixture.dart';
 
 void main() {
   const quick = GraphQLWsOptions(
-    connectionInitTimeout: Duration(milliseconds: 50),
+    connectionInitTimeout: Duration(milliseconds: 500),
     maxMessageLength: 200,
   );
   final initText = jsonEncode({'type': 'connection_init'});
@@ -152,6 +152,65 @@ void main() {
     });
   });
 
+  group('errors the handler swallows', () {
+    test(
+      'onConnect that throws an Error is reported and closes 4500',
+      () async {
+        final seen = <Object>[];
+        final fixture = WsFixture(
+          options: GraphQLWsOptions(
+            onConnect: (info) => throw ArgumentError('bug'),
+            onError: (error, stackTrace) => seen.add(error),
+          ),
+        );
+        final socket = FakeSocket();
+        final done = fixture.run(socket);
+        socket.receive(initText);
+        await done;
+        expect(socket.closeCode, 4500);
+        expect(seen.single, isA<ArgumentError>());
+      },
+    );
+
+    test('an onError that throws does not stop the close', () async {
+      final fixture = WsFixture(
+        options: GraphQLWsOptions(
+          onConnect: (info) => throw StateError('bug'),
+          onError: (error, stackTrace) => throw StateError('hook'),
+        ),
+      );
+      final socket = FakeSocket();
+      final done = fixture.run(socket);
+      socket.receive(initText);
+      await done;
+      expect(socket.closeCode, 4500);
+    });
+  });
+
+  group('operation ids', () {
+    test('a subscribe id past maxIdLength closes 4400', () async {
+      final fixture = WsFixture(
+        options: const GraphQLWsOptions(
+          connectionInitTimeout: Duration(seconds: 5),
+          maxIdLength: 8,
+        ),
+      );
+      final socket = FakeSocket();
+      final done = fixture.run(socket);
+      await fixture.init(socket);
+      fixture.subscribe(socket, 'x' * 9, '{ hello }');
+      await done;
+      expect(
+        [socket.closeCode, socket.closeReason],
+        [
+          4400,
+          'Invalid message received',
+        ],
+      );
+      expect(fixture.contexts, 0);
+    });
+  });
+
   group('the connection', () {
     test('closes 4408 when no connection_init arrives in time', () async {
       final socket = FakeSocket();
@@ -170,7 +229,7 @@ void main() {
       final socket = FakeSocket();
       unawaited(fixture.run(socket));
       await fixture.init(socket);
-      await Future<void>.delayed(const Duration(milliseconds: 120));
+      await Future<void>.delayed(const Duration(milliseconds: 1500));
       expect(socket.closeCode, isNull);
     });
 
@@ -271,7 +330,7 @@ void main() {
       final done = WsFixture(options: quick).run(socket);
       await socket.disconnect();
       await done;
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await Future<void>.delayed(const Duration(milliseconds: 1500));
       expect(socket.closeCalls, 0);
     });
   });
