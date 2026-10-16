@@ -40,3 +40,5 @@
   idempotent, are sent again after a network failure, a timeout or a
   retryable HTTP status, after the backoff's delay; the start of the Request
   Policies guide.
+- `DedupeLink`: identical queries in flight share one forwarded request, each
+  caller keeping its own stream and its own cancellation.

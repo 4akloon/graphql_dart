@@ -38,6 +38,7 @@ export 'src/operation/nullable_data_codec.dart';
 export 'src/operation/object_data_codec.dart';
 export 'src/operation/operation_document.dart';
 export 'src/operation/scalar_data_codec.dart';
+export 'src/policy/dedupe_link.dart';
 export 'src/policy/idempotent.dart';
 export 'src/policy/retry_link.dart';
 export 'src/policy/retry_policy.dart';

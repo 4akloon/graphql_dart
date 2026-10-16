@@ -84,3 +84,68 @@ client.mutate(
   context: LinkContext([const Idempotent()]),
 );
 ```
+
+## Sharing identical queries
+
+`DedupeLink()` lets identical queries that are in flight at the same time
+share one forwarded request. Two queries are identical when their bodies
+(document, variables and extensions, compared as JSON values) and their
+`RequestHeaders` are equal. Each caller gets the shared result through its
+own stream; a caller that cancels leaves the others their result, and the
+forwarded request is cancelled when the last caller cancels. The sharing ends
+at the first result, so a query sent later goes out again: the link is not a
+cache. Mutations, subscriptions and requests with `UploadFiles` pass through.
+
+```dart
+import 'package:typed_graphql/typed_graphql.dart';
+import 'package:typed_graphql_client/typed_graphql_client.dart';
+
+final class HelloQuery extends GraphQLQuery<String> {
+  const HelloQuery();
+
+  @override
+  OperationDocument get document => const OperationDocument(
+    name: 'Hello',
+    type: OperationType.query,
+    text: 'query Hello{hello}',
+    sha256: 'f6004747575e6561b67c600f28196e3c7648ef73797a3078da3e4658ddf6b623',
+  );
+
+  @override
+  JsonObject get variablesJson => JsonObject({});
+
+  @override
+  DecodeResult<String> decodeData(JsonObject data) => switch (data['hello']) {
+    JsonString(:final value) => DecodeSuccess(value),
+    _ => const DecodeFailure('expected a string', path: [PathKey('hello')]),
+  };
+}
+
+Future<void> main() async {
+  final mock = MockLink()
+    ..addData(JsonObject({'hello': JsonString('world')}))
+    ..addData(JsonObject({'hello': JsonString('again')}));
+  final client = GraphQLClient(link: Link.from([DedupeLink(), mock]));
+  final responses = await Future.wait([
+    client.query(const HelloQuery()),
+    client.query(const HelloQuery()),
+  ]);
+  for (final response in responses) {
+    if (response case GraphQLData(:final data)) {
+      print(data);
+    }
+  }
+  print('sent ${mock.requests.length} time');
+  await client.query(const HelloQuery());
+  print('sent ${mock.requests.length} times');
+}
+```
+
+It prints:
+
+```text
+world
+world
+sent 1 time
+sent 2 times
+```
