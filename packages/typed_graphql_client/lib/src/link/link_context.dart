@@ -18,11 +18,14 @@ final class LinkContext {
   /// The entries, in the order they were added.
   final List<ContextEntry> entries;
 
-  /// The last entry that is a [T], or null when there is none.
+  /// The last entry whose exact type is [T], or null when there is none.
+  ///
+  /// The rule is the one of [withEntry], so that what was added is what is
+  /// read: a subclass of [T] is another kind of entry.
   T? entry<T extends ContextEntry>() {
     for (final entry in entries.reversed) {
-      if (entry is T) {
-        return entry;
+      if (entry.runtimeType == T) {
+        return entry as T;
       }
     }
     return null;

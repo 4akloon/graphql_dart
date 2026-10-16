@@ -22,10 +22,14 @@ void main() {
       expect(context.entry<Tag>()?.name, 'b');
     });
 
-    test('entry finds a subtype', () {
-      final context = LinkContext([const OtherTag('a')]);
-      expect(context.entry<Tag>()?.name, 'a');
-    });
+    test(
+      'entry does not find a subtype, as withEntry does not replace one',
+      () {
+        final context = LinkContext([const OtherTag('a')]);
+        expect(context.entry<Tag>(), isNull);
+        expect(context.entry<OtherTag>()?.name, 'a');
+      },
+    );
 
     test('withEntry replaces the entries of the same exact type', () {
       final context = LinkContext([
