@@ -114,7 +114,21 @@ void main() {
         HttpLink(uri: uri, transport: transport),
       ).query(const HelloQuery());
       final failure = (response as GraphQLTransportFailure).failure;
-      expect((failure as NetworkFailure).cause, isA<FormatException>());
+      expect((failure as NetworkFailure).cause.toString(), contains('refused'));
+    });
+
+    test('a network failure message hides the query string', () async {
+      transport.answerWith(
+        (request) async => throw Exception(
+          'Connection failed, uri=https://example.com/graphql?variables=secret',
+        ),
+      );
+      final response = await clientOf(
+        HttpLink(uri: uri, transport: transport),
+      ).query(const HelloQuery());
+      final message = (response as GraphQLTransportFailure).failure.message;
+      expect(message, contains('https://example.com/graphql'));
+      expect(message, isNot(contains('secret')));
     });
 
     test('an exception of the body with a network failure', () async {

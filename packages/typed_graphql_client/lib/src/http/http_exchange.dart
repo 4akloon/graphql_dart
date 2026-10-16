@@ -5,6 +5,7 @@ import 'package:meta/meta.dart';
 import '../client/client_failure.dart';
 import '../link/link_result.dart';
 import 'http_transport.dart';
+import 'redacted_error.dart';
 import 'response_reader.dart';
 import 'transport_request.dart';
 
@@ -77,7 +78,7 @@ final class HttpExchange({
     try {
       return await reader.read(await transport.send(request));
     } on Exception catch (error) {
-      return LinkFailure(NetworkFailure(error));
+      return LinkFailure(NetworkFailure(RedactedError(error)));
     }
   }
 
