@@ -248,16 +248,17 @@ void main() {
       expect(rig.server.connectionCount, 1);
     });
 
-    run('a later request is not supported and does not connect', (
+    run('a later request is cancelled and does not connect', (
       async,
       rig,
     ) {
       rig.link.dispose();
       rig.settle();
       final probe = rig.request(const HelloQuery());
+      expect(probe.failures.single, isA<RequestCancelled>());
       expect(
         probe.failures.single.code,
-        DiagnosticCode.operationNotSupportedByLink,
+        DiagnosticCode.requestCancelled,
       );
       expect(rig.server.connectionCount, 0);
     });

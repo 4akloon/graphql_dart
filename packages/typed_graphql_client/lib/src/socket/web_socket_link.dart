@@ -56,8 +56,9 @@ import 'socket_settings.dart';
 /// attempts, end every operation with `SocketFailure` `GQL471` that holds
 /// the close code, or with the `NetworkFailure` of the last [connect].
 ///
-/// A request with `UploadFiles` in its context, or made after [dispose],
-/// gets `UnsupportedOperation` `GQL468`.
+/// A request with `UploadFiles` in its context gets `UnsupportedOperation`
+/// `GQL468`; one made after [dispose] gets `RequestCancelled` `GQL466`, as
+/// the operations that were open.
 ///
 /// {@category socket}
 final class WebSocketLink extends Link {
@@ -146,10 +147,7 @@ final class WebSocketLink extends Link {
   }
 
   static const LinkResult _disposedFailure = LinkFailure(
-    UnsupportedOperation(
-      .operationNotSupportedByLink,
-      'The WebSocketLink was disposed.',
-    ),
+    RequestCancelled('The WebSocketLink was disposed.'),
   );
 
   void _start(OpenOperation operation) {

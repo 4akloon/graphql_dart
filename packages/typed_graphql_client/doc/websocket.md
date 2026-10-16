@@ -157,9 +157,10 @@ message for an id the link does not know is ignored.
 
 The socket stays open after the last operation ends, so the next request
 needs no handshake. `dispose()` closes it with code 1000 and ends every
-open operation with `RequestCancelled`; a request made after that gets an
-`UnsupportedOperation` (`GQL468`). So does a request with `UploadFiles`
-in its context: a socket cannot send files, so route those over HTTP.
+open operation with `RequestCancelled` (`GQL466`); a request made after
+that gets the same failure. A request with `UploadFiles` in its context
+gets an `UnsupportedOperation` (`GQL468`): a socket cannot send files, so
+route those over HTTP.
 
 ## Keeping the socket alive
 
