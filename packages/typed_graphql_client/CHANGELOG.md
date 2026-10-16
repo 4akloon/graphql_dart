@@ -45,3 +45,6 @@
 - `PersistedQueryLink`: sends the document's hash instead of its text; in the
   automatic mode it falls back to the text when the server does not know the
   hash or stores no queries, in the trusted mode it never sends the text.
+- `AuthLink`: adds an authorization header from a token callback and, on a 401,
+  renews the token (one refresh for all requests waiting at once) and sends
+  the request again once; a throwing callback is an `AuthenticationFailure`.
