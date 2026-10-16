@@ -20,3 +20,6 @@
   `HttpStatusFailure`, `ResponseFormatFailure`, `DataFormatFailure`,
   `RequestCancelled`, `RequestTimedOut`, `UnsupportedOperation`,
   `SocketFailure`, `EventStreamFailure`, `AuthenticationFailure`.
+- `LinkRequest`, `LinkResult` (`LinkPayload`, `LinkFailure`), `LinkContext`,
+  `ContextEntry`, `RequestHeaders` and `HttpResponseInfo`; the start of the
+  Links guide.

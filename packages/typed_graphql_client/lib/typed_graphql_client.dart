@@ -9,6 +9,12 @@ library;
 
 export 'src/client/cancel_token.dart';
 export 'src/client/client_failure.dart';
+export 'src/link/context_entry.dart';
+export 'src/link/http_response_info.dart';
+export 'src/link/link_context.dart';
+export 'src/link/link_request.dart';
+export 'src/link/link_result.dart';
+export 'src/link/request_headers.dart';
 export 'src/operation/data_codec.dart';
 export 'src/operation/data_context.dart';
 export 'src/operation/data_enum.dart';

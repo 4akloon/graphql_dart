@@ -3,10 +3,14 @@ dartdoc:
     client:
       markdown: doc/client.md
       displayName: Client
+    link:
+      markdown: doc/links.md
+      displayName: Links
     operations:
       markdown: doc/operations.md
       displayName: Generated Operations
   categoryOrder:
     - client
+    - link
     - operations
   showUndocumentedCategories: true
