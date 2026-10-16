@@ -1,8 +1,9 @@
 # Uploads
 
 A GraphQL server that follows the multipart request specification takes
-files as values of the `Upload` scalar. The client sends them in three
-steps.
+files as values of the `Upload` scalar. The client's side has two parts:
+the mapping of the scalar and the list of the files of a request. The
+links that send them arrive with `HttpLink` (M11b).
 
 ## Mapping the scalar
 
@@ -38,5 +39,6 @@ await client.mutate(
 );
 ```
 
-A link that cannot send files answers a request with `UploadFiles` with an
-`UnsupportedOperation` (`GQL468`).
+The links that send the files arrive with `HttpLink` (M11b); the ones that
+cannot, `WebSocketLink` (M11d) and `SseLink` (M11e), will refuse such a
+request.

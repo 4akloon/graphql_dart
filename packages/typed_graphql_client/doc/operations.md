@@ -1,8 +1,8 @@
 # Generated Operations
 
 The code that `typed_graphql_codegen` generates for an operation compiles
-against the types of this package. This version holds only that contract; the
-client that sends operations arrives in a later release.
+against the types of this package. The Client guide covers the client
+that sends operations.
 
 ## The operation
 

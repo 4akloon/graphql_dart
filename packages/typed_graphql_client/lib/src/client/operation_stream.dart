@@ -102,7 +102,7 @@ final class OperationStream<D extends Object> {
   static Stream<LinkResult> _unterminated(LinkRequest request) => Stream.error(
     StateError(
       'The last link forwarded ${request.document.name}: end the chain with '
-      'a terminating link, such as HttpLink.',
+      'a terminating link, such as MockLink or, from M11b, HttpLink.',
     ),
   );
 }

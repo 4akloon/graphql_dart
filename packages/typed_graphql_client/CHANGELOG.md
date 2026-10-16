@@ -33,6 +33,8 @@
   (rewrite a request's context before forwarding it).
 - `Backoff`: exponential delays with full jitter, for retries and
   reconnections.
+- The failure codes `GQL461`-`GQL463`, `GQL467`, `GQL468` and `GQL470`-`GQL474`
+  are reserved: no link reports them yet (M11b to M11e).
 - `UploadFile`, `UploadFileCodec` (the `Upload` scalar's codec, which
   writes a file as its marker) and `UploadFiles` (the files of a request,
   in its context); the start of the Uploads guide.

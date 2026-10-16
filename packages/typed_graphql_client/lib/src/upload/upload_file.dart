@@ -5,7 +5,7 @@ import 'dart:typed_data';
 ///
 /// The generated variables hold the file's [marker] in its place, through
 /// `UploadFileCodec`; the caller lists the files of a request in an
-/// `UploadFiles` context entry, and `HttpLink` sends them as parts of a
+/// `UploadFiles` context entry, and `HttpLink` (M11b) will send them as parts of a
 /// `multipart/form-data` body.
 ///
 /// {@category upload}
