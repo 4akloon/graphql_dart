@@ -71,3 +71,15 @@
   event, not an uncaught error; `RetryLink` no longer retries after a payload
   was delivered; `TokenRenewal` no longer hands back a refused token after a
   failed refresh; `RequestHeaders` and `LinkContext` print header names only.
+- `ClientSocket`: the text-frame socket the WebSocket link talks over, which the
+  app supplies; an internal codec for the graphql-transport-ws messages that
+  never throws on a bad frame; the start of the WebSocket guide.
+- `WebSocketLink`: operations over one graphql-transport-ws socket the app
+  supplies, with the handshake and its timeout, ping and pong, an optional
+  keep-alive, reconnection with backoff that subscribes again, and `dispose`
+  (R8.4); the codes `GQL470`-`GQL472`.
+- The WebSocket guide: a runnable in-memory subscription, the reconnection
+  rules, the final close codes, and subscriptions over a socket beside HTTP.
+- `WebSocketLink` fails its operations when `connect` throws an `Error`, drops a
+  `send` that throws, clips server text in a failure, and resets the
+  reconnection count only after a result arrived; the guide lists its limits.

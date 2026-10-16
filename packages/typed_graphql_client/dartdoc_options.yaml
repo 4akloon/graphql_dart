@@ -12,6 +12,9 @@ dartdoc:
     policy:
       markdown: doc/policies.md
       displayName: Request Policies
+    socket:
+      markdown: doc/websocket.md
+      displayName: WebSocket
     upload:
       markdown: doc/uploads.md
       displayName: Uploads
@@ -23,6 +26,7 @@ dartdoc:
     - link
     - http
     - policy
+    - socket
     - upload
     - operations
   showUndocumentedCategories: true
