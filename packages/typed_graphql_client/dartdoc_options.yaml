@@ -9,6 +9,9 @@ dartdoc:
     http:
       markdown: doc/http.md
       displayName: HTTP
+    sse:
+      markdown: doc/sse.md
+      displayName: Server-sent events
     policy:
       markdown: doc/policies.md
       displayName: Request Policies
@@ -25,6 +28,7 @@ dartdoc:
     - client
     - link
     - http
+    - sse
     - policy
     - socket
     - upload

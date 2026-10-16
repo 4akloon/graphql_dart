@@ -53,6 +53,7 @@ export 'src/policy/retry_link.dart';
 export 'src/policy/retry_policy.dart';
 export 'src/socket/client_socket.dart';
 export 'src/socket/web_socket_link.dart';
+export 'src/sse/sse_link.dart';
 export 'src/upload/upload_file.dart';
 export 'src/upload/upload_file_codec.dart';
 export 'src/upload/upload_files.dart';

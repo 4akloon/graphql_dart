@@ -29,6 +29,9 @@ final class MediaType {
   /// The legacy media type of a GraphQL response.
   static const String json = 'application/json';
 
+  /// The media type of a server-sent event stream.
+  static const String eventStream = 'text/event-stream';
+
   /// The type and subtype, such as `application/json`; null when the
   /// header is missing.
   final String? essence;
