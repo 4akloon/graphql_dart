@@ -15,6 +15,9 @@ dartdoc:
     execution:
       markdown: doc/execution.md
       displayName: Execution
+    http:
+      markdown: doc/http.md
+      displayName: HTTP
     introspection:
       markdown: doc/introspection.md
       displayName: Introspection
@@ -36,6 +39,7 @@ dartdoc:
     - cancellation
     - dataloader
     - execution
+    - http
     - introspection
     - lookahead
     - persisted

@@ -222,3 +222,5 @@
   also share one `maxCost`, which bounds their summed field cost and summed
   type cost. The request that would pass it is refused with `GQL430` and is
   not charged; a request over the limit alone is still `GQL238`.
+- `HttpRequestData`, `HttpResponseData`, `FixedBody` and `StreamedBody`: the
+  values a host adapter exchanges with the HTTP transport (the HTTP guide).
