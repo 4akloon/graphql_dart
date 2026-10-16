@@ -41,6 +41,12 @@ this request." The reader puts a token such as `upload:` and 32 random hex
 digits in the place of each file, so a client cannot name a file of another
 request.
 
+The `Uploads` value of the scalar and the one in `HttpOptions.uploads` must be
+the same instance: the tokens live in it, and a scalar built from another
+`Uploads` rejects every file with that coercion error. A token is valid for
+any request in flight (it has 128 random bits, so it cannot be guessed), so
+never log one.
+
 This program builds a multipart body in memory, sends it through the handler
 and prints the answer of the resolver:
 
@@ -156,6 +162,14 @@ before the pipeline, so no context is built and no resolver runs:
   names; more is `413` `GQL442`, so one part named by many paths cannot
   multiply a request.
 
+- The headers of one part may take 8 KiB (`413` `GQL441`): `package:mime`
+  buffers a header whole, so the bytes before each part body are counted
+  before the parser sees them. The boundary must be one of RFC 2046 (1 to 70
+  characters of `0-9A-Za-z'()+_,-./:=?` and space, not ending with a space);
+  any other is `400` `GQL440`.
+- A file name may have 255 characters and a media type 127; more is `400`
+  `GQL440`.
+
 Anything else wrong with the structure is `400` `GQL440`: no boundary,
 `operations` and `map` out of order, a map that is not an object of lists of
 paths, a path that does not name a `null` inside `variables`, a part the map
@@ -176,15 +190,58 @@ too, so the program above sends a header.
 
 `MemoryUploadStorage`, the default, keeps each file in memory, which is right
 for small files and tests. Anything larger belongs on disk or in an object
-store: `typed_graphql_shelf` is planned to ship a temporary-file storage; until
-then write your own.
+store, and you write that storage yourself.
+
+The file name and the media type that reach `store` are what the client wrote:
+unchecked text of at most 255 and 127 characters. A storage must generate its
+own names and never use the client's name as a path. This sketch, for a host
+that has `dart:io` (this package does not), shows the shape:
+
+```text
+final class TemporaryFileStorage implements UploadStorage {
+  TemporaryFileStorage(this.directory);
+
+  final Directory directory;
+
+  @override
+  Future<Upload> store(
+    String filename,
+    String mediaType,
+    Stream<List<int>> content,
+  ) async {
+    // Its own name: a random one, never `filename`.
+    final file = File('${directory.path}/${randomName()}');
+    try {
+      await content.pipe(file.openWrite());
+    } on Exception {
+      if (file.existsSync()) file.deleteSync();
+      rethrow;
+    }
+    return FileUpload(file, filename, mediaType);
+  }
+
+  @override
+  Future<void> release(Upload upload) async {
+    if (upload is FileUpload && upload.file.existsSync()) {
+      await upload.file.delete();
+    }
+  }
+}
+```
 
 An `UploadStorage` has two methods. `store` receives the content of one file
 as a stream. When that stream fails, which is how a file over `maxFileBytes`
 is reported, drop what was written and let the error through. `release` is
 called once per stored upload, after the response is built, whatever happened
 to the request, and must not throw for an upload it does not know; an
-exception it throws is ignored so that it cannot change the response.
+exception it throws is reported to `HttpOptions.onError` and does not change
+the response, and the other uploads are still released.
+
+A storage that throws from `store` (a full disk, a lost connection to the
+object store) is a fault of the server, not of the request: the answer is
+`500` `GQL330`, `HttpOptions.onError` sees the exception, and the files already
+stored are released. Only the failure of the file's content, which the
+storage lets through, is the client's.
 
 This program stores a file by hand, as the reader does for each part:
 

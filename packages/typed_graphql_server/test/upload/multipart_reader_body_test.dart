@@ -133,10 +133,7 @@ void main() {
       final controller = StreamController<List<int>>()
         ..add(utf8.encode('--testBoundary\r\ncontent-disposition: '));
       addTearDown(controller.close);
-      Timer(
-        const Duration(milliseconds: 10),
-        () => controller.addError(const ConnectionReset()),
-      );
+      Future<void>(() => controller.addError(const ConnectionReset()));
       fixture.expectRefusal(
         await fixture.refusalOf(fixture.read(controller.stream)),
         400,
@@ -158,10 +155,7 @@ void main() {
           ),
         );
       addTearDown(controller.close);
-      Timer(
-        const Duration(milliseconds: 10),
-        () => controller.addError(const ConnectionReset()),
-      );
+      Future<void>(() => controller.addError(const ConnectionReset()));
       expect(
         (await fixture.refusalOf(fixture.read(controller.stream))).status,
         400,

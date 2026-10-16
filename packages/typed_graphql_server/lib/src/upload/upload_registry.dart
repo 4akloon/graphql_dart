@@ -38,7 +38,8 @@ final class UploadRegistry {
     }
   }
 
-  /// The number of uploads registered.
+  /// The number of uploads registered: the tests' proof that a request
+  /// leaves nothing behind.
   int get length => _uploads.length;
 
   String _newToken() {

@@ -12,8 +12,9 @@ final class UploadHttpFixture {
   UploadHttpFixture({
     bool releaseThrows = false,
     UploadLimits limits = const UploadLimits(),
-  }) : storage = CountingStorage(releaseThrows: releaseThrows) {
-    uploads = Uploads(storage: storage, limits: limits);
+    CountingStorage? storage,
+  }) : storage = storage ?? CountingStorage(releaseThrows: releaseThrows) {
+    uploads = Uploads(storage: this.storage, limits: limits);
     final b = ExecutableSchemaBuilder<Object?>();
     final upload = b.scalar<Upload>(Uploads.scalarName, uploads.codec);
     final file = Arg('file', upload);
@@ -76,6 +77,7 @@ final class UploadHttpFixture {
     ServerProfile profile = ServerProfile.development,
     BatchPolicy? batching,
     bool isUploadEnabled = true,
+    ErrorHook? onError,
   }) => GraphQLHttpHandler<Object?>(
     GraphQLServer<Object?>(
       schema: schema,
@@ -88,6 +90,7 @@ final class UploadHttpFixture {
     options: HttpOptions(
       uploads: isUploadEnabled ? uploads : null,
       batching: batching,
+      onError: onError,
     ),
   );
 

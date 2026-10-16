@@ -47,14 +47,14 @@ final class UploadMapParser {
   /// Validates [map] against [operations], never throwing.
   UploadMapResult parse(JsonValue map, JsonValue operations) {
     if (map is! JsonObject) return _malformed;
-    if (map.fields.length > maxFiles) return _tooMany('files');
+    if (map.fields.length > maxFiles) return _tooMany('file');
     final entries = <UploadMapEntry>[];
     final places = <String>{};
     var pathCount = 0;
     for (final MapEntry(key: field, value: list) in map.fields.entries) {
       if (list is! JsonArray || list.items.isEmpty) return _malformed;
       pathCount += list.items.length;
-      if (pathCount > maxFiles) return _tooMany('paths');
+      if (pathCount > maxFiles) return _tooMany('path');
       final paths = <MapPath>[];
       final problem = _collect(list, operations, places, paths);
       if (problem != null) return problem;
@@ -80,11 +80,12 @@ final class UploadMapParser {
     return null;
   }
 
-  UploadMapInvalid _tooMany(String noun) => UploadMapInvalid(
+  UploadMapInvalid _tooMany(String singular) => UploadMapInvalid(
     DecodingRefusal(
       413,
       DiagnosticCode.tooManyUploads,
-      'The map may name at most $maxFiles $noun.',
+      'The map may name at most $maxFiles '
+      '${maxFiles == 1 ? singular : '${singular}s'}.',
     ),
   );
 }

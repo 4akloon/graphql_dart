@@ -32,13 +32,11 @@ final class Uploads {
   /// The sizes a request may reach.
   final UploadLimits limits;
 
-  final UploadRegistry _registry = UploadRegistry();
-
   /// The tokens of the requests being served, shared with [codec].
   @internal
-  UploadRegistry get registry => _registry;
+  final UploadRegistry registry = UploadRegistry();
 
   /// The codec of the `Upload` scalar, for input only: encoding is an
   /// [ArgumentError].
-  ScalarCodec<Upload> get codec => UploadCodec(_registry);
+  ScalarCodec<Upload> get codec => UploadCodec(registry);
 }

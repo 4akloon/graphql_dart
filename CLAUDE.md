@@ -448,8 +448,8 @@ only through its barrel. One folder per concern, with no import order
 package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
 or web framework, only `dart:async`, `dart:collection`, `dart:convert`,
-`dart:core`, `dart:math`, `meta`, `crypto` and the core
-(`test/quality/imports_test.dart`), and the
+`dart:core`, `dart:math`, `dart:typed_data`, `meta`, `crypto`, `mime` and the
+core (`test/quality/imports_test.dart`), and the
 builder never instantiates resolvers or services: closures get them from the
 context `C`. `ExecutableSchemaBuilder<C>` makes `OutputRef`/`InputRef`/
 `LeafRef` types and definitions in creation order; a field is
@@ -579,12 +579,18 @@ order, each through the pipeline with one shared `CostBudget`, and stops
 between items when the client has gone; an array is counted, not decoded,
 before the size check. The outermost boundary of `handle` is the one place
 that catches `Object`, as `GraphQLServer.handle` does: it reports through
-`HttpOptions.onError` and never rethrows.
+`HttpOptions.onError` and never rethrows. `StoredUploads.release` also
+catches `Object`, only to release the remaining files and rethrow the first
+`Error`, like a `try`/`finally`.
 `upload/` (M7b): the scalar codec has no request context, so `MultipartReader`
-(over `package:mime`, `WatchedBody` for the byte limit and the timeout,
-`UploadMap` for the `map` field) replaces each mapped `null` with a token
+(over `package:mime`, `WatchedBody` for the byte limit, the timeout, the
+client's cancel signal and, through `PartHeaderScanner`, the 8 KiB limit on a
+part's headers and the detection of a cut body; `UploadMap` for the `map`
+field) replaces each mapped `null` with a token
 `upload:<32 hex>` registered in the `Uploads` registry, and `StoredUploads`
-removes the tokens and releases the files. `MultipartPost` (in `http/`) checks
+removes the tokens and releases the files (a release that throws is
+reported through `HttpOptions.onError`). A storage exception is wrapped in
+`StorageFailure` and escapes the reader as a server fault (`500`). `MultipartPost` (in `http/`) checks
 CSRF before reading the body (deviation 8), then the boundary and the declared
 length; `GraphQLHttpHandler` decodes `operations` with
 `JsonBodyDecoder.decodeValue` and releases the files in a `finally`.
