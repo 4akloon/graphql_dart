@@ -17,6 +17,8 @@ final class ContentType {
   /// The lower-cased `charset` parameter, or null.
   String? get charset => parameters['charset']?.toLowerCase();
 
+  static final RegExp _whitespace = RegExp(r'\s');
+
   /// The content type in [header], or null when it is missing or malformed
   /// (no `type/subtype`, a parameter without a value, an unterminated quote).
   static ContentType? parse(String? header) {
@@ -26,7 +28,7 @@ final class ContentType {
     final name = segments.first.trim().toLowerCase();
     final halves = name.split('/');
     if (halves.length != 2 || halves.any((half) => half.isEmpty)) return null;
-    if (name.contains(RegExp(r'\s'))) return null;
+    if (name.contains(_whitespace)) return null;
     final parameters = <String, String>{};
     for (final segment in segments.skip(1)) {
       if (segment.trim().isEmpty) continue;

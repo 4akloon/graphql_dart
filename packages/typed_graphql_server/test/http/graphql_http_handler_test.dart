@@ -161,7 +161,7 @@ void main() {
 
     test('lets the cancel signal reach the pipeline', () async {
       final signal = CancelSignal();
-      Timer(const Duration(milliseconds: 20), signal.cancel);
+      Timer.run(signal.cancel);
       final response = await http.handler().handle(
         http.post(
           {'query': '{ slow }'},

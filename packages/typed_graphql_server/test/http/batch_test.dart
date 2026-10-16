@@ -95,7 +95,7 @@ void main() {
             options: batching,
             contextFactory: (_) async {
               log.add('start');
-              await Future<void>.delayed(const Duration(milliseconds: 10));
+              await Future<void>.delayed(Duration.zero);
               log.add('end');
               return const Ctx('x');
             },

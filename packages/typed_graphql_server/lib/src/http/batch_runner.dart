@@ -19,7 +19,8 @@ import 'transport_errors.dart';
 final class BatchRunner<C> {
   /// Creates a runner over [server] that follows [policy] and writes with
   /// [writer].
-  const BatchRunner(this.server, this.policy, this.writer);
+  BatchRunner(this.server, this.policy, this.writer)
+    : _errors = TransportErrors(server.profile.maskErrors);
 
   /// The pipeline.
   final GraphQLServer<C> server;
@@ -30,7 +31,7 @@ final class BatchRunner<C> {
   /// Writes the results as an HTTP response.
   final ResultWriter writer;
 
-  TransportErrors get _errors => TransportErrors(server.profile.maskErrors);
+  final TransportErrors _errors;
 
   Set<OperationType> get _allowedOperationTypes => {
     OperationType.query,
@@ -63,10 +64,27 @@ final class BatchRunner<C> {
     final budget = CostBudget();
     final payloads = <ResponsePayload>[];
     for (final params in requests) {
-      payloads.add(await _runItem(http, params, budget));
+      // Nobody waits for the rest once the client has gone; a skipped item is
+      // cancelled as a running one would be.
+      payloads.add(
+        http.cancelSignal?.isCancelled ?? false
+            ? _cancelled()
+            : await _runItem(http, params, budget),
+      );
     }
     return writer.batch(payloads, type);
   }
+
+  ResponsePayload _cancelled() => RequestErrorResult(
+    errors: [
+      GraphQLError(
+        'The request was cancelled before this item ran.',
+        extensions: JsonObject({
+          'code': JsonString(DiagnosticCode.executionCancelled.id),
+        }),
+      ),
+    ],
+  );
 
   DecodeResult<List<GraphQLRequest>> _decode(List<JsonValue> items) {
     final requests = <GraphQLRequest>[];

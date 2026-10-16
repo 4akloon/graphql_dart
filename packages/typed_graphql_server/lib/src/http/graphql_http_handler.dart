@@ -2,7 +2,6 @@ import 'package:typed_graphql/typed_graphql.dart';
 
 import '../server/graphql_server.dart';
 import 'accept_negotiation.dart';
-import 'batch_policy.dart';
 import 'batch_runner.dart';
 import 'get_parameters.dart';
 import 'http_options.dart';
@@ -33,20 +32,8 @@ final class GraphQLHttpHandler<C> {
   /// that makes no sense.
   GraphQLHttpHandler(this.server, {this.options = const HttpOptions()})
     : _errors = TransportErrors(server.profile.maskErrors),
-      _exchange = JsonExchange<C>(
-        server,
-        ResultWriter(
-          usesPartialSuccessStatus: options.usesPartialSuccessStatus,
-        ),
-      ),
-      // The decoder refuses a batch when there is no policy, so the default
-      // here is never used to run one.
-      _batches = BatchRunner<C>(
-        server,
-        options.batching ?? const BatchPolicy(),
-        ResultWriter(
-          usesPartialSuccessStatus: options.usesPartialSuccessStatus,
-        ),
+      _writer = ResultWriter(
+        usesPartialSuccessStatus: options.usesPartialSuccessStatus,
       ) {
     const HttpOptionsCheck().check(options);
   }
@@ -58,8 +45,18 @@ final class GraphQLHttpHandler<C> {
   final HttpOptions options;
 
   final TransportErrors _errors;
-  final JsonExchange<C> _exchange;
-  final BatchRunner<C> _batches;
+  final ResultWriter _writer;
+
+  // `late`: built on first use, from the `_writer` that the initializer list
+  // cannot read.
+  late final JsonExchange<C> _exchange = JsonExchange<C>(server, _writer);
+
+  // Null without a batch policy: the decoder refuses a batch then, so no
+  // runner is needed.
+  late final BatchRunner<C>? _batches = switch (options.batching) {
+    final policy? => BatchRunner<C>(server, policy, _writer),
+    null => null,
+  };
 
   static const List<ResponseMediaType> _offered = [
     ResponseMediaType.graphqlResponseJson,
@@ -71,9 +68,11 @@ final class GraphQLHttpHandler<C> {
   Future<HttpResponseData> handle(HttpRequestData request) async {
     try {
       return await _handle(request);
-    } on Object catch (error) {
-      // The outermost boundary: a bug anywhere below must still be a response.
-      return _errors.unexpected(error);
+    } on Object catch (error, stackTrace) {
+      // The outermost boundary, like `GraphQLServer.handle`: a bug anywhere
+      // below must still be a response, so it is reported through the hook
+      // and never rethrown.
+      return _errors.reported(error, stackTrace, options.onError);
     }
   }
 
@@ -121,8 +120,20 @@ final class GraphQLHttpHandler<C> {
       params,
       type,
     ),
-    DecodedBatch(:final items) => await _batches.run(request, items, type),
+    DecodedBatch(:final items) => await _runBatch(request, items, type),
     DecodingRefusal(:final status, :final code, :final message) =>
       _errors.refusal(status, code, message),
   };
+
+  Future<HttpResponseData> _runBatch(
+    HttpRequestData request,
+    List<JsonValue> items,
+    ResponseMediaType type,
+  ) {
+    final batches = _batches;
+    if (batches == null) {
+      throw StateError('A batch was decoded without a batch policy.');
+    }
+    return batches.run(request, items, type);
+  }
 }

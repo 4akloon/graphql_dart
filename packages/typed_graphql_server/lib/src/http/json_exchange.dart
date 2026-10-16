@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
@@ -17,13 +15,16 @@ import 'transport_errors.dart';
 @internal
 final class JsonExchange<C> {
   /// Creates an exchange over [server] that writes with [writer].
-  const JsonExchange(this.server, this.writer);
+  JsonExchange(this.server, this.writer)
+    : _errors = TransportErrors(server.profile.maskErrors);
 
   /// The pipeline.
   final GraphQLServer<C> server;
 
   /// Writes a result as an HTTP response.
   final ResultWriter writer;
+
+  final TransportErrors _errors;
 
   /// The operation types plain JSON can deliver: a subscription needs a
   /// stream, which only the other transports have.
@@ -52,9 +53,9 @@ final class JsonExchange<C> {
       case StreamResponse(:final results):
         // Only an extension can make one; nobody will listen, so release it.
         results.listen(null).cancel().ignore();
-        return TransportErrors(
-          server.profile.maskErrors,
-        ).unexpected(StateError('A stream cannot be sent as JSON.'));
+        return _errors.unexpected(
+          StateError('A stream cannot be sent as JSON.'),
+        );
     }
   }
 }

@@ -7,7 +7,7 @@ import 'package:typed_graphql_server/src/http/result_writer.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 void main() {
-  const writer = ResultWriter(usesPartialSuccessStatus: true);
+  final writer = ResultWriter(usesPartialSuccessStatus: true);
   const graphql = ResponseMediaType.graphqlResponseJson;
   const legacy = ResponseMediaType.json;
 
@@ -66,7 +66,7 @@ void main() {
     }
 
     test('is 200 for errors when the partial success status is off', () {
-      const off = ResultWriter(usesPartialSuccessStatus: false);
+      final off = ResultWriter(usesPartialSuccessStatus: false);
       expect(off.single(executed(errors: [error(null)]), graphql).status, 200);
     });
   });

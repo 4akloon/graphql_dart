@@ -35,7 +35,7 @@ final class PostBody {
     final result = await BodyReader(
       options.maxBodyBytes,
       options.bodyTimeout,
-    ).read(request.body);
+    ).read(request.body, cancelSignal: request.cancelSignal);
     return switch (result) {
       BodyBytes(:final bytes) => JsonBodyDecoder(
         maxJsonDepth: options.maxJsonDepth,

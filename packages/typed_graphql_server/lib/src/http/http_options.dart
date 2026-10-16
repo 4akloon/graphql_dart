@@ -1,3 +1,4 @@
+import '../execution/error_hook.dart';
 import 'batch_policy.dart';
 
 /// The settings of `GraphQLHttpHandler`: the limits on what a client may send
@@ -16,6 +17,7 @@ final class HttpOptions {
     this.maxUriLength = 8192,
     this.usesPartialSuccessStatus = true,
     this.batching,
+    this.onError,
   });
 
   /// The longest request body accepted, in bytes; a longer one is refused with
@@ -45,4 +47,10 @@ final class HttpOptions {
 
   /// How batches are run, or null, the default, to refuse them (`GQL428`).
   final BatchPolicy? batching;
+
+  /// Called with a bug in the handler itself (not a refusal, not an error of
+  /// the pipeline, which has its own hook) before it is answered with `500`
+  /// and `GQL330`, like the `onError` of `GraphQLServer`; it may return a
+  /// replacement error, and one that throws is ignored.
+  final ErrorHook? onError;
 }

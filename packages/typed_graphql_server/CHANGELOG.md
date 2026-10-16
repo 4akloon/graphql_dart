@@ -235,5 +235,14 @@
 - `BatchPolicy` and `HttpOptions.batching`: opt-in batches of requests (a JSON
   array), run in order with one shared `CostBudget`; a mutation or
   subscription item is `GQL431` in its slot.
+- `HttpOptions.onError`: the error hook of the HTTP handler, called with a
+  bug caught at its outermost boundary (answered `500`, `GQL330`) and its
+  stack trace, like the hook of `GraphQLServer`.
+- Every HTTP response varies on `Accept`; a transport refusal is
+  `cache-control: no-store`; the echoed text of an unexpected error is cut at
+  500 characters; the body read copies its chunks, stops when the host's
+  cancel signal fires, and starts its timer only once the stream is
+  listened to; a batch stops running items when the client has gone (the
+  rest are `GQL350`).
 - The transport codes `GQL420`-`GQL431`.
 - The HTTP guide, with the dartdoc category `http`.

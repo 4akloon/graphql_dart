@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 
+import '../cancellation/cancel_signal.dart';
 import 'body_read_result.dart';
 
 /// Reads a request body into memory without ever holding more than a limit,
@@ -23,10 +24,12 @@ final class BodyReader {
   /// How long the whole body may take to arrive.
   final Duration timeout;
 
-  /// Reads [body] to its end, or until a limit or an error stops it; the
-  /// subscription is cancelled in every case but the end.
-  Future<BodyReadResult> read(Stream<List<int>> body) =>
-      _BodyRead(maxBytes, timeout).run(body);
+  /// Reads [body] to its end, or until a limit, an error or [cancelSignal]
+  /// stops it; the subscription is cancelled in every case but the end.
+  Future<BodyReadResult> read(
+    Stream<List<int>> body, {
+    CancelSignal? cancelSignal,
+  }) => _BodyRead(maxBytes, timeout).run(body, cancelSignal);
 }
 
 /// One run of [BodyReader.read]: the state it needs, kept out of the reader
@@ -37,19 +40,36 @@ final class _BodyRead {
   final int _maxBytes;
   final Duration _timeout;
   final Completer<BodyReadResult> _completer = Completer<BodyReadResult>();
-  final BytesBuilder _bytes = BytesBuilder(copy: false);
-  // `late`: assigned by `run` right after the stream is listened to; no
-  // callback can run before `run` returns, because events are asynchronous.
-  late final StreamSubscription<List<int>> _subscription;
+  // A copying builder: a host may reuse one buffer for every chunk, and a
+  // body of many tiny chunks would otherwise keep one view per chunk alive.
+  final BytesBuilder _bytes = BytesBuilder();
+  // Nullable, not `late`: a synchronous source can deliver (and finish the
+  // read) inside `listen`, before this is assigned.
+  StreamSubscription<List<int>>? _subscription;
   Timer? _timer;
+  void Function()? _removeCancelListener;
 
-  Future<BodyReadResult> run(Stream<List<int>> body) {
-    _timer = Timer(_timeout, () => _finish(const BodyTimedOut()));
-    _subscription = body.listen(
+  Future<BodyReadResult> run(
+    Stream<List<int>> body,
+    CancelSignal? cancelSignal,
+  ) {
+    // Listening first: if it throws (a stream already listened to), no timer
+    // has been started and nothing is left running.
+    final subscription = body.listen(
       _onChunk,
       onError: (Object _) => _finish(const BodyFailed()),
       onDone: () => _finish(BodyBytes(_bytes.takeBytes())),
       cancelOnError: true,
+    );
+    _subscription = subscription;
+    if (_completer.isCompleted) {
+      subscription.cancel().ignore();
+      return _completer.future;
+    }
+    _timer = Timer(_timeout, () => _finish(const BodyTimedOut()));
+    // A client that has gone is a failed read, as an aborted connection is.
+    _removeCancelListener = cancelSignal?.addListener(
+      () => _finish(const BodyFailed()),
     );
     return _completer.future;
   }
@@ -65,7 +85,8 @@ final class _BodyRead {
   void _finish(BodyReadResult result) {
     if (_completer.isCompleted) return;
     _timer?.cancel();
-    _subscription.cancel().ignore();
+    _removeCancelListener?.call();
+    _subscription?.cancel().ignore();
     _completer.complete(result);
   }
 }

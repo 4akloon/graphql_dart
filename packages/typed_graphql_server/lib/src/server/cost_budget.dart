@@ -6,7 +6,9 @@ import 'package:typed_graphql/typed_graphql.dart';
 ///
 /// Give the same budget to the `ServerRequest`s that must stay under one
 /// `maxCost` together; a request charges it only when it is within the limit
-/// alone and with what the others spent.
+/// alone and with what the others spent. The charge is made when the request
+/// is admitted, before it runs, so a request that is refused or fails later
+/// has still used its share of the budget.
 ///
 /// {@category server}
 final class CostBudget {

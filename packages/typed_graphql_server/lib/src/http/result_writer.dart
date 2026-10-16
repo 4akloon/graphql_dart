@@ -13,18 +13,21 @@ import 'status_table.dart';
 @internal
 final class ResultWriter {
   /// Creates a writer; see [StatusTable.usesPartialSuccessStatus].
-  const ResultWriter({required this.usesPartialSuccessStatus});
+  ResultWriter({required this.usesPartialSuccessStatus})
+    : _statuses = StatusTable(
+        usesPartialSuccessStatus: usesPartialSuccessStatus,
+      );
 
   /// Whether a result with errors gets `294` under
   /// `application/graphql-response+json`.
   final bool usesPartialSuccessStatus;
 
-  StatusTable get _statuses =>
-      StatusTable(usesPartialSuccessStatus: usesPartialSuccessStatus);
+  final StatusTable _statuses;
 
   /// [response] as an HTTP response of media type [type]: the response's
   /// headers, then our `content-type`, which wins over any header an
-  /// extension set.
+  /// extension set; `vary: accept`, because the media type and the status
+  /// depend on the `Accept` header.
   HttpResponseData single(SingleResponse response, ResponseMediaType type) =>
       HttpResponseData(
         _statuses.of(response, type),
@@ -49,5 +52,8 @@ final class ResultWriter {
   Map<String, String> _headers(
     Map<String, String> base,
     ResponseMediaType type,
-  ) => const HeaderNames().merged(base, {'content-type': type.contentType});
+  ) => const HeaderNames().varied(
+    const HeaderNames().merged(base, {'content-type': type.contentType}),
+    'accept',
+  );
 }

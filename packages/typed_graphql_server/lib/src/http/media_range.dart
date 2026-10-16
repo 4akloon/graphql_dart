@@ -49,7 +49,9 @@ final class MediaRange {
   }
 
   static bool _isToken(String text) =>
-      text.isNotEmpty && !text.contains(RegExp(r'\s'));
+      text.isNotEmpty && !text.contains(_whitespace);
+
+  static final RegExp _whitespace = RegExp(r'\s');
 
   // The weight given by the first `q` parameter, 1 without one, null when it
   // is malformed.

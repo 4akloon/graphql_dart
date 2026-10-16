@@ -164,7 +164,7 @@ void main() {
       addTearDown(controller.close);
       final response = await http
           .handler(
-            options: const HttpOptions(bodyTimeout: Duration(milliseconds: 50)),
+            options: const HttpOptions(bodyTimeout: Duration(milliseconds: 1)),
           )
           .handle(
             http.postStream(
@@ -176,7 +176,7 @@ void main() {
       expect(isCancelled, isTrue);
       expect(
         await http.message(response),
-        'The request body did not arrive within 50 ms.',
+        'The request body did not arrive within 1 ms.',
       );
     });
 

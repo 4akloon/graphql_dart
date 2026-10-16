@@ -35,6 +35,10 @@ final class HttpRequestData {
 
   /// The body, a stream so the handler can stop reading at its size limit;
   /// a host that has the bytes passes `Stream.value(bytes)`.
+  ///
+  /// A request refused before its body is read (`415`, or `413` by the
+  /// declared length) leaves the stream unlistened: the host must drain it or
+  /// close the connection.
   final Stream<List<int>> body;
 
   /// The host's own request object, never read by the library.

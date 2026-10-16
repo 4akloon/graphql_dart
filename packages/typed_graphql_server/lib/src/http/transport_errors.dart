@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
+import '../execution/error_hook.dart';
 import '../execution/masked_message.dart';
 import '../server/header_names.dart';
 import 'http_response_body.dart';
@@ -25,37 +26,48 @@ final class TransportErrors {
 
   /// A response with [status] and one error coded [code], with [headers] such
   /// as `allow` added.
+  ///
+  /// It varies on `Accept`, as every response of the handler does (the status
+  /// of a refusal can depend on the negotiation), and must not be stored.
   HttpResponseData refusal(
     int status,
     DiagnosticCode code,
     String message, {
     Map<String, String> headers = const {},
-  }) => HttpResponseData(
+  }) => _response(
     status,
-    headers: const HeaderNames().merged(headers, {
-      'content-type': ResponseMediaType.json.contentType,
-    }),
-    body: FixedBody(
-      const JsonBytes().of(
-        RequestErrorResult(
-          errors: [
-            GraphQLError(
-              message,
-              extensions: JsonObject({'code': JsonString(code.id)}),
-            ),
-          ],
-        ).toJson(),
-      ),
+    GraphQLError(
+      message,
+      extensions: JsonObject({'code': JsonString(code.id)}),
     ),
+    headers,
   );
 
   /// The `500` for a bug in the handler: `GQL330`, with the message of
   /// [error] unless errors are masked.
-  HttpResponseData unexpected(Object error) => refusal(
-    500,
-    DiagnosticCode.unexpectedError,
-    _unexpectedText(error),
-  );
+  HttpResponseData unexpected(Object error) =>
+      _response(500, unexpectedError(error), const {});
+
+  /// The `500` for a bug caught at the outermost boundary: like [unexpected],
+  /// after [onError] has seen [error] and [stackTrace] and possibly replaced
+  /// the error; a hook that throws is ignored.
+  HttpResponseData reported(
+    Object error,
+    StackTrace stackTrace,
+    ErrorHook? onError,
+  ) {
+    final standard = unexpectedError(error);
+    GraphQLError? replacement;
+    if (onError != null) {
+      try {
+        replacement = onError(error, stackTrace, standard);
+      } on Object {
+        // A faulty hook must not turn the report into a failure.
+        replacement = null;
+      }
+    }
+    return _response(500, replacement ?? standard, const {});
+  }
 
   /// The `GQL330` error of [error] as [unexpected] writes it, for a place
   /// that is not a whole response, such as the slot of a batch.
@@ -66,15 +78,39 @@ final class TransportErrors {
     }),
   );
 
+  HttpResponseData _response(
+    int status,
+    GraphQLError error,
+    Map<String, String> headers,
+  ) => HttpResponseData(
+    status,
+    headers: const HeaderNames().varied(
+      const HeaderNames().merged(headers, {
+        'content-type': ResponseMediaType.json.contentType,
+        'cache-control': 'no-store',
+      }),
+      'accept',
+    ),
+    body: FixedBody(
+      const JsonBytes().of(RequestErrorResult(errors: [error]).toJson()),
+    ),
+  );
+
   String _unexpectedText(Object error) =>
       maskErrors ? const MaskedMessage().text : _describe(error);
 
-  // A `toString()` that throws must not turn the report into a failure.
+  // A `toString()` that throws must not turn the report into a failure, and a
+  // long one is cut: the text is echoed to the client.
   String _describe(Object error) {
     try {
-      return error.toString();
+      final text = error.toString();
+      if (text.length <= maxDescriptionLength) return text;
+      return '${text.substring(0, maxDescriptionLength - 1)}…';
     } on Object {
       return const MaskedMessage().text;
     }
   }
+
+  /// The longest message of an unmasked unexpected error, in characters.
+  static const int maxDescriptionLength = 500;
 }

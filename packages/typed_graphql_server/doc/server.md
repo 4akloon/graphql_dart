@@ -80,8 +80,8 @@ executed {"data":{"hello":"Hello, Ada!"}}
   subscription. Both have an `outcome` and `headers`, a hint the transport
   adds to its own. `withHeaders` returns a copy with more headers.
 
-`ServerOutcome` is the status-like part, which the HTTP transport (see the HTTP guide) maps
-to a status code:
+`ServerOutcome` is the status-like part, which the HTTP transport (see the
+HTTP guide) maps to a status code:
 
 | Outcome | When |
 |---|---|
@@ -608,6 +608,8 @@ internalError {"errors":[{"message":"Unexpected error.","extensions":{"code":"GQ
 | `GQL403` | CSRF prevention refused the request |
 | `GQL238` | the operation costs more than `maxCost` with the request's variables |
 | `GQL330` | an unexpected error of the context factory, an extension or a persisted query store |
+| `GQL430` | a request sharing a `CostBudget` would pass the shared `maxCost` (HTTP guide) |
+| `GQL431` | an operation type the transport cannot deliver, such as a subscription over plain JSON (HTTP guide) |
 | `GQL410`-`GQL415` | a persisted query or trusted document problem (Persisted Documents guide) |
 
 The parser's `GQL0xx`, the validator's `GQL2xx` and the executor's `GQL3xx`

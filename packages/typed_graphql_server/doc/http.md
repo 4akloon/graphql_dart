@@ -34,7 +34,10 @@ lower-cased), the body as a stream of byte chunks, and optionally the host's
 own request object and a `CancelSignal` the host cancels when the client goes
 away. The body is a stream so that the handler can stop reading at its size
 limit; a host that has the bytes passes `Stream.value(bytes)`. The body is read
-at most once, and only when the request got that far.
+at most once, and only when the request got that far. When the handler
+refuses a request before it reads the body (`415`, or `413` by the declared
+length), the stream is left unlistened: the host must drain it or close the
+connection, or the connection cannot be reused.
 
 An `HttpResponseData` holds a status, headers and a body. The body is a
 `FixedBody` (all bytes known) or a `StreamedBody` (chunks written as they
@@ -151,7 +154,8 @@ GraphQL-over-HTTP response, and its body is
 `294` tells a client that reads only the status that the result is partial.
 A legacy client always gets `200` for an executed result, whatever it holds.
 
-The refusals before the pipeline, in the order they are checked:
+The refusals of the transport, in the order they are checked (the last row is
+the pipeline's own, for a request that reached it):
 
 | Check | Status | Code |
 |---|---|---|
@@ -181,13 +185,16 @@ The refusals before the pipeline, in the order they are checked:
 | `maxUriLength` | 8192 characters | a longer URI is `414`, before anything else |
 | `usesPartialSuccessStatus` | `true` | `294` for an executed result with errors |
 | `batching` | `null` | a `BatchPolicy` turns batching on |
+| `onError` | `null` | sees a bug in the handler and its stack trace before the `500` is written (the pipeline's own hook is `GraphQLServer.onError`) |
 
 A `content-length` header can lie or be absent, so the handler refuses a
 declared length over the limit without reading, and otherwise counts the bytes
 that really arrive: it cancels the stream the moment the count passes the limit,
 so it never holds more than `maxBodyBytes` plus one chunk. The time limit covers
 the whole body, not each chunk, so a client that trickles one byte at a time is
-stopped too.
+stopped too. If the host's cancel signal fires while the body is still
+arriving, reading stops and the request is refused with `400` (`GQL424`) as if
+the connection had failed.
 
 The handler bounds only what it controls. A client that is slow to send its
 headers, or that holds a connection open and idle, is not seen by the handler
