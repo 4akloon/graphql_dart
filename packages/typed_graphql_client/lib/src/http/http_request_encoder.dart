@@ -93,10 +93,11 @@ final class HttpRequestEncoder({
     return TransportRequest(
       method: 'POST',
       uri: uri,
-      headers: headersFor(request, {
+      headers: {
+        ...headersFor(request, const {'graphql-require-preflight': 'true'}),
+        // Last, so no configured header can contradict the boundary.
         'content-type': multipart.contentType,
-        'graphql-require-preflight': 'true',
-      }),
+      },
       body: multipart.body,
       contentLength: multipart.length,
       abortTrigger: abortTrigger,

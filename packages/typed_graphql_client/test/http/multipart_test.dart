@@ -193,4 +193,28 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('keeps the multipart content type whatever headers say', () async {
+    final file = UploadFile.fromBytes([1], filename: 'a');
+    final request = upload(JsonObject({'file': JsonString(file.marker)}), [
+      file,
+    ]);
+    await send(
+      HttpLink(
+        uri: Uri.parse('https://example.com/graphql'),
+        transport: transport,
+        headers: {'Content-Type': 'application/json'},
+        random: ZeroRandom(),
+      ),
+      request.withContext(
+        request.context.withEntry(
+          RequestHeaders({'content-type': 'text/plain'}),
+        ),
+      ),
+    );
+    expect(
+      transport.requests.single.headers['content-type'],
+      'multipart/form-data; boundary=$boundary',
+    );
+  });
 }
