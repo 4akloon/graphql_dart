@@ -15,6 +15,9 @@ final class LoopbackServer {
 
   final HttpServer _server;
 
+  /// The port the server listens on.
+  int get port => _server.port;
+
   /// The HTTP address of the server.
   Uri get httpUri => Uri.parse('http://127.0.0.1:${_server.port}/graphql');
 

@@ -11,6 +11,7 @@ import 'package:web_socket_channel/io.dart';
 
 import 'support/frame_reader.dart';
 import 'support/loopback_server.dart';
+import 'support/raw_web_socket.dart';
 import 'support/shelf_fixture.dart';
 
 void main() {
@@ -146,12 +147,39 @@ void main() {
         webSocketPingInterval: const Duration(milliseconds: 30),
       ).call,
     );
+    final client = await RawWebSocket.open(server.port);
+    addTearDown(client.destroy);
+    // A ping frame is 0x89 and a zero length, the first thing the server
+    // writes after the handshake when nobody sent it a message.
+    await client
+        .until((frames) => frames.length >= 2)
+        .timeout(const Duration(seconds: 5));
+    expect(client.frames.take(2), [0x89, 0]);
+  });
+
+  test('closes the socket on a frame larger than a message may be', () async {
+    await serve(options: const GraphQLWsOptions(maxMessageLength: 100));
+    final client = await RawWebSocket.open(server.port);
+    addTearDown(client.destroy);
+    await client.until((_) => client.statusLine != null);
+    // The header alone declares 1 MiB; no payload follows, so the close
+    // proves the frame was refused before it was buffered.
+    client.sendTextHeader(1 << 20);
+    await client
+        .until((frames) => frames.contains(0x88))
+        .timeout(const Duration(seconds: 5));
+    final close = client.frames.skipWhile((byte) => byte != 0x88).toList();
+    // dart:io answers 1002 (protocol error), not 1009, to such a frame.
+    expect(close.sublist(2, 4), [0x03, 0xEA]);
+  });
+
+  test('accepts a frame under the limit of a small message', () async {
+    await serve(options: const GraphQLWsOptions(maxMessageLength: 100));
     final client = await connect();
-    client.send({'type': 'connection_init'});
-    await client.next();
-    // A ping the client does not answer would end the connection; the pong
-    // dart:io sends by itself keeps it open past several intervals.
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    expect(client.channel.closeCode, isNull);
+    client.send({
+      'type': 'connection_init',
+      'payload': {'k': 'x' * 40},
+    });
+    expect((await client.next())['type'], 'connection_ack');
   });
 }

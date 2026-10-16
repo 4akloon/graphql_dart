@@ -17,6 +17,14 @@ void main() {
   late HttpClient client;
   late Directory directory;
 
+  // Waits for the server to catch up with an event the test cannot observe;
+  // the test's own timeout is the deadline.
+  Future<void> until(bool Function() isDone) async {
+    while (!isDone()) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+  }
+
   setUp(() {
     fixture = EndToEndFixture();
     client = HttpClient();
@@ -183,6 +191,46 @@ void main() {
     final (response, _) = await upload('big.txt', 'x' * 100);
     expect(response.statusCode, 413);
     expect(directory.listSync(), isEmpty);
+  });
+
+  test('removes the file of an upload whose client disconnects', () async {
+    await serveUploads(const UploadLimits());
+    final socket = await Socket.connect(
+      InternetAddress.loopbackIPv4,
+      server.port,
+    );
+    const boundary = 'cutBoundary';
+    final head = [
+      '--$boundary',
+      'content-disposition: form-data; name="operations"',
+      '',
+      jsonEncode({
+        'query': r'mutation ($file: Upload!) { upload(file: $file) }',
+        'variables': {'file': null},
+      }),
+      '--$boundary',
+      'content-disposition: form-data; name="map"',
+      '',
+      '{"0":["variables.file"]}',
+      '--$boundary',
+      'content-disposition: form-data; name="0"; filename="cut.txt"',
+      'content-type: text/plain',
+      '',
+      'the first bytes of a file that never ends',
+    ].join('\r\n');
+    socket.write(
+      'POST /graphql HTTP/1.1\r\n'
+      'host: 127.0.0.1\r\n'
+      'content-type: multipart/form-data; boundary=$boundary\r\n'
+      'graphql-require-preflight: true\r\n'
+      'content-length: ${head.length + 100000}\r\n'
+      '\r\n'
+      '$head',
+    );
+    await socket.flush();
+    await until(() => directory.listSync().isNotEmpty);
+    socket.destroy();
+    await until(() => directory.listSync().isEmpty);
   });
 
   test('answers a batch of two queries with two results', () async {

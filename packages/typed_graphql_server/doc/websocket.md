@@ -173,7 +173,8 @@ completing in a loop.
 What the limits do not cover:
 
 - `maxMessageLength` is checked after the adapter has buffered the frame, so
-  an adapter must cap the size of a frame before it buffers it.
+  an adapter must cap the size of a frame before it buffers it
+  (`typed_graphql_shelf` does, per frame).
 - The `Origin` check ignores the scheme and trusts the `Host` header, which
   a DNS-rebinding page controls; it does not replace authentication in
   `onConnect`.

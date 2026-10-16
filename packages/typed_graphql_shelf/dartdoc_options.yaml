@@ -2,7 +2,7 @@ dartdoc:
   categories:
     shelf:
       markdown: doc/shelf.md
-      displayName: shelf
+      displayName: Shelf
   categoryOrder:
     - shelf
   showUndocumentedCategories: true

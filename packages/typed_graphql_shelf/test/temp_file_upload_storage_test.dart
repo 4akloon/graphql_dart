@@ -4,10 +4,16 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:test/test.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
+import 'package:typed_graphql_shelf/src/file_upload.dart';
 import 'package:typed_graphql_shelf/typed_graphql_shelf.dart';
+
+final bool _isRoot =
+    !Platform.isWindows &&
+    Process.runSync('id', ['-u']).stdout.toString().trim() == '0';
 
 void main() {
   late Directory directory;
@@ -130,14 +136,103 @@ void main() {
     expect(directory.listSync(), isEmpty);
   });
 
-  test('stores in the system temporary directory by default', () async {
+  test('stores in a private directory by default', () async {
     final byDefault = TempFileUploadStorage();
     final upload = await byDefault.store('a', 'b', Stream.value([1]));
-    addTearDown(() => byDefault.release(upload));
+    addTearDown(() async {
+      await byDefault.release(upload);
+      (upload as FileUpload).file.parent.deleteSync();
+    });
+    final parent = (upload as FileUpload).file.parent;
+    expect(parent.parent.path, Directory.systemTemp.path);
     expect(await upload.openRead().toList(), [
       [1],
     ]);
   });
+
+  test(
+    'makes the default directory readable by its owner only',
+    () async {
+      final byDefault = TempFileUploadStorage();
+      final upload = await byDefault.store('a', 'b', Stream.value([1]));
+      final parent = (upload as FileUpload).file.parent;
+      addTearDown(() async {
+        await byDefault.release(upload);
+        parent.deleteSync();
+      });
+      expect(FileStat.statSync(parent.path).mode & 511, 448);
+    },
+    skip: Platform.isWindows ? 'POSIX modes only' : false,
+  );
+
+  test('uses one default directory for every upload', () async {
+    final byDefault = TempFileUploadStorage();
+    final first = await byDefault.store('a', 'b', Stream.value([1]));
+    final second = await byDefault.store('a', 'b', Stream.value([2]));
+    addTearDown(() async {
+      await byDefault.release(first);
+      await byDefault.release(second);
+      (first as FileUpload).file.parent.deleteSync();
+    });
+    expect(
+      (first as FileUpload).file.parent.path,
+      (second as FileUpload).file.parent.path,
+    );
+  });
+
+  test('refuses to reuse a file that already exists', () async {
+    final first = TempFileUploadStorage(
+      directory: directory,
+      random: Random(7),
+    );
+    final second = TempFileUploadStorage(
+      directory: directory,
+      random: Random(7),
+    );
+    final kept = await first.store('a', 'b', Stream.value([1]));
+    await expectLater(
+      second.store('a', 'b', Stream.value([2])),
+      throwsA(isA<PathExistsException>()),
+    );
+    expect(await kept.openRead().toList(), [
+      [1],
+    ]);
+  });
+
+  test('fails the store when the file vanishes before its length', () async {
+    Stream<List<int>> vanishing() async* {
+      yield [1];
+      for (final entry in directory.listSync()) {
+        entry.deleteSync();
+      }
+    }
+
+    await expectLater(
+      storage.store('a', 'b', vanishing()),
+      throwsA(isA<FileSystemException>()),
+    );
+    expect(directory.listSync(), isEmpty);
+  });
+
+  test(
+    'reports the original failure when the partial file cannot be deleted',
+    () async {
+      Stream<List<int>> failing() async* {
+        yield [1];
+        Process.runSync('chmod', ['500', directory.path]);
+        throw const FormatException('too long');
+      }
+
+      addTearDown(() => Process.runSync('chmod', ['700', directory.path]));
+      await expectLater(
+        storage.store('a', 'b', failing()),
+        throwsA(isA<FormatException>()),
+      );
+    },
+    skip: Platform.isWindows || _isRoot
+        ? 'needs POSIX modes and a user that is not root'
+        : false,
+  );
 
   test('cannot read an upload after its release', () async {
     final upload = await storage.store('a', 'b', Stream.value([1]));

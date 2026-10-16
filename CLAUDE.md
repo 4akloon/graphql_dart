@@ -611,7 +611,7 @@ Guards: `TransportErrors` (`reported`, `notify`), `GraphQLWsHandler` and
 `SocketSession` closing a dead socket, `SocketErrorReporter` calling a hook.
 Two catches rethrow: `StreamOperations._execute` frees the operation id, and
 `StoredUploads.release` finishes the other releases before it rethrows the
-first `Error`, like a `try`/`finally`. The shelf package has no `on Object`.
+first `Error`, like a `try`/`finally`. The shelf package has one boundary, `GraphQLShelfHandler.call`, and a guard around its hook.
 `upload/` (M7b): the scalar codec has no request context, so `MultipartReader`
 (over `package:mime`, `WatchedBody` for the byte limit, the timeout, the
 client's cancel signal and, through `PartHeaderScanner`, the 8 KiB limit on a
@@ -662,7 +662,7 @@ React 18.3.1 and GraphiQL 3.9.0 from jsDelivr with Subresource Integrity and
 sends its queries to the request's own path (escaped as a JSON string).
 
 **Shelf** (`packages/typed_graphql_shelf/lib/src/`; M7e). Depends on
-`typed_graphql_server`, `shelf`, `shelf_web_socket` and `web_socket_channel`;
+`typed_graphql_server`, `shelf`, `stream_channel` and `web_socket_channel`;
 it is the only transport package that imports `dart:io`, and only for
 `TempFileUploadStorage`. `GraphQLShelfHandler<C>` is a shelf `Handler`
 (`call`) over a `GraphQLHttpHandler`: `RequestConversion` makes the
@@ -673,12 +673,17 @@ reaches the client when written). `shelf_io` reports no client that went away
 outside a streamed body, so no `cancelSignal` is given; for an event stream it
 cancels the body's subscription, which stops the work. With `webSocket` set,
 `WebSocketUpgrade` takes a `GET` with `upgrade: websocket`: the Origin check
-first (`allowsUpgrade`, else a `403` JSON refusal with `GQL403`, before
-`shelf_web_socket` is reached), then `webSocketHandler` with the one
-subprotocol and `webSocketPingInterval`, whose connection becomes a
-`WebSocketChannelSocket` for `GraphQLWsHandler.serve`. `TempFileUploadStorage`
+first (`allowsUpgrade`, else a `403` JSON refusal with `GQL403`), then
+`UpgradeHandshake` (a `400` with `GQL425`), then the adapter hijacks, writes
+the `101` itself and wraps the socket in `WebSocket.fromUpgradedSocket` with
+`maxPayloadLength` (`3 * maxMessageLength + 1024`; `shelf_web_socket` gives no
+limit) and `webSocketPingInterval`; the connection becomes a
+`WebSocketChannelSocket` for `GraphQLWsHandler.serve`. `call` is the shelf
+package's one `on Object` BOUNDARY (a 500 `GQL330` through `JsonRefusal`,
+reported to `HttpOptions.onError`; `HijackException` is rethrown). `TempFileUploadStorage`
 writes each upload to an exclusive file with a random name (never the
-client's), deletes a partial file when the content stream fails and the file
+client's) in a directory it makes under the system temp and `chmod`s to
+`0700` (dart:io's `createTemp` honours the umask), deletes a partial file when the content stream fails and the file
 on `release`; its `FileUpload` reads it back. The tests run the transports end
 to end over `shelf_io` on a loopback port (`test/end_to_end_*_test.dart`, with
 `LoopbackServer`); the guide's program is run by `test/doc/`.

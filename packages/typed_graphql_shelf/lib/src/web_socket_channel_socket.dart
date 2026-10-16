@@ -5,8 +5,8 @@ import 'package:meta/meta.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-/// A [GraphQLSocket] over the [WebSocketChannel] that `shelf_web_socket`
-/// hands to a connection.
+/// A [GraphQLSocket] over the [WebSocketChannel] that the upgrade makes for a
+/// connection.
 @internal
 final class WebSocketChannelSocket implements GraphQLSocket {
   /// Wraps [_channel], whose negotiated subprotocol is [protocol].

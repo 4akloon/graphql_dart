@@ -75,12 +75,23 @@ void main() {
     expect(await response.readAsString(), '{"data":{"hello":"world"}}');
   });
 
-  test('hands a same-host upgrade to the WebSocket handler', () async {
-    final handler = GraphQLShelfHandler<Object?>(
-      fixture.server(),
-      webSocket: const GraphQLWsOptions(),
-    );
-    final response = await handler(
+  GraphQLShelfHandler<Object?> upgrading({
+    HttpOptions http = const HttpOptions(),
+  }) => GraphQLShelfHandler<Object?>(
+    fixture.server(),
+    http: http,
+    webSocket: const GraphQLWsOptions(),
+  );
+
+  Future<Map<String, Object?>> body(Response response) async =>
+      jsonDecode(await response.readAsString()) as Map<String, Object?>;
+
+  String? codeOf(Map<String, Object?> body) =>
+      (((body['errors']! as List).single as Map)['extensions'] as Map)['code']
+          as String?;
+
+  test('refuses a version other than 13 with a JSON 400', () async {
+    final response = await upgrading()(
       upgrade(
         headers: {
           'origin': 'http://example.test',
@@ -89,8 +100,99 @@ void main() {
         },
       ),
     );
-    // shelf_web_socket answers 404 to a version it does not speak, which
-    // shows the request got past the Origin check.
-    expect(response.statusCode, 404);
+    expect(response.statusCode, 400);
+    expect(response.headers['content-type'], startsWith('application/json'));
+    expect(codeOf(await body(response)), 'GQL425');
   });
+
+  test('refuses an upgrade without Connection: Upgrade with JSON', () async {
+    final response = await upgrading()(
+      Request(
+        'GET',
+        queryUri,
+        headers: {
+          'graphql-require-preflight': 'true',
+          'upgrade': 'websocket',
+          'sec-websocket-version': '13',
+          'sec-websocket-key': 'dGhlIHNhbXBsZSBub25jZQ==',
+        },
+      ),
+    );
+    expect(response.statusCode, 400);
+    expect(codeOf(await body(response)), 'GQL425');
+  });
+
+  test('refuses an upgrade without a key', () async {
+    final response = await upgrading()(
+      Request(
+        'GET',
+        queryUri,
+        headers: {
+          'connection': 'Upgrade',
+          'upgrade': 'websocket',
+          'sec-websocket-version': '13',
+        },
+      ),
+    );
+    expect(response.statusCode, 400);
+  });
+
+  test('answers 500 GQL330 when the request cannot be hijacked', () async {
+    Object? reported;
+    final response = await upgrading(
+      http: HttpOptions(
+        onError: (error, stackTrace, standard) {
+          reported = error;
+          return null;
+        },
+      ),
+    )(upgrade());
+    expect(response.statusCode, 500);
+    expect(codeOf(await body(response)), 'GQL330');
+    expect(reported, isA<StateError>());
+  });
+
+  test('answers 500 GQL330 when a middleware already read the body', () async {
+    Object? reported;
+    final handler = GraphQLShelfHandler<Object?>(
+      fixture.server(),
+      http: HttpOptions(
+        onError: (error, stackTrace, standard) {
+          reported = error;
+          return null;
+        },
+      ),
+    );
+    final request = Request('POST', uri, body: '{}');
+    await request.read().drain<void>();
+    final response = await handler(request);
+    expect(response.statusCode, 500);
+    expect(codeOf(await body(response)), 'GQL330');
+    expect(reported, isA<StateError>());
+  });
+
+  test('still answers when the error hook throws', () async {
+    final handler = GraphQLShelfHandler<Object?>(
+      fixture.server(),
+      http: HttpOptions(
+        onError: (error, stackTrace, standard) => throw StateError('hook'),
+      ),
+    );
+    final request = Request('POST', uri, body: '{}');
+    await request.read().drain<void>();
+    expect((await handler(request)).statusCode, 500);
+  });
+
+  for (final interval in [Duration.zero, const Duration(seconds: -1)]) {
+    test('refuses the ping interval $interval', () {
+      expect(
+        () => GraphQLShelfHandler<Object?>(
+          fixture.server(),
+          webSocket: const GraphQLWsOptions(),
+          webSocketPingInterval: interval,
+        ),
+        throwsArgumentError,
+      );
+    });
+  }
 }

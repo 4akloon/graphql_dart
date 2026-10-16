@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:meta/meta.dart';
 import 'package:typed_graphql_server/typed_graphql_server.dart';
 
 import 'file_upload.dart';
@@ -13,15 +14,28 @@ import 'file_upload.dart';
 /// named at random, never after what the client sent, so a hostile file name
 /// cannot reach another path.
 ///
+/// Without a `directory`, the storage makes its own under
+/// `Directory.systemTemp` on the first upload and sets its mode to `0700` on
+/// POSIX (with `chmod`; if that fails the upload fails), so other local users
+/// can neither list nor open the files. The
+/// directory is left behind, empty, when the process ends: the system's
+/// temporary directory cleaning removes it. A `directory` you give is used as
+/// it is, with its own permissions, and must exist: make it private yourself.
+///
 /// {@category shelf}
 final class TempFileUploadStorage implements UploadStorage {
   /// Creates a storage that writes under [directory], which must exist, or
-  /// under `Directory.systemTemp` when it is null.
-  TempFileUploadStorage({Directory? directory})
-    : _directory = directory ?? Directory.systemTemp;
+  /// under a private directory of its own when it is null. [random] is for
+  /// tests that need two storages to choose the same name.
+  TempFileUploadStorage({
+    this.directory,
+    @visibleForTesting Random? random,
+  }) : _random = random ?? Random.secure();
 
-  final Directory _directory;
-  final Random _random = Random.secure();
+  /// The directory given to the constructor, or null for the private one.
+  final Directory? directory;
+  final Random _random;
+  Future<Directory>? _privateDirectory;
 
   @override
   Future<Upload> store(
@@ -35,13 +49,15 @@ final class TempFileUploadStorage implements UploadStorage {
     try {
       await sink.addStream(content);
       await sink.close();
+      final upload = FileUpload(file, filename, mediaType, await file.length());
       isStored = true;
+      return upload;
     } finally {
-      // A failed content stream (a limit, a broken request) must not leave a
-      // partial file; its own failure goes on to the caller.
+      // A failed content stream (a limit, a broken request) or a file that
+      // cannot be measured must not leave a partial file; its own failure goes
+      // on to the caller.
       if (!isStored) await _discard(file, sink);
     }
-    return FileUpload(file, filename, mediaType, await file.length());
   }
 
   @override
@@ -59,11 +75,44 @@ final class TempFileUploadStorage implements UploadStorage {
   // `exclusive` makes the creation fail rather than reuse a file that
   // another request, or another process, already made.
   Future<File> _newFile() async {
+    final target = await _target();
     final name = [
       for (var i = 0; i < 16; i++)
         _random.nextInt(256).toRadixString(16).padLeft(2, '0'),
     ].join();
-    return File('${_directory.path}/upload_$name').create(exclusive: true);
+    return File('${target.path}/upload_$name').create(exclusive: true);
+  }
+
+  Future<Directory> _target() => switch (directory) {
+    final given? => Future.value(given),
+    null => _privateDirectory ??= _createPrivate(),
+  };
+
+  // `createTemp` makes the directory with the process's umask, not `0700`
+  // (dart:io has no `chmod`), so on POSIX the mode is set before any file is
+  // made, and a directory that cannot be made private is not used. A failure
+  // is not remembered: the next upload tries again.
+  Future<Directory> _createPrivate() async {
+    try {
+      final directory = await Directory.systemTemp.createTemp(
+        'typed_graphql_uploads_',
+      );
+      if (!Platform.isWindows) await _restrict(directory);
+      return directory;
+    } on Exception {
+      _privateDirectory = null;
+      rethrow;
+    }
+  }
+
+  Future<void> _restrict(Directory directory) async {
+    final result = await Process.run('chmod', ['700', directory.path]);
+    if (result.exitCode == 0) return;
+    await directory.delete();
+    throw FileSystemException(
+      'Cannot make the upload directory private',
+      directory.path,
+    );
   }
 
   Future<void> _discard(File file, IOSink sink) async {
@@ -75,8 +124,9 @@ final class TempFileUploadStorage implements UploadStorage {
     }
     try {
       await file.delete();
-    } on PathNotFoundException {
-      // Nothing was written.
+    } on FileSystemException {
+      // Nothing was written, or the file cannot be removed; either way the
+      // original failure is the one the caller sees.
     }
   }
 }

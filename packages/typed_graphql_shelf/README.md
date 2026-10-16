@@ -10,7 +10,7 @@
 > is a shelf `Handler` that serves a `GraphQLServer` over HTTP (`GET` and
 > `POST`, JSON and multipart uploads, batching, server-sent events) and, with
 > `webSocket` set, over graphql-ws; `TempFileUploadStorage` keeps uploaded
-> files in temporary files; under `ServerProfile.development` a browser that
+> files in a private temporary directory; under `ServerProfile.development` a browser that
 > opens the endpoint gets the GraphiQL page. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
