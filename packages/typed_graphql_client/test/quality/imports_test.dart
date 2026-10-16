@@ -55,6 +55,16 @@ void main() {
       );
     });
 
+    test('reads a Windows path with backslashes', () {
+      expect(
+        rule.check(
+          r'lib\src\link\a.dart',
+          "import '../client/b.dart';\n",
+        ),
+        isEmpty,
+      );
+    });
+
     test('rejects dart:io', () {
       expect(
         rule.check('lib/src/link/a.dart', "import 'dart:io';\n"),

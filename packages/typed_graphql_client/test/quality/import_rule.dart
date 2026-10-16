@@ -69,7 +69,7 @@ final class ImportRule {
   /// Whether the relative [target], read from [filePath], leaves `lib/`.
   bool _escapes(String filePath, String target) {
     final parts = [
-      ...filePath.replaceAll(r'\\', '/').split('/').where((p) => p != '.'),
+      ...filePath.replaceAll(r'\', '/').split('/').where((p) => p != '.'),
     ]..removeLast();
     for (final segment in target.split('/')) {
       if (segment == '..') {
