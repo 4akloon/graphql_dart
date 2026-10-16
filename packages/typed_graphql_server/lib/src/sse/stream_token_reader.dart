@@ -12,6 +12,10 @@ final class StreamTokenReader {
   /// The header that carries the token.
   static const String header = 'x-graphql-event-stream-token';
 
+  /// The longest operation id, in UTF-16 code units, the same bound as
+  /// graphql-ws's `maxIdLength`; a longer one counts as missing.
+  static const int maxOperationIdLength = 256;
+
   /// The token of [request]: the header, else the `token` parameter. Null when
   /// there is none or it is empty.
   String? tokenOf(HttpRequestData request) {
@@ -20,9 +24,12 @@ final class StreamTokenReader {
     return _parameter(request, 'token');
   }
 
-  /// The `operationId` parameter of [request], or null.
-  String? operationIdOf(HttpRequestData request) =>
-      _parameter(request, 'operationId');
+  /// The `operationId` parameter of [request], or null when it is missing or
+  /// longer than [maxOperationIdLength].
+  String? operationIdOf(HttpRequestData request) {
+    final id = _parameter(request, 'operationId');
+    return id != null && id.length <= maxOperationIdLength ? id : null;
+  }
 
   // A query string with a bad escape throws when it is decoded; to the
   // reader it is no parameter.

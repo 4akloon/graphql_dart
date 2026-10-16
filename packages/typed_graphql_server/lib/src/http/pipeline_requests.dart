@@ -2,7 +2,6 @@ import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../server/cost_budget.dart';
-import '../server/request_info.dart';
 import '../server/server_request.dart';
 import 'http_request_data.dart';
 
@@ -21,12 +20,7 @@ final class PipelineRequests {
     CostBudget? costBudget,
   }) => ServerRequest(
     params: params,
-    info: RequestInfo(
-      method: http.method,
-      uri: http.uri,
-      headers: http.headers,
-      source: http.source,
-    ),
+    info: http.info,
     cancelSignal: http.cancelSignal,
     allowedOperationTypes: allowedOperationTypes,
     costBudget: costBudget,

@@ -140,8 +140,26 @@ void main() {
       expect(await sse.http.code(response), 'GQL435');
       expect(
         await sse.http.message(response),
-        'A request on an event stream needs extensions.operationId.',
+        'A request on an event stream needs extensions.operationId, '
+        'at most 256 characters.',
       );
+    });
+
+    test('an operation id of 257 characters is 400 GQL435', () async {
+      final token = await sse.reserve(handler);
+      final response = await handler.handle(
+        sse.operation(token, '{ hello }', id: 'a' * 257),
+      );
+      expect(response.status, 400);
+      expect(await sse.http.code(response), 'GQL435');
+    });
+
+    test('an operation id of 256 characters is accepted', () async {
+      final token = await sse.reserve(handler);
+      final response = await handler.handle(
+        sse.operation(token, '{ hello }', id: 'a' * 256),
+      );
+      expect(response.status, 202);
     });
 
     test('an operation id that is not a string is 400 GQL435', () async {

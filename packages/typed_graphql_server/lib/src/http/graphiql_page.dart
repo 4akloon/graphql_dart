@@ -39,6 +39,8 @@ final class GraphiQLPage {
     200,
     headers: const {
       'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'no-store',
+      'vary': 'accept',
       'x-content-type-options': 'nosniff',
       'referrer-policy': 'no-referrer',
       'x-frame-options': 'DENY',

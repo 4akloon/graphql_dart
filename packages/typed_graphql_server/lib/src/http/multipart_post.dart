@@ -2,7 +2,6 @@ import 'package:meta/meta.dart';
 import 'package:typed_graphql/typed_graphql.dart';
 
 import '../server/csrf_prevention.dart';
-import '../server/request_info.dart';
 import '../upload/boundary_syntax.dart';
 import '../upload/multipart_reader.dart';
 import '../upload/multipart_result.dart';
@@ -51,7 +50,7 @@ final class MultipartPost {
   /// cross-site form must not cost a single file write (deviation 8).
   Future<MultipartResult> read(HttpRequestData request) {
     final prevention = csrfPrevention;
-    if (prevention != null && !prevention.allows(_info(request))) {
+    if (prevention != null && !prevention.allows(request.info)) {
       return _refused(
         403,
         DiagnosticCode.csrfRequestBlocked,
@@ -99,13 +98,6 @@ final class MultipartPost {
       'The multipart boundary is not valid.',
     );
   }
-
-  RequestInfo _info(HttpRequestData request) => RequestInfo(
-    method: request.method,
-    uri: request.uri,
-    headers: request.headers,
-    source: request.source,
-  );
 
   Future<MultipartResult> _refused(
     int status,

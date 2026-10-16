@@ -597,11 +597,21 @@ refusal is `TransportErrors`, always `application/json` and `no-store`.
 `BatchRunner` decodes every item before running the first, then runs them in
 order, each through the pipeline with one shared `CostBudget`, and stops
 between items when the client has gone; an array is counted, not decoded,
-before the size check. The outermost boundary of `handle` is the one place
-that catches `Object`, as `GraphQLServer.handle` does: it reports through
-`HttpOptions.onError` and never rethrows. `StoredUploads.release` also
-catches `Object`, only to release the remaining files and rethrow the first
-`Error`, like a `try`/`finally`.
+before the size check. Request order in `handle`: URI length, the single
+connection routes' `early` (`PUT`, `DELETE`, a connect or an unknown token),
+the method, GraphiQL, then `Accept`.
+`on Object` appears in `http/`, `sse/` and `websocket/` as a BOUNDARY (reports
+through the hook, never rethrows, the caller still gets a response or a close)
+or a GUARD (best effort, swallows a faulty hook or a dead socket, and the
+failure it hides was already reported). Boundaries: `GraphQLHttpHandler.handle`
+(through `HttpOptions.onError`), `GraphQLWsHandler.serve`, `SocketSession`'s
+frame handling and `SocketOperation` (through `SocketErrorHook`); the server
+pipeline's `GraphQLServer.handle` and `PipelineErrors` follow the same rule.
+Guards: `TransportErrors` (`reported`, `notify`), `GraphQLWsHandler` and
+`SocketSession` closing a dead socket, `SocketErrorReporter` calling a hook.
+Two catches rethrow: `StreamOperations._execute` frees the operation id, and
+`StoredUploads.release` finishes the other releases before it rethrows the
+first `Error`, like a `try`/`finally`. The shelf package has no `on Object`.
 `upload/` (M7b): the scalar codec has no request context, so `MultipartReader`
 (over `package:mime`, `WatchedBody` for the byte limit, the timeout, the
 client's cancel signal and, through `PartHeaderScanner`, the 8 KiB limit on a

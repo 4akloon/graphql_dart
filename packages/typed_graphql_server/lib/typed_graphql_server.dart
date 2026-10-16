@@ -14,7 +14,7 @@
 /// batching, multipart file uploads through `Uploads`, and GraphQL over
 /// server-sent events in both modes of graphql-sse through `SseOptions`)
 /// and graphql-ws (`GraphQLWsHandler` over any `GraphQLSocket`). The shelf
-/// adapter comes with the rest of M7. See the package README.
+/// adapter is the package `typed_graphql_shelf`. See the package README.
 library;
 
 export 'src/authorization/authorization.dart';

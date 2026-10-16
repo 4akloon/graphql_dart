@@ -338,6 +338,32 @@ guide). Compare the method as the framework gives it; the handler ignores its
 case. A `StreamedBody` is an event stream: write it as it arrives, without
 buffering, and cancel the subscription when the client goes away.
 
+Two facts about the host decide how well the limits protect a deployment:
+
+- A request refused before its body is read (`413` by the declared length,
+  `415`) leaves the body stream unlistened. A host that cannot answer before
+  it has consumed the body (shelf's `shelf_io` delivers the response only after
+  the whole body has arrived, and cancelling the subscription destroys the
+  connection without a response) therefore holds a slow client until it
+  finishes. Run such a host behind a proxy that caps body size and time.
+- A handler cannot stop work for a client it does not know has gone. A host
+  that gives no `cancelSignal` (shelf gives none for a fixed response) lets
+  a long query run to its end after a disconnect. `ServerProfile.production`
+  sets no `timeout`, so set one (`ServerProfile.withTimeout`, or
+  `ExecutionOptions.timeout`) wherever the host cannot report disconnects.
+
+## Error hooks
+
+The hooks differ in what they may do. The HTTP `ErrorHook`
+(`HttpOptions.onError`, `GraphQLServer.onError`) sees the error and may return
+a replacement `GraphQLError` for the response. The graphql-ws `SocketErrorHook`
+(`GraphQLWsOptions.onError`) only observes: the close code or message the
+client gets is fixed. Server-sent events have no hook of their own and none is
+reachable: an event stream starts only after the pipeline has answered, and
+what the pipeline fails with before that is an HTTP refusal handled by
+`HttpOptions.onError`, so a failure after the stream started cannot happen
+today (a source that fails is a `GQL340` result in the stream).
+
 ## Security notes
 
 - **CSRF prevention stays in the pipeline.** A `GET` needs a header such as
@@ -365,5 +391,9 @@ A missing `Accept` or `*/*` ranks them equally, so it is still a GraphQL
 request. The page loads React and GraphiQL 3.9.0 from jsDelivr, each pinned
 by version and Subresource Integrity, sends its queries to the path it was
 opened at, and is served with `nosniff`, `no-referrer` and `x-frame-options:
-DENY`. Subscriptions are not run from the page. With the switch off, the same
+DENY`, with `cache-control: no-store` and `vary: accept`. It carries no
+`content-security-policy`: its script is inline, so a nonce is not possible
+without per-response state, and the assets are protected by Subresource
+Integrity only. It is meant for development. Subscriptions are not run from
+the page. With the switch off, the same
 request is an ordinary one and, with no query, `GQL400`.

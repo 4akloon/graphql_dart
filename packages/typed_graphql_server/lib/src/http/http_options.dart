@@ -63,6 +63,9 @@ final class HttpOptions {
   /// the pipeline, which has its own hook) before it is answered with `500`
   /// and `GQL330`, like the `onError` of `GraphQLServer`; it may return a
   /// replacement error, and one that throws is ignored.
+  ///
+  /// It is also called, with the same replacement rule, when [uploads] fails to
+  /// store or release a file.
   final ErrorHook? onError;
 
   /// The event streams of GraphQL over server-sent events, or null to refuse

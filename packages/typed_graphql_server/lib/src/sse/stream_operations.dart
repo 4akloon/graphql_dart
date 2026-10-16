@@ -82,14 +82,18 @@ final class StreamOperations<C> {
     ResponseMediaType type,
   ) async {
     final id = switch (params.extensions?['operationId']) {
-      JsonString(:final value) when value.isNotEmpty => value,
+      JsonString(:final value)
+          when value.isNotEmpty &&
+              value.length <= StreamTokenReader.maxOperationIdLength =>
+        value,
       _ => null,
     };
     if (id == null) {
       return errors.refusal(
         400,
         DiagnosticCode.operationIdRequired,
-        'A request on an event stream needs extensions.operationId.',
+        'A request on an event stream needs extensions.operationId, '
+        'at most ${StreamTokenReader.maxOperationIdLength} characters.',
       );
     }
     return _refusalFor(connection, id) ??

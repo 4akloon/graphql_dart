@@ -61,7 +61,9 @@ dependencies:
   ([Schema Builder](doc/schema_builder.md#objects-and-fields),
   [Execution](doc/execution.md#executing-a-request)).
 - **You do not need it when** you only call a GraphQL server: that is the
-  client package, not usable yet. Today it has the HTTP and graphql-ws
+  [client package](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_client)
+  (links for HTTP, WebSocket and server-sent events; its cache is not built
+  yet). Today this package has the HTTP and graphql-ws
   handlers; for shelf the adapter is
   [typed_graphql_shelf](https://github.com/4akloon/graphql_dart/tree/main/packages/typed_graphql_shelf),
   and for any other framework a host converts its request into an

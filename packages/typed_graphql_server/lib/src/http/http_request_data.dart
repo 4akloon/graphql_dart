@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../cancellation/cancel_signal.dart';
 import '../server/header_names.dart';
+import '../server/request_info.dart';
 
 /// One HTTP request as a host hands it to `GraphQLHttpHandler`, without any
 /// tie to a web framework (R5.5).
@@ -47,6 +48,15 @@ final class HttpRequestData {
   /// Cancelled by the host when the client goes away, so the handler can stop
   /// the work nobody waits for.
   final CancelSignal? cancelSignal;
+
+  /// What the pipeline and the extensions read of this request: its method,
+  /// URI, headers and [source], without the body.
+  RequestInfo get info => RequestInfo(
+    method: method,
+    uri: uri,
+    headers: headers,
+    source: source,
+  );
 
   /// The value of the header [name], whatever its case, or null.
   String? header(String name) => headers[name.toLowerCase()];

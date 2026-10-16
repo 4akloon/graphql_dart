@@ -137,7 +137,8 @@ final class SingleConnectionRoutes<C> {
       return errors.refusal(
         400,
         DiagnosticCode.operationIdRequired,
-        'A cancellation on an event stream needs the operationId parameter.',
+        'A cancellation on an event stream needs the operationId parameter, '
+        'at most ${StreamTokenReader.maxOperationIdLength} characters.',
       );
     }
     connection.cancelOperation(id);

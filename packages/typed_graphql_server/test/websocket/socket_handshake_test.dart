@@ -13,6 +13,12 @@ void main() {
     connectionInitTimeout: Duration(milliseconds: 500),
     maxMessageLength: 200,
   );
+  // A test that a timer never fires has to outwait it: the timeout is short so
+  // that the wait is, and the wait is five timeouts.
+  const brief = GraphQLWsOptions(
+    connectionInitTimeout: Duration(milliseconds: 20),
+    maxMessageLength: 200,
+  );
   final initText = jsonEncode({'type': 'connection_init'});
 
   group('connection_init', () {
@@ -243,11 +249,11 @@ void main() {
     });
 
     test('keeps the timer off once acknowledged', () async {
-      final fixture = WsFixture(options: quick);
+      final fixture = WsFixture(options: brief);
       final socket = FakeSocket();
       unawaited(fixture.run(socket));
       await fixture.init(socket);
-      await Future<void>.delayed(const Duration(milliseconds: 1500));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       expect(socket.closeCode, isNull);
     });
 
@@ -345,10 +351,10 @@ void main() {
 
     test('does not time out after the socket disconnects', () async {
       final socket = FakeSocket();
-      final done = WsFixture(options: quick).run(socket);
+      final done = WsFixture(options: brief).run(socket);
       await socket.disconnect();
       await done;
-      await Future<void>.delayed(const Duration(milliseconds: 1500));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       expect(socket.closeCalls, 0);
     });
   });

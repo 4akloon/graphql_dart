@@ -63,13 +63,17 @@ final class EventStream {
   Timer? _keepAlive;
 
   /// The `200` response, with [extraHeaders] (such as those of the pipeline's
-  /// response) under the event stream's own.
+  /// response) under the event stream's own; it varies on `Accept`, because
+  /// the same URL answers JSON to another `Accept`.
   HttpResponseData response({Map<String, String> extraHeaders = const {}}) =>
       HttpResponseData(
         200,
-        headers: const HeaderNames().merged(
-          const HeaderNames().lowerCased(extraHeaders),
-          headers,
+        headers: const HeaderNames().varied(
+          const HeaderNames().merged(
+            const HeaderNames().lowerCased(extraHeaders),
+            headers,
+          ),
+          'accept',
         ),
         body: StreamedBody(_controller.stream),
       );

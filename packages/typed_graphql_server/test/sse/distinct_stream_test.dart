@@ -30,6 +30,7 @@ void main() {
       expect(response.headers, {
         'content-type': 'text/event-stream; charset=utf-8',
         'cache-control': 'no-cache',
+        'vary': 'accept',
       });
       await sse.http.text(response);
     });

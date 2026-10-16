@@ -167,7 +167,7 @@ Refusals:
 |---|---|---|
 | `404` | `GQL433` | no stream is reserved for the token |
 | `409` | `GQL434` | the stream for the token is already open |
-| `400` | `GQL435` | a `POST` has no `extensions.operationId` (a `DELETE` has no `operationId`) |
+| `400` | `GQL435` | a `POST` has no `extensions.operationId` (a `DELETE` has no `operationId`), or the id is longer than 256 UTF-16 code units, the bound of graphql-ws's `maxIdLength` |
 | `409` | `GQL436` | an operation with that id is already running on the stream |
 | `409` | `GQL438` | the stream runs more than `maxOperationsPerStream` operations |
 | `503` | `GQL437` | the server holds `maxReservations` reservations |
