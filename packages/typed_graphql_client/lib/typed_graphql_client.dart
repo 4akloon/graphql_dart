@@ -38,3 +38,6 @@ export 'src/operation/nullable_data_codec.dart';
 export 'src/operation/object_data_codec.dart';
 export 'src/operation/operation_document.dart';
 export 'src/operation/scalar_data_codec.dart';
+export 'src/upload/upload_file.dart';
+export 'src/upload/upload_file_codec.dart';
+export 'src/upload/upload_files.dart';

@@ -6,11 +6,15 @@ dartdoc:
     link:
       markdown: doc/links.md
       displayName: Links
+    upload:
+      markdown: doc/uploads.md
+      displayName: Uploads
     operations:
       markdown: doc/operations.md
       displayName: Generated Operations
   categoryOrder:
     - client
     - link
+    - upload
     - operations
   showUndocumentedCategories: true
