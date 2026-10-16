@@ -50,3 +50,8 @@
   the request again once; a throwing callback is an `AuthenticationFailure`.
 - The Request Policies guide completes with the recommended order of a chain
   and a program that runs all four policies over a `MockLink`.
+- A link, a callback or a refresh that throws now ends the request of
+  `RetryLink`, `AuthLink`, `PersistedQueryLink` and `DedupeLink` with an error
+  event, not an uncaught error; `RetryLink` no longer retries after a payload
+  was delivered; `TokenRenewal` no longer hands back a refused token after a
+  failed refresh; `RequestHeaders` and `LinkContext` print header names only.

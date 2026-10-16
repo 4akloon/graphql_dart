@@ -386,3 +386,15 @@ hash alone, Bearer expired
 text and hash, Bearer expired
 hash alone, Bearer fresh
 ```
+
+## Limits
+
+`AuthLink` sets no timeout on `token()` or `refresh()`: a callback that never
+completes keeps its requests waiting, so give them a timeout of your own.
+
+`PersistedQueryLink` stops sending hashes for the life of the link after a
+`PersistedQueryNotSupported` answer or a `GQL412`; create a new link to try
+hashes again.
+
+The key of `DedupeLink` is the request body and its `RequestHeaders`; other
+context entries do not tell two requests apart.
