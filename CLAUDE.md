@@ -83,7 +83,10 @@ tests and the HTTP guide. M7b (multipart uploads) delivers `Upload`,
 `UploadStorage`, `MemoryUploadStorage`, `UploadLimits` and `Uploads` (the
 `Upload` scalar, input only), `HttpOptions.uploads`, the multipart reader on
 `package:mime`, the codes `GQL440`-`GQL442`, the upload hostile-input tests and
-the Uploads guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
+the Uploads guide. M7d (GraphQL over SSE) delivers `SseOptions`,
+`SingleConnectionOptions`, `HttpOptions.sse`, the distinct connections mode
+and the single connection mode of graphql-sse, the codes `GQL433`-`GQL438`,
+the SSE hostile-input tests and the Server-sent events guide. M10 (client code generation) delivers the `typed_graphql.yaml` reader, schema loading from a
 file or a URL, the project's documents as one fragment graph, the planner and
 emitters that generate the schema-types library and a library per document
 (operations, variables, data, fragments, sealed polymorphic classes, the
@@ -441,7 +444,7 @@ only through its barrel. One folder per concern, with no import order
 (`builder/` and `execution/` import each other): `builder/` (M5a),
 `coercion/`, `plan/` and `execution/` (M5b), `introspection/` and
 `subscription/` (M5c), `lookahead/`, `authorization/` and `cancellation/`
-(M5d), `dataloader/` (M6a), `server/` (M6b), `persisted/` (M6c), `http/` (M7a) and `upload/` (M7b). The
+(M5d), `dataloader/` (M6a), `server/` (M6b), `persisted/` (M6c), `http/` (M7a), `upload/` (M7b) and `sse/` (M7d). The
 package is
 transport-agnostic: `lib/` imports no `dart:io`, `dart:html`, `dart:isolate`
 or web framework, only `dart:async`, `dart:collection`, `dart:convert`,
@@ -585,6 +588,18 @@ removes the tokens and releases the files. `MultipartPost` (in `http/`) checks
 CSRF before reading the body (deviation 8), then the boundary and the declared
 length; `GraphQLHttpHandler` decodes `operations` with
 `JsonBodyDecoder.decodeValue` and releases the files in a `finally`.
+`sse/` (M7d): `EventStream` is a `StreamedBody` over a controller whose
+pause, resume and cancel are its source's (real backpressure; a first comment
+and a keep-alive comment while idle; no `connection` header), written by
+`EventStreamWriter`. `DistinctStream` answers a request whose negotiated type
+is `text/event-stream` with every operation type allowed: 405, 500 and a CSRF
+403 stay JSON, any other single result is one `next` and `complete`. Single
+connection mode is `SingleConnectionRoutes` over `StreamReservations` (token,
+timeout, limit) and one `SingleConnection` per reservation, which owns the
+frame controller and its `StreamOperation`s: an operation is admitted at its
+`POST` but its source is listened to only once the stream is, so held work
+runs nothing; the host closing the body cancels all of them. State is in the
+handler, so a deployment needs sticky sessions.
 
 **Codegen** (`packages/typed_graphql_codegen`; M10). Depends on the core,
 `args`, `crypto`, `glob`, `path` and `yaml`, never on `analyzer`; the engine

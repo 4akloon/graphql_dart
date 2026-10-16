@@ -51,6 +51,7 @@ adds its row (or turns it to "yes") together with its README line and its
 | GraphQL trusted documents dart | M6 | yes |
 | graphql over http handler dart | M7 | yes |
 | GraphQL multipart file upload dart | M7 | yes |
+| GraphQL server-sent events dart | M7 | yes |
 | GraphQL server dart | M7 | no |
 | generate a typed GraphQL client dart | M10 | yes |
 

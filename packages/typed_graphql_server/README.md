@@ -24,8 +24,9 @@
 > GraphQL over HTTP (`GET` and `POST`, both media types, the status codes of
 > the specification, size and time limits, opt-in batching) for any web
 > framework through a small adapter, and reads multipart file uploads (M7b)
-> into the `Upload` scalar. The graphql-ws and graphql-sse handlers
-> come in the rest of M7. See the
+> into the `Upload` scalar. The same handler streams results as server-sent
+> events (M7d, both modes of graphql-sse). The graphql-ws handler
+> comes in the rest of M7. See the
 > [roadmap](https://github.com/4akloon/graphql_dart/blob/main/docs/roadmap.md).
 
 ## Contents

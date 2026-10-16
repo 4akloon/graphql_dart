@@ -288,6 +288,14 @@ refused with `415` (`GQL421`) until `HttpOptions.uploads` holds an `Uploads`
 value; see the Uploads guide for the schema scalar, the limits, the CSRF rule
 and the storage.
 
+## Event streams
+
+A `GET` or `POST` whose `Accept` prefers `text/event-stream` is answered as
+GraphQL over server-sent events, in the distinct connections mode, and
+`HttpOptions.sse` can turn on the single connection mode; see the Server-sent
+events guide. The response body is then a `StreamedBody` that the adapter must
+write and flush chunk by chunk, and cancel when the client goes away.
+
 ## Writing a host adapter
 
 An adapter for a framework does three things: convert the request, call the
