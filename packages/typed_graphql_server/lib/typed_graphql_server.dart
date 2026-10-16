@@ -86,6 +86,7 @@ export 'src/server/server_outcome.dart';
 export 'src/server/server_profile.dart';
 export 'src/server/server_request.dart';
 export 'src/server/server_response.dart';
+export 'src/sse/sse_options.dart';
 export 'src/subscription/subscription_result.dart';
 export 'src/upload/memory_upload_storage.dart';
 export 'src/upload/upload.dart';

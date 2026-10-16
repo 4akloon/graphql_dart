@@ -30,6 +30,9 @@ dartdoc:
     server:
       markdown: doc/server.md
       displayName: Server
+    sse:
+      markdown: doc/sse.md
+      displayName: Server-sent events
     subscription:
       markdown: doc/subscriptions.md
       displayName: Subscriptions
@@ -47,6 +50,7 @@ dartdoc:
     - lookahead
     - persisted
     - server
+    - sse
     - subscription
     - upload
   showUndocumentedCategories: true
